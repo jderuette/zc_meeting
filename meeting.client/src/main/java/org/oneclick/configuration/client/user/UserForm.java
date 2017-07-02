@@ -211,6 +211,19 @@ public class UserForm extends AbstractForm {
 
 		@Order(1500)
 		public class LoginField extends AbstractStringField {
+			private static final String LOGIN_PATTERN = "^[_A-Za-z0-9-_-].*$";
+			private String initialValue = null;
+
+			// private Boolean modified = Boolean.FALSE;
+			//
+			// protected Boolean isModified() {
+			// return this.modified;
+			// }
+			//
+			// protected void setModified(final Boolean modified) {
+			// this.modified = modified;
+			// }
+
 			@Override
 			protected String getConfiguredLabel() {
 				return TEXTS.get("Login");
@@ -221,17 +234,42 @@ public class UserForm extends AbstractForm {
 				return 64;
 			}
 
+			// @Override
+			// protected void execInitField() {
+			// this.addPropertyChangeListener(new PropertyChangeListener() {
+			//
+			// @Override
+			// public void propertyChange(final PropertyChangeEvent evt) {
+			// if (null != evt.getNewValue() && !"".equals(evt.getNewValue())
+			// && !evt.getNewValue().equals(evt.getOldValue())) {
+			// LoginField.this.setModified(Boolean.TRUE);
+			// }
+			// }
+			// });
+			// }
+
 			@Override
 			protected String execValidateValue(final String rawValue) {
 				final IUserService userService = BEANS.get(IUserService.class);
-				if (null != rawValue) {
+				Boolean modified = Boolean.FALSE;
+
+				if (null == this.initialValue) {
+					this.initialValue = rawValue;
+				}
+
+				if (null != rawValue && !rawValue.equals(this.initialValue)) {
+					modified = Boolean.TRUE;
+				}
+
+				if (null != rawValue && modified) {
 					if (rawValue.length() < 4) {
 						throw new VetoException(TEXTS.get("zc.login.tooShort"));
 					}
+					if (!Pattern.matches(LOGIN_PATTERN, rawValue)) {
+						throw new VetoException(TEXTS.get("zc.login.invalid"));
+					}
 
-					final UserFormData currentUserData = userService.getCurrentUserDetails();
-					if (!rawValue.equals(currentUserData.getLogin().getValue())
-							&& userService.isLoginAlreadyUsed(rawValue)) {
+					if (userService.isLoginAlreadyUsed(rawValue)) {
 						throw new VetoException(TEXTS.get("zc.login.invalid"));
 					}
 				}

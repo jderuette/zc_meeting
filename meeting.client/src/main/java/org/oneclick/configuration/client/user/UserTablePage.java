@@ -37,6 +37,11 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 	}
 
 	@Override
+	public boolean isLeaf() {
+		return Boolean.TRUE;
+	}
+
+	@Override
 	protected void execLoadData(final SearchFilter filter) {
 		this.importPageData(BEANS.get(IUserService.class).getUserTableData(filter));
 	}
