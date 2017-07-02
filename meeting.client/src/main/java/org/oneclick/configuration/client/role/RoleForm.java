@@ -12,8 +12,8 @@ import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.oneclick.configuration.client.role.RoleForm.MainBox.CancelButton;
-import org.oneclick.configuration.client.role.RoleForm.MainBox.RoleNameField;
 import org.oneclick.configuration.client.role.RoleForm.MainBox.OkButton;
+import org.oneclick.configuration.client.role.RoleForm.MainBox.RoleNameField;
 import org.oneclick.configuration.shared.role.CreateRolePermission;
 import org.oneclick.configuration.shared.role.IRoleService;
 import org.oneclick.configuration.shared.role.RoleFormData;
@@ -36,7 +36,7 @@ public class RoleForm extends AbstractForm {
 
 	@Override
 	protected String getConfiguredTitle() {
-		return TEXTS.get("Role");
+		return TEXTS.get("zc.user.role");
 	}
 
 	@Override

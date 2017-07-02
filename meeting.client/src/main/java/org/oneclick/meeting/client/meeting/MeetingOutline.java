@@ -48,7 +48,7 @@ public class MeetingOutline extends AbstractOutline {
 
 	@Override
 	protected String getConfiguredTitle() {
-		return TEXTS.get("Meetings");
+		return TEXTS.get("zc.meeting.meetings");
 	}
 
 	@Override

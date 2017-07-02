@@ -64,7 +64,7 @@ public class AdministrationOutline extends AbstractOutline {
 
 	@Override
 	protected String getConfiguredTitle() {
-		return TEXTS.get("Administration");
+		return TEXTS.get("zc.common.administration");
 	}
 
 	@Override

@@ -33,7 +33,7 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 
 	@Override
 	protected String getConfiguredTitle() {
-		return TEXTS.get("Utilisateurs");
+		return TEXTS.get("zc.user.utilisateurs");
 	}
 
 	@Override
@@ -81,7 +81,7 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 		public class EditMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {
-				return TEXTS.get("Edit");
+				return TEXTS.get("zc.common.edit");
 			}
 
 			@Override
@@ -143,7 +143,7 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 		public class UserIdColumn extends AbstractLongColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("UserId");
+				return TEXTS.get("zc.user.userId");
 			}
 
 			@Override
@@ -169,7 +169,7 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 		public class EmailColumn extends AbstractStringColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("Email");
+				return TEXTS.get("zc.common.email");
 			}
 
 			@Override

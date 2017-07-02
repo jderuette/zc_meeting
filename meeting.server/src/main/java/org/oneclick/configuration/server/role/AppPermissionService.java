@@ -53,7 +53,7 @@ public class AppPermissionService implements IAppPermissionService {
 		if (!ACCESS.check(new UpdatePermissionPermission())) {
 			throw new VetoException(TEXTS.get("AuthorizationFailed"));
 		}
-		throw new VetoException(TEXTS.get("PermissionStoreNotAllowed"));
+		throw new VetoException(TEXTS.get("zc.user.permissionStoreNotAllowed"));
 		// return formData;
 	}
 

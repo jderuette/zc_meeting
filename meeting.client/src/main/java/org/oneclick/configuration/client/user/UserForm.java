@@ -97,7 +97,7 @@ public class UserForm extends AbstractForm {
 
 	@Override
 	protected String getConfiguredTitle() {
-		return TEXTS.get("User");
+		return TEXTS.get("zc.user.user");
 	}
 
 	@Override
@@ -185,7 +185,7 @@ public class UserForm extends AbstractForm {
 		public class UserIdField extends AbstractLongField {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("UserId");
+				return TEXTS.get("zc.user.userId");
 			}
 
 			@Override
@@ -246,7 +246,7 @@ public class UserForm extends AbstractForm {
 
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("Email");
+				return TEXTS.get("zc.common.email");
 			}
 
 			@Override
@@ -262,7 +262,7 @@ public class UserForm extends AbstractForm {
 			@Override
 			protected String execValidateValue(final String rawValue) {
 				if (rawValue != null && !Pattern.matches(EMAIL_PATTERN, rawValue)) {
-					throw new VetoException(TEXTS.get("BadEmailAddress"));
+					throw new VetoException(TEXTS.get("zc.common.badEmailAddress"));
 				}
 				return rawValue;
 			}
@@ -297,13 +297,13 @@ public class UserForm extends AbstractForm {
 			protected String execValidateValue(final String rawValue) {
 				if (null != rawValue) {
 					if (rawValue.length() < 6) {
-						throw new VetoException(TEXTS.get("PasswordTooShort"));
+						throw new VetoException(TEXTS.get("zc.user.passwordTooShort"));
 					}
 					if (!Pattern.matches(NUMBER_PATTERN, rawValue)) {
-						throw new VetoException(TEXTS.get("PasswordMustContainNumber"));
+						throw new VetoException(TEXTS.get("zc.user.passwordMustContainNumber"));
 					}
 					if (!Pattern.matches(LETTER_PATTERN, rawValue)) {
-						throw new VetoException(TEXTS.get("PasswordMustContainLetter"));
+						throw new VetoException(TEXTS.get("zc.user.passwordMustContainLetter"));
 					}
 				}
 				UserForm.this.getConfirmPasswordField().setMandatory(Boolean.TRUE);
@@ -315,7 +315,7 @@ public class UserForm extends AbstractForm {
 		public class ConfirmPasswordField extends AbstractStringField {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("ConfirmPassword");
+				return TEXTS.get("zc.user.confirmPassword");
 			}
 
 			@Override
@@ -337,7 +337,7 @@ public class UserForm extends AbstractForm {
 			protected String execValidateValue(final String rawValue) {
 				final String password = UserForm.this.getPasswordField().getValue();
 				if (rawValue != null && !rawValue.equals(password)) {
-					throw new VetoException(TEXTS.get("PasswordsDontMatch"));
+					throw new VetoException(TEXTS.get("zc.user.passwordsDontMatch"));
 				}
 				return rawValue;
 			}
@@ -365,7 +365,7 @@ public class UserForm extends AbstractForm {
 		public class RolesBox extends AbstractListBox<Long> {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("Roles");
+				return TEXTS.get("zc.user.roles");
 			}
 
 			@Override
@@ -389,7 +389,7 @@ public class UserForm extends AbstractForm {
 		public class SendUserInviteEmailField extends AbstractBooleanField {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("SendUserInviteEmail");
+				return TEXTS.get("zc.user.sendUserInviteEmail");
 			}
 
 			@Override
@@ -503,20 +503,20 @@ public class UserForm extends AbstractForm {
 
 		if (this.isAutofilled()) {
 			// invite + meeting
-			subject = TEXTS.get("email.invit.subject", emailSender);
-			messageBody = TEXTS.get("email.invit.html", emailSender, new ApplicationUrlProperty().getValue(),
+			subject = TEXTS.get("zc.meeting.email.invit.subject", emailSender);
+			messageBody = TEXTS.get("zc.meeting.email.invit.html", emailSender, new ApplicationUrlProperty().getValue(),
 					newUser.getEmailField().getValue(), newUser.getPasswordField().getValue());
 		} else {
 			// Simple invite without meeting
-			subject = TEXTS.get("email.invit.withoutMeeting.subject", emailSender);
-			messageBody = TEXTS.get("email.invit.withoutMeeting.html", emailSender,
+			subject = TEXTS.get("zc.user.email.invit.withoutMeeting.subject", emailSender);
+			messageBody = TEXTS.get("zc.user.email.invit.withoutMeeting.html", emailSender,
 					new ApplicationUrlProperty().getValue(), newUser.getEmailField().getValue(),
 					newUser.getPasswordField().getValue());
 		}
 		try {
 			mailSender.sendEmail(newUser.getEmailField().getValue(), subject, messageBody);
 		} catch (final MailException e) {
-			throw new VetoException(TEXTS.get("CannotSendEmail"));
+			throw new VetoException(TEXTS.get("zc.common.cannotSendEmail"));
 		}
 	}
 
@@ -526,7 +526,7 @@ public class UserForm extends AbstractForm {
 		LOG.info("Creating and invite a new User with email : " + email + " by : " + emailSender);
 
 		if (userService.isEmailAlreadyUsed(email)) {
-			new VetoException(TEXTS.get("EmailAlreadyUsed"));
+			new VetoException(TEXTS.get("zc.user.emailAlreadyUsed"));
 		}
 
 		this.createUser(email, Boolean.TRUE);

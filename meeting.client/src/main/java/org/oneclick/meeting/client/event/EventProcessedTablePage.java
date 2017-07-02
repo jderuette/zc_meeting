@@ -25,7 +25,7 @@ public class EventProcessedTablePage extends AbstractEventsTablePage<Table> {
 
 	@Override
 	protected String getConfiguredTitle() {
-		return TEXTS.get("EventsProccessed");
+		return TEXTS.get("zc.meeting.eventsProccessed");
 	}
 
 	public class Table extends AbstractEventsTablePage<Table>.Table {
@@ -43,8 +43,8 @@ public class EventProcessedTablePage extends AbstractEventsTablePage<Table> {
 			if (this.getUserFilterManager().getFilter(this.getStateColumn().getColumnId()) == null) {
 				final TextColumnUserFilterState askedFilter = new TextColumnUserFilterState(this.getStateColumn());
 				final Set<Object> selectedValues = new HashSet<>();
-				selectedValues.add(TEXTS.get("Accepted"));
-				selectedValues.add(TEXTS.get("Refused"));
+				selectedValues.add(TEXTS.get("zc.meeting.state.Accepted"));
+				selectedValues.add(TEXTS.get("zc.meeting.state.refused"));
 				askedFilter.setSelectedValues(selectedValues);
 				// askedFilter.setFreeText(TEXTS.get("EventsProccessed"));
 				this.getUserFilterManager().addFilter(askedFilter);

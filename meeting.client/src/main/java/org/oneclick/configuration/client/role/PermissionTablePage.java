@@ -41,7 +41,7 @@ public class PermissionTablePage extends AbstractPageWithTable<Table> {
 
 	@Override
 	protected String getConfiguredTitle() {
-		return TEXTS.get("Permissions");
+		return TEXTS.get("zc.user.permissions");
 	}
 
 	@Override
@@ -81,7 +81,7 @@ public class PermissionTablePage extends AbstractPageWithTable<Table> {
 		public class AddToRoleMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {
-				return TEXTS.get("AddToRole");
+				return TEXTS.get("zc.user.addToRole");
 			}
 
 			@Override
@@ -111,7 +111,7 @@ public class PermissionTablePage extends AbstractPageWithTable<Table> {
 		public class RemoveToRoleMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {
-				return TEXTS.get("RemoveToRole");
+				return TEXTS.get("zc.user.removeToRole");
 			}
 
 			@Override
@@ -171,7 +171,7 @@ public class PermissionTablePage extends AbstractPageWithTable<Table> {
 		public class LevelColumn extends AbstractIntegerColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("Level");
+				return TEXTS.get("zc.user.level");
 			}
 
 			@Override

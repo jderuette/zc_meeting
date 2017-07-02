@@ -58,7 +58,7 @@ public class Desktop extends AbstractDesktop {
 
 	@Override
 	protected String getConfiguredTitle() {
-		return TEXTS.get("ApplicationTitle");
+		return TEXTS.get("zc.common.applicationTitle");
 	}
 
 	@Override
@@ -145,7 +145,7 @@ public class Desktop extends AbstractDesktop {
 	public class CreateEventMenu extends AbstractMenu {
 		@Override
 		protected String getConfiguredText() {
-			return TEXTS.get("addEvent");
+			return TEXTS.get("zc.meeting.addEvent");
 		}
 
 		@Override
@@ -170,7 +170,7 @@ public class Desktop extends AbstractDesktop {
 	public class AddGoogleCalendarMenu extends AbstractMenu {
 		@Override
 		protected String getConfiguredText() {
-			return TEXTS.get("AddGoogleCalendar");
+			return TEXTS.get("zc.meeting.addGoogleCalendar");
 		}
 
 		@Override
@@ -212,7 +212,7 @@ public class Desktop extends AbstractDesktop {
 			protected String getConfiguredText() {
 				final IUserService userService = BEANS.get(IUserService.class);
 				final UserFormData userDetails = userService.getCurrentUserDetails();
-				return TEXTS.get("LogedAs", userDetails.getEmail().getValue());
+				return TEXTS.get("zc.user.logedAs", userDetails.getEmail().getValue());
 			}
 
 			@Override
@@ -234,7 +234,7 @@ public class Desktop extends AbstractDesktop {
 		public class EditMyAccountMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {
-				return TEXTS.get("Edit.account");
+				return TEXTS.get("zc.user.edit.account");
 			}
 
 			@Override
@@ -266,7 +266,7 @@ public class Desktop extends AbstractDesktop {
 		public class LogoutMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {
-				return TEXTS.get("Logout");
+				return TEXTS.get("zc.user.logout");
 			}
 
 			@Override

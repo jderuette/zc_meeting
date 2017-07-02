@@ -32,7 +32,7 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 
 	@Override
 	protected String getConfiguredTitle() {
-		return TEXTS.get("ApisManagement");
+		return TEXTS.get("zc.api.apisManagement");
 	}
 
 	@Override
@@ -51,7 +51,7 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 		public class EditMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {
-				return TEXTS.get("Edit");
+				return TEXTS.get("zc.common.edit");
 			}
 
 			@Override
@@ -141,7 +141,7 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 		public class ApiCredentialIdColumn extends AbstractLongColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("Id");
+				return TEXTS.get("zc.common.id");
 			}
 
 			@Override
@@ -164,7 +164,7 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 		public class ProviderColumn extends AbstractSmartColumn<Integer> {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("Provider");
+				return TEXTS.get("zc.api.provider");
 			}
 
 			@Override
@@ -182,7 +182,7 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 		public class AccessTokenColumn extends AbstractStringColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("AccessToken");
+				return TEXTS.get("zc.api.accessToken");
 			}
 
 			@Override
@@ -195,7 +195,7 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 		public class ExpirationTimeMillisecondsColumn extends AbstractLongColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("ExpirationTimeMilliseconds");
+				return TEXTS.get("zc.api.expirationTimeMilliseconds");
 			}
 
 			@Override
@@ -208,7 +208,7 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 		public class RefreshTokenColumn extends AbstractStringColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("RefreshToken");
+				return TEXTS.get("zc.api.refreshToken");
 			}
 
 			@Override
@@ -221,7 +221,7 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 		public class UserIdColumn extends AbstractStringColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("UserId");
+				return TEXTS.get("zc.user.userId");
 			}
 
 			@Override

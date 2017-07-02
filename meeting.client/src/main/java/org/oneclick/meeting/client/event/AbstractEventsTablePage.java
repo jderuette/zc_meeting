@@ -82,7 +82,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 	@Override
 	protected String getConfiguredTitle() {
-		return TEXTS.get("Events");
+		return TEXTS.get("zc.meeting.events");
 	}
 
 	@Override
@@ -329,14 +329,14 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				row.setCellValue(this.getHeldColumn().getColumnIndex(), Boolean.TRUE);
 				row.setIconId(Icons.AngleDoubleLeft);
 
-				this.getOrganizerEmailColumn().updateDisplayText(row, TEXTS.get("Me"));
+				this.getOrganizerEmailColumn().updateDisplayText(row, TEXTS.get("zc.common.me"));
 			}
 
 			if (this.isGuestCurrentUser(row)) {
 				row.setCellValue(this.getGuestColumn().getColumnIndex(), Boolean.TRUE);
 				row.setIconId(Icons.AngleDoubleRight);
 
-				this.getEmailColumn().updateDisplayText(row, TEXTS.get("Me"));
+				this.getEmailColumn().updateDisplayText(row, TEXTS.get("zc.common.me"));
 			}
 		}
 
@@ -560,7 +560,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		public class AddGoogleCalendarMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {
-				return TEXTS.get("AddGoogleCalendar");
+				return TEXTS.get("zc.meeting.addGoogleCalendar");
 			}
 
 			@Override
@@ -597,7 +597,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		public class RefuseMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {
-				return TEXTS.get("Refuse");
+				return TEXTS.get("zc.meeting.refuse");
 			}
 
 			@Override
@@ -817,7 +817,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		public class EventIdColumn extends AbstractLongColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("Id");
+				return TEXTS.get("zc.common.id");
 			}
 
 			@Override
@@ -835,7 +835,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		public class OrganizerColumn extends AbstractLongColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("Organizer");
+				return TEXTS.get("zc.meeting.host");
 			}
 
 			@Override
@@ -853,7 +853,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		public class OrganizerEmailColumn extends AbstractStringColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("Organizer");
+				return TEXTS.get("zc.meeting.host");
 			}
 
 			@Override
@@ -866,7 +866,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		public class EmailColumn extends AbstractStringColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("Attendee");
+				return TEXTS.get("zc.meeting.attendee");
 			}
 
 			@Override
@@ -879,7 +879,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		public class SubjectColumn extends AbstractStringColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("Event.subject");
+				return TEXTS.get("zc.meeting.event.subject");
 			}
 
 			@Override
@@ -892,7 +892,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		public class GuestIdColumn extends AbstractLongColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("AttendeeId");
+				return TEXTS.get("zc.meeting.attendeeId");
 			}
 
 			@Override
@@ -910,7 +910,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		public class SlotColumn extends AbstractSmartColumn<Integer> {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("Slot");
+				return TEXTS.get("zc.meeting.slot");
 			}
 
 			@Override
@@ -928,7 +928,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		public class DurationColumn extends AbstractSmartColumn<Integer> {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("Duration");
+				return TEXTS.get("zc.meeting.duration");
 			}
 
 			@Override
@@ -946,7 +946,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		public class HeldColumn extends AbstractBooleanColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("Held");
+				return TEXTS.get("zc.meeting.hosted");
 			}
 
 			@Override
@@ -959,7 +959,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		public class GuestColumn extends AbstractBooleanColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("Attendee");
+				return TEXTS.get("zc.meeting.attendee");
 			}
 
 			@Override
@@ -972,7 +972,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		public class StateColumn extends AbstractSmartColumn<String> {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("State");
+				return TEXTS.get("zc.meeting.state");
 			}
 
 			@Override
@@ -990,7 +990,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		public class StartDateColumn extends AbstractDateColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("Start");
+				return TEXTS.get("zc.meeting.start");
 			}
 
 			protected IUserService getUserService() {
@@ -1085,7 +1085,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		public class EndDateColumn extends AbstractDateColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("End");
+				return TEXTS.get("zc.meeting.end");
 			}
 
 			protected IUserService getUserService() {
@@ -1180,7 +1180,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		public class ExternalIdOrganizerColumn extends AbstractStringColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("ExternalId");
+				return TEXTS.get("zc.meeting.externalId");
 			}
 
 			@Override
@@ -1193,7 +1193,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		public class ExternalIdRecipientColumn extends AbstractStringColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("ExternalId");
+				return TEXTS.get("zc.meeting.externalId");
 			}
 
 			@Override

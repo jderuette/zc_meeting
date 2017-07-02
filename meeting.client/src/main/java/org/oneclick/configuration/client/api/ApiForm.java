@@ -77,7 +77,7 @@ public class ApiForm extends AbstractForm {
 
 	@Override
 	protected String getConfiguredTitle() {
-		return TEXTS.get("OAuthCredential");
+		return TEXTS.get("zc.api.oAuthCredential");
 	}
 
 	public void startModify() {
@@ -127,7 +127,7 @@ public class ApiForm extends AbstractForm {
 		public class AccessTokenField extends AbstractStringField {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("AccessToken");
+				return TEXTS.get("zc.api.accessToken");
 			}
 
 			@Override
@@ -147,7 +147,7 @@ public class ApiForm extends AbstractForm {
 		public class ExpirationTimeMillisecondsField extends AbstractLongField {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("ExpirationTimeMilliseconds");
+				return TEXTS.get("zc.api.expirationTimeMilliseconds");
 			}
 
 			@Override
@@ -172,7 +172,7 @@ public class ApiForm extends AbstractForm {
 		public class RefreshTokenField extends AbstractStringField {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("RefreshToken");
+				return TEXTS.get("zc.api.refreshToken");
 			}
 
 			@Override
@@ -192,7 +192,7 @@ public class ApiForm extends AbstractForm {
 		public class ProviderField extends AbstractSmartField<Integer> {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("Provider");
+				return TEXTS.get("zc.api.provider");
 			}
 
 			@Override

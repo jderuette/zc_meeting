@@ -29,7 +29,7 @@ public class RoleTablePage extends AbstractPageWithTable<Table> {
 
 	@Override
 	protected String getConfiguredTitle() {
-		return TEXTS.get("Roles");
+		return TEXTS.get("zc.user.roles");
 	}
 
 	@Override
@@ -71,7 +71,7 @@ public class RoleTablePage extends AbstractPageWithTable<Table> {
 		public class EditMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {
-				return TEXTS.get("Edit");
+				return TEXTS.get("zc.common.edit");
 			}
 
 			@Override
@@ -117,7 +117,7 @@ public class RoleTablePage extends AbstractPageWithTable<Table> {
 		public class RoleIdColumn extends AbstractIntegerColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("Id");
+				return TEXTS.get("zc.common.id");
 			}
 
 			@Override

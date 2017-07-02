@@ -96,7 +96,7 @@ public class EventForm extends AbstractForm {
 
 	@Override
 	protected String getConfiguredTitle() {
-		return TEXTS.get("Event");
+		return TEXTS.get("zc.meeting.event");
 	}
 
 	@Override
@@ -187,7 +187,7 @@ public class EventForm extends AbstractForm {
 		public class OrganizerField extends AbstractLongField {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("Organizer");
+				return TEXTS.get("zc.meeting.host");
 			}
 
 			@Override
@@ -203,7 +203,7 @@ public class EventForm extends AbstractForm {
 
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("Organizer");
+				return TEXTS.get("zc.meeting.host");
 			}
 
 			@Override
@@ -219,7 +219,7 @@ public class EventForm extends AbstractForm {
 			@Override
 			protected String execValidateValue(final String rawValue) {
 				if (rawValue != null && !Pattern.matches(EMAIL_PATTERN, rawValue)) {
-					throw new VetoException(TEXTS.get("BadEmailAddress"));
+					throw new VetoException(TEXTS.get("zc.common.badEmailAddress"));
 				}
 				return null == rawValue ? null : rawValue.toLowerCase();
 			}
@@ -234,7 +234,7 @@ public class EventForm extends AbstractForm {
 		public class SubjectField extends AbstractStringField {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("Event.subject");
+				return TEXTS.get("zc.meeting.event.subject");
 			}
 
 			@Override
@@ -250,7 +250,7 @@ public class EventForm extends AbstractForm {
 			@Override
 			protected String execValidateValue(final String rawValue) {
 				if (null != rawValue && rawValue.length() > 150) {
-					throw new VetoException(TEXTS.get("event.subject.tooLong"));
+					throw new VetoException(TEXTS.get("zc.meeting.event.subject.tooLong"));
 				}
 				return rawValue;
 			}
@@ -263,7 +263,7 @@ public class EventForm extends AbstractForm {
 
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("AttendeeEmail");
+				return TEXTS.get("zc.meeting.attendeeEmail");
 			}
 
 			@Override
@@ -280,11 +280,11 @@ public class EventForm extends AbstractForm {
 			protected String execValidateValue(final String rawValue) {
 				if (rawValue != null) {
 					if (!Pattern.matches(EMAIL_PATTERN, rawValue)) {
-						throw new VetoException(TEXTS.get("BadEmailAddress"));
+						throw new VetoException(TEXTS.get("zc.common.badEmailAddress"));
 					}
 
 					if (rawValue.equals(EventForm.this.getOrganizerEmailField().getValue())) {
-						throw new VetoException(TEXTS.get("YouCannotInviteYourself"));
+						throw new VetoException(TEXTS.get("zc.meeting.youCannotInviteYourself"));
 					}
 				}
 				return null == rawValue ? null : rawValue.toLowerCase();
@@ -295,7 +295,7 @@ public class EventForm extends AbstractForm {
 		public class GuestIdField extends AbstractLongField {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("AttendeeId");
+				return TEXTS.get("zc.meeting.attendeeId");
 			}
 
 			@Override
@@ -308,7 +308,7 @@ public class EventForm extends AbstractForm {
 		public class SlotField extends AbstractSmartField<Integer> {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("Slot");
+				return TEXTS.get("zc.meeting.slot");
 			}
 
 			@Override
@@ -326,7 +326,7 @@ public class EventForm extends AbstractForm {
 		public class DurationField extends AbstractSmartField<Integer> {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("Duration");
+				return TEXTS.get("zc.meeting.duration");
 			}
 
 			@Override
@@ -344,7 +344,7 @@ public class EventForm extends AbstractForm {
 		public class StateField extends AbstractSmartField<String> {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("State");
+				return TEXTS.get("zc.meeting.state");
 			}
 
 			@Override
@@ -362,7 +362,7 @@ public class EventForm extends AbstractForm {
 		public class StartDateField extends AbstractDateField {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("Start");
+				return TEXTS.get("zc.meeting.start");
 			}
 
 			@Override
@@ -375,7 +375,7 @@ public class EventForm extends AbstractForm {
 		public class EndDateField extends AbstractDateField {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("End");
+				return TEXTS.get("zc.meeting.end");
 			}
 
 			@Override
@@ -388,7 +388,7 @@ public class EventForm extends AbstractForm {
 		public class OkButton extends AbstractOkButton {
 			@Override
 			public String getLabel() {
-				return TEXTS.get("ScheduleMeeting");
+				return TEXTS.get("zc.meeting.scheduleMeeting");
 			}
 		}
 
@@ -468,8 +468,8 @@ public class EventForm extends AbstractForm {
 			final String recipient = formData.getEmail().getValue();
 			final String organizerEmail = formData.getOrganizerEmail().getValue();
 			final String meetingSubject = formData.getSubject().getValue();
-			final String subject = TEXTS.get("email.event.new.subject", organizerEmail);
-			final String content = TEXTS.get("email.event.new.html", organizerEmail,
+			final String subject = TEXTS.get("zc.meeting.email.event.new.subject", organizerEmail);
+			final String content = TEXTS.get("zc.meeting.email.event.new.html", organizerEmail,
 					new ApplicationUrlProperty().getValue(), meetingSubject);
 			// final String subject = "ZeroClick Meeting : " + organizerEmail +
 			// " ask for a meeting";
@@ -479,7 +479,7 @@ public class EventForm extends AbstractForm {
 			try {
 				mailSender.sendEmail(recipient, subject, content);
 			} catch (final MailException e) {
-				throw new VetoException(TEXTS.get("CannotSendEmail"));
+				throw new VetoException(TEXTS.get("zc.common.cannotSendEmail"));
 			}
 		}
 	}
@@ -514,7 +514,7 @@ public class EventForm extends AbstractForm {
 		final String durationText = durationLookupCall.getText(this.getDurationField().getValue());
 		final String slotText = slotLookupCall.getText(this.getSlotField().getValue());
 
-		return StringUtility.join(" ", durationText, slotText, "\r\n", TEXTS.get("With"),
+		return StringUtility.join(" ", durationText, slotText, "\r\n", TEXTS.get("zc.common.with"),
 				this.getEmailField().getValue());
 	}
 

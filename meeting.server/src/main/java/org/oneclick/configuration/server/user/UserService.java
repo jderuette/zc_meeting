@@ -95,20 +95,16 @@ public class UserService implements IUserService {
 		LOG.info("Create User with Id :" + formData.getUserId() + ", Login : " + formData.getLogin().getValue()
 				+ " and email : " + formData.getEmail());
 
-		// if (null == formData.getLogin().getValue()) {
-		// LOG.error("Trying to create User without Login");
-		// throw new VetoException(TEXTS.get("UserIdRequired"));
-		// }
 		if (null != formData.getLogin().getValue() && this.userAlreadyExists(formData.getLogin().getValue())) {
 			LOG.error("Trying to create User with an existing login (lowercase match) : "
 					+ formData.getLogin().getValue());
-			throw new VetoException(TEXTS.get("UserAlreadyExists"));
+			throw new VetoException(TEXTS.get("zc.user.userAlreadyExists"));
 		}
 
 		if (null != formData.getEmail().getValue() && this.isEmailAlreadyUsed(formData.getEmail().getValue())) {
 			LOG.error("Trying to create User with an existing email (lowercase match) : "
 					+ formData.getEmail().getValue());
-			throw new VetoException(TEXTS.get("UserAlreadyExists"));
+			throw new VetoException(TEXTS.get("zc.user.userAlreadyExists"));
 		}
 		SQL.insert(SQLs.USER_INSERT, formData);
 		return this.store(formData);

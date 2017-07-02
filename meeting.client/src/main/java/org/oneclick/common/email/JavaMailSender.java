@@ -61,7 +61,7 @@ public class JavaMailSender implements IMailSender {
 	}
 
 	private String addDefaultFooter() {
-		return TEXTS.get("email.footer", new ApplicationUrlProperty().getValue() + "res/logo.png");
+		return TEXTS.get("zc.common.email.footer", new ApplicationUrlProperty().getValue() + "/res/logo.png");
 	}
 
 	@Override

@@ -40,7 +40,7 @@ public class AssignToRoleForm extends AbstractForm {
 
 	@Override
 	protected String getConfiguredTitle() {
-		return TEXTS.get("AssignToRole");
+		return TEXTS.get("zc.user.assignToRole");
 	}
 
 	public void startNew() {
@@ -74,7 +74,7 @@ public class AssignToRoleForm extends AbstractForm {
 		public class RoleIdField extends AbstractSmartField<Long> {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("Role");
+				return TEXTS.get("zc.user.role");
 			}
 
 			@Override
@@ -87,7 +87,7 @@ public class AssignToRoleForm extends AbstractForm {
 		public class LevelField extends AbstractLongField {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("Level");
+				return TEXTS.get("zc.user.level");
 			}
 
 			@Override

@@ -72,7 +72,7 @@ public class MailjetMailSender implements IMailSender {
 	}
 
 	private String addDefaultFooter() {
-		return TEXTS.get("email.footer", new ApplicationUrlProperty().getValue() + "/res/logo.png");
+		return TEXTS.get("zc.common.email.footer", new ApplicationUrlProperty().getValue() + "/res/logo.png");
 	}
 
 	@Override
@@ -101,7 +101,7 @@ public class MailjetMailSender implements IMailSender {
 				.property(Email.FROMNAME, new EmailFromNameProperty().getValue()).property(Email.SUBJECT, subject)
 				.property(Email.TEXTPART, "No message text use an html compliant mail reader")
 				.property(Email.HTMLPART, messageBody)
-				.property(Email.RECIPIENTS, new JSONArray().put(new JSONObject().put("Email", recipientTo)))
+				.property(Email.RECIPIENTS, new JSONArray().put(new JSONObject().put("zc.common.email", recipientTo)))
 				.property(Email.BCC, new EmailBccProperty().getValue());
 		try {
 			// trigger the API call

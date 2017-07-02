@@ -36,9 +36,9 @@ public class EventStateLookupCall extends LocalLookupCall<String> {
 	protected List<LookupRow<String>> execCreateLookupRows() {
 		final List<LookupRow<String>> rows = new ArrayList<>();
 
-		rows.add(new LookupRow<>("ASKED", TEXTS.get("Asked")));
-		rows.add(new LookupRow<>("ACCEPTED", TEXTS.get("Accepted")));
-		rows.add(new LookupRow<>("REFUSED", TEXTS.get("Refused")));
+		rows.add(new LookupRow<>("ASKED", TEXTS.get("zc.meeting.state.asked")));
+		rows.add(new LookupRow<>("ACCEPTED", TEXTS.get("zc.meeting.state.Accepted")));
+		rows.add(new LookupRow<>("REFUSED", TEXTS.get("zc.meeting.state.refused")));
 
 		return rows;
 	}

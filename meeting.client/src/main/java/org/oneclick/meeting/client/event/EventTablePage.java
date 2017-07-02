@@ -67,7 +67,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 	@Override
 	protected String getConfiguredTitle() {
-		return TEXTS.get("Events");
+		return TEXTS.get("zc.meeting.events");
 	}
 
 	@Override
@@ -96,9 +96,9 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			if (this.getUserFilterManager().getFilter(this.getStateColumn().getColumnId()) == null) {
 				final TextColumnUserFilterState askedFilter = new TextColumnUserFilterState(this.getStateColumn());
 				final Set<Object> selectedValues = new HashSet<>();
-				selectedValues.add(TEXTS.get("Asked"));
+				selectedValues.add(TEXTS.get("zc.meeting.state.asked"));
 				askedFilter.setSelectedValues(selectedValues);
-				// askedFilter.setFreeText(TEXTS.get("Asked"));
+				// askedFilter.setFreeText(TEXTS.get("zc.meeting.state.asked"));
 				this.getUserFilterManager().addFilter(askedFilter);
 			}
 		}
@@ -332,7 +332,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			try {
 				googleCalendarService = googleHelper.getCalendarService(userId);
 			} catch (final UserAccessRequiredException uare) {
-				throw new VetoException(TEXTS.get("CalendarProviderRequired"));
+				throw new VetoException(TEXTS.get("zc.meeting.calendarProviderRequired"));
 			}
 
 			// getEvent from start to End for each calendar
@@ -477,7 +477,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			try {
 				googleCalendarService = googleHelper.getCalendarService(forUserId);
 			} catch (final UserAccessRequiredException uare) {
-				throw new VetoException(TEXTS.get("CalendarProviderRequired"));
+				throw new VetoException(TEXTS.get("zc.meeting.calendarProviderRequired"));
 			}
 
 			final Event newEvent = new Event();
@@ -502,7 +502,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		public class EditMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {
-				return TEXTS.get("Edit");
+				return TEXTS.get("zc.common.edit");
 			}
 
 			@Override
@@ -599,7 +599,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		public class AcceptMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {
-				return TEXTS.get("Accept");
+				return TEXTS.get("zc.meeting.Accept");
 			}
 
 			@Override
@@ -638,7 +638,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					if (hasStartDate) {
 						this.setTooltipText(null);
 					} else {
-						this.setTooltipText(TEXTS.get("Accept.require.startDate"));
+						this.setTooltipText(TEXTS.get("zc.meeting.accept.require.startDate"));
 					}
 				}
 			}
@@ -657,7 +657,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				try {
 					if (null == start || null == end) {
 						Table.this.changeDatesNext();
-						throw new VetoException(TEXTS.get("ChooseDateFirst"));
+						throw new VetoException(TEXTS.get("zc.meeting.chooseDateFirst"));
 					}
 
 					if (null == eventGuest) {
@@ -702,7 +702,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				try {
 					mailSender.sendEmail(recipient, subject, content);
 				} catch (final MailException e) {
-					throw new VetoException(TEXTS.get("CannotSendEmail"));
+					throw new VetoException(TEXTS.get("zc.common.cannotSendEmail"));
 				}
 			}
 
@@ -716,7 +716,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		public class NextMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {
-				return TEXTS.get("Next");
+				return TEXTS.get("zc.meeting.next");
 			}
 
 			@Override

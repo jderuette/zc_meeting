@@ -132,7 +132,7 @@ public class RejectEventForm extends AbstractForm {
 
 	@Override
 	protected String getConfiguredTitle() {
-		return TEXTS.get("RejectEvent");
+		return TEXTS.get("zc.meeting.rejectEvent");
 	}
 
 	@Override
@@ -205,7 +205,7 @@ public class RejectEventForm extends AbstractForm {
 		public class OrganizerEmailField extends AbstractStringField {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("Organizer");
+				return TEXTS.get("zc.meeting.host");
 			}
 
 			@Override
@@ -228,7 +228,7 @@ public class RejectEventForm extends AbstractForm {
 		public class EmailField extends AbstractStringField {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("Email");
+				return TEXTS.get("zc.common.email");
 			}
 
 			@Override
@@ -289,7 +289,7 @@ public class RejectEventForm extends AbstractForm {
 					this.setLabel(TEXTS.get("RejectEvent"));
 					break;
 				case ACTION_CANCEL:
-					this.setLabel(TEXTS.get("CancelEvent"));
+					this.setLabel(TEXTS.get("zc.meeting.cancelEvent"));
 					break;
 				default:
 					LOG.warn("Unknow sub action " + RejectEventForm.this.subAction + " for reject Action");
@@ -327,11 +327,11 @@ public class RejectEventForm extends AbstractForm {
 			switch (RejectEventForm.this.subAction) {
 			case ACTION_REJECT:
 				RejectEventForm.this.setTitle(TEXTS.get("RejectEvent"));
-				RejectEventForm.this.setSubTitle(TEXTS.get("ConfirmRejectEvent"));
+				RejectEventForm.this.setSubTitle(TEXTS.get("zc.meeting.confirmRejectEvent"));
 				break;
 			case ACTION_CANCEL:
-				RejectEventForm.this.setTitle(TEXTS.get("CancelEvent"));
-				RejectEventForm.this.setSubTitle(TEXTS.get("ConfirmCancelEvent"));
+				RejectEventForm.this.setTitle(TEXTS.get("zc.meeting.cancelEvent"));
+				RejectEventForm.this.setSubTitle(TEXTS.get("zc.meeting.confirmCancelEvent"));
 				break;
 			default:
 				LOG.warn("Unknow sub action " + RejectEventForm.this.subAction + " for reject Action");
@@ -350,7 +350,7 @@ public class RejectEventForm extends AbstractForm {
 					this.hostCalendarService = googleHelper.getCalendarService(hostId);
 				}
 			} catch (final UserAccessRequiredException uare) {
-				throw new VetoException(TEXTS.get("CalendarProviderRequired"));
+				throw new VetoException(TEXTS.get("zc.meeting.calendarProviderRequired"));
 			} catch (final IOException e) {
 				throw new VetoException(TEXTS.get("ErrorAndRetryTextDefault"));
 			}
@@ -441,13 +441,13 @@ public class RejectEventForm extends AbstractForm {
 
 		switch (RejectEventForm.this.subAction) {
 		case ACTION_REJECT:
-			subject = TEXTS.get("email.refuse.subject", senderEmail);
-			content = TEXTS.get("email.refuse.html", senderEmail, eventSubject,
+			subject = TEXTS.get("zc.meeting.email.refuse.subject", senderEmail);
+			content = TEXTS.get("zc.meeting.email.refuse.html", senderEmail, eventSubject,
 					new ApplicationUrlProperty().getValue());
 			break;
 		case ACTION_CANCEL:
-			subject = TEXTS.get("email.cancel.subject", senderEmail);
-			content = TEXTS.get("email.cancel.html", senderEmail, eventSubject);
+			subject = TEXTS.get("zc.meeting.email.cancel.subject", senderEmail);
+			content = TEXTS.get("zc.meeting.email.cancel.html", senderEmail, eventSubject);
 			break;
 		default:
 			LOG.warn("Unknow sub action " + RejectEventForm.this.subAction + " for reject Action");
@@ -458,7 +458,7 @@ public class RejectEventForm extends AbstractForm {
 			mailSender.sendEmail(destEmail, subject, content);
 		} catch (final MailException e) {
 			LOG.error("Cannot send email for : " + destEmail + ", subject : " + subject, e);
-			throw new VetoException(TEXTS.get("CannotSendEmail"));
+			throw new VetoException(TEXTS.get("zc.common.cannotSendEmail"));
 		}
 
 	}

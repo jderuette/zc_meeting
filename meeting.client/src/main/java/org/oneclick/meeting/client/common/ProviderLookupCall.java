@@ -35,8 +35,8 @@ public class ProviderLookupCall extends LocalLookupCall<Integer> {
 	protected List<LookupRow<Integer>> execCreateLookupRows() {
 		final List<LookupRow<Integer>> rows = new ArrayList<>();
 
-		rows.add(new LookupRow<>(1, TEXTS.get("Google")));
-		rows.add(new LookupRow<>(2, TEXTS.get("TestProvider")));
+		rows.add(new LookupRow<>(1, TEXTS.get("zc.api.provider.google")));
+		rows.add(new LookupRow<>(2, TEXTS.get("zc.api.provider.testProvider")));
 
 		return rows;
 	}

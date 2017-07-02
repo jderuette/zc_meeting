@@ -35,7 +35,7 @@ public class PermissionForm extends AbstractForm {
 
 	@Override
 	protected String getConfiguredTitle() {
-		return TEXTS.get("Permissions");
+		return TEXTS.get("zc.user.permissions");
 	}
 
 	public void startModify() {
@@ -69,7 +69,7 @@ public class PermissionForm extends AbstractForm {
 		public class PermissionField extends AbstractStringField {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("Permission");
+				return TEXTS.get("zc.user.permission");
 			}
 
 			@Override
