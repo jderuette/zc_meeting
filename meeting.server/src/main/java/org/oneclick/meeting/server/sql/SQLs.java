@@ -225,7 +225,7 @@ public interface SQLs {
 	String USER_CREATE_TABLE = "CREATE TABLE APP_USER (user_id INTEGER NOT NULL, login VARCHAR(50), email VARCHAR(120), password VARCHAR(256), time_zone VARCHAR(120), CONSTRAINT USER_PK PRIMARY KEY (user_id), CONSTRAINT USER_UNIQUE_EMAIL UNIQUE (email))";
 
 	String USER_PAGE_SELECT = "select user_id, login, email, time_zone FROM APP_USER WHERE 1=1";
-	String USER_PAGE_DATA_SELECT_INTO = " INTO :{page.userId}, :{page.lofgin}, :{page.email}, :{page.timeZone}";
+	String USER_PAGE_DATA_SELECT_INTO = " INTO :{page.userId}, :{page.login}, :{page.email}, :{page.timeZone}";
 
 	String USER_SELECT = "SELECT user_id, login, email, password, time_zone FROM APP_USER WHERE 1=1";
 
