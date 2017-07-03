@@ -1,4 +1,4 @@
-package org.oneclick.common.email;
+package org.zeroclick.common.email;
 
 import org.eclipse.scout.rt.platform.ApplicationScoped;
 import org.eclipse.scout.rt.platform.config.AbstractBooleanConfigProperty;

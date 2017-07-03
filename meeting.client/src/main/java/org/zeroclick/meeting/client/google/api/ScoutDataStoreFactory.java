@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.oneclick.meeting.client.google.api;
+package org.zeroclick.meeting.client.google.api;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -25,11 +25,11 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.scout.rt.platform.BEANS;
-import org.oneclick.meeting.client.common.CallTrackerService;
-import org.oneclick.meeting.shared.calendar.ApiFormData;
-import org.oneclick.meeting.shared.calendar.IApiService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.meeting.client.common.CallTrackerService;
+import org.zeroclick.meeting.shared.calendar.ApiFormData;
+import org.zeroclick.meeting.shared.calendar.IApiService;
 
 import com.google.api.client.auth.oauth2.StoredCredential;
 import com.google.api.client.util.IOUtils;

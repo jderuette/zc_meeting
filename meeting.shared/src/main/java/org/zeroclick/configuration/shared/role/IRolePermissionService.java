@@ -13,12 +13,13 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.oneclick.configuration.shared.role;
+package org.zeroclick.configuration.shared.role;
 
 import java.util.List;
 
 import org.eclipse.scout.rt.platform.service.IService;
 import org.eclipse.scout.rt.shared.TunnelToServer;
+import org.zeroclick.configuration.shared.role.AssignToRoleFormData;
 
 /**
  * @author djer

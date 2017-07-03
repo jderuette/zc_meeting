@@ -1,4 +1,4 @@
-package org.oneclick.configuration.server.role;
+package org.zeroclick.configuration.server.role;
 
 import java.util.UUID;
 
@@ -8,15 +8,15 @@ import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
-import org.oneclick.configuration.shared.role.CreateRolePermission;
-import org.oneclick.configuration.shared.role.IRoleService;
-import org.oneclick.configuration.shared.role.ReadRolePermission;
-import org.oneclick.configuration.shared.role.RoleFormData;
-import org.oneclick.configuration.shared.role.RoleTablePageData;
-import org.oneclick.configuration.shared.role.UpdateRolePermission;
-import org.oneclick.meeting.server.sql.SQLs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.configuration.shared.role.CreateRolePermission;
+import org.zeroclick.configuration.shared.role.IRoleService;
+import org.zeroclick.configuration.shared.role.ReadRolePermission;
+import org.zeroclick.configuration.shared.role.RoleFormData;
+import org.zeroclick.configuration.shared.role.RoleTablePageData;
+import org.zeroclick.configuration.shared.role.UpdateRolePermission;
+import org.zeroclick.meeting.server.sql.SQLs;
 
 public class RoleService implements IRoleService {
 

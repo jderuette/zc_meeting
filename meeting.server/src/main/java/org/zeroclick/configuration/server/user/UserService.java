@@ -1,4 +1,4 @@
-package org.oneclick.configuration.server.user;
+package org.zeroclick.configuration.server.user;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -14,17 +14,17 @@ import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
-import org.oneclick.configuration.shared.user.CreateUserPermission;
-import org.oneclick.configuration.shared.user.IUserService;
-import org.oneclick.configuration.shared.user.ReadUserPermission;
-import org.oneclick.configuration.shared.user.UpdateUserPermission;
-import org.oneclick.configuration.shared.user.UserFormData;
-import org.oneclick.configuration.shared.user.UserModifiedNotification;
-import org.oneclick.configuration.shared.user.UserTablePageData;
-import org.oneclick.meeting.server.sql.SQLs;
-import org.oneclick.meeting.shared.security.AccessControlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.configuration.shared.user.CreateUserPermission;
+import org.zeroclick.configuration.shared.user.IUserService;
+import org.zeroclick.configuration.shared.user.ReadUserPermission;
+import org.zeroclick.configuration.shared.user.UpdateUserPermission;
+import org.zeroclick.configuration.shared.user.UserFormData;
+import org.zeroclick.configuration.shared.user.UserModifiedNotification;
+import org.zeroclick.configuration.shared.user.UserTablePageData;
+import org.zeroclick.meeting.server.sql.SQLs;
+import org.zeroclick.meeting.shared.security.AccessControlService;
 
 public class UserService implements IUserService {
 

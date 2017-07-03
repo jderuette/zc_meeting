@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.oneclick.configuration.client;
+package org.zeroclick.configuration.client;
 
 import java.util.List;
 
@@ -22,9 +22,9 @@ import org.eclipse.scout.rt.client.ui.desktop.outline.pages.IPage;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
-import org.oneclick.configuration.client.api.ApiTablePage;
-import org.oneclick.meeting.shared.Icons;
-import org.oneclick.meeting.shared.calendar.ReadApiPermission;
+import org.zeroclick.configuration.client.api.ApiTablePage;
+import org.zeroclick.meeting.shared.Icons;
+import org.zeroclick.meeting.shared.calendar.ReadApiPermission;
 
 /**
  * @author djer

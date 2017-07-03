@@ -1,11 +1,11 @@
-package org.oneclick.test;
+package org.zeroclick.test;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.scout.rt.client.ui.desktop.outline.pages.IPage;
-import org.oneclick.configuration.client.user.UserTablePage;
-import org.oneclick.meeting.client.event.EventTablePage;
+import org.zeroclick.configuration.client.user.UserTablePage;
+import org.zeroclick.meeting.client.event.EventTablePage;
 
 public class TestNodePage extends AbstractTestNodePage {
 

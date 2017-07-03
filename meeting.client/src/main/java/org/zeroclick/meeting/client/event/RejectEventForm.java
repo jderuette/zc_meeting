@@ -1,4 +1,4 @@
-package org.oneclick.meeting.client.event;
+package org.zeroclick.meeting.client.event;
 
 import java.io.IOException;
 
@@ -14,26 +14,26 @@ import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.shared.TEXTS;
-import org.oneclick.common.email.IMailSender;
-import org.oneclick.common.email.MailException;
-import org.oneclick.meeting.client.ClientSession;
-import org.oneclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
-import org.oneclick.meeting.client.common.UserAccessRequiredException;
-import org.oneclick.meeting.client.event.EventForm.MainBox.CancelButton;
-import org.oneclick.meeting.client.event.EventForm.MainBox.GuestIdField;
-import org.oneclick.meeting.client.event.EventForm.MainBox.OrganizerField;
-import org.oneclick.meeting.client.event.RejectEventForm.MainBox.EmailField;
-import org.oneclick.meeting.client.event.RejectEventForm.MainBox.OkButton;
-import org.oneclick.meeting.client.event.RejectEventForm.MainBox.OrganizerEmailField;
-import org.oneclick.meeting.client.event.RejectEventForm.MainBox.SubjectField;
-import org.oneclick.meeting.client.google.api.GoogleApiHelper;
-import org.oneclick.meeting.shared.Icons;
-import org.oneclick.meeting.shared.event.EventFormData;
-import org.oneclick.meeting.shared.event.IEventService;
-import org.oneclick.meeting.shared.event.RejectEventFormData;
-import org.oneclick.meeting.shared.event.UpdateEventPermission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.common.email.IMailSender;
+import org.zeroclick.common.email.MailException;
+import org.zeroclick.meeting.client.ClientSession;
+import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
+import org.zeroclick.meeting.client.common.UserAccessRequiredException;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.CancelButton;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.GuestIdField;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.OrganizerField;
+import org.zeroclick.meeting.client.event.RejectEventForm.MainBox.EmailField;
+import org.zeroclick.meeting.client.event.RejectEventForm.MainBox.OkButton;
+import org.zeroclick.meeting.client.event.RejectEventForm.MainBox.OrganizerEmailField;
+import org.zeroclick.meeting.client.event.RejectEventForm.MainBox.SubjectField;
+import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
+import org.zeroclick.meeting.shared.Icons;
+import org.zeroclick.meeting.shared.event.EventFormData;
+import org.zeroclick.meeting.shared.event.IEventService;
+import org.zeroclick.meeting.shared.event.RejectEventFormData;
+import org.zeroclick.meeting.shared.event.UpdateEventPermission;
 
 import com.google.api.services.calendar.Calendar;
 

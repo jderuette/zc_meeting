@@ -1,4 +1,4 @@
-package org.oneclick.configuration.shared.user;
+package org.zeroclick.configuration.shared.user;
 
 import java.util.Set;
 
@@ -6,6 +6,8 @@ import org.eclipse.scout.rt.platform.ApplicationScoped;
 import org.eclipse.scout.rt.platform.service.IService;
 import org.eclipse.scout.rt.shared.TunnelToServer;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
+import org.zeroclick.configuration.shared.user.UserFormData;
+import org.zeroclick.configuration.shared.user.UserTablePageData;
 
 @ApplicationScoped
 @TunnelToServer

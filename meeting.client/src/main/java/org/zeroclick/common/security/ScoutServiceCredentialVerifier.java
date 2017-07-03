@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.oneclick.common.security;
+package org.zeroclick.common.security;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -40,10 +40,10 @@ import org.eclipse.scout.rt.platform.util.Base64Utility;
 import org.eclipse.scout.rt.platform.util.StringUtility;
 import org.eclipse.scout.rt.shared.servicetunnel.IServiceTunnel;
 import org.eclipse.scout.rt.shared.ui.UserAgents;
-import org.oneclick.configuration.shared.user.IUserService;
-import org.oneclick.configuration.shared.user.UserFormData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.configuration.shared.user.IUserService;
+import org.zeroclick.configuration.shared.user.UserFormData;
 
 /**
  * Credential verifier against credentials configured in <i>Scout Service</i>

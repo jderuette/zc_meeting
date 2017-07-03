@@ -1,4 +1,4 @@
-package org.oneclick.meeting.client.event;
+package org.zeroclick.meeting.client.event;
 
 import java.util.regex.Pattern;
 
@@ -19,31 +19,31 @@ import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.util.StringUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
-import org.oneclick.common.email.IMailSender;
-import org.oneclick.common.email.MailException;
-import org.oneclick.configuration.client.user.UserForm;
-import org.oneclick.configuration.shared.user.IUserService;
-import org.oneclick.configuration.shared.user.UserFormData;
-import org.oneclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
-import org.oneclick.meeting.client.common.DurationLookupCall;
-import org.oneclick.meeting.client.common.EventStateLookupCall;
-import org.oneclick.meeting.client.common.SlotLookupCall;
-import org.oneclick.meeting.client.event.EventForm.MainBox.CancelButton;
-import org.oneclick.meeting.client.event.EventForm.MainBox.DurationField;
-import org.oneclick.meeting.client.event.EventForm.MainBox.EmailField;
-import org.oneclick.meeting.client.event.EventForm.MainBox.EndDateField;
-import org.oneclick.meeting.client.event.EventForm.MainBox.GuestIdField;
-import org.oneclick.meeting.client.event.EventForm.MainBox.OkButton;
-import org.oneclick.meeting.client.event.EventForm.MainBox.OrganizerEmailField;
-import org.oneclick.meeting.client.event.EventForm.MainBox.OrganizerField;
-import org.oneclick.meeting.client.event.EventForm.MainBox.SlotField;
-import org.oneclick.meeting.client.event.EventForm.MainBox.StartDateField;
-import org.oneclick.meeting.client.event.EventForm.MainBox.StateField;
-import org.oneclick.meeting.client.event.EventForm.MainBox.SubjectField;
-import org.oneclick.meeting.shared.event.CreateEventPermission;
-import org.oneclick.meeting.shared.event.EventFormData;
-import org.oneclick.meeting.shared.event.IEventService;
-import org.oneclick.meeting.shared.event.UpdateEventPermission;
+import org.zeroclick.common.email.IMailSender;
+import org.zeroclick.common.email.MailException;
+import org.zeroclick.configuration.client.user.UserForm;
+import org.zeroclick.configuration.shared.user.IUserService;
+import org.zeroclick.configuration.shared.user.UserFormData;
+import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
+import org.zeroclick.meeting.client.common.DurationLookupCall;
+import org.zeroclick.meeting.client.common.EventStateLookupCall;
+import org.zeroclick.meeting.client.common.SlotLookupCall;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.CancelButton;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.DurationField;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.EmailField;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.EndDateField;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.GuestIdField;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.OkButton;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.OrganizerEmailField;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.OrganizerField;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.SlotField;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.StartDateField;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.StateField;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.SubjectField;
+import org.zeroclick.meeting.shared.event.CreateEventPermission;
+import org.zeroclick.meeting.shared.event.EventFormData;
+import org.zeroclick.meeting.shared.event.IEventService;
+import org.zeroclick.meeting.shared.event.UpdateEventPermission;
 
 @FormData(value = EventFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class EventForm extends AbstractForm {

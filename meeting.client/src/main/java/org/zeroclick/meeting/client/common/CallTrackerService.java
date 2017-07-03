@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.oneclick.meeting.client.common;
+package org.zeroclick.meeting.client.common;
 
 import java.time.Duration;
 import java.time.LocalDateTime;

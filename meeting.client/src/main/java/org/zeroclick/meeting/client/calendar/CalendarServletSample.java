@@ -1,4 +1,4 @@
-package org.oneclick.meeting.client.calendar;
+package org.zeroclick.meeting.client.calendar;
 
 import java.io.IOException;
 import java.util.List;
@@ -8,11 +8,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.oneclick.meeting.client.ClientSession;
-import org.oneclick.meeting.client.common.UserAccessRequiredException;
-import org.oneclick.meeting.client.google.api.GoogleApiHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.meeting.client.ClientSession;
+import org.zeroclick.meeting.client.common.UserAccessRequiredException;
+import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
 
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;

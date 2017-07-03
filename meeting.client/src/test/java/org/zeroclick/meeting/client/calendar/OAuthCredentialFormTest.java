@@ -1,4 +1,4 @@
-package org.oneclick.meeting.client.calendar;
+package org.zeroclick.meeting.client.calendar;
 
 import org.eclipse.scout.rt.client.testenvironment.TestEnvironmentClientSession;
 import org.eclipse.scout.rt.testing.client.runner.ClientTestRunner;
@@ -9,8 +9,8 @@ import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
-import org.oneclick.meeting.shared.calendar.ApiFormData;
-import org.oneclick.meeting.shared.calendar.IApiService;
+import org.zeroclick.meeting.shared.calendar.ApiFormData;
+import org.zeroclick.meeting.shared.calendar.IApiService;
 
 @RunWithSubject("anonymous")
 @RunWith(ClientTestRunner.class)

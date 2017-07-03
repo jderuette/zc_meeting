@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?><project-modules id="moduleCoreId" project-version="1.5.0">
-    <wb-module deploy-name="org.oneclick.meeting.server">
+    <wb-module deploy-name="org.zeroclick.meeting.server">
         <wb-resource deploy-path="/" source-path="/target/m2e-wtp/web-resources"/>
         <wb-resource deploy-path="/" source-path="/src/main/webapp" tag="defaultRootSource"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/java"/>
@@ -10,7 +10,7 @@
         <dependent-module archiveName="meeting.shared-1.0.0-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/meeting.shared/meeting.shared">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <property name="context-root" value="org.oneclick.meeting.server"/>
+        <property name="context-root" value="org.zeroclick.meeting.server"/>
         <property name="java-output-path" value="/meeting.server.app.war/target/classes"/>
     </wb-module>
 </project-modules>

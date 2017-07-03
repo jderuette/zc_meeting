@@ -1,4 +1,4 @@
-package org.oneclick.configuration.client.role;
+package org.zeroclick.configuration.client.role;
 
 import org.eclipse.scout.rt.client.testenvironment.TestEnvironmentClientSession;
 import org.eclipse.scout.rt.testing.client.runner.ClientTestRunner;
@@ -9,8 +9,8 @@ import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
-import org.oneclick.configuration.shared.role.IAppPermissionService;
-import org.oneclick.configuration.shared.role.PermissionFormData;
+import org.zeroclick.configuration.shared.role.IAppPermissionService;
+import org.zeroclick.configuration.shared.role.PermissionFormData;
 
 @RunWithSubject("anonymous")
 @RunWith(ClientTestRunner.class)

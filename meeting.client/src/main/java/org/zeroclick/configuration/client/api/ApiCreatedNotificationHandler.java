@@ -13,10 +13,10 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.oneclick.configuration.client.api;
+package org.zeroclick.configuration.client.api;
 
-import org.oneclick.configuration.shared.api.ApiCreatedNotification;
-import org.oneclick.meeting.client.clientnotification.AbstractObservableModelNotificationHandler;
+import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
+import org.zeroclick.meeting.client.clientnotification.AbstractObservableModelNotificationHandler;
 
 /**
  * @author djer

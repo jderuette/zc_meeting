@@ -1,4 +1,4 @@
-package org.oneclick.meeting.server;
+package org.zeroclick.meeting.server;
 
 import org.eclipse.scout.rt.server.AbstractServerSession;
 import org.eclipse.scout.rt.server.session.ServerSessionProvider;

@@ -1,4 +1,4 @@
-package org.oneclick.configuration.shared.user;
+package org.zeroclick.configuration.shared.user;
 
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.shared.security.BasicHierarchyPermission;

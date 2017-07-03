@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.oneclick</groupId>
+    <groupId>org.zeroclick</groupId>
     <artifactId>meeting</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <relativePath>../meeting/pom.xml</relativePath>
@@ -12,7 +12,7 @@
 
   <artifactId>meeting.shared</artifactId>
 
-  <name>One ClickMeeting Shared</name>
+  <name>0ClickMeeting Shared</name>
 
   <dependencies>
     <dependency>
@@ -33,4 +33,5 @@
       <artifactId>logback-classic</artifactId>
     </dependency>
   </dependencies>
+  <groupId>org.zeroclick</groupId>
 </project>

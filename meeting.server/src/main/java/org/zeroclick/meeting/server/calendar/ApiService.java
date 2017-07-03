@@ -1,4 +1,4 @@
-package org.oneclick.meeting.server.calendar;
+package org.zeroclick.meeting.server.calendar;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,20 +15,20 @@ import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
-import org.oneclick.configuration.shared.api.ApiCreatedNotification;
-import org.oneclick.configuration.shared.api.ApiTablePageData;
-import org.oneclick.meeting.server.sql.SQLs;
-import org.oneclick.meeting.shared.calendar.ApiFormData;
-import org.oneclick.meeting.shared.calendar.CreateApiPermission;
-import org.oneclick.meeting.shared.calendar.DeleteApiPermission;
-import org.oneclick.meeting.shared.calendar.IApiService;
-import org.oneclick.meeting.shared.calendar.ReadApiPermission;
-import org.oneclick.meeting.shared.calendar.UpdateApiPermission;
-import org.oneclick.meeting.shared.event.IEventService;
-import org.oneclick.meeting.shared.event.ReadEventPermission;
-import org.oneclick.meeting.shared.security.AccessControlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
+import org.zeroclick.configuration.shared.api.ApiTablePageData;
+import org.zeroclick.meeting.server.sql.SQLs;
+import org.zeroclick.meeting.shared.calendar.ApiFormData;
+import org.zeroclick.meeting.shared.calendar.CreateApiPermission;
+import org.zeroclick.meeting.shared.calendar.DeleteApiPermission;
+import org.zeroclick.meeting.shared.calendar.IApiService;
+import org.zeroclick.meeting.shared.calendar.ReadApiPermission;
+import org.zeroclick.meeting.shared.calendar.UpdateApiPermission;
+import org.zeroclick.meeting.shared.event.IEventService;
+import org.zeroclick.meeting.shared.event.ReadEventPermission;
+import org.zeroclick.meeting.shared.security.AccessControlService;
 
 public class ApiService implements IApiService {
 

@@ -1,4 +1,4 @@
-package org.oneclick.configuration.shared.role;
+package org.zeroclick.configuration.shared.role;
 
 import java.security.BasicPermission;
 

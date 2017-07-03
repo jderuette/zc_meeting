@@ -1,4 +1,4 @@
-package org.oneclick.configuration.client.api;
+package org.zeroclick.configuration.client.api;
 
 import java.util.Set;
 
@@ -19,13 +19,13 @@ import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
-import org.oneclick.configuration.client.api.ApiTablePage.ApisTable;
-import org.oneclick.configuration.shared.api.ApiTablePageData;
-import org.oneclick.meeting.client.common.ProviderLookupCall;
-import org.oneclick.meeting.shared.Icons;
-import org.oneclick.meeting.shared.calendar.DeleteApiPermission;
-import org.oneclick.meeting.shared.calendar.IApiService;
-import org.oneclick.meeting.shared.calendar.UpdateApiPermission;
+import org.zeroclick.configuration.client.api.ApiTablePage.ApisTable;
+import org.zeroclick.configuration.shared.api.ApiTablePageData;
+import org.zeroclick.meeting.client.common.ProviderLookupCall;
+import org.zeroclick.meeting.shared.Icons;
+import org.zeroclick.meeting.shared.calendar.DeleteApiPermission;
+import org.zeroclick.meeting.shared.calendar.IApiService;
+import org.zeroclick.meeting.shared.calendar.UpdateApiPermission;
 
 @Data(ApiTablePageData.class)
 public class ApiTablePage extends AbstractPageWithTable<ApisTable> {

@@ -8,7 +8,7 @@
  * Contributors:
  *     BSI Business Systems Integration AG - initial API and implementation
  ******************************************************************************/
-package org.oneclick.meeting.server.sql;
+package org.zeroclick.meeting.server.sql;
 
 import java.util.concurrent.Callable;
 
@@ -30,7 +30,7 @@ import org.eclipse.scout.rt.server.context.ServerRunContextProducer;
 import org.eclipse.scout.rt.server.context.ServerRunContexts;
 import org.eclipse.scout.rt.server.session.ServerSessionProvider;
 import org.eclipse.scout.rt.shared.ui.UserAgents;
-import org.oneclick.meeting.server.sql.DatabaseProperties.SuperUserSubjectProperty;
+import org.zeroclick.meeting.server.sql.DatabaseProperties.SuperUserSubjectProperty;
 
 /**
  * Central point to obtain run contexts with super user rights, and to get the

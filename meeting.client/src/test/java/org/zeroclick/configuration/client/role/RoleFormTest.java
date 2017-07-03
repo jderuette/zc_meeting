@@ -1,4 +1,4 @@
-package org.oneclick.configuration.client.role;
+package org.zeroclick.configuration.client.role;
 
 import org.eclipse.scout.rt.client.testenvironment.TestEnvironmentClientSession;
 import org.eclipse.scout.rt.testing.client.runner.ClientTestRunner;

@@ -1,4 +1,4 @@
-package org.oneclick.meeting.shared;
+package org.zeroclick.meeting.shared;
 
 import org.eclipse.scout.rt.shared.AbstractIcons;
 

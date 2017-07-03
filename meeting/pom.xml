@@ -10,7 +10,7 @@
     <relativePath></relativePath>
   </parent>
 
-  <groupId>org.oneclick</groupId>
+  <groupId>org.zeroclick</groupId>
   <artifactId>meeting</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
@@ -18,7 +18,7 @@
   <name>One Click Meeting Parent Module</name>
 
   <properties>
-    <org.oneclick.meeting.version>${project.version}</org.oneclick.meeting.version>
+    <org.zeroclick.meeting.version>${project.version}</org.zeroclick.meeting.version>
     <jdk.source.version>1.8</jdk.source.version>
     <org.eclipse.scout.rt.version>6.0.300.RC2</org.eclipse.scout.rt.version>
   </properties>
@@ -45,25 +45,36 @@
 
       <!-- Application Dependencies -->
       <dependency>
-        <groupId>org.oneclick</groupId>
+        <groupId>org.zeroclick</groupId>
         <artifactId>meeting.client</artifactId>
-        <version>${org.oneclick.meeting.version}</version>
+        <version>${org.zeroclick.meeting.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.oneclick</groupId>
+        <groupId>org.zeroclick</groupId>
         <artifactId>meeting.shared</artifactId>
-        <version>${org.oneclick.meeting.version}</version>
+        <version>${org.zeroclick.meeting.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.oneclick</groupId>
+        <groupId>org.zeroclick</groupId>
         <artifactId>meeting.server</artifactId>
-        <version>${org.oneclick.meeting.version}</version>
+        <version>${org.zeroclick.meeting.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.oneclick</groupId>
+        <groupId>org.zeroclick</groupId>
         <artifactId>meeting.ui.html</artifactId>
-        <version>${org.oneclick.meeting.version}</version>
+        <version>${org.zeroclick.meeting.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
+  <organization>
+  	<name>0Click</name>
+  </organization>
+  <scm>
+  	<url>https://github.com/jderuette/zc_meeting</url>
+  	<developerConnection>DERUETTE Jérémie</developerConnection>
+  </scm>
+  <issueManagement>
+  	<url>https://github.com/jderuette/zc_meeting/issues</url>
+  	<system>GitHub</system>
+  </issueManagement>
 </project>

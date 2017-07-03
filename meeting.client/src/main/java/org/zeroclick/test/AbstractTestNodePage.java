@@ -1,4 +1,4 @@
-package org.oneclick.test;
+package org.zeroclick.test;
 
 import org.eclipse.scout.rt.client.ui.desktop.outline.pages.AbstractPageWithNodes;
 

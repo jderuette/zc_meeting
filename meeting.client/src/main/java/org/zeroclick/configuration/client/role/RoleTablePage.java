@@ -1,4 +1,4 @@
-package org.oneclick.configuration.client.role;
+package org.zeroclick.configuration.client.role;
 
 import java.util.Set;
 
@@ -19,10 +19,10 @@ import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
-import org.oneclick.configuration.client.role.RoleTablePage.Table;
-import org.oneclick.configuration.shared.role.IRoleService;
-import org.oneclick.configuration.shared.role.RoleTablePageData;
-import org.oneclick.meeting.shared.Icons;
+import org.zeroclick.configuration.client.role.RoleTablePage.Table;
+import org.zeroclick.configuration.shared.role.IRoleService;
+import org.zeroclick.configuration.shared.role.RoleTablePageData;
+import org.zeroclick.meeting.shared.Icons;
 
 @Data(RoleTablePageData.class)
 public class RoleTablePage extends AbstractPageWithTable<Table> {

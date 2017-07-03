@@ -13,9 +13,11 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.oneclick.configuration.shared.user;
+package org.zeroclick.configuration.shared.user;
 
 import java.io.Serializable;
+
+import org.zeroclick.configuration.shared.user.UserFormData;
 
 /**
  * @author djer

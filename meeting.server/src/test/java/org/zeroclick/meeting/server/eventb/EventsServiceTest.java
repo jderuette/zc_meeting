@@ -1,4 +1,4 @@
-package org.oneclick.meeting.server.eventb;
+package org.zeroclick.meeting.server.eventb;
 
 import org.eclipse.scout.rt.server.AbstractServerSession;
 import org.eclipse.scout.rt.testing.platform.runner.RunWithSubject;

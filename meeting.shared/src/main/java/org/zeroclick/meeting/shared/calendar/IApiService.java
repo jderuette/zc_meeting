@@ -1,4 +1,4 @@
-package org.oneclick.meeting.shared.calendar;
+package org.zeroclick.meeting.shared.calendar;
 
 import java.util.Collection;
 import java.util.Set;
@@ -6,7 +6,8 @@ import java.util.Set;
 import org.eclipse.scout.rt.platform.service.IService;
 import org.eclipse.scout.rt.shared.TunnelToServer;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
-import org.oneclick.configuration.shared.api.ApiTablePageData;
+import org.zeroclick.configuration.shared.api.ApiTablePageData;
+import org.zeroclick.meeting.shared.calendar.ApiFormData;
 
 @TunnelToServer
 public interface IApiService extends IService {

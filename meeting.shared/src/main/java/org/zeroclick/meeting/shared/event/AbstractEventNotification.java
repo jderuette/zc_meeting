@@ -13,9 +13,11 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.oneclick.meeting.shared.event;
+package org.zeroclick.meeting.shared.event;
 
 import java.io.Serializable;
+
+import org.zeroclick.meeting.shared.event.EventFormData;
 
 /**
  * @author djer

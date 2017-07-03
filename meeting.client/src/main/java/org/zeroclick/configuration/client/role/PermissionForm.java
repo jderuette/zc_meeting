@@ -1,4 +1,4 @@
-package org.oneclick.configuration.client.role;
+package org.zeroclick.configuration.client.role;
 
 import org.eclipse.scout.rt.client.dto.FormData;
 import org.eclipse.scout.rt.client.ui.form.AbstractForm;
@@ -10,13 +10,13 @@ import org.eclipse.scout.rt.client.ui.form.fields.stringfield.AbstractStringFiel
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
-import org.oneclick.configuration.client.role.PermissionForm.MainBox.CancelButton;
-import org.oneclick.configuration.client.role.PermissionForm.MainBox.OkButton;
-import org.oneclick.configuration.client.role.PermissionForm.MainBox.PermissionField;
-import org.oneclick.configuration.shared.role.CreatePermissionPermission;
-import org.oneclick.configuration.shared.role.IAppPermissionService;
-import org.oneclick.configuration.shared.role.PermissionFormData;
-import org.oneclick.configuration.shared.role.UpdatePermissionPermission;
+import org.zeroclick.configuration.client.role.PermissionForm.MainBox.CancelButton;
+import org.zeroclick.configuration.client.role.PermissionForm.MainBox.OkButton;
+import org.zeroclick.configuration.client.role.PermissionForm.MainBox.PermissionField;
+import org.zeroclick.configuration.shared.role.CreatePermissionPermission;
+import org.zeroclick.configuration.shared.role.IAppPermissionService;
+import org.zeroclick.configuration.shared.role.PermissionFormData;
+import org.zeroclick.configuration.shared.role.UpdatePermissionPermission;
 
 @FormData(value = PermissionFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class PermissionForm extends AbstractForm {

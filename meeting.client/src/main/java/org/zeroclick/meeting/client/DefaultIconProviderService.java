@@ -1,4 +1,4 @@
-package org.oneclick.meeting.client;
+package org.zeroclick.meeting.client;
 
 import java.net.URL;
 

@@ -1,4 +1,4 @@
-package org.oneclick.configuration.client.api;
+package org.zeroclick.configuration.client.api;
 
 import org.eclipse.scout.rt.client.dto.FormData;
 import org.eclipse.scout.rt.client.ui.form.AbstractForm;
@@ -14,18 +14,18 @@ import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.util.ToStringBuilder;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
-import org.oneclick.configuration.client.api.ApiForm.MainBox.AccessTokenField;
-import org.oneclick.configuration.client.api.ApiForm.MainBox.CancelButton;
-import org.oneclick.configuration.client.api.ApiForm.MainBox.ExpirationTimeMillisecondsField;
-import org.oneclick.configuration.client.api.ApiForm.MainBox.OkButton;
-import org.oneclick.configuration.client.api.ApiForm.MainBox.ProviderField;
-import org.oneclick.configuration.client.api.ApiForm.MainBox.RefreshTokenField;
-import org.oneclick.meeting.client.common.ProviderLookupCall;
-import org.oneclick.meeting.shared.calendar.ApiFormData;
-import org.oneclick.meeting.shared.calendar.CreateApiPermission;
-import org.oneclick.meeting.shared.calendar.DeleteApiPermission;
-import org.oneclick.meeting.shared.calendar.IApiService;
-import org.oneclick.meeting.shared.calendar.UpdateApiPermission;
+import org.zeroclick.configuration.client.api.ApiForm.MainBox.AccessTokenField;
+import org.zeroclick.configuration.client.api.ApiForm.MainBox.CancelButton;
+import org.zeroclick.configuration.client.api.ApiForm.MainBox.ExpirationTimeMillisecondsField;
+import org.zeroclick.configuration.client.api.ApiForm.MainBox.OkButton;
+import org.zeroclick.configuration.client.api.ApiForm.MainBox.ProviderField;
+import org.zeroclick.configuration.client.api.ApiForm.MainBox.RefreshTokenField;
+import org.zeroclick.meeting.client.common.ProviderLookupCall;
+import org.zeroclick.meeting.shared.calendar.ApiFormData;
+import org.zeroclick.meeting.shared.calendar.CreateApiPermission;
+import org.zeroclick.meeting.shared.calendar.DeleteApiPermission;
+import org.zeroclick.meeting.shared.calendar.IApiService;
+import org.zeroclick.meeting.shared.calendar.UpdateApiPermission;
 
 @FormData(value = ApiFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class ApiForm extends AbstractForm {

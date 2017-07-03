@@ -1,4 +1,4 @@
-package org.oneclick.meeting.client.google.api;
+package org.zeroclick.meeting.client.google.api;
 
 import java.io.IOException;
 

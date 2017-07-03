@@ -1,4 +1,4 @@
-package org.oneclick.meeting.server.calendar;
+package org.zeroclick.meeting.server.calendar;
 
 import org.eclipse.scout.rt.server.AbstractServerSession;
 import org.eclipse.scout.rt.testing.platform.runner.RunWithSubject;

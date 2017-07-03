@@ -1,4 +1,4 @@
-package org.oneclick.configuration.server.role;
+package org.zeroclick.configuration.server.role;
 
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.exception.VetoException;
@@ -8,15 +8,15 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.eclipse.scout.rt.shared.services.common.security.IAccessControlService;
-import org.oneclick.configuration.shared.role.CreatePermissionPermission;
-import org.oneclick.configuration.shared.role.IAppPermissionService;
-import org.oneclick.configuration.shared.role.PermissionFormData;
-import org.oneclick.configuration.shared.role.PermissionTablePageData;
-import org.oneclick.configuration.shared.role.ReadPermissionPermission;
-import org.oneclick.configuration.shared.role.RoleFormData;
-import org.oneclick.configuration.shared.role.UpdatePermissionPermission;
-import org.oneclick.configuration.shared.user.IUserService;
-import org.oneclick.meeting.server.sql.SQLs;
+import org.zeroclick.configuration.shared.role.CreatePermissionPermission;
+import org.zeroclick.configuration.shared.role.IAppPermissionService;
+import org.zeroclick.configuration.shared.role.PermissionFormData;
+import org.zeroclick.configuration.shared.role.PermissionTablePageData;
+import org.zeroclick.configuration.shared.role.ReadPermissionPermission;
+import org.zeroclick.configuration.shared.role.RoleFormData;
+import org.zeroclick.configuration.shared.role.UpdatePermissionPermission;
+import org.zeroclick.configuration.shared.user.IUserService;
+import org.zeroclick.meeting.server.sql.SQLs;
 
 public class AppPermissionService implements IAppPermissionService {
 

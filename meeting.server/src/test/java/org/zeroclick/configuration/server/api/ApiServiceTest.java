@@ -1,4 +1,4 @@
-package org.oneclick.configuration.server.api;
+package org.zeroclick.configuration.server.api;
 
 import org.eclipse.scout.rt.server.AbstractServerSession;
 import org.eclipse.scout.rt.testing.platform.runner.RunWithSubject;

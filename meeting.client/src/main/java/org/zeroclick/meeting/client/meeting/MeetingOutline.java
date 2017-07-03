@@ -1,4 +1,4 @@
-package org.oneclick.meeting.client.meeting;
+package org.zeroclick.meeting.client.meeting;
 
 import java.util.List;
 
@@ -7,10 +7,10 @@ import org.eclipse.scout.rt.client.ui.desktop.outline.pages.IPage;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
-import org.oneclick.meeting.client.event.EventProcessedTablePage;
-import org.oneclick.meeting.client.event.EventTablePage;
-import org.oneclick.meeting.shared.Icons;
-import org.oneclick.meeting.shared.event.ReadEventPermission;
+import org.zeroclick.meeting.client.event.EventProcessedTablePage;
+import org.zeroclick.meeting.client.event.EventTablePage;
+import org.zeroclick.meeting.shared.Icons;
+import org.zeroclick.meeting.shared.event.ReadEventPermission;
 
 /**
  * <h3>{@link MeetingOutline}</h3>

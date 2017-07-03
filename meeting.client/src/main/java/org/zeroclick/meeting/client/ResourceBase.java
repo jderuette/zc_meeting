@@ -1,4 +1,4 @@
-package org.oneclick.meeting.client;
+package org.zeroclick.meeting.client;
 
 /**
  * <h3>{@link ResourceBase}</h3> This class is the base for resources contained

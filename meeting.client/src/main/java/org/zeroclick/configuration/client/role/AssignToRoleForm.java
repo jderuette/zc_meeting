@@ -1,4 +1,4 @@
-package org.oneclick.configuration.client.role;
+package org.zeroclick.configuration.client.role;
 
 import java.util.List;
 
@@ -14,14 +14,14 @@ import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
-import org.oneclick.configuration.client.role.AssignToRoleForm.MainBox.CancelButton;
-import org.oneclick.configuration.client.role.AssignToRoleForm.MainBox.LevelField;
-import org.oneclick.configuration.client.role.AssignToRoleForm.MainBox.OkButton;
-import org.oneclick.configuration.client.role.AssignToRoleForm.MainBox.RoleIdField;
-import org.oneclick.configuration.shared.role.AssignToRoleFormData;
-import org.oneclick.configuration.shared.role.CreateAssignToRolePermission;
-import org.oneclick.configuration.shared.role.IRolePermissionService;
-import org.oneclick.configuration.shared.role.RoleLookupCall;
+import org.zeroclick.configuration.client.role.AssignToRoleForm.MainBox.CancelButton;
+import org.zeroclick.configuration.client.role.AssignToRoleForm.MainBox.LevelField;
+import org.zeroclick.configuration.client.role.AssignToRoleForm.MainBox.OkButton;
+import org.zeroclick.configuration.client.role.AssignToRoleForm.MainBox.RoleIdField;
+import org.zeroclick.configuration.shared.role.AssignToRoleFormData;
+import org.zeroclick.configuration.shared.role.CreateAssignToRolePermission;
+import org.zeroclick.configuration.shared.role.IRolePermissionService;
+import org.zeroclick.configuration.shared.role.RoleLookupCall;
 
 @FormData(value = AssignToRoleFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class AssignToRoleForm extends AbstractForm {

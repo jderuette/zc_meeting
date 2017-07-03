@@ -1,4 +1,4 @@
-package org.oneclick.meeting.shared.event;
+package org.zeroclick.meeting.shared.event;
 
 import java.security.BasicPermission;
 

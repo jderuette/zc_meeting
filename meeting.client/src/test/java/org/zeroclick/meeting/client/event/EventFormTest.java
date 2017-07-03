@@ -1,4 +1,4 @@
-package org.oneclick.meeting.client.event;
+package org.zeroclick.meeting.client.event;
 
 import org.eclipse.scout.rt.client.testenvironment.TestEnvironmentClientSession;
 import org.eclipse.scout.rt.testing.client.runner.ClientTestRunner;
@@ -9,8 +9,8 @@ import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
-import org.oneclick.meeting.shared.event.EventFormData;
-import org.oneclick.meeting.shared.event.IEventService;
+import org.zeroclick.meeting.shared.event.EventFormData;
+import org.zeroclick.meeting.shared.event.IEventService;
 
 @RunWithSubject("anonymous")
 @RunWith(ClientTestRunner.class)

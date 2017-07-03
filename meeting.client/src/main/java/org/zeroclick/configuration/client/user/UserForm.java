@@ -1,4 +1,4 @@
-package org.oneclick.configuration.client.user;
+package org.zeroclick.configuration.client.user;
 
 import java.util.regex.Pattern;
 
@@ -21,30 +21,30 @@ import org.eclipse.scout.rt.platform.util.Base64Utility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.security.IAccessControlService;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
-import org.oneclick.common.email.IMailSender;
-import org.oneclick.common.email.MailException;
-import org.oneclick.common.security.ScoutServiceCredentialVerifier;
-import org.oneclick.configuration.client.user.UserForm.MainBox.CancelButton;
-import org.oneclick.configuration.client.user.UserForm.MainBox.ConfirmPasswordField;
-import org.oneclick.configuration.client.user.UserForm.MainBox.EmailField;
-import org.oneclick.configuration.client.user.UserForm.MainBox.LoginField;
-import org.oneclick.configuration.client.user.UserForm.MainBox.OkButton;
-import org.oneclick.configuration.client.user.UserForm.MainBox.PasswordField;
-import org.oneclick.configuration.client.user.UserForm.MainBox.RolesBox;
-import org.oneclick.configuration.client.user.UserForm.MainBox.SendUserInviteEmailField;
-import org.oneclick.configuration.client.user.UserForm.MainBox.TimeZoneField;
-import org.oneclick.configuration.client.user.UserForm.MainBox.UserIdField;
-import org.oneclick.configuration.shared.role.CreateAssignToRolePermission;
-import org.oneclick.configuration.shared.role.RoleLookupCall;
-import org.oneclick.configuration.shared.user.CreateUserPermission;
-import org.oneclick.configuration.shared.user.IUserService;
-import org.oneclick.configuration.shared.user.UpdateUserPermission;
-import org.oneclick.configuration.shared.user.UserFormData;
-import org.oneclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
-import org.oneclick.meeting.client.common.ZoneIdLookupCall;
-import org.oneclick.meeting.shared.security.AccessControlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.common.email.IMailSender;
+import org.zeroclick.common.email.MailException;
+import org.zeroclick.common.security.ScoutServiceCredentialVerifier;
+import org.zeroclick.configuration.client.user.UserForm.MainBox.CancelButton;
+import org.zeroclick.configuration.client.user.UserForm.MainBox.ConfirmPasswordField;
+import org.zeroclick.configuration.client.user.UserForm.MainBox.EmailField;
+import org.zeroclick.configuration.client.user.UserForm.MainBox.LoginField;
+import org.zeroclick.configuration.client.user.UserForm.MainBox.OkButton;
+import org.zeroclick.configuration.client.user.UserForm.MainBox.PasswordField;
+import org.zeroclick.configuration.client.user.UserForm.MainBox.RolesBox;
+import org.zeroclick.configuration.client.user.UserForm.MainBox.SendUserInviteEmailField;
+import org.zeroclick.configuration.client.user.UserForm.MainBox.TimeZoneField;
+import org.zeroclick.configuration.client.user.UserForm.MainBox.UserIdField;
+import org.zeroclick.configuration.shared.role.CreateAssignToRolePermission;
+import org.zeroclick.configuration.shared.role.RoleLookupCall;
+import org.zeroclick.configuration.shared.user.CreateUserPermission;
+import org.zeroclick.configuration.shared.user.IUserService;
+import org.zeroclick.configuration.shared.user.UpdateUserPermission;
+import org.zeroclick.configuration.shared.user.UserFormData;
+import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
+import org.zeroclick.meeting.client.common.ZoneIdLookupCall;
+import org.zeroclick.meeting.shared.security.AccessControlService;
 
 @FormData(value = UserFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class UserForm extends AbstractForm {

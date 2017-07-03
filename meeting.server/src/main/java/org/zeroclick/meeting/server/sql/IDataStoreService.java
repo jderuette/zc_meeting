@@ -8,7 +8,7 @@
  * Contributors:
  *     BSI Business Systems Integration AG - initial API and implementation
  ******************************************************************************/
-package org.oneclick.meeting.server.sql;
+package org.zeroclick.meeting.server.sql;
 
 public interface IDataStoreService {
 

@@ -1,4 +1,4 @@
-package org.oneclick.meeting.client.event;
+package org.zeroclick.meeting.client.event;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -8,9 +8,9 @@ import org.eclipse.scout.rt.client.ui.basic.table.userfilter.TextColumnUserFilte
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
-import org.oneclick.meeting.client.event.EventProcessedTablePage.Table;
-import org.oneclick.meeting.shared.event.IEventService;
-import org.oneclick.meeting.shared.eventb.EventsTablePageData;
+import org.zeroclick.meeting.client.event.EventProcessedTablePage.Table;
+import org.zeroclick.meeting.shared.event.IEventService;
+import org.zeroclick.meeting.shared.eventb.EventsTablePageData;
 
 @Data(EventsTablePageData.class)
 public class EventProcessedTablePage extends AbstractEventsTablePage<Table> {

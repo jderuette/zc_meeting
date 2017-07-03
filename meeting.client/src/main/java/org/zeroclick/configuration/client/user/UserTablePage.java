@@ -1,4 +1,4 @@
-package org.oneclick.configuration.client.user;
+package org.zeroclick.configuration.client.user;
 
 import java.util.Set;
 
@@ -19,11 +19,11 @@ import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
-import org.oneclick.configuration.client.user.UserTablePage.Table;
-import org.oneclick.configuration.shared.user.CreateUserPermission;
-import org.oneclick.configuration.shared.user.IUserService;
-import org.oneclick.configuration.shared.user.UpdateUserPermission;
-import org.oneclick.configuration.shared.user.UserTablePageData;
+import org.zeroclick.configuration.client.user.UserTablePage.Table;
+import org.zeroclick.configuration.shared.user.CreateUserPermission;
+import org.zeroclick.configuration.shared.user.IUserService;
+import org.zeroclick.configuration.shared.user.UpdateUserPermission;
+import org.zeroclick.configuration.shared.user.UserTablePageData;
 
 @Data(UserTablePageData.class)
 public class UserTablePage extends AbstractPageWithTable<Table> {

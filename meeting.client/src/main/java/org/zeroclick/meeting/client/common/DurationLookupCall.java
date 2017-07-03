@@ -1,4 +1,4 @@
-package org.oneclick.meeting.client.common;
+package org.zeroclick.meeting.client.common;
 
 import java.util.ArrayList;
 import java.util.Iterator;

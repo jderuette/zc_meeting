@@ -18,7 +18,7 @@
 
   <filter>
     <filter-name>AuthFilter</filter-name>
-    <filter-class>org.oneclick.meeting.ui.html.UiServletFilter</filter-class>
+    <filter-class>org.zeroclick.meeting.ui.html.UiServletFilter</filter-class>
     <init-param>
       <param-name>filter-exclude</param-name>
       <param-value>
@@ -44,7 +44,7 @@
   
      <servlet>
     <servlet-name>CalendarServlet</servlet-name>
-    <servlet-class>org.oneclick.meeting.client.calendar.CalendarServletSample</servlet-class>
+    <servlet-class>org.zeroclick.meeting.client.calendar.CalendarServletSample</servlet-class>
   </servlet>
 
   <servlet-mapping>
@@ -54,7 +54,7 @@
   
    <servlet>
     <servlet-name>GoogleApiServletCallback</servlet-name>
-    <servlet-class>org.oneclick.meeting.client.google.api.GoogleApiServletCallback</servlet-class>
+    <servlet-class>org.zeroclick.meeting.client.google.api.GoogleApiServletCallback</servlet-class>
   </servlet>
 
   <servlet-mapping>

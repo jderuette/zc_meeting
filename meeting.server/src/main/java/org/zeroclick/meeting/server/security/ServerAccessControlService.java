@@ -1,4 +1,4 @@
-package org.oneclick.meeting.server.security;
+package org.zeroclick.meeting.server.security;
 
 import java.lang.reflect.InvocationTargetException;
 import java.security.BasicPermission;
@@ -14,10 +14,10 @@ import org.eclipse.scout.rt.platform.exception.ProcessingException;
 import org.eclipse.scout.rt.shared.cache.KeyCacheEntryFilter;
 import org.eclipse.scout.rt.shared.security.BasicHierarchyPermission;
 import org.eclipse.scout.rt.shared.security.RemoteServiceAccessPermission;
-import org.oneclick.configuration.shared.role.IAppPermissionService;
-import org.oneclick.meeting.shared.security.AccessControlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.configuration.shared.role.IAppPermissionService;
+import org.zeroclick.meeting.shared.security.AccessControlService;
 
 /**
  * <h3>{@link AccessControlService}</h3>

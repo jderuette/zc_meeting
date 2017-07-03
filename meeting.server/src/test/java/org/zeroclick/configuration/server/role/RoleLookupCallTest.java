@@ -1,11 +1,11 @@
-package org.oneclick.configuration.server.role;
+package org.zeroclick.configuration.server.role;
 
 import org.eclipse.scout.rt.server.AbstractServerSession;
 import org.eclipse.scout.rt.testing.platform.runner.RunWithSubject;
 import org.eclipse.scout.rt.testing.server.runner.RunWithServerSession;
 import org.eclipse.scout.rt.testing.server.runner.ServerTestRunner;
 import org.junit.runner.RunWith;
-import org.oneclick.configuration.shared.role.RoleLookupCall;
+import org.zeroclick.configuration.shared.role.RoleLookupCall;
 
 @RunWithSubject("anonymous")
 @RunWith(ServerTestRunner.class)

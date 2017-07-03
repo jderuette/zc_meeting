@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.oneclick.meeting.client.common;
+package org.zeroclick.meeting.client.common;
 
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
@@ -21,9 +21,9 @@ import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 
-import org.oneclick.meeting.client.common.SlotHelper.DayOfWeekLists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.meeting.client.common.SlotHelper.DayOfWeekLists;
 
 /**
  * represent a (list of) period(s) during one day. This day period can be

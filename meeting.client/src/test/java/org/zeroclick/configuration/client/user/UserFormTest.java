@@ -1,4 +1,4 @@
-package org.oneclick.configuration.client.user;
+package org.zeroclick.configuration.client.user;
 
 import org.eclipse.scout.rt.client.testenvironment.TestEnvironmentClientSession;
 import org.eclipse.scout.rt.testing.client.runner.ClientTestRunner;
@@ -9,8 +9,8 @@ import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
-import org.oneclick.configuration.shared.user.IUserService;
-import org.oneclick.configuration.shared.user.UserFormData;
+import org.zeroclick.configuration.shared.user.IUserService;
+import org.zeroclick.configuration.shared.user.UserFormData;
 
 @RunWithSubject("anonymous")
 @RunWith(ClientTestRunner.class)

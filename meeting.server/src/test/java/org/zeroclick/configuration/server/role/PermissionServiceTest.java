@@ -1,4 +1,4 @@
-package org.oneclick.configuration.server.role;
+package org.zeroclick.configuration.server.role;
 
 import org.eclipse.scout.rt.server.AbstractServerSession;
 import org.eclipse.scout.rt.testing.platform.runner.RunWithSubject;

@@ -1,4 +1,4 @@
-package org.oneclick.meeting.server;
+package org.zeroclick.meeting.server;
 
 import java.io.IOException;
 

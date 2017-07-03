@@ -1,4 +1,4 @@
-package org.oneclick.meeting.client;
+package org.zeroclick.meeting.client;
 
 import org.eclipse.scout.rt.client.AbstractClientSession;
 import org.eclipse.scout.rt.client.IClientSession;
@@ -27,7 +27,7 @@ public class ClientSession extends AbstractClientSession {
 	@Override
 	protected void execLoadSession() {
 		// pre-load all known code types
-		CODES.getAllCodeTypes("org.oneclick.meeting.shared");
+		CODES.getAllCodeTypes("org.zeroclick.meeting.shared");
 
 		this.setDesktop(new Desktop());
 	}

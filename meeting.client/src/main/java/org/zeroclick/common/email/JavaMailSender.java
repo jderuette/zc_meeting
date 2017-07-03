@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.oneclick.common.email;
+package org.zeroclick.common.email;
 
 import java.util.Properties;
 
@@ -28,9 +28,9 @@ import javax.mail.internet.MimeMessage;
 import org.eclipse.scout.rt.platform.IgnoreBean;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
-import org.oneclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
 
 /**
  * @author djer
@@ -90,7 +90,7 @@ public class JavaMailSender implements IMailSender {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see org.oneclick.common.email.MailSender#sendEmail(java.lang.String,
+	 * @see org.zeroclick.common.email.MailSender#sendEmail(java.lang.String,
 	 * java.lang.String, java.lang.String)
 	 */
 	@Override

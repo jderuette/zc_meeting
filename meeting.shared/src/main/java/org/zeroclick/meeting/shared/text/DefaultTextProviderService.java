@@ -1,4 +1,4 @@
-package org.oneclick.meeting.shared.text;
+package org.zeroclick.meeting.shared.text;
 
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.services.common.text.AbstractDynamicNlsTextProviderService;
@@ -12,6 +12,6 @@ import org.eclipse.scout.rt.shared.services.common.text.AbstractDynamicNlsTextPr
 public class DefaultTextProviderService extends AbstractDynamicNlsTextProviderService {
 	@Override
 	protected String getDynamicNlsBaseName() {
-		return "org.oneclick.meeting.shared.texts.Texts";
+		return "org.zeroclick.meeting.shared.texts.Texts";
 	}
 }

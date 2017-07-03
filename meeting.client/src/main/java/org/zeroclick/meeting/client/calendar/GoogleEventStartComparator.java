@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.oneclick.meeting.client.calendar;
+package org.zeroclick.meeting.client.calendar;
 
 import java.util.Comparator;
 

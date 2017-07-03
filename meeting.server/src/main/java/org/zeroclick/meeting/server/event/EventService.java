@@ -1,4 +1,4 @@
-package org.oneclick.meeting.server.event;
+package org.zeroclick.meeting.server.event;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -15,21 +15,21 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.data.page.AbstractTablePageData;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
-import org.oneclick.configuration.shared.user.IUserService;
-import org.oneclick.configuration.shared.user.UserFormData;
-import org.oneclick.meeting.server.sql.SQLs;
-import org.oneclick.meeting.shared.event.CreateEventPermission;
-import org.oneclick.meeting.shared.event.EventCreatedNotification;
-import org.oneclick.meeting.shared.event.EventFormData;
-import org.oneclick.meeting.shared.event.EventModifiedNotification;
-import org.oneclick.meeting.shared.event.EventTablePageData;
-import org.oneclick.meeting.shared.event.IEventService;
-import org.oneclick.meeting.shared.event.ReadEventPermission;
-import org.oneclick.meeting.shared.event.RejectEventFormData;
-import org.oneclick.meeting.shared.event.UpdateEventPermission;
-import org.oneclick.meeting.shared.security.AccessControlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.configuration.shared.user.IUserService;
+import org.zeroclick.configuration.shared.user.UserFormData;
+import org.zeroclick.meeting.server.sql.SQLs;
+import org.zeroclick.meeting.shared.event.CreateEventPermission;
+import org.zeroclick.meeting.shared.event.EventCreatedNotification;
+import org.zeroclick.meeting.shared.event.EventFormData;
+import org.zeroclick.meeting.shared.event.EventModifiedNotification;
+import org.zeroclick.meeting.shared.event.EventTablePageData;
+import org.zeroclick.meeting.shared.event.IEventService;
+import org.zeroclick.meeting.shared.event.ReadEventPermission;
+import org.zeroclick.meeting.shared.event.RejectEventFormData;
+import org.zeroclick.meeting.shared.event.UpdateEventPermission;
+import org.zeroclick.meeting.shared.security.AccessControlService;
 
 public class EventService implements IEventService {
 

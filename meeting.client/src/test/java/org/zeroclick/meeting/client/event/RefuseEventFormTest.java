@@ -1,4 +1,4 @@
-package org.oneclick.meeting.client.event;
+package org.zeroclick.meeting.client.event;
 
 import org.eclipse.scout.rt.client.testenvironment.TestEnvironmentClientSession;
 import org.eclipse.scout.rt.testing.client.runner.ClientTestRunner;

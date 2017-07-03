@@ -1,4 +1,4 @@
-package org.oneclick.meeting.ui.html;
+package org.zeroclick.meeting.ui.html;
 
 import java.io.IOException;
 
@@ -19,7 +19,7 @@ import org.eclipse.scout.rt.server.commons.authentication.FormBasedAccessControl
 import org.eclipse.scout.rt.server.commons.authentication.ServletFilterHelper;
 import org.eclipse.scout.rt.server.commons.authentication.TrivialAccessController;
 import org.eclipse.scout.rt.server.commons.authentication.TrivialAccessController.TrivialAuthConfig;
-import org.oneclick.common.security.ScoutServiceCredentialVerifier;
+import org.zeroclick.common.security.ScoutServiceCredentialVerifier;
 
 /**
  * <h3>{@link UiServletFilter}</h3> This is the main servlet filter used for the

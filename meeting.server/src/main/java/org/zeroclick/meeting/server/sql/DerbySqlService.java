@@ -8,7 +8,7 @@
  * Contributors:
  *     BSI Business Systems Integration AG - initial API and implementation
  ******************************************************************************/
-package org.oneclick.meeting.server.sql;
+package org.zeroclick.meeting.server.sql;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -18,8 +18,8 @@ import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.config.CONFIG;
 import org.eclipse.scout.rt.platform.exception.PlatformExceptionTranslator;
 import org.eclipse.scout.rt.server.jdbc.derby.AbstractDerbySqlService;
-import org.oneclick.meeting.server.sql.DatabaseProperties.DatabaseAutoCreateProperty;
-import org.oneclick.meeting.server.sql.DatabaseProperties.JdbcMappingNameProperty;
+import org.zeroclick.meeting.server.sql.DatabaseProperties.DatabaseAutoCreateProperty;
+import org.zeroclick.meeting.server.sql.DatabaseProperties.JdbcMappingNameProperty;
 
 @Order(1950)
 public class DerbySqlService extends AbstractDerbySqlService {

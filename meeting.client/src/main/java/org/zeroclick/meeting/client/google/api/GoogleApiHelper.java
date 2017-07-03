@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.oneclick.meeting.client.google.api;
+package org.zeroclick.meeting.client.google.api;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,11 +41,11 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.config.AbstractStringConfigProperty;
 import org.eclipse.scout.rt.platform.config.CONFIG;
-import org.oneclick.meeting.client.common.CallTrackerService;
-import org.oneclick.meeting.client.common.UserAccessRequiredException;
-import org.oneclick.meeting.shared.security.AccessControlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.meeting.client.common.CallTrackerService;
+import org.zeroclick.meeting.client.common.UserAccessRequiredException;
+import org.zeroclick.meeting.shared.security.AccessControlService;
 
 import com.google.api.client.auth.oauth2.AuthorizationCodeFlow;
 import com.google.api.client.auth.oauth2.AuthorizationCodeRequestUrl;
@@ -114,7 +114,7 @@ public class GoogleApiHelper {
 	 * (non-Javadoc)
 	 *
 	 * @see
-	 * org.oneclick.meeting.client.calendar.IGoogleApiHelper#getCurrentUserId()
+	 * org.zeroclick.meeting.client.calendar.IGoogleApiHelper#getCurrentUserId()
 	 */
 	public Long getCurrentUserId() {
 		final AccessControlService acs = BEANS.get(AccessControlService.class);
@@ -140,7 +140,7 @@ public class GoogleApiHelper {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see org.oneclick.meeting.client.calendar.IGoogleApiHelper#
+	 * @see org.zeroclick.meeting.client.calendar.IGoogleApiHelper#
 	 * getOrRetrieveCredential(javax.servlet.http.HttpServletRequest,
 	 * javax.servlet.http.HttpServletResponse, java.lang.String)
 	 */
@@ -193,7 +193,7 @@ public class GoogleApiHelper {
 	 * (non-Javadoc)
 	 *
 	 * @see
-	 * org.oneclick.meeting.client.calendar.IGoogleApiHelper#tryStoreCredential(
+	 * org.zeroclick.meeting.client.calendar.IGoogleApiHelper#tryStoreCredential(
 	 * javax.servlet.http.HttpServletRequest,
 	 * javax.servlet.http.HttpServletResponse, java.lang.String)
 	 */

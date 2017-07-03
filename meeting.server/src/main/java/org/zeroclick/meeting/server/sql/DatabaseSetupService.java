@@ -1,4 +1,4 @@
-package org.oneclick.meeting.server.sql;
+package org.zeroclick.meeting.server.sql;
 
 import java.util.Set;
 

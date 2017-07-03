@@ -1,4 +1,4 @@
-package org.oneclick.meeting.shared.security;
+package org.zeroclick.meeting.shared.security;
 
 import java.security.AccessController;
 import java.security.PermissionCollection;
@@ -11,7 +11,7 @@ import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.shared.ISession;
 import org.eclipse.scout.rt.shared.services.common.security.AbstractAccessControlService;
 import org.eclipse.scout.rt.shared.services.common.security.IAccessControlService;
-import org.oneclick.configuration.shared.user.IUserService;
+import org.zeroclick.configuration.shared.user.IUserService;
 
 /**
  * <h3>{@link UserIdAccessControlService}</h3>

@@ -13,10 +13,10 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.oneclick.meeting.client.event;
+package org.zeroclick.meeting.client.event;
 
-import org.oneclick.meeting.client.clientnotification.AbstractObservableModelNotificationHandler;
-import org.oneclick.meeting.shared.event.EventCreatedNotification;
+import org.zeroclick.meeting.client.clientnotification.AbstractObservableModelNotificationHandler;
+import org.zeroclick.meeting.shared.event.EventCreatedNotification;
 
 /**
  * @author djer

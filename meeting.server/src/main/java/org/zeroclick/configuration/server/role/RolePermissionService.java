@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.oneclick.configuration.server.role;
+package org.zeroclick.configuration.server.role;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,13 +24,13 @@ import org.eclipse.scout.rt.platform.holders.NVPair;
 import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
-import org.oneclick.configuration.shared.role.AssignToRoleFormData;
-import org.oneclick.configuration.shared.role.CreateAssignToRolePermission;
-import org.oneclick.configuration.shared.role.IRolePermissionService;
-import org.oneclick.meeting.server.security.ServerAccessControlService;
-import org.oneclick.meeting.server.sql.SQLs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.configuration.shared.role.AssignToRoleFormData;
+import org.zeroclick.configuration.shared.role.CreateAssignToRolePermission;
+import org.zeroclick.configuration.shared.role.IRolePermissionService;
+import org.zeroclick.meeting.server.security.ServerAccessControlService;
+import org.zeroclick.meeting.server.sql.SQLs;
 
 /**
  * @author djer
@@ -44,8 +44,8 @@ public class RolePermissionService implements IRolePermissionService {
 	 * (non-Javadoc)
 	 *
 	 * @see
-	 * org.oneclick.configuration.shared.role.IRolePermissionService#create(org.
-	 * oneclick.configuration.shared.role.RoleFormData)
+	 * org.zeroclick.configuration.shared.role.IRolePermissionService#create(
+	 * org. zeroclick.configuration.shared.role.RoleFormData)
 	 */
 	@Override
 	public AssignToRoleFormData create(final AssignToRoleFormData formData) {

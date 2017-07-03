@@ -1,4 +1,4 @@
-package org.oneclick.configuration.client.role;
+package org.zeroclick.configuration.client.role;
 
 import java.security.Permission;
 import java.util.ArrayList;
@@ -21,10 +21,10 @@ import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.IPermissionService;
-import org.oneclick.configuration.client.role.RoleTablePage.Table;
-import org.oneclick.configuration.shared.role.IAppPermissionService;
-import org.oneclick.configuration.shared.role.IRolePermissionService;
-import org.oneclick.configuration.shared.role.PermissionTablePageData;
+import org.zeroclick.configuration.client.role.RoleTablePage.Table;
+import org.zeroclick.configuration.shared.role.IAppPermissionService;
+import org.zeroclick.configuration.shared.role.IRolePermissionService;
+import org.zeroclick.configuration.shared.role.PermissionTablePageData;
 
 @Data(PermissionTablePageData.class)
 public class PermissionTablePage extends AbstractPageWithTable<Table> {
@@ -57,7 +57,7 @@ public class PermissionTablePage extends AbstractPageWithTable<Table> {
 					.getAllPermissionClasses();
 
 			for (final Class<? extends Permission> permisison : permissions) {
-				if (permisison.getCanonicalName().contains(".oneclick.")) {
+				if (permisison.getCanonicalName().contains(".zeroclick.")) {
 					rows.add(permisison.getCanonicalName());
 				}
 			}

@@ -8,7 +8,7 @@
  * Contributors:
  *     BSI Business Systems Integration AG - initial API and implementation
  ******************************************************************************/
-package org.oneclick.meeting.server.sql;
+package org.zeroclick.meeting.server.sql;
 
 //tag::createDB[]
 //tag::organizationListing[]
@@ -159,36 +159,36 @@ public interface SQLs {
 
 	String ROLE_PERMISSION_INSERT_SAMPLE = "INSERT INTO ROLE_PERMISSION (role_id, permission, level)";
 	// -- Admin Role
-	String ROLE_PERMISSION_VALUES_01 = " VALUES(1, 'org.oneclick.meeting.shared.calendar.CreateApiPermission', 100)";
-	String ROLE_PERMISSION_VALUES_02 = " VALUES(1, 'org.oneclick.configuration.shared.role.CreateAssignToRolePermission', 100)";
-	String ROLE_PERMISSION_VALUES_04 = " VALUES(1, 'org.oneclick.meeting.shared.event.CreateEventPermission', 100)";
-	String ROLE_PERMISSION_VALUES_05 = " VALUES(1, 'org.oneclick.configuration.shared.role.CreatePermissionPermission', 100)";
-	String ROLE_PERMISSION_VALUES_06 = " VALUES(1, 'org.oneclick.configuration.shared.role.CreateRolePermission', 100)";
-	String ROLE_PERMISSION_VALUES_07 = " VALUES(1, 'org.oneclick.meeting.shared.calendar.DeleteApiPermission', 100)";
-	String ROLE_PERMISSION_VALUES_08 = " VALUES(1, 'org.oneclick.meeting.shared.calendar.UpdateApiPermission', 100)";
-	String ROLE_PERMISSION_VALUES_09 = " VALUES(1, 'org.oneclick.configuration.shared.role.UpdateAssignToRolePermission', 100)";
-	String ROLE_PERMISSION_VALUES_11 = " VALUES(1, 'org.oneclick.meeting.shared.event.UpdateEventPermission', 100)";
-	String ROLE_PERMISSION_VALUES_12 = " VALUES(1, 'org.oneclick.configuration.shared.role.UpdatePermissionPermission', 100)";
-	String ROLE_PERMISSION_VALUES_13 = " VALUES(1, 'org.oneclick.configuration.shared.role.UpdateRolePermission', 100)";
-	String ROLE_PERMISSION_VALUES_14 = " VALUES(1, 'org.oneclick.meeting.shared.calendar.ReadApiPermission', 100)";
-	String ROLE_PERMISSION_VALUES_17 = " VALUES(1, 'org.oneclick.meeting.shared.event.ReadEventPermission', 100)";
-	String ROLE_PERMISSION_VALUES_18 = " VALUES(1, 'org.oneclick.configuration.shared.role.ReadPermissionPermission', 100)";
-	String ROLE_PERMISSION_VALUES_19 = " VALUES(1, 'org.oneclick.configuration.shared.role.ReadRolePermission', 100)";
-	String ROLE_PERMISSION_VALUES_20 = " VALUES(1, 'org.oneclick.configuration.shared.user.CreateUserPermission', 100)";
-	String ROLE_PERMISSION_VALUES_21 = " VALUES(1, 'org.oneclick.configuration.shared.user.ReadUserPermission', 100)";
-	String ROLE_PERMISSION_VALUES_22 = " VALUES(1, 'org.oneclick.configuration.shared.user.UpdateUserPermission', 100)";
-	String ROLE_PERMISSION_VALUES_23 = " VALUES(1, 'org.oneclick.meeting.shared.event.ReadEventExtendedPropsPermission', 100)";
+	String ROLE_PERMISSION_VALUES_01 = " VALUES(1, 'org.zeroclick.meeting.shared.calendar.CreateApiPermission', 100)";
+	String ROLE_PERMISSION_VALUES_02 = " VALUES(1, 'org.zeroclick.configuration.shared.role.CreateAssignToRolePermission', 100)";
+	String ROLE_PERMISSION_VALUES_04 = " VALUES(1, 'org.zeroclick.meeting.shared.event.CreateEventPermission', 100)";
+	String ROLE_PERMISSION_VALUES_05 = " VALUES(1, 'org.zeroclick.configuration.shared.role.CreatePermissionPermission', 100)";
+	String ROLE_PERMISSION_VALUES_06 = " VALUES(1, 'org.zeroclick.configuration.shared.role.CreateRolePermission', 100)";
+	String ROLE_PERMISSION_VALUES_07 = " VALUES(1, 'org.zeroclick.meeting.shared.calendar.DeleteApiPermission', 100)";
+	String ROLE_PERMISSION_VALUES_08 = " VALUES(1, 'org.zeroclick.meeting.shared.calendar.UpdateApiPermission', 100)";
+	String ROLE_PERMISSION_VALUES_09 = " VALUES(1, 'org.zeroclick.configuration.shared.role.UpdateAssignToRolePermission', 100)";
+	String ROLE_PERMISSION_VALUES_11 = " VALUES(1, 'org.zeroclick.meeting.shared.event.UpdateEventPermission', 100)";
+	String ROLE_PERMISSION_VALUES_12 = " VALUES(1, 'org.zeroclick.configuration.shared.role.UpdatePermissionPermission', 100)";
+	String ROLE_PERMISSION_VALUES_13 = " VALUES(1, 'org.zeroclick.configuration.shared.role.UpdateRolePermission', 100)";
+	String ROLE_PERMISSION_VALUES_14 = " VALUES(1, 'org.zeroclick.meeting.shared.calendar.ReadApiPermission', 100)";
+	String ROLE_PERMISSION_VALUES_17 = " VALUES(1, 'org.zeroclick.meeting.shared.event.ReadEventPermission', 100)";
+	String ROLE_PERMISSION_VALUES_18 = " VALUES(1, 'org.zeroclick.configuration.shared.role.ReadPermissionPermission', 100)";
+	String ROLE_PERMISSION_VALUES_19 = " VALUES(1, 'org.zeroclick.configuration.shared.role.ReadRolePermission', 100)";
+	String ROLE_PERMISSION_VALUES_20 = " VALUES(1, 'org.zeroclick.configuration.shared.user.CreateUserPermission', 100)";
+	String ROLE_PERMISSION_VALUES_21 = " VALUES(1, 'org.zeroclick.configuration.shared.user.ReadUserPermission', 100)";
+	String ROLE_PERMISSION_VALUES_22 = " VALUES(1, 'org.zeroclick.configuration.shared.user.UpdateUserPermission', 100)";
+	String ROLE_PERMISSION_VALUES_23 = " VALUES(1, 'org.zeroclick.meeting.shared.event.ReadEventExtendedPropsPermission', 100)";
 
 	// -- Standard Role
-	String ROLE_PERMISSION_VALUES_100 = " VALUES(2, 'org.oneclick.meeting.shared.calendar.CreateApiPermission', 100)";
-	String ROLE_PERMISSION_VALUES_101 = " VALUES(2, 'org.oneclick.meeting.shared.event.CreateEventPermission', 100)";
-	String ROLE_PERMISSION_VALUES_102 = " VALUES(2, 'org.oneclick.meeting.shared.calendar.DeleteApiPermission', 10)";
-	String ROLE_PERMISSION_VALUES_103 = " VALUES(2, 'org.oneclick.meeting.shared.calendar.UpdateApiPermission', 15)";
-	String ROLE_PERMISSION_VALUES_104 = " VALUES(2, 'org.oneclick.meeting.shared.event.UpdateEventPermission', 10)";
-	String ROLE_PERMISSION_VALUES_105 = " VALUES(2, 'org.oneclick.meeting.shared.calendar.ReadApiPermission', 10)";
-	String ROLE_PERMISSION_VALUES_106 = " VALUES(2, 'org.oneclick.meeting.shared.event.ReadEventPermission', 10)";
-	String ROLE_PERMISSION_VALUES_107 = " VALUES(2, 'org.oneclick.configuration.shared.user.ReadUserPermission', 10)";
-	String ROLE_PERMISSION_VALUES_108 = " VALUES(2, 'org.oneclick.configuration.shared.user.UpdateUserPermission', 10)";
+	String ROLE_PERMISSION_VALUES_100 = " VALUES(2, 'org.zeroclick.meeting.shared.calendar.CreateApiPermission', 100)";
+	String ROLE_PERMISSION_VALUES_101 = " VALUES(2, 'org.zeroclick.meeting.shared.event.CreateEventPermission', 100)";
+	String ROLE_PERMISSION_VALUES_102 = " VALUES(2, 'org.zeroclick.meeting.shared.calendar.DeleteApiPermission', 10)";
+	String ROLE_PERMISSION_VALUES_103 = " VALUES(2, 'org.zeroclick.meeting.shared.calendar.UpdateApiPermission', 15)";
+	String ROLE_PERMISSION_VALUES_104 = " VALUES(2, 'org.zeroclick.meeting.shared.event.UpdateEventPermission', 10)";
+	String ROLE_PERMISSION_VALUES_105 = " VALUES(2, 'org.zeroclick.meeting.shared.calendar.ReadApiPermission', 10)";
+	String ROLE_PERMISSION_VALUES_106 = " VALUES(2, 'org.zeroclick.meeting.shared.event.ReadEventPermission', 10)";
+	String ROLE_PERMISSION_VALUES_107 = " VALUES(2, 'org.zeroclick.configuration.shared.user.ReadUserPermission', 10)";
+	String ROLE_PERMISSION_VALUES_108 = " VALUES(2, 'org.zeroclick.configuration.shared.user.UpdateUserPermission', 10)";
 
 	String ROLE_PERMISSION_DROP_TABLE = "DROP TABLE ROLE_PERMISSION";
 

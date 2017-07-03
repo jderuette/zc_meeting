@@ -1,4 +1,4 @@
-package org.oneclick.meeting.client;
+package org.zeroclick.meeting.client;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,29 +21,29 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.notification.INotificationListener;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.eclipse.scout.rt.shared.services.common.security.IAccessControlService;
-import org.oneclick.configuration.client.ConfigurationOutline;
-import org.oneclick.configuration.client.administration.AdministrationOutline;
-import org.oneclick.configuration.client.api.ApiCreatedNotificationHandler;
-import org.oneclick.configuration.client.user.UserForm;
-import org.oneclick.configuration.shared.api.ApiCreatedNotification;
-import org.oneclick.configuration.shared.role.ReadPermissionPermission;
-import org.oneclick.configuration.shared.role.ReadRolePermission;
-import org.oneclick.configuration.shared.user.IUserService;
-import org.oneclick.configuration.shared.user.ReadUserPermission;
-import org.oneclick.configuration.shared.user.UpdateUserPermission;
-import org.oneclick.configuration.shared.user.UserFormData;
-import org.oneclick.meeting.client.event.EventForm;
-import org.oneclick.meeting.client.google.api.GoogleApiHelper;
-import org.oneclick.meeting.client.meeting.MeetingOutline;
-import org.oneclick.meeting.shared.Icons;
-import org.oneclick.meeting.shared.calendar.ApiFormData;
-import org.oneclick.meeting.shared.calendar.CreateApiPermission;
-import org.oneclick.meeting.shared.calendar.ReadApiPermission;
-import org.oneclick.meeting.shared.event.CreateEventPermission;
-import org.oneclick.meeting.shared.event.ReadEventPermission;
-import org.oneclick.meeting.shared.security.AccessControlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.configuration.client.ConfigurationOutline;
+import org.zeroclick.configuration.client.administration.AdministrationOutline;
+import org.zeroclick.configuration.client.api.ApiCreatedNotificationHandler;
+import org.zeroclick.configuration.client.user.UserForm;
+import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
+import org.zeroclick.configuration.shared.role.ReadPermissionPermission;
+import org.zeroclick.configuration.shared.role.ReadRolePermission;
+import org.zeroclick.configuration.shared.user.IUserService;
+import org.zeroclick.configuration.shared.user.ReadUserPermission;
+import org.zeroclick.configuration.shared.user.UpdateUserPermission;
+import org.zeroclick.configuration.shared.user.UserFormData;
+import org.zeroclick.meeting.client.event.EventForm;
+import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
+import org.zeroclick.meeting.client.meeting.MeetingOutline;
+import org.zeroclick.meeting.shared.Icons;
+import org.zeroclick.meeting.shared.calendar.ApiFormData;
+import org.zeroclick.meeting.shared.calendar.CreateApiPermission;
+import org.zeroclick.meeting.shared.calendar.ReadApiPermission;
+import org.zeroclick.meeting.shared.event.CreateEventPermission;
+import org.zeroclick.meeting.shared.event.ReadEventPermission;
+import org.zeroclick.meeting.shared.security.AccessControlService;
 
 /**
  * <h3>{@link Desktop}</h3>
