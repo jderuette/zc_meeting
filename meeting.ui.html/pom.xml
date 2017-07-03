@@ -12,7 +12,7 @@
 
   <artifactId>meeting.ui.html</artifactId>
 
-  <name>One Click Meeting HTML UI</name>
+  <name>0Click Meeting HTML UI</name>
 
   <dependencies>
     <dependency>

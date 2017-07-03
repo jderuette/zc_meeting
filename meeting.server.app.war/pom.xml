@@ -13,7 +13,7 @@
   <artifactId>meeting.server.app.war</artifactId>
   <packaging>war</packaging>
 
-  <name>One Click Meeting Server WAR</name>
+  <name>0Click Meeting Server WAR</name>
 
   <build>
       <finalName>org.zeroclick.meeting.server</finalName>

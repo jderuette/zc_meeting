@@ -13,7 +13,7 @@
   <artifactId>meeting.server.app.dev</artifactId>
   <packaging>war</packaging>
 
-  <name>One Click Meeting HTML UI WAR Development</name>
+  <name>0Click Meeting HTML UI WAR Development</name>
 
   <dependencies>
     <dependency>
