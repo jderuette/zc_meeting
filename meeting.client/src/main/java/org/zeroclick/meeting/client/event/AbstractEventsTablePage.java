@@ -101,6 +101,24 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	// protected abstract INotificationListener<EventModifiedNotification>
 	// createEventModifiedListener();
 
+	/**
+	 * Propagate new Events to child page if implemented.Default do Nothing
+	 *
+	 * @param formData
+	 */
+	protected void onNewEvent(final EventFormData formData) {
+
+	}
+
+	/**
+	 * Propagate modified Events to child page if implemented.Default do Nothing
+	 *
+	 * @param formData
+	 */
+	protected void onModifiedEvent(final EventFormData formData) {
+
+	}
+
 	public class Table extends AbstractTable {
 
 		protected INotificationListener<EventCreatedNotification> eventCreatedListener;
@@ -175,6 +193,9 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 						AbstractEventsTablePage.this.getTable()
 								.addRow(AbstractEventsTablePage.this.getTable().createTableRowFromForm(eventForm));
 						AbstractEventsTablePage.this.getTable().applyRowFilters();
+
+						ClientSession.get().getDesktop().refreshPages(EventTablePage.class);
+						AbstractEventsTablePage.this.onNewEvent(eventForm);
 					} catch (final RuntimeException e) {
 						LOG.error("Could not add new event. (" + this.getClass().getName() + ")", e);
 					}
@@ -196,6 +217,8 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 						final ITableRow row = AbstractEventsTablePage.this.getTable().getRow(eventForm.getEventId());
 						Table.this.updateTableRowFromForm(row, eventForm);
 						AbstractEventsTablePage.this.getTable().applyRowFilters();
+
+						AbstractEventsTablePage.this.onModifiedEvent(eventForm);
 
 					} catch (final RuntimeException e) {
 						LOG.error("Could not update event. (" + this.getClass().getName() + ")", e);

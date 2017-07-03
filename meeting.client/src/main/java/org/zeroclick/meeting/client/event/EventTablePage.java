@@ -19,6 +19,7 @@ import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
 import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
 import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.action.menu.TableMenuType;
+import org.eclipse.scout.rt.client.ui.basic.cell.Cell;
 import org.eclipse.scout.rt.client.ui.basic.table.ITableRow;
 import org.eclipse.scout.rt.client.ui.basic.table.userfilter.TextColumnUserFilterState;
 import org.eclipse.scout.rt.client.ui.form.FormEvent;
@@ -43,6 +44,7 @@ import org.zeroclick.meeting.client.event.EventTablePage.Table;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.event.CreateEventPermission;
+import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.EventTablePageData;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
@@ -60,19 +62,70 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(EventTablePage.class);
 
+	private Integer nbEventToProcess = 0;
+
+	protected Integer getNbEventToProcess() {
+		return this.nbEventToProcess;
+	}
+
+	protected void setNbEventToProcess(final Integer nbEventToProcess) {
+		this.nbEventToProcess = nbEventToProcess;
+	}
+
 	@Override
 	protected void execLoadData(final SearchFilter filter) {
-		this.importPageData(BEANS.get(IEventService.class).getEventTableData(filter));
+		final EventTablePageData pageData = BEANS.get(IEventService.class).getEventTableData(filter);
+		this.importPageData(pageData);
+		this.setNbEventToProcess(pageData.getRowCount());
+
+		this.refreshTitle();
 	}
 
 	@Override
 	protected String getConfiguredTitle() {
-		return TEXTS.get("zc.meeting.events");
+		return this.buildTitle();
+	}
+
+	protected String buildTitle() {
+		return TEXTS.get("zc.meeting.events", this.nbEventToProcess.toString());
 	}
 
 	@Override
 	protected boolean getConfiguredTableStatusVisible() {
 		return Boolean.FALSE;
+	}
+
+	protected void incNbEventToProcess() {
+		Integer currentNbEventToProcess = this.getNbEventToProcess();
+		this.setNbEventToProcess(++currentNbEventToProcess);
+		this.refreshTitle();
+	}
+
+	protected void decNbEventToProcess() {
+		Integer currentNbEventToProcess = this.getNbEventToProcess();
+		this.setNbEventToProcess(--currentNbEventToProcess);
+		this.refreshTitle();
+	}
+
+	protected void refreshTitle() {
+		final Cell cell = this.getCellForUpdate();
+		cell.setText(this.buildTitle());
+	}
+
+	@Override
+	protected void onNewEvent(final EventFormData formData) {
+		LOG.debug("New event detected incrementing nb Event to Process");
+		this.incNbEventToProcess();
+	}
+
+	@Override
+	protected void onModifiedEvent(final EventFormData formData) {
+		LOG.debug("New event detected changing nb Event to Process");
+		if ("ASKED".equals(formData.getState())) {
+			this.incNbEventToProcess();
+		} else {
+			this.decNbEventToProcess();
+		}
 	}
 
 	public class Table extends AbstractEventsTablePage<Table>.Table {

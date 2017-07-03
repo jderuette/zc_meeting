@@ -6,9 +6,6 @@ import org.eclipse.scout.rt.platform.service.IService;
 import org.eclipse.scout.rt.shared.TunnelToServer;
 import org.eclipse.scout.rt.shared.data.page.AbstractTablePageData;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
-import org.zeroclick.meeting.shared.event.EventFormData;
-import org.zeroclick.meeting.shared.event.EventTablePageData;
-import org.zeroclick.meeting.shared.event.RejectEventFormData;
 
 @TunnelToServer
 public interface IEventService extends IService {
