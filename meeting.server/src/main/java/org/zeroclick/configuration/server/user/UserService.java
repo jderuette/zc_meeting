@@ -107,7 +107,7 @@ public class UserService implements IUserService {
 			throw new VetoException(TEXTS.get("zc.user.userAlreadyExists"));
 		}
 		SQL.insert(SQLs.USER_INSERT, formData);
-		return this.store(formData);
+		return this.store(formData, Boolean.TRUE);
 	}
 
 	private boolean userAlreadyExists(final String userLogin) {
@@ -175,9 +175,8 @@ public class UserService implements IUserService {
 		return formData;
 	}
 
-	@Override
-	public UserFormData store(final UserFormData formData) {
-		if (!ACCESS.check(new UpdateUserPermission(formData.getUserId().getValue()))) {
+	protected UserFormData store(final UserFormData formData, final Boolean isCreation) {
+		if (!isCreation && !ACCESS.check(new UpdateUserPermission(formData.getUserId().getValue()))) {
 			throw new VetoException(TEXTS.get("AuthorizationFailed"));
 		}
 		LOG.debug("Store User with Id :" + formData.getUserId().getValue() + " and email : "
@@ -197,6 +196,11 @@ public class UserService implements IUserService {
 		this.sendModifiedNotifications(formData);
 
 		return formData;
+	}
+
+	@Override
+	public UserFormData store(final UserFormData formData) {
+		return this.store(formData, Boolean.FALSE);
 	}
 
 	private Set<String> buildNotifiedUsers(final UserFormData formData) {
