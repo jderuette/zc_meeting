@@ -274,7 +274,7 @@ public class RejectEventForm extends AbstractForm {
 		public class OkButton extends AbstractOkButton {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("RejectEvent");
+				return TEXTS.get("zc.meeting.rejectEvent");
 			}
 
 			@Override
@@ -286,7 +286,7 @@ public class RejectEventForm extends AbstractForm {
 			protected void execInitField() {
 				switch (RejectEventForm.this.subAction) {
 				case ACTION_REJECT:
-					this.setLabel(TEXTS.get("RejectEvent"));
+					this.setLabel(TEXTS.get("zc.meeting.rejectEvent"));
 					break;
 				case ACTION_CANCEL:
 					this.setLabel(TEXTS.get("zc.meeting.cancelEvent"));
@@ -326,7 +326,7 @@ public class RejectEventForm extends AbstractForm {
 
 			switch (RejectEventForm.this.subAction) {
 			case ACTION_REJECT:
-				RejectEventForm.this.setTitle(TEXTS.get("RejectEvent"));
+				RejectEventForm.this.setTitle(TEXTS.get("zc.meeting.rejectEvent"));
 				RejectEventForm.this.setSubTitle(TEXTS.get("zc.meeting.confirmRejectEvent"));
 				break;
 			case ACTION_CANCEL:
