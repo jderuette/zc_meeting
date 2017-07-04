@@ -186,8 +186,6 @@ public class Desktop extends AbstractDesktop {
 		@Override
 		protected void execAction() {
 			ClientSession.get().getDesktop().openUri("/addGoogleCalendar", OpenUriAction.NEW_WINDOW);
-			// force refresh on next check
-			GoogleApiHelper.get().resetIsCalendarConfigured();
 		}
 
 		@Override

@@ -17,7 +17,6 @@ package org.zeroclick.meeting.client.google.api;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.time.Duration;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -27,7 +26,6 @@ import java.util.Set;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeroclick.meeting.client.common.CallTrackerService;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.IApiService;
 
@@ -54,14 +52,11 @@ public class ScoutDataStoreFactory extends AbstractDataStoreFactory {
 
 	public class ScoutDataStore<V extends Serializable> extends AbstractDataStore<V> {
 
-		private final CallTrackerService<String> callTracker;
-
 		// TODO Djer13 use a real cache manager (TTL, maxItems ?)
 		private final Map<String, V> cache;
 
 		protected ScoutDataStore(final DataStoreFactory dataStoreFactory, final String id) {
 			super(dataStoreFactory, id);
-			this.callTracker = new CallTrackerService<>(3, Duration.ofMinutes(1), "Manage Google Flow");
 			this.cache = new HashMap<>();
 		}
 
@@ -97,8 +92,6 @@ public class ScoutDataStoreFactory extends AbstractDataStoreFactory {
 				return this.cache.get(key);
 			}
 			final IApiService oAuthCredentialService = BEANS.get(IApiService.class);
-
-			this.callTracker.validateCanCall(key);
 
 			final ApiFormData input = new ApiFormData();
 			input.setUserId(new Long(key));
@@ -147,7 +140,6 @@ public class ScoutDataStoreFactory extends AbstractDataStoreFactory {
 			}
 
 			apiService.store(createdData);
-			this.callTracker.resetNbCall(key);
 
 			if (this.cache.containsKey(key)) {
 				this.cache.remove(key);

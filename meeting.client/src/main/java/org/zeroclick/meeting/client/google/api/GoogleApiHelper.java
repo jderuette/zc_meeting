@@ -28,8 +28,6 @@ import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -75,8 +73,6 @@ public class GoogleApiHelper {
 	private static GoogleApiHelper instance;
 	private final CallTrackerService<Long> callTracker;
 	private final DataStoreFactory dataStoreFactory;
-
-	private final Map<Long, Boolean> cachedCalendarConfiguredByUser = new HashMap<>();
 
 	private GoogleApiHelper() {
 		this.callTracker = new CallTrackerService<>(5, Duration.ofMinutes(1), "GoogleApiHelper create API flow");
@@ -192,9 +188,8 @@ public class GoogleApiHelper {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * org.zeroclick.meeting.client.calendar.IGoogleApiHelper#tryStoreCredential(
-	 * javax.servlet.http.HttpServletRequest,
+	 * @see org.zeroclick.meeting.client.calendar.IGoogleApiHelper#
+	 * tryStoreCredential( javax.servlet.http.HttpServletRequest,
 	 * javax.servlet.http.HttpServletResponse, java.lang.String)
 	 */
 	public Credential tryStoreCredential(final HttpServletRequest req, final HttpServletResponse resp,
@@ -224,6 +219,8 @@ public class GoogleApiHelper {
 				final TokenResponse response = this.flow.newTokenRequest(code).setRedirectUri(redirectUri).execute();
 				result = this.flow.createAndStoreCredential(response, userId.toString());
 				LOG.debug("Credential Stored in default dataStore for : " + userId);
+
+				this.callTracker.resetNbCall(userId);
 
 				// onSuccess(req, resp, credential);
 			} finally {
@@ -327,22 +324,17 @@ public class GoogleApiHelper {
 	}
 
 	public Boolean isCalendarConfigured(final Long userId) {
-		if (!this.cachedCalendarConfiguredByUser.containsKey(userId)) {
-			try {
-				this.getCalendarService(userId);
-				this.cachedCalendarConfiguredByUser.put(userId, Boolean.TRUE);
-			} catch (final UserAccessRequiredException uare) {
-				this.cachedCalendarConfiguredByUser.put(userId, Boolean.FALSE);
-			} catch (final IOException ios) {
-				this.cachedCalendarConfiguredByUser.put(userId, Boolean.FALSE);
-			}
+		Boolean isConfigured = Boolean.FALSE;
+		try {
+			this.getCalendarService(userId);
+			isConfigured = Boolean.TRUE;
+		} catch (final UserAccessRequiredException uare) {
+			// Do nothing default is FALSE
+		} catch (final IOException ios) {
+			// Do nothing default is FALSE
 		}
-		return this.cachedCalendarConfiguredByUser.get(userId);
+		return isConfigured;
 
-	}
-
-	public void resetIsCalendarConfigured(final Long userId) {
-		this.cachedCalendarConfiguredByUser.remove(userId);
 	}
 
 	/**
@@ -353,11 +345,6 @@ public class GoogleApiHelper {
 	public Boolean isCalendarConfigured() {
 		final AccessControlService acs = BEANS.get(AccessControlService.class);
 		return this.isCalendarConfigured(acs.getZeroClickUserIdOfCurrentSubject());
-	}
-
-	public void resetIsCalendarConfigured() {
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-		this.resetIsCalendarConfigured(acs.getZeroClickUserIdOfCurrentSubject());
 	}
 
 	public String aslog(final Event event) {

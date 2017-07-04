@@ -601,8 +601,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			@Override
 			protected void execAction() {
 				ClientSession.get().getDesktop().openUri("/addGoogleCalendar", OpenUriAction.NEW_WINDOW);
-				// force refresh on next check
-				GoogleApiHelper.get().resetIsCalendarConfigured();
 			}
 
 			@Override
