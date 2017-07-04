@@ -51,5 +51,10 @@ public class EventProcessedTablePage extends AbstractEventsTablePage<Table> {
 			}
 		}
 
+		@Override
+		protected String getConfiguredTitle() {
+			return TEXTS.get("zc.meeting.eventsProccessed");
+		}
+
 	}
 }

@@ -35,7 +35,6 @@ import org.slf4j.LoggerFactory;
 import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
 import org.zeroclick.configuration.shared.user.IUserService;
-import org.zeroclick.meeting.client.ClientSession;
 import org.zeroclick.meeting.client.calendar.GoogleEventStartComparator;
 import org.zeroclick.meeting.client.common.DayDuration;
 import org.zeroclick.meeting.client.common.SlotHelper;
@@ -87,7 +86,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 	}
 
 	protected String buildTitle() {
-		return TEXTS.get("zc.meeting.events", this.nbEventToProcess.toString());
+		return TEXTS.get("zc.meeting.events", null == this.nbEventToProcess ? "0" : this.nbEventToProcess.toString());
 	}
 
 	@Override
@@ -120,7 +119,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 	@Override
 	protected void onModifiedEvent(final EventFormData formData) {
-		LOG.debug("New event detected changing nb Event to Process");
+		LOG.debug("Modified event detected changing nb Event to Process");
 		if ("ASKED".equals(formData.getState())) {
 			this.incNbEventToProcess();
 		} else {
@@ -157,6 +156,11 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		}
 
 		@Override
+		protected String getConfiguredTitle() {
+			return EventTablePage.this.buildTitle();
+		}
+
+		@Override
 		protected void execDecorateRow(final ITableRow row) {
 
 			this.autoFillDates(row);
@@ -172,6 +176,13 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				} catch (final IOException e) {
 					LOG.warn("Canno't auto calculate start/end meeting for row " + row, e);
 				}
+			}
+		}
+
+		protected void autoFillDates() {
+			final List<ITableRow> rows = this.getRows();
+			for (final ITableRow row : rows) {
+				this.autoFillDates(row);
 			}
 		}
 
@@ -738,9 +749,13 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 					Table.this.saveEventCurrentRow();
 
-					EventTablePage.this.reloadPage();
-					ClientSession.get().getDesktop()
-							.refreshPages(CollectionUtility.arrayList(EventProcessedTablePage.class));
+					// EventTablePage.this.reloadPage();
+					// ClientSession.get().getDesktop()
+					// .refreshPages(CollectionUtility.arrayList(EventProcessedTablePage.class));
+
+					// TODO Djer13 avoid recalculating if a row dates are not
+					// impacted by this event
+					Table.this.autoFillDates();
 
 				} catch (final IOException e) {
 					throw new VetoException("Canno't get calendar details, re-try later");

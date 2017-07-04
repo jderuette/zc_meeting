@@ -187,17 +187,18 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 					try {
 						final EventFormData eventForm = notification.getEventForm();
 
-						LOG.debug("New event prepare to add to table (" + this.getClass().getName() + ") : "
+						LOG.debug("New event prepare to add to table (in " + Table.this.getTitle() + ") for event Id : "
 								+ eventForm.getEventId());
 
 						AbstractEventsTablePage.this.getTable()
 								.addRow(AbstractEventsTablePage.this.getTable().createTableRowFromForm(eventForm));
 						AbstractEventsTablePage.this.getTable().applyRowFilters();
 
-						ClientSession.get().getDesktop().refreshPages(EventTablePage.class);
+						// ClientSession.get().getDesktop().refreshPages(EventTablePage.class);
+
 						AbstractEventsTablePage.this.onNewEvent(eventForm);
 					} catch (final RuntimeException e) {
-						LOG.error("Could not add new event. (" + this.getClass().getName() + ")", e);
+						LOG.error("Could not add new event. (" + Table.this.getTitle() + ")", e);
 					}
 				}
 			};
@@ -211,17 +212,18 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 					try {
 						final EventFormData eventForm = notification.getEventForm();
 
-						LOG.debug("Modified event prepare to modify table row (" + this.getClass().getName() + ") : "
-								+ eventForm.getEventId());
+						LOG.debug("Modified event prepare to modify table row (in " + Table.this.getTitle()
+								+ ") for event Id : " + eventForm.getEventId());
 
 						final ITableRow row = AbstractEventsTablePage.this.getTable().getRow(eventForm.getEventId());
 						Table.this.updateTableRowFromForm(row, eventForm);
+
 						AbstractEventsTablePage.this.getTable().applyRowFilters();
 
 						AbstractEventsTablePage.this.onModifiedEvent(eventForm);
 
 					} catch (final RuntimeException e) {
-						LOG.error("Could not update event. (" + this.getClass().getName() + ")", e);
+						LOG.error("Could not update event. (" + Table.this.getTitle() + ")", e);
 					}
 				}
 			};
@@ -245,7 +247,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 							Table.this.autoFillDates(row);
 						}
 					} catch (final RuntimeException e) {
-						LOG.error("Could not handle new api. (" + this.getClass().getName() + ")", e);
+						LOG.error("Could not handle new api. (" + Table.this.getTitle() + ")", e);
 					}
 				}
 			};
@@ -259,14 +261,14 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				public void handleNotification(final UserModifiedNotification notification) {
 					try {
 						final UserFormData userForm = notification.getUserForm();
-						LOG.debug("User modified prepare to reset cached TimeZone (" + this.getClass().getName()
-								+ ") : " + userForm.getUserId());
+						LOG.debug("User modified prepare to reset cached TimeZone (" + Table.this.getTitle() + ") : "
+								+ userForm.getUserId());
 						final List<ITableRow> rows = Table.this.getRows();
 						for (final ITableRow row : rows) {
 							Table.this.autoFillDates(row);
 						}
 					} catch (final RuntimeException e) {
-						LOG.error("Could not handle modified User. (" + this.getClass().getName() + ")", e);
+						LOG.error("Could not handle modified User. (" + Table.this.getTitle() + ")", e);
 					}
 				}
 			};
