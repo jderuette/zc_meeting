@@ -123,20 +123,27 @@ public class ApiService implements IApiService {
 		LOG.debug("Loading credential by ID : " + oAuthId);
 
 		if (!ACCESS.check(new ReadApiPermission(oAuthId))) {
-			// force to currentUserId ONLY
 			final AccessControlService acs = BEANS.get(AccessControlService.class);
-			if (!ACCESS.check(new ReadApiPermission(oAuthId))) {
-				LOG.error("User :" + acs.getUserIdOfCurrentSubject() + " (id : "
-						+ acs.getZeroClickUserIdOfCurrentSubject() + " try to load Api Data with Id : " + oAuthId
-						+ " (user : " + userId + ") wich belong to User " + userId
-						+ " But haven't 'ALL'/'RELATED' read permission");
-				throw new VetoException(TEXTS.get("AuthorizationFailed"));
-			}
+			LOG.error("User :" + acs.getUserIdOfCurrentSubject() + " (id : " + acs.getZeroClickUserIdOfCurrentSubject()
+					+ " try to load Api Data with Id : " + oAuthId + " (user : " + userId + ") wich belong to User "
+					+ userId + " But haven't 'ALL'/'RELATED' read permission");
+			throw new VetoException(TEXTS.get("AuthorizationFailed"));
 		}
 
 		SQL.selectInto(
 				SQLs.OAUHTCREDENTIAL_SELECT + SQLs.OAUHTCREDENTIAL_FILTER_OAUTH_ID + SQLs.OAUHTCREDENTIAL_SELECT_INTO,
 				formData);
+
+		if (null == formData.getProviderData()) {
+			// force load BLOB data
+			final Object[][] apiProvierData = SQL.select(
+					SQLs.OAUHTCREDENTIAL_SELECT_PROVIDER_DATA_ONLY + SQLs.OAUHTCREDENTIAL_FILTER_OAUTH_ID,
+					new NVPair("apiCredentialId", oAuthId));
+			if (apiProvierData.length == 1) {
+				formData.setProviderData((byte[]) apiProvierData[0][0]);
+			}
+		}
+
 		return formData;
 	}
 
@@ -168,9 +175,11 @@ public class ApiService implements IApiService {
 		// Warning no permission check to allow "attendee" to check "host"
 		// calendar
 		LOG.debug("Searching API Id for user : " + userId);
+
 		final ApiFormData formData = new ApiFormData();
+		formData.setUserId(userId);
 		SQL.selectInto(SQLs.OAUHTCREDENTIAL_SELECT_API_ID + SQLs.OAUHTCREDENTIAL_FILTER_USER_ID
-				+ SQLs.OAUHTCREDENTIAL_SELECT_INTO, formData);
+				+ SQLs.OAUHTCREDENTIAL_SELECT_INTO_API_ID, formData);
 		return formData.getApiCredentialId();
 	}
 

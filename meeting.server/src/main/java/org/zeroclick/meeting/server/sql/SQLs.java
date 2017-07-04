@@ -82,15 +82,18 @@ public interface SQLs {
 
 	String OAUHTCREDENTIAL_INSERT = "INSERT INTO OAUHTCREDENTIAL (api_credential_id, user_id) VALUES (:apiCredentialId, :userId)";
 
-	String OAUHTCREDENTIAL_UPDATE = "UPDATE OAUHTCREDENTIAL SET user_id = :userId,  access_token = :accessToken, expiration_time_milliseconds = :expirationTimeMilliseconds, refresh_token = :refreshToken, provider = :provider, repository_id = :repositoryId, provider_data= :providerData WHERE api_credential_id = :apiCredentialId";
+	String OAUHTCREDENTIAL_UPDATE = "UPDATE OAUHTCREDENTIAL SET user_id=:userId,  access_token=:accessToken, expiration_time_milliseconds=:expirationTimeMilliseconds, refresh_token=:refreshToken, provider=:provider, repository_id=:repositoryId, provider_data=:providerData WHERE api_credential_id=:apiCredentialId";
 
 	String OAUHTCREDENTIAL_SELECT_OWNER = "SELECT user_id FROM OAUHTCREDENTIAL WHERE api_credential_id=:apiCredentialId INTO :userId";
 
-	String OAUHTCREDENTIAL_SELECT = "SELECT access_token, expiration_time_milliseconds, refresh_token, provider, repository_id, provider_data FROM OAUHTCREDENTIAL WHERE 1=1";
+	String OAUHTCREDENTIAL_SELECT = "SELECT api_credential_id, access_token, expiration_time_milliseconds, refresh_token, provider, repository_id, provider_data FROM OAUHTCREDENTIAL WHERE 1=1";
 	String OAUHTCREDENTIAL_SELECT_API_ID = "SELECT api_credential_id FROM OAUHTCREDENTIAL WHERE 1=1";
 	String OAUHTCREDENTIAL_SELECT_GOOGLE_DATA = "SELECT google_data FROM OAUHTCREDENTIAL WHERE provider=1";
 
-	String OAUHTCREDENTIAL_SELECT_INTO = " INTO :accessToken, :expirationTimeMilliseconds, :refreshToken, :provider, :repositoryId, :providerData";
+	String OAUHTCREDENTIAL_SELECT_INTO = " INTO :apiCredentialId, :accessToken, :expirationTimeMilliseconds, :refreshToken, :provider, :repositoryId, :providerData";
+	String OAUHTCREDENTIAL_SELECT_INTO_API_ID = " INTO :apiCredentialId";
+
+	String OAUHTCREDENTIAL_SELECT_PROVIDER_DATA_ONLY = "SELECT provider_data FROM OAUHTCREDENTIAL WHERE 1=1";
 
 	String OAUHTCREDENTIAL_FILTER_OAUTH_ID = " AND api_credential_id = :apiCredentialId";
 	String OAUHTCREDENTIAL_FILTER_USER_ID = " AND user_id= :userId";
