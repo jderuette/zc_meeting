@@ -29,6 +29,7 @@ import com.mailjet.client.MailjetRequest;
 import com.mailjet.client.MailjetResponse;
 import com.mailjet.client.errors.MailjetException;
 import com.mailjet.client.errors.MailjetSocketTimeoutException;
+import com.mailjet.client.resource.Contact;
 import com.mailjet.client.resource.Email;
 
 /**
@@ -101,7 +102,7 @@ public class MailjetMailSender implements IMailSender {
 				.property(Email.FROMNAME, new EmailFromNameProperty().getValue()).property(Email.SUBJECT, subject)
 				.property(Email.TEXTPART, "No message text use an html compliant mail reader")
 				.property(Email.HTMLPART, messageBody)
-				.property(Email.RECIPIENTS, new JSONArray().put(new JSONObject().put("zc.common.email", recipientTo)))
+				.property(Email.RECIPIENTS, new JSONArray().put(new JSONObject().put(Contact.EMAIL, recipientTo)))
 				.property(Email.BCC, new EmailBccProperty().getValue());
 		try {
 			// trigger the API call
