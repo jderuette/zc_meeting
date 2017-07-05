@@ -314,9 +314,10 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			final Long hostId = this.getOrganizerColumn().getValue(row.getRowIndex());
 			final Long attendeeId = this.getGuestIdColumn().getValue(row.getRowIndex());
 			return null != row && "ASKED".equals(this.getStateColumn().getValue(row.getRowIndex()))
+					&& (null == this.getStartDateColumn().getValue(row.getRowIndex())
+							|| null == this.getEndDateColumn().getValue(row.getRowIndex()))
 					&& GoogleApiHelper.get().isCalendarConfigured(hostId)
-					&& GoogleApiHelper.get().isCalendarConfigured(attendeeId)
-					&& null == this.getStartDateColumn().getValue(row.getRowIndex()) && this.isTimeZoneValid(attendeeId)
+					&& GoogleApiHelper.get().isCalendarConfigured(attendeeId) && this.isTimeZoneValid(attendeeId)
 					&& this.isTimeZoneValid(hostId) && this.isGuestCurrentUser(row);
 		}
 
@@ -502,6 +503,24 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 		protected ZoneId getUserZoneId(final Long userId) {
 			return ZoneId.of(this.getUserTimeZone(userId));
+		}
+
+		protected ZoneId getCurrentUserTimeZone() {
+			final IUserService userService = BEANS.get(IUserService.class);
+			final AccessControlService acs = BEANS.get(AccessControlService.class);
+			ZoneId userZoneId = ZoneId.of("UTC");
+			if (null != userService) {
+				userZoneId = this.getUserZoneId(acs.getZeroClickUserIdOfCurrentSubject());
+			}
+			return userZoneId;
+		}
+
+		protected ZonedDateTime getZonedValue(final ZoneId userZoneId, final Date value) {
+			ZonedDateTime zdt = null;
+			if (null != value) {
+				zdt = Table.this.toZonedDateTime(value, userZoneId);
+			}
+			return zdt;
 		}
 
 		@Override
@@ -1016,28 +1035,17 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				return TEXTS.get("zc.meeting.start");
 			}
 
-			protected IUserService getUserService() {
-				final IUserService userService = BEANS.get(IUserService.class);
-				return userService;
+			public ZonedDateTime getZonedValue(final int rowIndex) {
+				return Table.this.getZonedValue(Table.this.getCurrentUserTimeZone(), this.getValue(rowIndex));
 			}
 
 			public ZonedDateTime getSelectedZonedValue() {
-				final IUserService userService = this.getUserService();
-				final AccessControlService acs = BEANS.get(AccessControlService.class);
-				ZoneId userZoneId = ZoneId.of("UTC");
-				if (null != userService) {
-					userZoneId = ZoneId.of(userService.getUserTimeZone(acs.getZeroClickUserIdOfCurrentSubject()));
-				}
-				return this.getSelectedZonedValue(userZoneId);
+				return this.getSelectedZonedValue(Table.this.getCurrentUserTimeZone());
 			}
 
 			public ZonedDateTime getSelectedZonedValue(final ZoneId userZoneId) {
 				final Date currentDate = super.getSelectedValue();
-				ZonedDateTime zdt = null;
-				if (null != currentDate) {
-					zdt = Table.this.toZonedDateTime(currentDate, userZoneId);
-				}
-				return zdt;
+				return Table.this.getZonedValue(userZoneId, currentDate);
 			}
 
 			/**
@@ -1111,28 +1119,17 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				return TEXTS.get("zc.meeting.end");
 			}
 
-			protected IUserService getUserService() {
-				final IUserService userService = BEANS.get(IUserService.class);
-				return userService;
+			public ZonedDateTime getZonedValue(final int rowIndex) {
+				return Table.this.getZonedValue(Table.this.getCurrentUserTimeZone(), this.getValue(rowIndex));
 			}
 
 			public ZonedDateTime getSelectedZonedValue() {
-				final IUserService userService = this.getUserService();
-				final AccessControlService acs = BEANS.get(AccessControlService.class);
-				ZoneId userZoneId = ZoneId.of("UTC");
-				if (null != userService) {
-					userZoneId = ZoneId.of(userService.getUserTimeZone(acs.getZeroClickUserIdOfCurrentSubject()));
-				}
-				return this.getSelectedZonedValue(userZoneId);
+				return this.getSelectedZonedValue(Table.this.getCurrentUserTimeZone());
 			}
 
 			public ZonedDateTime getSelectedZonedValue(final ZoneId userZoneId) {
 				final Date currentDate = super.getSelectedValue();
-				ZonedDateTime zdt = null;
-				if (null != currentDate) {
-					zdt = Table.this.toZonedDateTime(currentDate, userZoneId);
-				}
-				return zdt;
+				return Table.this.getZonedValue(userZoneId, currentDate);
 			}
 
 			/**

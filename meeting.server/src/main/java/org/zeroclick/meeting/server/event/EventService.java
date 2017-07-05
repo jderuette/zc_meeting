@@ -1,8 +1,8 @@
 package org.zeroclick.meeting.server.event;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -66,8 +66,8 @@ public class EventService implements IEventService {
 	}
 
 	@Override
-	public List<Long> getUsersWithPendingMeeting() {
-		final List<Long> users = new ArrayList<>();
+	public Map<Long, Integer> getUsersWithPendingMeeting() {
+		final Map<Long, Integer> users = new HashMap<>();
 
 		final AccessControlService acs = BEANS.get(AccessControlService.class);
 		final Long currentUser = acs.getZeroClickUserIdOfCurrentSubject();
@@ -84,13 +84,23 @@ public class EventService implements IEventService {
 
 		if (null != pendingOrganizer) {
 			for (int i = 0; i < pendingOrganizer.length; i++) {
-				users.add((Long) pendingOrganizer[i][0]);
+				final Long pendingUserAttendee = (Long) pendingOrganizer[i][1];
+				if (!users.containsKey(pendingUserAttendee)) {
+					users.put(pendingUserAttendee, 0);
+				}
+				Integer currentNbEvent = users.get(pendingUserAttendee);
+				users.put(pendingUserAttendee, ++currentNbEvent);
 			}
 		}
 
 		if (null != pendingAttendee) {
 			for (int i = 0; i < pendingAttendee.length; i++) {
-				users.add((Long) pendingAttendee[i][1]);
+				final Long pendingUserAttendee = (Long) pendingOrganizer[i][1];
+				if (!users.containsKey(pendingUserAttendee)) {
+					users.put(pendingUserAttendee, 0);
+				}
+				Integer currentNbEvent = users.get(pendingUserAttendee);
+				users.put(pendingUserAttendee, ++currentNbEvent);
 			}
 		}
 

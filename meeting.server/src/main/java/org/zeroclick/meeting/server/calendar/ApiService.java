@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -245,9 +246,9 @@ public class ApiService implements IApiService {
 
 		final IEventService eventService = BEANS.get(IEventService.class);
 
-		final List<Long> pendingUsers = eventService.getUsersWithPendingMeeting();
+		final Map<Long, Integer> pendingUsers = eventService.getUsersWithPendingMeeting();
 
-		return pendingUsers.contains(apiCredentialOwner);
+		return pendingUsers.containsKey(apiCredentialOwner) ? pendingUsers.get(apiCredentialOwner) > 0 : Boolean.FALSE;
 
 	}
 

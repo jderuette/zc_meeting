@@ -1,6 +1,6 @@
 package org.zeroclick.meeting.shared.event;
 
-import java.util.List;
+import java.util.Map;
 
 import org.eclipse.scout.rt.platform.service.IService;
 import org.eclipse.scout.rt.shared.TunnelToServer;
@@ -30,6 +30,11 @@ public interface IEventService extends IService {
 
 	EventFormData storeNewState(RejectEventFormData formData);
 
-	List<Long> getUsersWithPendingMeeting();
+	/**
+	 * Get pending events for current connected user
+	 * 
+	 * @return a Map<UserId, NbEvent>
+	 */
+	Map<Long, Integer> getUsersWithPendingMeeting();
 
 }
