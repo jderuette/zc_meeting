@@ -188,7 +188,7 @@ public interface SQLs {
 	String ROLE_PERMISSION_VALUES_102 = " VALUES(2, 'org.zeroclick.meeting.shared.calendar.DeleteApiPermission', 10)";
 	String ROLE_PERMISSION_VALUES_103 = " VALUES(2, 'org.zeroclick.meeting.shared.calendar.UpdateApiPermission', 15)";
 	String ROLE_PERMISSION_VALUES_104 = " VALUES(2, 'org.zeroclick.meeting.shared.event.UpdateEventPermission', 10)";
-	String ROLE_PERMISSION_VALUES_105 = " VALUES(2, 'org.zeroclick.meeting.shared.calendar.ReadApiPermission', 10)";
+	String ROLE_PERMISSION_VALUES_105 = " VALUES(2, 'org.zeroclick.meeting.shared.calendar.ReadApiPermission', 15)";
 	String ROLE_PERMISSION_VALUES_106 = " VALUES(2, 'org.zeroclick.meeting.shared.event.ReadEventPermission', 10)";
 	String ROLE_PERMISSION_VALUES_107 = " VALUES(2, 'org.zeroclick.configuration.shared.user.ReadUserPermission', 10)";
 	String ROLE_PERMISSION_VALUES_108 = " VALUES(2, 'org.zeroclick.configuration.shared.user.UpdateUserPermission', 10)";
