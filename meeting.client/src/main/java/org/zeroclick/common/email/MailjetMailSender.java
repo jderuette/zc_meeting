@@ -113,7 +113,7 @@ public class MailjetMailSender implements IMailSender {
 						+ response.getData());
 				throw new MailException("Error while sending mail");
 			} else {
-				LOG.debug("Mail sent with status : " + response.getStatus() + " and data : " + response.getData());
+				LOG.info("Mail sent with status : " + response.getStatus() + " and data : " + response.getData());
 			}
 		} catch (final MailjetException e) {
 			LOG.error("Error while sending mail." + e);
