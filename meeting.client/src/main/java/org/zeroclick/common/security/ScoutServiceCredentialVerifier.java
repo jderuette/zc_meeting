@@ -118,10 +118,15 @@ public class ScoutServiceCredentialVerifier implements ICredentialVerifier {
 
 	public String generatePassword(final String plainText) {
 		IPassword hashedPassword = null;
+		String plainPassword = plainText;
+		if (null == plainText || "".equals(plainText)) {
+			LOG.warn("No PlainText provided for password hash, using default");
+			plainPassword = "GR4p-gO8";
+		}
 		if (CONFIG.getPropertyValue(CredentialScoutServicePlainTextProperty.class)) {
-			hashedPassword = new PlainTextPassword(plainText.toCharArray());
+			hashedPassword = new PlainTextPassword(plainPassword.toCharArray());
 		} else {
-			hashedPassword = new HashedPassword(plainText, SecurityUtility.createRandomBytes());
+			hashedPassword = new HashedPassword(plainPassword, SecurityUtility.createRandomBytes());
 		}
 		return hashedPassword.toString();
 	}
