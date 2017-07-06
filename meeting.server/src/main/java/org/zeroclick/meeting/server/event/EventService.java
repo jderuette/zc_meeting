@@ -15,6 +15,7 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.data.page.AbstractTablePageData;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
+import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.shared.user.IUserService;
@@ -82,7 +83,7 @@ public class EventService implements IEventService {
 		pendingAttendee = SQL.select(SQLs.EVENT_SELECT_USERS_PENDING_EVENT_HOST,
 				new NVPair("currentUser", currentUser));
 
-		if (null != pendingOrganizer) {
+		if (null != pendingOrganizer && pendingOrganizer.length > 0) {
 			for (int i = 0; i < pendingOrganizer.length; i++) {
 				final Long pendingUserAttendee = (Long) pendingOrganizer[i][1];
 				if (!users.containsKey(pendingUserAttendee)) {
@@ -93,7 +94,7 @@ public class EventService implements IEventService {
 			}
 		}
 
-		if (null != pendingAttendee) {
+		if (null != pendingAttendee && pendingAttendee.length > 0) {
 			for (int i = 0; i < pendingAttendee.length; i++) {
 				final Long pendingUserAttendee = (Long) pendingOrganizer[i][1];
 				if (!users.containsKey(pendingUserAttendee)) {
@@ -246,6 +247,37 @@ public class EventService implements IEventService {
 		SQL.selectInto(SQLs.EVENT_SELECT_RECIPIENT, formData);
 
 		return formData.getEmail().getValue();
+	}
+
+	protected Set<String> getKnowEmail(final ILookupCall<String> call, final Boolean strict) {
+		final Set<String> knowEmail = new HashSet<>();
+		final AccessControlService acs = BEANS.get(AccessControlService.class);
+		final Long currentUserId = acs.getZeroClickUserIdOfCurrentSubject();
+
+		final Object[][] attendeesData = SQL.select(SQLs.EVENT_SELECT_KNOWN_ATTENDEE_LOOKUP,
+				new NVPair("currentUser", currentUserId), new NVPair("call", call));
+		for (int row = 0; row < attendeesData.length; row++) {
+			knowEmail.add((String) attendeesData[row][0]);
+		}
+
+		final Object[][] hostsData = SQL.select(SQLs.EVENT_SELECT_KNOWN_HOST_LOOKUP,
+				new NVPair("currentUser", currentUserId), new NVPair("call", call));
+		for (int row = 0; row < hostsData.length; row++) {
+			knowEmail.add((String) hostsData[row][0]);
+		}
+
+		return knowEmail;
+	}
+
+	@Override
+	public Set<String> getKnowEmail(final ILookupCall<String> call) {
+		return this.getKnowEmail(call, Boolean.FALSE);
+
+	}
+
+	@Override
+	public Set<String> getKnowEmailByKey(final ILookupCall<String> call) {
+		return this.getKnowEmail(call, Boolean.TRUE);
 	}
 
 	@Override

@@ -11,6 +11,7 @@ import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractOkButton;
 import org.eclipse.scout.rt.client.ui.form.fields.datefield.AbstractDateField;
 import org.eclipse.scout.rt.client.ui.form.fields.groupbox.AbstractGroupBox;
 import org.eclipse.scout.rt.client.ui.form.fields.longfield.AbstractLongField;
+import org.eclipse.scout.rt.client.ui.form.fields.smartfield.AbstractProposalField;
 import org.eclipse.scout.rt.client.ui.form.fields.smartfield.AbstractSmartField;
 import org.eclipse.scout.rt.client.ui.form.fields.stringfield.AbstractStringField;
 import org.eclipse.scout.rt.platform.BEANS;
@@ -43,10 +44,14 @@ import org.zeroclick.meeting.client.event.EventForm.MainBox.SubjectField;
 import org.zeroclick.meeting.shared.event.CreateEventPermission;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.IEventService;
+import org.zeroclick.meeting.shared.event.KnowEmailLookupCall;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
 
 @FormData(value = EventFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class EventForm extends AbstractForm {
+
+	private static final String EMAIL_PATTERN = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
+			+ "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
 
 	// represents the Event primary key
 	private Long eventId;
@@ -257,18 +262,10 @@ public class EventForm extends AbstractForm {
 		}
 
 		@Order(1000)
-		public class EmailField extends AbstractStringField {
-			private static final String EMAIL_PATTERN = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
-					+ "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
-
+		public class EmailField extends AbstractProposalField<String> {
 			@Override
 			protected String getConfiguredLabel() {
 				return TEXTS.get("zc.meeting.attendeeEmail");
-			}
-
-			@Override
-			protected int getConfiguredMaxLength() {
-				return 128;
 			}
 
 			@Override
@@ -277,18 +274,12 @@ public class EventForm extends AbstractForm {
 			}
 
 			@Override
-			protected String execValidateValue(final String rawValue) {
-				if (rawValue != null) {
-					if (!Pattern.matches(EMAIL_PATTERN, rawValue)) {
-						throw new VetoException(TEXTS.get("zc.common.badEmailAddress"));
-					}
-
-					if (rawValue.equals(EventForm.this.getOrganizerEmailField().getValue())) {
-						throw new VetoException(TEXTS.get("zc.meeting.youCannotInviteYourself"));
-					}
-				}
-				return null == rawValue ? null : rawValue.toLowerCase();
+			protected Class<? extends ILookupCall<String>> getConfiguredLookupCall() {
+				return KnowEmailLookupCall.class;
 			}
+
+			// some validation logic done on save due to limitation in
+			// proposalField (No maxLeng, execvalidate final
 		}
 
 		@Order(1500)
@@ -442,6 +433,8 @@ public class EventForm extends AbstractForm {
 
 		@Override
 		protected void execStore() {
+			EventForm.this.checkAttendeeEmail(EventForm.this.getEmailField().getValue());
+
 			final IEventService eventService = BEANS.get(IEventService.class);
 			final IUserService userService = BEANS.get(IUserService.class);
 			final EventFormData formData = new EventFormData();
@@ -499,6 +492,7 @@ public class EventForm extends AbstractForm {
 
 		@Override
 		protected void execStore() {
+
 			final IEventService service = BEANS.get(IEventService.class);
 			final EventFormData formData = new EventFormData();
 			EventForm.this.exportFormData(formData);
@@ -516,6 +510,23 @@ public class EventForm extends AbstractForm {
 
 		return StringUtility.join(" ", durationText, slotText, "\r\n", TEXTS.get("zc.common.with"),
 				this.getEmailField().getValue());
+	}
+
+	protected void checkAttendeeEmail(final String rawValue) {
+		final Integer maxCaracters = 128;
+		if (rawValue != null) {
+			if (!Pattern.matches(EMAIL_PATTERN, rawValue)) {
+				throw new VetoException(TEXTS.get("zc.common.badEmailAddress"));
+			}
+
+			if (rawValue.equals(EventForm.this.getOrganizerEmailField().getValue())) {
+				throw new VetoException(TEXTS.get("zc.meeting.youCannotInviteYourself"));
+			}
+			if (rawValue.length() > maxCaracters) {
+				throw new VetoException(TEXTS.get("zc.common.tooLong", TEXTS.get("zc.meeting.attendeeEmail"),
+						String.valueOf(maxCaracters)));
+			}
+		}
 	}
 
 }

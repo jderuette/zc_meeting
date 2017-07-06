@@ -1,11 +1,13 @@
 package org.zeroclick.meeting.shared.event;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.scout.rt.platform.service.IService;
 import org.eclipse.scout.rt.shared.TunnelToServer;
 import org.eclipse.scout.rt.shared.data.page.AbstractTablePageData;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
+import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 
 @TunnelToServer
 public interface IEventService extends IService {
@@ -32,9 +34,13 @@ public interface IEventService extends IService {
 
 	/**
 	 * Get pending events for current connected user
-	 * 
+	 *
 	 * @return a Map<UserId, NbEvent>
 	 */
 	Map<Long, Integer> getUsersWithPendingMeeting();
+
+	Set<String> getKnowEmail(ILookupCall<String> call);
+
+	Set<String> getKnowEmailByKey(ILookupCall<String> call);
 
 }

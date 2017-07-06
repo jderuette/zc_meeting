@@ -65,6 +65,15 @@ public interface SQLs {
 	String EVENT_SELECT_RECIPIENT = "SELECT email FROM EVENT WHERE event_id=:eventId INTO :email";
 	String EVENT_SELECT_OWNER = "SELECT organizer FROM EVENT WHERE event_id=:eventId INTO :organizer";
 
+	String EVENT_SELECT_KNOWN_ATTENDEE = "SELECT DISTINCT email FROM EVENT WHERE organizer=:currentUser AND email LIKE :searchEmail AND guest_id!=:currentUser";
+	String EVENT_SELECT_KNOWN_HOST = "SELECT DISTINCT organizer_email FROM EVENT WHERE guest_id=:currentUser AND organizer_email LIKE :searchEmail AND organizer!=:currentUser";
+
+	String EVENT_SELECT_KNOWN_ATTENDEE_LOOKUP = "SELECT DISTINCT email, email FROM EVENT WHERE organizer=:currentUser  AND guest_id!=:currentUser <key> AND email=:key</key><text> AND email LIKE :text</text> <all></all>";
+	String EVENT_SELECT_KNOWN_HOST_LOOKUP = "SELECT DISTINCT organizer_email, organizer_email FROM EVENT WHERE guest_id=:currentUser  AND organizer!=:currentUser <key> AND email=:key</key><text> AND email LIKE :text</text> <all></all>";
+
+	String EVENT_SELECT_KNOWN_ATTENDEE_STRICT = "SELECT DISTINCT email FROM EVENT WHERE organizer=:currentUser AND email=:searchEmail";
+	String EVENT_SELECT_KNOWN_HOST_STRICT = "SELECT DISTINCT organizer_email FROM EVENT WHERE guest_id=:currentUser AND organizer_email=:searchEmail";
+
 	String EVENT_INSERT_SAMPLE = "INSERT INTO EVENT (event_id, organizer, organizer_email, duration, slot, email, guest_id, state, subject)";
 	String EVENT_VALUES_01 = " VALUES  (1, 1, 'djer13@gmail.com', 15, 1, 'bob1@gmail.com', 2, 'ASKED', 'Prendre le thé')";
 	String EVENT_VALUES_02 = " VALUES  (2, 2,'bob1@gmail.com', 120, 3, 'bob2@entreporise.com', 1, 'ASKED', 'Do Something')";
