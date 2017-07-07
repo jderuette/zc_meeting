@@ -211,18 +211,8 @@ public class UserForm extends AbstractForm {
 
 		@Order(1500)
 		public class LoginField extends AbstractStringField {
-			private static final String LOGIN_PATTERN = "^[_A-Za-z0-9-_-].*$";
+			private static final String LOGIN_PATTERN = "^[A-Za-z0-9\\-_]*$";
 			private String initialValue = null;
-
-			// private Boolean modified = Boolean.FALSE;
-			//
-			// protected Boolean isModified() {
-			// return this.modified;
-			// }
-			//
-			// protected void setModified(final Boolean modified) {
-			// this.modified = modified;
-			// }
 
 			@Override
 			protected String getConfiguredLabel() {
@@ -233,20 +223,6 @@ public class UserForm extends AbstractForm {
 			protected int getConfiguredMaxLength() {
 				return 64;
 			}
-
-			// @Override
-			// protected void execInitField() {
-			// this.addPropertyChangeListener(new PropertyChangeListener() {
-			//
-			// @Override
-			// public void propertyChange(final PropertyChangeEvent evt) {
-			// if (null != evt.getNewValue() && !"".equals(evt.getNewValue())
-			// && !evt.getNewValue().equals(evt.getOldValue())) {
-			// LoginField.this.setModified(Boolean.TRUE);
-			// }
-			// }
-			// });
-			// }
 
 			@Override
 			protected String execValidateValue(final String rawValue) {
