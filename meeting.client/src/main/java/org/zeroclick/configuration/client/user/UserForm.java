@@ -506,10 +506,10 @@ public class UserForm extends AbstractForm {
 	private void sendUserInviteEmail() {
 		final IUserService userService = BEANS.get(IUserService.class);
 
-		this.sendUserInviteEmail(this, userService.getCurrentUserDetails().getEmail().getValue());
+		this.sendUserInviteEmail(this, userService.getCurrentUserDetails().getEmail().getValue(), null);
 	}
 
-	private void sendUserInviteEmail(final UserForm newUser, final String emailSender) {
+	private void sendUserInviteEmail(final UserForm newUser, final String emailSender, final String meetinSubject) {
 		final IMailSender mailSender = BEANS.get(IMailSender.class);
 
 		String subject;
@@ -519,7 +519,7 @@ public class UserForm extends AbstractForm {
 			// invite + meeting
 			subject = TEXTS.get("zc.meeting.email.invit.subject", emailSender);
 			messageBody = TEXTS.get("zc.meeting.email.invit.html", emailSender, new ApplicationUrlProperty().getValue(),
-					newUser.getEmailField().getValue(), newUser.getPasswordField().getValue());
+					newUser.getEmailField().getValue(), newUser.getPasswordField().getValue(), meetinSubject);
 		} else {
 			// Simple invite without meeting
 			subject = TEXTS.get("zc.user.email.invit.withoutMeeting.subject", emailSender);
@@ -534,10 +534,11 @@ public class UserForm extends AbstractForm {
 		}
 	}
 
-	public UserForm autoFillInviteUser(final String email, final String emailSender) {
+	public UserForm autoFillInviteUser(final String email, final String emailSender, final String meetingSubject) {
 		final IUserService userService = BEANS.get(IUserService.class);
 
-		LOG.info("Creating and invite a new User with email : " + email + " by : " + emailSender);
+		LOG.info("Creating and invite a new User with email : " + email + " by : " + emailSender
+				+ " with meetingSubject : " + meetingSubject);
 
 		if (userService.isEmailAlreadyUsed(email)) {
 			new VetoException(TEXTS.get("zc.user.emailAlreadyUsed"));
@@ -545,7 +546,7 @@ public class UserForm extends AbstractForm {
 
 		this.createUser(email, Boolean.TRUE);
 		this.save();
-		this.sendUserInviteEmail(this, emailSender);
+		this.sendUserInviteEmail(this, emailSender, meetingSubject);
 
 		return this;
 	}

@@ -443,10 +443,11 @@ public class EventForm extends AbstractForm {
 			final String eventGuestEmail = formData.getEmail().getValue();
 			final String eventHeldEmail = formData.getOrganizerEmail().getValue();
 			final Long eventGuest = userService.getUserIdByEmail(eventGuestEmail);
+			final String meetingSubject = formData.getSubject().getValue();
 
 			if (null == eventGuest) {
 				final UserForm userForm = new UserForm();
-				userForm.autoFillInviteUser(eventGuestEmail, eventHeldEmail);
+				userForm.autoFillInviteUser(eventGuestEmail, eventHeldEmail, meetingSubject);
 				// eventGuest = form.getUserIdField().getValue();
 				formData.getGuestId().setValue(userForm.getUserIdField().getValue());
 			} else {
