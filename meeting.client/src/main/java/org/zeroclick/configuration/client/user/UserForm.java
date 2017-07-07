@@ -558,10 +558,16 @@ public class UserForm extends AbstractForm {
 		this.getEmailField().setValue(email);
 		// this.getUserIdField().setValue(userId);
 
-		final byte[] randomBytes = SecurityUtility.createRandomBytes(20);
-		String plainRandomPassword = Base64Utility.encode(randomBytes);
-		plainRandomPassword.replaceAll("[iI0O/=\\\\]", java.util.regex.Matcher.quoteReplacement(""));
-		plainRandomPassword = plainRandomPassword.substring(0, 8);
+		String plainRandomPassword = this.generatePasword();
+
+		if (null == plainRandomPassword || "".equals(plainRandomPassword)) {
+			LOG.warn("Generated Plain Password is null or empty ! Trying again ...");
+			plainRandomPassword = this.generatePasword();
+			if (null == plainRandomPassword || "".equals(plainRandomPassword)) {
+				LOG.warn("Generated Plain Password is STILL null or empty !");
+			}
+		}
+
 		this.getPasswordField().setValue(plainRandomPassword);
 		this.getConfirmPasswordField().setValue(plainRandomPassword);
 
@@ -573,6 +579,15 @@ public class UserForm extends AbstractForm {
 		super.doSave();
 
 		return this;
+	}
+
+	private String generatePasword() {
+		final byte[] randomBytes = SecurityUtility.createRandomBytes(20);
+		String plainRandomPassword = Base64Utility.encode(randomBytes);
+		plainRandomPassword.replaceAll("[iI0O/=\\\\]", java.util.regex.Matcher.quoteReplacement(""));
+		plainRandomPassword = plainRandomPassword.substring(0, 8);
+
+		return plainRandomPassword;
 	}
 
 }
