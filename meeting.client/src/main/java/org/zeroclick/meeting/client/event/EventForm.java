@@ -433,7 +433,7 @@ public class EventForm extends AbstractForm {
 
 		@Override
 		protected void execStore() {
-			EventForm.this.checkAttendeeEmail(EventForm.this.getEmailField().getValue());
+			EventForm.this.checkAttendeeEmail();
 
 			final IEventService eventService = BEANS.get(IEventService.class);
 			final IUserService userService = BEANS.get(IUserService.class);
@@ -513,8 +513,12 @@ public class EventForm extends AbstractForm {
 				this.getEmailField().getValue());
 	}
 
-	protected void checkAttendeeEmail(final String rawValue) {
+	protected void checkAttendeeEmail() {
 		final Integer maxCaracters = 128;
+		// force to lowerCase
+		EventForm.this.getEmailField().setValue(EventForm.this.getEmailField().getValue().toLowerCase());
+		final String rawValue = EventForm.this.getEmailField().getValue();
+
 		if (rawValue != null) {
 			if (!Pattern.matches(EMAIL_PATTERN, rawValue)) {
 				throw new VetoException(TEXTS.get("zc.common.badEmailAddress"));
