@@ -610,20 +610,27 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				return Boolean.FALSE;
 			}
 
-			private Boolean isWorkFlowVisible() {
-				final String currentState = (String) EventTablePage.this.getTable().getSelectedRow()
-						.getCell(Table.this.getStateColumn()).getValue();
-				return "ASKED".equals(currentState);
-			}
+			// private Boolean isWorkFlowVisible() {
+			// final String currentState = (String)
+			// EventTablePage.this.getTable().getSelectedRow()
+			// .getCell(Table.this.getStateColumn()).getValue();
+			// return "ASKED".equals(currentState);
+			// }
 
 			@Override
 			protected void execOwnerValueChanged(final Object newOwnerValue) {
 				final AccessControlService acs = BEANS.get(AccessControlService.class);
 
 				final Long rowId = Table.this.getEventIdColumn().getSelectedValue();
-				final Boolean isHeld = Table.this.isHeldByCurrentUser(EventTablePage.this.getTable().getSelectedRow());
-				this.setVisible(this.isWorkFlowVisible() && (isHeld || acs
-						.getPermissionLevel(new UpdateEventPermission(rowId)) >= UpdateEventPermission.LEVEL_ALL));
+				// final Boolean isHeld =
+				// Table.this.isHeldByCurrentUser(EventTablePage.this.getTable().getSelectedRow());
+				// this.setVisible(this.isWorkFlowVisible() && (isHeld || acs
+				// .getPermissionLevel(new UpdateEventPermission(rowId)) >=
+				// UpdateEventPermission.LEVEL_ALL));
+				// Only for admin
+				this.setVisible(
+						acs.getPermissionLevel(new UpdateEventPermission(rowId)) >= UpdateEventPermission.LEVEL_ALL);
+
 				this.setEnabled(EventTablePage.this.isUserCalendarConfigured());
 			}
 
