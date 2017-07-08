@@ -16,6 +16,7 @@ import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.configuration.shared.onboarding.OnBoradingUserFormData;
 import org.zeroclick.configuration.shared.user.CreateUserPermission;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.ReadUserPermission;
@@ -149,6 +150,19 @@ public class UserService implements IUserService {
 		return formData;
 	}
 
+	@Override
+	public OnBoradingUserFormData load(final OnBoradingUserFormData formData) {
+		UserFormData userFormData = new UserFormData();
+		userFormData.getUserId().setValue(formData.getUserId().getValue());
+
+		userFormData = this.load(userFormData);
+
+		formData.getLogin().setValue(userFormData.getLogin().getValue());
+		formData.getTimeZone().setValue(userFormData.getTimeZone().getValue());
+
+		return formData;
+	}
+
 	private void loadRoles(final UserFormData formData, final Long currentSelectedUserId) {
 		final UserFormData formDataRoles = new UserFormData();
 		SQL.selectInto(SQLs.USER_ROLE_SELECT_ROLES + SQLs.USER_ROLE_SELECT_FILTER_USER + SQLs.USER_SELECT_INTO_ROLE,
@@ -201,6 +215,25 @@ public class UserService implements IUserService {
 	@Override
 	public UserFormData store(final UserFormData formData) {
 		return this.store(formData, Boolean.FALSE);
+	}
+
+	@Override
+	public OnBoradingUserFormData store(final OnBoradingUserFormData formData) {
+		if (!ACCESS.check(new UpdateUserPermission(formData.getUserId().getValue()))) {
+			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+		}
+		LOG.debug("Store OnBoarding User datas with Id :" + formData.getUserId().getValue() + " (Login : "
+				+ formData.getLogin().getValue() + ")");
+
+		SQL.update(SQLs.USER_UPDATE_ONBOARDING, formData);
+
+		UserFormData userFormForNotifications = new UserFormData();
+
+		userFormForNotifications.getUserId().setValue(formData.getUserId().getValue());
+		userFormForNotifications = this.load(userFormForNotifications);
+		this.sendModifiedNotifications(userFormForNotifications);
+
+		return formData;
 	}
 
 	private Set<String> buildNotifiedUsers(final UserFormData formData) {

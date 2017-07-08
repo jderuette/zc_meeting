@@ -1,7 +1,5 @@
 package org.zeroclick.configuration.client.user;
 
-import java.util.regex.Pattern;
-
 import org.eclipse.scout.rt.client.dto.FormData;
 import org.eclipse.scout.rt.client.ui.form.AbstractForm;
 import org.eclipse.scout.rt.client.ui.form.AbstractFormHandler;
@@ -11,8 +9,6 @@ import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractOkButton;
 import org.eclipse.scout.rt.client.ui.form.fields.groupbox.AbstractGroupBox;
 import org.eclipse.scout.rt.client.ui.form.fields.listbox.AbstractListBox;
 import org.eclipse.scout.rt.client.ui.form.fields.longfield.AbstractLongField;
-import org.eclipse.scout.rt.client.ui.form.fields.smartfield.AbstractSmartField;
-import org.eclipse.scout.rt.client.ui.form.fields.stringfield.AbstractStringField;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.exception.VetoException;
@@ -43,7 +39,6 @@ import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
-import org.zeroclick.meeting.client.common.ZoneIdLookupCall;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
 @FormData(value = UserFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
@@ -210,172 +205,44 @@ public class UserForm extends AbstractForm {
 		}
 
 		@Order(1500)
-		public class LoginField extends AbstractStringField {
-			private static final String LOGIN_PATTERN = "^[A-Za-z0-9\\-_]*$";
-			private String initialValue = null;
+		public class LoginField extends org.zeroclick.ui.form.fields.loginfield.LoginField {
 
-			@Override
-			protected String getConfiguredLabel() {
-				return TEXTS.get("Login");
-			}
-
-			@Override
-			protected int getConfiguredMaxLength() {
-				return 64;
-			}
-
-			@Override
-			protected String execValidateValue(final String rawValue) {
-				final IUserService userService = BEANS.get(IUserService.class);
-				Boolean modified = Boolean.FALSE;
-
-				if (null == this.initialValue) {
-					this.initialValue = rawValue;
-				}
-
-				if (null != rawValue && !rawValue.equals(this.initialValue)) {
-					modified = Boolean.TRUE;
-				}
-
-				if (null != rawValue && modified) {
-					if (rawValue.length() < 4) {
-						throw new VetoException(TEXTS.get("zc.login.tooShort"));
-					}
-					if (!Pattern.matches(LOGIN_PATTERN, rawValue)) {
-						throw new VetoException(TEXTS.get("zc.login.invalid"));
-					}
-
-					if (userService.isLoginAlreadyUsed(rawValue)) {
-						throw new VetoException(TEXTS.get("zc.login.invalid"));
-					}
-				}
-				return rawValue;
-			}
 		}
 
 		@Order(2000)
-		public class EmailField extends AbstractStringField {
-			private static final String EMAIL_PATTERN = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
-					+ "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
+		public class EmailField extends org.zeroclick.ui.form.fields.emailfield.EmailField {
 
-			@Override
-			protected String getConfiguredLabel() {
-				return TEXTS.get("zc.common.email");
-			}
-
-			@Override
-			protected int getConfiguredMaxLength() {
-				return 128;
-			}
-
-			@Override
-			protected boolean getConfiguredMandatory() {
-				return Boolean.TRUE;
-			}
-
-			@Override
-			protected String execValidateValue(final String rawValue) {
-				if (rawValue != null && !Pattern.matches(EMAIL_PATTERN, rawValue)) {
-					throw new VetoException(TEXTS.get("zc.common.badEmailAddress"));
-				}
-				return rawValue;
-			}
 		}
 
 		@Order(2500)
-		public class PasswordField extends AbstractStringField {
-			private static final String NUMBER_PATTERN = "^.*[0-9]+.*$";
-			private static final String LETTER_PATTERN = "^.*[A-Za-z]+.*";
-
-			@Override
-			protected String getConfiguredLabel() {
-				return TEXTS.get("Password");
-			}
-
-			@Override
-			protected int getConfiguredMaxLength() {
-				return 128;
-			}
-
-			@Override
-			protected boolean getConfiguredMandatory() {
-				return Boolean.FALSE;
-			}
-
-			@Override
-			protected boolean getConfiguredInputMasked() {
-				return Boolean.TRUE;
-			}
-
+		public class PasswordField extends org.zeroclick.ui.form.fields.passwordfield.PasswordField {
 			@Override
 			protected String execValidateValue(final String rawValue) {
-				if (null != rawValue) {
-					if (rawValue.length() < 6) {
-						throw new VetoException(TEXTS.get("zc.user.passwordTooShort"));
-					}
-					if (!Pattern.matches(NUMBER_PATTERN, rawValue)) {
-						throw new VetoException(TEXTS.get("zc.user.passwordMustContainNumber"));
-					}
-					if (!Pattern.matches(LETTER_PATTERN, rawValue)) {
-						throw new VetoException(TEXTS.get("zc.user.passwordMustContainLetter"));
-					}
-				}
+				final String superRawValue = super.execValidateValue(rawValue);
+
 				UserForm.this.getConfirmPasswordField().setMandatory(Boolean.TRUE);
-				return rawValue;
-			}
-		}
-
-		@Order(2600)
-		public class ConfirmPasswordField extends AbstractStringField {
-			@Override
-			protected String getConfiguredLabel() {
-				return TEXTS.get("zc.user.confirmPassword");
-			}
-
-			@Override
-			protected int getConfiguredMaxLength() {
-				return 128;
-			}
-
-			@Override
-			protected boolean getConfiguredMandatory() {
-				return Boolean.FALSE;
-			}
-
-			@Override
-			protected boolean getConfiguredInputMasked() {
-				return Boolean.TRUE;
-			}
-
-			@Override
-			protected String execValidateValue(final String rawValue) {
-				final String password = UserForm.this.getPasswordField().getValue();
-				if (rawValue != null && !rawValue.equals(password)) {
-					throw new VetoException(TEXTS.get("zc.user.passwordsDontMatch"));
-				}
-				return rawValue;
-			}
-		}
-
-		@Order(2800)
-		public class TimeZoneField extends AbstractSmartField<String> {
-			@Override
-			protected String getConfiguredLabel() {
-				return TEXTS.get("zc.timezone");
-			}
-
-			@Override
-			protected boolean getConfiguredMandatory() {
-				return Boolean.TRUE;
-			}
-
-			@Override
-			protected Class<? extends ILookupCall<String>> getConfiguredLookupCall() {
-				return ZoneIdLookupCall.class;
+				return superRawValue;
 			}
 		}
 
 		@Order(3000)
+		public class ConfirmPasswordField extends org.zeroclick.ui.form.fields.confirmpasswordfield.ConfirmPasswordField {
+			@Override
+			protected String execValidateValue(final String rawValue) {
+				final String password = UserForm.this.getPasswordField().getValue();
+
+				super.CheckPasswordMatches(password, rawValue);
+
+				return rawValue;
+			}
+		}
+
+		@Order(3500)
+		public class TimeZoneField extends org.zeroclick.ui.form.fields.timezonefield.TimeZoneField {
+
+		}
+
+		@Order(4000)
 		public class RolesBox extends AbstractListBox<Long> {
 			@Override
 			protected String getConfiguredLabel() {
@@ -399,7 +266,7 @@ public class UserForm extends AbstractForm {
 			}
 		}
 
-		@Order(4000)
+		@Order(4500)
 		public class SendUserInviteEmailField extends AbstractBooleanField {
 			@Override
 			protected String getConfiguredLabel() {

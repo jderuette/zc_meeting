@@ -202,10 +202,7 @@ public class EventForm extends AbstractForm {
 		}
 
 		@Order(950)
-		public class OrganizerEmailField extends AbstractStringField {
-			private static final String EMAIL_PATTERN = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
-					+ "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
-
+		public class OrganizerEmailField extends org.zeroclick.ui.form.fields.emailfield.EmailField {
 			@Override
 			protected String getConfiguredLabel() {
 				return TEXTS.get("zc.meeting.host");
@@ -216,23 +213,6 @@ public class EventForm extends AbstractForm {
 				return Boolean.FALSE;
 			}
 
-			@Override
-			protected boolean getConfiguredMandatory() {
-				return Boolean.TRUE;
-			}
-
-			@Override
-			protected String execValidateValue(final String rawValue) {
-				if (rawValue != null && !Pattern.matches(EMAIL_PATTERN, rawValue)) {
-					throw new VetoException(TEXTS.get("zc.common.badEmailAddress"));
-				}
-				return null == rawValue ? null : rawValue.toLowerCase();
-			}
-
-			@Override
-			protected int getConfiguredMaxLength() {
-				return 128;
-			}
 		}
 
 		@Order(975)

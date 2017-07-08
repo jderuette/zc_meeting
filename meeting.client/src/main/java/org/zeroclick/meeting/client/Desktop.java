@@ -27,6 +27,7 @@ import org.zeroclick.configuration.client.ConfigurationOutline;
 import org.zeroclick.configuration.client.administration.AdministrationOutline;
 import org.zeroclick.configuration.client.api.ApiCreatedNotificationHandler;
 import org.zeroclick.configuration.client.user.UserForm;
+import org.zeroclick.configuration.onboarding.OnBoradingUserForm;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
 import org.zeroclick.configuration.shared.role.ReadPermissionPermission;
 import org.zeroclick.configuration.shared.role.ReadRolePermission;
@@ -99,7 +100,7 @@ public class Desktop extends AbstractDesktop {
 		final Long currentUserId = acs.getZeroClickUserIdOfCurrentSubject();
 		final String currentUserTimeZone = userService.getUserTimeZone(currentUserId);
 		if (null == currentUserTimeZone) {
-			final UserForm form = new UserForm();
+			final OnBoradingUserForm form = new OnBoradingUserForm();
 			form.getUserIdField().setValue(currentUserId);
 			form.setEnabledPermission(new UpdateUserPermission(currentUserId));
 			form.startModify();

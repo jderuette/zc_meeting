@@ -262,6 +262,7 @@ public interface SQLs {
 	 * Password not updtaded use USER_UPDATE_PASSWORD
 	 */
 	String USER_UPDATE = "UPDATE APP_USER SET email=:email, login=:login, time_zone=:timeZone WHERE user_id=:userId ";
+	String USER_UPDATE_ONBOARDING = "UPDATE APP_USER SET login=:login, time_zone=:timeZone WHERE user_id=:userId ";
 	String USER_UPDATE_PASSWORD = "UPDATE APP_USER SET password=:hashedPassword WHERE user_id=:userId";
 
 	String USER_INSERT_SAMPLE = "INSERT INTO APP_USER (user_id, login, email, time_zone, password)";

@@ -6,8 +6,7 @@ import org.eclipse.scout.rt.platform.ApplicationScoped;
 import org.eclipse.scout.rt.platform.service.IService;
 import org.eclipse.scout.rt.shared.TunnelToServer;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
-import org.zeroclick.configuration.shared.user.UserFormData;
-import org.zeroclick.configuration.shared.user.UserTablePageData;
+import org.zeroclick.configuration.shared.onboarding.OnBoradingUserFormData;
 
 @ApplicationScoped
 @TunnelToServer
@@ -40,5 +39,9 @@ public interface IUserService extends IService {
 	Set<String> getUserNotificationIds(Long userId);
 
 	boolean isLoginAlreadyUsed(String login);
+
+	OnBoradingUserFormData load(OnBoradingUserFormData formData);
+
+	OnBoradingUserFormData store(OnBoradingUserFormData formData);
 
 }
