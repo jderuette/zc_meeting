@@ -346,11 +346,17 @@ public class RejectEventForm extends AbstractForm {
 				if (null != attendeeId) {
 					this.attendeeCalendarService = googleHelper.getCalendarService(attendeeId);
 				}
+			} catch (final UserAccessRequiredException uare) {
+				LOG.debug("No calendar provider for user " + attendeeId);
+			} catch (final IOException e) {
+				throw new VetoException(TEXTS.get("ErrorAndRetryTextDefault"));
+			}
+			try {
 				if (null != hostId) {
 					this.hostCalendarService = googleHelper.getCalendarService(hostId);
 				}
 			} catch (final UserAccessRequiredException uare) {
-				throw new VetoException(TEXTS.get("zc.meeting.calendarProviderRequired"));
+				LOG.debug("No calendar provider for user " + hostId);
 			} catch (final IOException e) {
 				throw new VetoException(TEXTS.get("ErrorAndRetryTextDefault"));
 			}
@@ -362,8 +368,6 @@ public class RejectEventForm extends AbstractForm {
 			final RejectEventFormData formData = new RejectEventFormData();
 			RejectEventForm.this.exportFormData(formData);
 
-			// TODO Djer13 if there is an external ID, ask provider to
-			// delete
 			if (null != RejectEventForm.this.getExternalIdOrganizer() && null != this.hostCalendarService) {
 				try {
 					LOG.info(this.buildRejectLog("Deleting", RejectEventForm.this.getEventId(),
