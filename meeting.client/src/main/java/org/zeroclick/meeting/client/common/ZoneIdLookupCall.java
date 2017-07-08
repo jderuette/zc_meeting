@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.eclipse.scout.rt.shared.services.lookup.ILookupRow;
 import org.eclipse.scout.rt.shared.services.lookup.LocalLookupCall;
@@ -17,7 +18,7 @@ public class ZoneIdLookupCall extends LocalLookupCall<String> {
 	@Override
 	protected List<LookupRow<String>> execCreateLookupRows() {
 		final List<LookupRow<String>> rows = new ArrayList<>();
-		
+
 		final Set<String> existingZoneids = ZoneId.getAvailableZoneIds();
 
 		for (final String zoneId : existingZoneids) {
@@ -25,6 +26,14 @@ public class ZoneIdLookupCall extends LocalLookupCall<String> {
 		}
 
 		return rows;
+	}
+
+	@Override
+	protected Pattern createSearchPattern(String s) {
+		if (s != null && !s.startsWith(this.getWildcard())) {
+			s = this.getWildcard() + s;
+		}
+		return super.createSearchPattern(s);
 	}
 
 	public ILookupRow<String> getDataById(final String searchedId) {
