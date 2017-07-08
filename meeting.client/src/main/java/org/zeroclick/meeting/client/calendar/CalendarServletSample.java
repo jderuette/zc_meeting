@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.meeting.client.ClientSession;
@@ -53,6 +54,9 @@ public class CalendarServletSample extends HttpServlet {
 			return; // early break to let user handle google auth flow
 		}
 
+		response.getWriter()
+				.write("<html><head></head><body><b>" + TEXTS.get("zc.api.added.google") + "<b></body></html>");
+
 		final ClientSession clientSession = ClientSession.get();
 
 		if (null != clientSession && clientSession.getSubject().getPrincipals().size() > 0) {
@@ -93,12 +97,6 @@ public class CalendarServletSample extends HttpServlet {
 				System.out.printf("%s (%s)\n", event.getSummary(), start);
 			}
 		}
-
-		// getNext period available for first calendar
-
-		// check on other calendars,
-		// if "ok" done
-		// else get next available period
 
 	}
 }
