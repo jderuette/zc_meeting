@@ -21,6 +21,34 @@ Keys for text have this geenral format : {org_shortcut}.{module}.{identifier}.
   - common (other topic)
 - identifier : free text to identify the key, may contains . (dot)
 
-#### Samples : 
+#### Samples 
 - zc.meeting.error.deletingEvent
 - zc.meeting.googleTooManyCall
+
+## Instalation informations
+Mostly a standard [Scout application](https://eclipsescout.github.io/6.0/technical-guide.html#overview). Fro standard information about [Eclipse scout installations](https://eclipsescout.github.io/6.0/beginners-guide.html#apx-install_scout).
+
+### ZeroClick specific requirements
+Most specific configuration ca be visualiser throught Config.properties files. ${UPPER_CASE_INDETIFIER} means an System/environnement varaibles is required.
+
+| ID | alias |Example | Location | Description | Default |
+| -- | ----- | ------- | -------- | ----------- | ------- |
+| ZEROCLICK_BDD_LOGIN | ? | mylogin | Server | The login to connect to DataBase | (empty) |
+| ZEROCLICK_BDD_PASS | ? | The_password | Server | The password to connect to DataBase | (empty) |
+| ZEROCLICK_BDD_MAPPING | ? | jdbc:postgresql://127.0.0.1:5432/zcdev | Server | Mapping to conenct to the DataBase | jdbc:derby:memory:zeroclick-database |
+| MAILJET_USER |  ? | 4f08eb4e3a2c9c2gt72f1e45f8c818dd | Client | Api user ID for Mailjet | (empty) |
+| MAILJET_PASS |  ? | c836bcbd553284320bf410fbc370a6d3 | Client | APi password for Mailjet | (empty) |
+| ZEROCLICK_USER_AREA_UI | user.area | /var/zeroclick or ${user.home}/org.zeroclick.meeting.html.ui.dev | Client | Local storage for Scout Files, and root folder for other application specific files | (empty) |
+| ZEROCLICK_USER_AREA_SRV | user.area | /var/zeroclick or ${user.home}/org.zeroclick.meeting.server.dev | Server | Local storage for Scout Files, and root folder for other application specific files | (empty) |
+| ZEROCLICK_MAIL_FROM | zeroclick.mail.from | bob358@someProvider.com | Client | Mail who send email | admin@0click.org |
+| ZEROCLICK_MAIL_FROM_NAME | zeroclick.mail.from.name | Bob from 0Click | Client | Name display in mail client for the sender | admin |
+| ZEROCLICK_MAIL_BCC | zeroclick.mail.bcc | suport@someProvider.com | Client | in not empty will be bcc for all mail | (empty) |
+
+Other config wich require server configuration. Folder need read/writer access for appServer user : 
+- Folder ${user.area}/GoogleUserStorage
+- File ${user.area}/GoogleClientStorage/client_secret_zeroclick_dev.json (contain your app API acces to Google)
+
+
+
+
+
