@@ -57,7 +57,7 @@ public class DatabaseProperties {
 	public static class JdbcMappingNameProperty extends AbstractStringConfigProperty {
 		@Override
 		protected String getDefaultValue() {
-			return "jdbc:derby:memory:contacts-database";
+			return "jdbc:derby:memory:zeroclick-database";
 		}
 
 		@Override

@@ -105,7 +105,7 @@ public class JavaMailSender implements IMailSender {
 		generateMailMessage.setFrom(new EmailFromProperty().getValue());
 		generateMailMessage.addRecipient(Message.RecipientType.TO, new InternetAddress(recipientTo));
 		final String mailBCC = new EmailBccProperty().getValue();
-		if (null != mailBCC) {
+		if (null != mailBCC && !"".equals(mailBCC)) {
 			generateMailMessage.addRecipient(Message.RecipientType.BCC, new InternetAddress(mailBCC));
 		}
 		generateMailMessage.setSubject(subject);

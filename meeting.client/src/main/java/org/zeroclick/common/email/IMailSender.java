@@ -102,13 +102,13 @@ public interface IMailSender {
 	}
 
 	/**
-	 * Email from email aderess.
+	 * Email from email address.
 	 */
 	public static class EmailBccProperty extends AbstractStringConfigProperty {
 
 		@Override
 		protected String getDefaultValue() {
-			return "djer13@gmail.com";
+			return "";
 		}
 
 		@Override

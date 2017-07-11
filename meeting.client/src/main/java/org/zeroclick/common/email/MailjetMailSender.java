@@ -96,8 +96,12 @@ public class MailjetMailSender implements IMailSender {
 				.property(Email.FROMNAME, new EmailFromNameProperty().getValue()).property(Email.SUBJECT, subject)
 				.property(Email.TEXTPART, "No message text use an html compliant mail reader")
 				.property(Email.HTMLPART, messageBody)
-				.property(Email.RECIPIENTS, new JSONArray().put(new JSONObject().put(Contact.EMAIL, recipientTo)))
-				.property(Email.BCC, new EmailBccProperty().getValue());
+				.property(Email.RECIPIENTS, new JSONArray().put(new JSONObject().put(Contact.EMAIL, recipientTo)));
+
+		final String mailBCC = new EmailBccProperty().getValue();
+		if (null != mailBCC && !"".equals(mailBCC)) {
+			email.property(Email.BCC, mailBCC);
+		}
 		try {
 			// trigger the API call
 			final MailjetResponse response = this.client.post(email);
