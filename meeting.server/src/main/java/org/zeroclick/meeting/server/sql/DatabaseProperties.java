@@ -19,8 +19,6 @@ import org.eclipse.scout.rt.platform.config.AbstractSubjectConfigProperty;
 public class DatabaseProperties {
 
 	public static class DatabaseAutoCreateProperty extends AbstractBooleanConfigProperty {
-		// defines default value and key
-
 		@Override
 		protected Boolean getDefaultValue() {
 			return Boolean.TRUE;
@@ -28,12 +26,11 @@ public class DatabaseProperties {
 
 		@Override
 		public String getKey() {
-			return "contacts.database.autocreate";
+			return "zeroclick.database.autocreate";
 		}
 	}
 
 	public static class DatabaseAutoPopulateProperty extends AbstractBooleanConfigProperty {
-		// defines default value and key
 		@Override
 		protected Boolean getDefaultValue() {
 			return Boolean.TRUE;
@@ -41,13 +38,23 @@ public class DatabaseProperties {
 
 		@Override
 		public String getKey() {
-			return "contacts.database.autopopulate";
+			return "zeroclick.database.autopopulate";
+		}
+	}
+
+	public static class DatabaseAutoDropAllProperty extends AbstractBooleanConfigProperty {
+		@Override
+		protected Boolean getDefaultValue() {
+			return Boolean.TRUE;
+		}
+
+		@Override
+		public String getKey() {
+			return "zeroclick.database.autodropall";
 		}
 	}
 
 	public static class JdbcMappingNameProperty extends AbstractStringConfigProperty {
-		// defines default value and key
-
 		@Override
 		protected String getDefaultValue() {
 			return "jdbc:derby:memory:contacts-database";
@@ -55,13 +62,11 @@ public class DatabaseProperties {
 
 		@Override
 		public String getKey() {
-			return "contacts.database.jdbc.mapping.name";
+			return "zeroclick.database.jdbc.mapping.name";
 		}
 	}
 
 	public static class SuperUserSubjectProperty extends AbstractSubjectConfigProperty {
-		// defines default value and key
-
 		@Override
 		protected Subject getDefaultValue() {
 			return this.convertToSubject("system");
@@ -69,7 +74,7 @@ public class DatabaseProperties {
 
 		@Override
 		public String getKey() {
-			return "contacts.superuser";
+			return "zeroclick.superuser";
 		}
 	}
 }

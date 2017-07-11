@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.exception.VetoException;
@@ -137,7 +136,7 @@ public class EventService implements IEventService {
 		}
 		// add a unique event id if necessary
 		if (null == formData.getEventId()) {
-			formData.setEventId(new Long(UUID.randomUUID().hashCode()));
+			formData.setEventId(new Long(SQL.getSequenceNextval("EVENT_ID_SEQ")));
 		}
 
 		// retrieve guest UserID

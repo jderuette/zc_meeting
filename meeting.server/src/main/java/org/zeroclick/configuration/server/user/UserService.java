@@ -83,7 +83,7 @@ public class UserService implements IUserService {
 		}
 
 		if (null == formData.getUserId().getValue()) {
-			formData.getUserId().setValue(this.getNextId());
+			formData.getUserId().setValue(SQL.getSequenceNextval("USER_ID_SEQ"));
 		}
 
 		if (null != formData.getLogin().getValue()) {

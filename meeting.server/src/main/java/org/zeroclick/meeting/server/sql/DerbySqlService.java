@@ -14,6 +14,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import org.eclipse.scout.rt.platform.BEANS;
+import org.eclipse.scout.rt.platform.IgnoreBean;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.config.CONFIG;
 import org.eclipse.scout.rt.platform.exception.PlatformExceptionTranslator;
@@ -22,6 +23,7 @@ import org.zeroclick.meeting.server.sql.DatabaseProperties.DatabaseAutoCreatePro
 import org.zeroclick.meeting.server.sql.DatabaseProperties.JdbcMappingNameProperty;
 
 @Order(1950)
+@IgnoreBean
 public class DerbySqlService extends AbstractDerbySqlService {
 
 	@Override

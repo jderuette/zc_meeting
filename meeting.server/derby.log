@@ -1,0 +1,13 @@
+----------------------------------------------------------------
+Sat Jul 08 18:08:38 CEST 2017:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.13.1.1 - (1765088): instance a816c00e-015d-22f5-c24a-000017084488 
+on database directory memory:/home/djer/git/meeting/meeting.server/contacts-database with class loader sun.misc.Launcher$AppClassLoader@18b4aac2 
+Loaded from file:/home/djer/.m2/repository/org/apache/derby/derby/10.13.1.1/derby-10.13.1.1.jar
+java.vendor=Oracle Corporation
+java.runtime.version=1.8.0_121-b13
+user.dir=/home/djer/git/meeting/meeting.server
+os.name=Linux
+os.arch=amd64
+os.version=4.8.0-58-generic
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''

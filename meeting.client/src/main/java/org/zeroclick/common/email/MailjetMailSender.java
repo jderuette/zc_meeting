@@ -57,18 +57,12 @@ public class MailjetMailSender implements IMailSender {
 	}
 
 	private String getUser() {
-		String user = System.getenv("MAILJET_USER");
-		if (null == user) {
-			user = new EmailUserProperty().getValue();
-		}
+		final String user = new EmailUserProperty().getValue();
 		return user;
 	}
 
 	private String getPass() {
-		String pass = System.getenv("MAILJET_PASS");
-		if (null == pass) {
-			pass = new EmailPasswordProperty().getValue();
-		}
+		final String pass = new EmailPasswordProperty().getValue();
 		return pass;
 	}
 

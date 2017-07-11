@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.exception.VetoException;
@@ -76,7 +75,7 @@ public class ApiService implements IApiService {
 			isNew = Boolean.TRUE;
 			// add a unique id if necessary
 			if (null == formData.getApiCredentialId()) {
-				formData.setApiCredentialId(new Long(UUID.randomUUID().hashCode()));
+				formData.setApiCredentialId(SQL.getSequenceNextval("OAUHTCREDENTIAL_ID_SEQ"));
 			}
 			SQL.insert(SQLs.OAUHTCREDENTIAL_INSERT, formData);
 		} else {

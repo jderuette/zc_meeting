@@ -14,10 +14,18 @@ package org.zeroclick.meeting.server.sql;
 //tag::organizationListing[]
 public interface SQLs {
 
+	String SELECT_TABLE_NAMES_DERBY = "SELECT UPPER(tablename) FROM sys.systables INTO :result";
+	String SELECT_TABLE_NAMES_POSTGRESQL = "select UPPER(tables.table_name) from information_schema.tables INTO :result";
+
+	String GENERIC_DROP_TABLE = "DROP TABLE __tableName__ CASCADE";
+	String GENERIC_CREATE_SEQUENCE = "CREATE SEQUENCE __seqName__ START __seqStart__";
+	String GENERIC_DROP_SEQUENCE = "DROP SEQUENCE __seqName__";
+
+	String GENERIC_SEQUENCE_EXISTS = "SELECT to_regclass('__seqName__')";
+
 	/**
 	 * EVENT
 	 */
-	String SELECT_TABLE_NAMES = "SELECT UPPER(tablename) FROM sys.systables INTO :result";
 
 	String EVENT_CREATE_TABLE = ""
 			+ "CREATE TABLE EVENT (event_id INTEGER NOT NULL CONSTRAINT EVENT_PK PRIMARY KEY, organizer INTEGER, organizer_email VARCHAR(120), duration INTEGER, slot INTEGER, email VARCHAR(120), guest_id INTEGER, state VARCHAR(50), subject VARCHAR(250), startDate TIMESTAMP, endDate TIMESTAMP, externalIdRecipient VARCHAR(250), externalIdOrganizer VARCHAR(250))";
@@ -66,24 +74,24 @@ public interface SQLs {
 	String EVENT_SELECT_OWNER = "SELECT organizer FROM EVENT WHERE event_id=:eventId INTO :organizer";
 
 	String EVENT_SELECT_KNOWN_ATTENDEE = "SELECT DISTINCT email FROM EVENT WHERE organizer=:currentUser AND email LIKE :searchEmail AND guest_id!=:currentUser";
-	String EVENT_SELECT_KNOWN_HOST = "SELECT DISTINCT organizer_email FROM EVENT WHERE guest_id=:currentUser AND organizer_email LIKE :searchEmail AND organizer!=:currentUser";
+	String EVENT_SELECT_KNOWN_HOST = "SELECT DISTINCT organizer_email FROM EVENT WHERE guest_id=:currentUser AND organizer_email LIKE ':searchEmail' AND organizer!=:currentUser";
 
 	String EVENT_SELECT_KNOWN_ATTENDEE_LOOKUP = "SELECT DISTINCT email, email FROM EVENT WHERE organizer=:currentUser  AND guest_id!=:currentUser <key> AND email=:key</key><text> AND email LIKE :text</text> <all></all>";
-	String EVENT_SELECT_KNOWN_HOST_LOOKUP = "SELECT DISTINCT organizer_email, organizer_email FROM EVENT WHERE guest_id=:currentUser  AND organizer!=:currentUser <key> AND email=:key</key><text> AND email LIKE :text</text> <all></all>";
+	String EVENT_SELECT_KNOWN_HOST_LOOKUP = "SELECT DISTINCT organizer_email, organizer_email FROM EVENT WHERE guest_id=:currentUser AND organizer!=:currentUser <key> AND organizer_email=:key</key><text> AND organizer_email LIKE :text</text> <all></all>";
 
 	String EVENT_SELECT_KNOWN_ATTENDEE_STRICT = "SELECT DISTINCT email FROM EVENT WHERE organizer=:currentUser AND email=:searchEmail";
 	String EVENT_SELECT_KNOWN_HOST_STRICT = "SELECT DISTINCT organizer_email FROM EVENT WHERE guest_id=:currentUser AND organizer_email=:searchEmail";
 
 	String EVENT_INSERT_SAMPLE = "INSERT INTO EVENT (event_id, organizer, organizer_email, duration, slot, email, guest_id, state, subject)";
-	String EVENT_VALUES_01 = " VALUES  (1, 1, 'djer13@gmail.com', 15, 1, 'bob1@gmail.com', 2, 'ASKED', 'Prendre le thé')";
-	String EVENT_VALUES_02 = " VALUES  (2, 2,'bob1@gmail.com', 120, 3, 'bob2@entreporise.com', 1, 'ASKED', 'Do Something')";
+	String EVENT_VALUES_01 = " VALUES  (nextval('EVENT_ID_SEQ'), 1, 'djer13@gmail.com', 15, 1, 'bob1@gmail.com', 2, 'ASKED', 'Prendre le thé')";
+	String EVENT_VALUES_02 = " VALUES  (nextval('EVENT_ID_SEQ'), 2,'bob1@gmail.com', 120, 3, 'bob2@entreporise.com', 1, 'ASKED', 'Do Something')";
 
-	String EVENT_DROP_TABLE = "DROP TABLE EVENT";
+	String EVENT_DROP_TABLE = "DROP TABLE EVENT CASCADE";
 
 	/**
 	 * OAuth credential
 	 */
-	String OAUHTCREDENTIAL_CREATE_TABLE = "CREATE TABLE OAUHTCREDENTIAL (api_credential_id INTEGER NOT NULL CONSTRAINT OAUHTCREDENTIAL_PK PRIMARY KEY, user_id INTEGER, access_token VARCHAR(200), expiration_time_milliseconds BIGINT, refresh_token VARCHAR(200), provider INTEGER, repository_id VARCHAR(200), provider_data BLOB)";
+	String OAUHTCREDENTIAL_CREATE_TABLE = "CREATE TABLE OAUHTCREDENTIAL (api_credential_id INTEGER NOT NULL CONSTRAINT OAUHTCREDENTIAL_PK PRIMARY KEY, user_id INTEGER, access_token VARCHAR(200), expiration_time_milliseconds BIGINT, refresh_token VARCHAR(200), provider INTEGER, repository_id VARCHAR(200), provider_data __blobType__)";
 
 	String OAUHTCREDENTIAL_PAGE_SELECT = "SELECT api_credential_id, access_token, expiration_time_milliseconds, refresh_token, user_id, provider FROM OAUHTCREDENTIAL WHERE 1=1";
 	String OAUHTCREDENTIAL_PAGE_SELECT_FILTER_USER = " AND user_id = :currentUser";
@@ -111,7 +119,7 @@ public interface SQLs {
 
 	String OAUHTCREDENTIAL_INSERT_SAMPLE = "INSERT INTO OAUHTCREDENTIAL (api_credential_id, user_id, access_token, expiration_time_milliseconds, refresh_token, provider, repository_id, provider_data) ";
 
-	String OAUHTCREDENTIAL_VALUES_01 = " VALUES  (1, 0, 'testAccessToken', 1514568455, 'testRefreshToken', 1, 'testRepo', null)";
+	String OAUHTCREDENTIAL_VALUES_01 = " VALUES  (nextval('OAUHTCREDENTIAL_ID_SEQ'), 0, 'testAccessToken', 1514568455, 'testRefreshToken', 1, 'testRepo', null)";
 
 	String OAUHTCREDENTIAL_DROP_TABLE = "DROP TABLE OAUHTCREDENTIAL";
 
@@ -140,7 +148,7 @@ public interface SQLs {
 	String ROLE_VALUES_01 = " VALUES(1, 'Administrator')";
 	String ROLE_VALUES_02 = " VALUES(2, 'Standard')";
 
-	String ROLE_DROP_TABLE = "DROP TABLE ROLE";
+	String ROLE_DROP_TABLE = "DROP TABLE ROLE CASCADE";
 
 	/**
 	 * --- Permission
@@ -202,7 +210,7 @@ public interface SQLs {
 	String ROLE_PERMISSION_VALUES_107 = " VALUES(2, 'org.zeroclick.configuration.shared.user.ReadUserPermission', 10)";
 	String ROLE_PERMISSION_VALUES_108 = " VALUES(2, 'org.zeroclick.configuration.shared.user.UpdateUserPermission', 10)";
 
-	String ROLE_PERMISSION_DROP_TABLE = "DROP TABLE ROLE_PERMISSION";
+	String ROLE_PERMISSION_DROP_TABLE = "DROP TABLE ROLE_PERMISSION CASCADE";
 
 	/**
 	 * User Role mapping
@@ -266,6 +274,8 @@ public interface SQLs {
 	String USER_UPDATE_PASSWORD = "UPDATE APP_USER SET password=:hashedPassword WHERE user_id=:userId";
 
 	String USER_INSERT_SAMPLE = "INSERT INTO APP_USER (user_id, login, email, time_zone, password)";
-	String USER_VALUES_01 = " VALUES(1, 'djer13', 'djer13@gmail.com', 'Europe/Paris', 'kv6kmSYn4jnCyoQK/4cQjA==.7bXNiiq6QcbGKFge/UdQ7T5cFud69Wp+qRBGZLnMU8VZ3UMgFuWtb/BpVsFBlpUSfYBd8t06uOkmHAliGKisOA==')"; // Djer13
-	String USER_VALUES_02 = " VALUES(2, 'bob1', 'bob1@gmail.com', null, 'I/ocgG3Cp6QhLzIkrmYOQg==.GIxlDVNe8rl4r8WnnhT197qSBWaQIRvKnn4lNt6dqVWJ/aHDBCyxltXCNuWjYyyaynI34FM5x9Uz4hBBWMjYZw==')"; // Bob001
+	String USER_VALUES_01 = " VALUES(nextval('USER_ID_SEQ'), 'djer13', 'djer13@gmail.com', 'Europe/Paris', 'kv6kmSYn4jnCyoQK/4cQjA==.7bXNiiq6QcbGKFge/UdQ7T5cFud69Wp+qRBGZLnMU8VZ3UMgFuWtb/BpVsFBlpUSfYBd8t06uOkmHAliGKisOA==')"; // Djer13
+	String USER_VALUES_02 = " VALUES(nextval('USER_ID_SEQ'), 'bob1', 'bob1@gmail.com', null, 'I/ocgG3Cp6QhLzIkrmYOQg==.GIxlDVNe8rl4r8WnnhT197qSBWaQIRvKnn4lNt6dqVWJ/aHDBCyxltXCNuWjYyyaynI34FM5x9Uz4hBBWMjYZw==')"; // Bob001
+
+	String USER_CREATE_DROP = "CREATE TABLE APP_USE CASCADE";
 }
