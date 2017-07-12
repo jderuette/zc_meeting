@@ -72,7 +72,7 @@ public class LoginField extends AbstractStringField {
 				throw new VetoException(TEXTS.get("zc.login.invalid"));
 			}
 		}
-		return rawValue;
+		return null == rawValue ? null : rawValue.toLowerCase();
 	}
 
 }

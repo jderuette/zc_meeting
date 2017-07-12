@@ -340,10 +340,10 @@ public class UserService implements IUserService {
 	@Override
 	public Long getUserId(final String loginOrEmail) {
 		final UserFormData formData = new UserFormData();
-		formData.getEmail().setValue(loginOrEmail);
+		formData.getEmail().setValue(loginOrEmail.toLowerCase());
 		this.loadByEmail(formData);
 		if (null == formData.getUserId().getValue()) {
-			formData.getLogin().setValue(loginOrEmail);
+			formData.getLogin().setValue(loginOrEmail.toLowerCase());
 			this.loadByLogin(formData);
 		}
 
