@@ -30,7 +30,7 @@ public class GlobalConfig {
 
 		@Override
 		protected String getDefaultValue() {
-			return "http://localhost:8082/";
+			return "http://localhost:8082";
 		}
 
 		@Override
