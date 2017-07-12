@@ -100,6 +100,11 @@ public class OnBoradingUserForm extends AbstractForm {
 
 		@Order(100000)
 		public class OkButton extends AbstractOkButton {
+
+			@Override
+			protected String getConfiguredLabel() {
+				return TEXTS.get("zc.common.updateAction");
+			}
 		}
 
 	}
