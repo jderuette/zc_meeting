@@ -313,9 +313,10 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		protected Boolean canAutofillDates(final ITableRow row) {
 			final Long hostId = this.getOrganizerColumn().getValue(row.getRowIndex());
 			final Long attendeeId = this.getGuestIdColumn().getValue(row.getRowIndex());
-			return null != row && "ASKED".equals(this.getStateColumn().getValue(row.getRowIndex()))
-					&& (null == this.getStartDateColumn().getValue(row.getRowIndex())
-							|| null == this.getEndDateColumn().getValue(row.getRowIndex()))
+			final Boolean startDateEmpty = null == this.getStartDateColumn().getValue(row.getRowIndex());
+			final Boolean endDateEmpty = null == this.getEndDateColumn().getValue(row.getRowIndex());
+			final String rowState = this.getStateColumn().getValue(row.getRowIndex());
+			return null != row && "ASKED".equals(rowState) && startDateEmpty && endDateEmpty
 					&& GoogleApiHelper.get().isCalendarConfigured(hostId)
 					&& GoogleApiHelper.get().isCalendarConfigured(attendeeId) && this.isTimeZoneValid(attendeeId)
 					&& this.isTimeZoneValid(hostId) && this.isGuestCurrentUser(row);

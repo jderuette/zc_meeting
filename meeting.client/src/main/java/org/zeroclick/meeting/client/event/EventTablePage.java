@@ -176,7 +176,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		@Override
 		protected void autoFillDates(final ITableRow row) {
 			if (this.canAutofillDates(row)) {
-				LOG.debug("Calculating new Date (autofill) for row : " + row);
+				LOG.info("Calculating new Date (autofill) for row : " + row);
 				try {
 					this.changeDatesNext(row);
 				} catch (final IOException e) {
