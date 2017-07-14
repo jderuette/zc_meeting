@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
 import org.zeroclick.configuration.shared.user.IUserService;
+import org.zeroclick.meeting.client.GlobalConfig.ApplicationEnvProperty;
 import org.zeroclick.meeting.client.calendar.GoogleEventStartComparator;
 import org.zeroclick.meeting.client.common.DayDuration;
 import org.zeroclick.meeting.client.common.SlotHelper;
@@ -418,6 +419,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			final GoogleApiHelper googleHelper = GoogleApiHelper.get();
 			Calendar googleCalendarService;
 			ZonedDateTime recommendedNewDate = null;
+			final String ReadEventCalendarId = "primary";
 
 			try {
 				googleCalendarService = googleHelper.getCalendarService(userId);
@@ -427,7 +429,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			// getEvent from start to End for each calendar
 			final List<CalendarListEntry> synchronizedCalendars = CollectionUtility
-					.arrayList(googleCalendarService.calendarList().get("primary").execute());
+					.arrayList(googleCalendarService.calendarList().get(ReadEventCalendarId).execute());
 
 			// final DateTime googledStartDate = new
 			// DateTime(Date.from(startDate.toInstant(ZoneOffset.UTC)),
@@ -570,16 +572,20 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				throw new VetoException(TEXTS.get("zc.meeting.calendarProviderRequired"));
 			}
 
+			final String EnvDisplay = new ApplicationEnvProperty().displayAsText();
+			final String createdEventCalendarId = "primary";
+
 			final Event newEvent = new Event();
 			newEvent.setStart(googleHelper.toEventDateTime(startDate));
 			newEvent.setEnd(googleHelper.toEventDateTime(endDate));
-			newEvent.setSummary("Meeting with : " + withEmail);
+			newEvent.setSummary(EnvDisplay + "Meeting with : " + withEmail);
 			newEvent.setDescription(subject);
 
 			final EventAttendee[] attendees = new EventAttendee[] { new EventAttendee().setEmail(withEmail) };
 			newEvent.setAttendees(Arrays.asList(attendees));
 
-			final Event createdEvent = googleCalendarService.events().insert("primary", newEvent).execute();
+			final Event createdEvent = googleCalendarService.events().insert(createdEventCalendarId, newEvent)
+					.execute();
 
 			LOG.info("(Google) Event created  with id : " + createdEvent.getId() + " from " + startDate + " to "
 					+ endDate + ", for : " + forUserId + " ICalUID : " + createdEvent.getICalUID() + " link : "

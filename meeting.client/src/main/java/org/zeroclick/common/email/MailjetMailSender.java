@@ -22,6 +22,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.meeting.client.GlobalConfig.ApplicationEnvProperty;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
 
 import com.mailjet.client.MailjetClient;
@@ -80,10 +81,8 @@ public class MailjetMailSender implements IMailSender {
 			messageBody = sbMessageBodyWithFooter.toString();
 		}
 
-		final String currentEnv = System.getenv("ZEROCLICK_ENV");
-		if (null != currentEnv) {
-			subject = "[" + currentEnv + "] " + subject;
-		}
+		final String currentEnvDisplay = new ApplicationEnvProperty().displayAsText();
+		subject = currentEnvDisplay + subject;
 
 		LOG.info("Sending mail to : " + recipientTo + " subject : " + subject + " BodySize : " + messageBody.length());
 

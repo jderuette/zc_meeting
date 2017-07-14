@@ -24,7 +24,7 @@ import org.eclipse.scout.rt.platform.config.AbstractStringConfigProperty;
 public class GlobalConfig {
 
 	/**
-	 * Email auth password.
+	 * FrontEnd URL, use to build absolute URL to the application (email, ...)
 	 */
 	public static class ApplicationUrlProperty extends AbstractStringConfigProperty {
 
@@ -36,6 +36,37 @@ public class GlobalConfig {
 		@Override
 		public String getKey() {
 			return "zeroclick.url";
+		}
+	}
+
+	/**
+	 * Environment type. You can use #displayAsText to display formated text
+	 * environment value.
+	 */
+	public static class ApplicationEnvProperty extends AbstractStringConfigProperty {
+
+		@Override
+		protected String getDefaultValue() {
+			return "Local";
+		}
+
+		@Override
+		public String getKey() {
+			return "zeroclick.env";
+		}
+
+		/**
+		 * Display the current env name. return "" for env with name "prod".
+		 *
+		 * @return a user friendly text.
+		 */
+		public String displayAsText() {
+			if ("prod".equals(this.getValue())) {
+				return "";
+			}
+			final StringBuffer sb = new StringBuffer();
+			sb.append("[").append(this.getValue()).append("]");
+			return sb.toString();
 		}
 	}
 
