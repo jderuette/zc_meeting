@@ -120,11 +120,11 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 	}
 
 	@Override
-	protected void onModifiedEvent(final EventFormData formData) {
+	protected void onModifiedEvent(final EventFormData formData, final ITableRow previousState) {
 		LOG.debug("Modified event detected changing nb Event to Process");
 		if ("ASKED".equals(formData.getState())) {
 			this.incNbEventToProcess();
-		} else {
+		} else if (null != previousState && "ACCEPTED".equals(this.getTable().getState(previousState))) {
 			this.decNbEventToProcess();
 		}
 	}
@@ -141,6 +141,8 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		protected void initConfig() {
 			super.initConfig();
 			this.addDefaultFilters();
+			// TODO Djer allow filtering on not visible column
+			// super.getStateColumn().setVisible(Boolean.FALSE);
 		}
 
 		protected void addDefaultFilters() {
@@ -578,7 +580,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			final Event newEvent = new Event();
 			newEvent.setStart(googleHelper.toEventDateTime(startDate));
 			newEvent.setEnd(googleHelper.toEventDateTime(endDate));
-			newEvent.setSummary(EnvDisplay + "Meeting with : " + withEmail);
+			newEvent.setSummary(EnvDisplay + subject + TEXTS.get("zc.common.email.subject.suffix"));
 			newEvent.setDescription(subject);
 
 			final EventAttendee[] attendees = new EventAttendee[] { new EventAttendee().setEmail(withEmail) };

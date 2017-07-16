@@ -115,7 +115,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	 *
 	 * @param formData
 	 */
-	protected void onModifiedEvent(final EventFormData formData) {
+	protected void onModifiedEvent(final EventFormData formData, final ITableRow row) {
 
 	}
 
@@ -220,7 +220,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 						AbstractEventsTablePage.this.getTable().applyRowFilters();
 
-						AbstractEventsTablePage.this.onModifiedEvent(eventForm);
+						AbstractEventsTablePage.this.onModifiedEvent(eventForm, row);
 
 					} catch (final RuntimeException e) {
 						LOG.error("Could not update event. (" + Table.this.getTitle() + ")", e);
