@@ -63,12 +63,6 @@ public class UserService implements IUserService {
 		return formData;
 	}
 
-	private Long getNextId() {
-		final Object[][] maxUserIdData = SQL.select("SELECT MAX(user_id)+1 FROM APP_USER");
-
-		return (Long) maxUserIdData[0][0];
-	}
-
 	@Override
 	public UserFormData create(final UserFormData formData) {
 		if (formData.getAutofilled()) {

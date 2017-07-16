@@ -226,7 +226,8 @@ public class UserForm extends AbstractForm {
 		}
 
 		@Order(3000)
-		public class ConfirmPasswordField extends org.zeroclick.ui.form.fields.confirmpasswordfield.ConfirmPasswordField {
+		public class ConfirmPasswordField
+				extends org.zeroclick.ui.form.fields.confirmpasswordfield.ConfirmPasswordField {
 			@Override
 			protected String execValidateValue(final String rawValue) {
 				final String password = UserForm.this.getPasswordField().getValue();
@@ -321,7 +322,8 @@ public class UserForm extends AbstractForm {
 		@Override
 		protected void execLoad() {
 			final IUserService service = BEANS.get(IUserService.class);
-			UserForm.this.getUserIdField().setEnabled(Boolean.TRUE);
+			UserForm.this.getUserIdField().setVisible(Boolean.FALSE);
+			UserForm.this.getUserIdField().setMandatory(Boolean.FALSE);
 			UserFormData formData = new UserFormData();
 			UserForm.this.exportFormData(formData);
 			formData = service.prepareCreate(formData);
