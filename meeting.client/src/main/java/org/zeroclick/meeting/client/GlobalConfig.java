@@ -24,6 +24,23 @@ import org.eclipse.scout.rt.platform.config.AbstractStringConfigProperty;
 public class GlobalConfig {
 
 	/**
+	 * Backend server protocol. To avoid url transformed to file in
+	 * #PropertiesHelper.resolve line 323
+	 */
+	public static class ServerUrlProtocolProperty extends AbstractStringConfigProperty {
+
+		@Override
+		protected String getDefaultValue() {
+			return "https";
+		}
+
+		@Override
+		public String getKey() {
+			return "zeroclick.server.url.protocol";
+		}
+	}
+
+	/**
 	 * FrontEnd URL, use to build absolute URL to the application (email, ...)
 	 */
 	public static class ApplicationUrlProperty extends AbstractStringConfigProperty {
