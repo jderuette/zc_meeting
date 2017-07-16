@@ -65,7 +65,7 @@ public class ServerServletFilter implements Filter {
 			return;
 		}
 
-		LOG.warn("No Access Controller handle the request : " + req.getRequestURI());
+		LOG.warn("No Access Controller handle the request : " + req.getRequestURL());
 
 		resp.sendError(HttpServletResponse.SC_FORBIDDEN);
 	}
