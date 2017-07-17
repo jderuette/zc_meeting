@@ -324,7 +324,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		 * @return
 		 */
 		private ZonedDateTime addReactionTime(final ZonedDateTime date, final Integer reactionDelayMin) {
-			ZonedDateTime minimalStart = ZonedDateTime.now().plus(Duration.ofMinutes(reactionDelayMin));
+			ZonedDateTime minimalStart = ZonedDateTime.now(date.getZone()).plus(Duration.ofMinutes(reactionDelayMin));
 			minimalStart = this.roundToNextHourQuarter(minimalStart);
 			if (date.isBefore(minimalStart)) {
 				LOG.debug(date + " is too close with reactionTime of " + reactionDelayMin + " mins. Using : "
