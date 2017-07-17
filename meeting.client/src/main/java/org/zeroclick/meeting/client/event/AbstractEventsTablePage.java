@@ -784,12 +784,12 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		}
 
 		protected ZonedDateTime toZonedDateTime(final Date date, final ZoneId userZoneId) {
-			ZonedDateTime eonedDateTime = null;
+			ZonedDateTime zonedDateTime = null;
 			if (null != date) {
-				eonedDateTime = ZonedDateTime.ofInstant(date.toInstant(), userZoneId);
+				zonedDateTime = ZonedDateTime.ofInstant(date.toInstant(), userZoneId);
 			}
 
-			return eonedDateTime;
+			return zonedDateTime;
 		}
 
 		protected Date toDate(final ZonedDateTime zonedDateTime) {
