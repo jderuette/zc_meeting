@@ -36,7 +36,7 @@ public class ConfigurationOutline extends AbstractOutline {
 	@Override
 	protected void initConfig() {
 		super.initConfig();
-		final Boolean isVisible = ACCESS.getLevel(new ReadApiPermission((Long) null)) > ReadApiPermission.LEVEL_OWN;
+		final Boolean isVisible = ACCESS.getLevel(new ReadApiPermission((Long) null)) > ReadApiPermission.LEVEL_RELATED;
 		this.setEnabledGranted(isVisible);
 		this.setVisibleGranted(isVisible);
 	}
@@ -46,7 +46,7 @@ public class ConfigurationOutline extends AbstractOutline {
 		// super.execCreateChildPages(pageList);
 		final ApiTablePage apiTablePage = new ApiTablePage();
 
-		this.setVisibleGranted(ACCESS.getLevel(new ReadApiPermission((Long) null)) >= ReadApiPermission.LEVEL_OWN);
+		this.setVisibleGranted(ACCESS.getLevel(new ReadApiPermission((Long) null)) >= ReadApiPermission.LEVEL_RELATED);
 		pageList.add(apiTablePage);
 	}
 
