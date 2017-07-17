@@ -512,6 +512,8 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			ZoneId userZoneId = ZoneId.of("UTC");
 			if (null != userService) {
 				userZoneId = this.getUserZoneId(acs.getZeroClickUserIdOfCurrentSubject());
+			} else {
+				LOG.warn("No timeZone configured or user : " + acs.getZeroClickUserIdOfCurrentSubject());
 			}
 			return userZoneId;
 		}
