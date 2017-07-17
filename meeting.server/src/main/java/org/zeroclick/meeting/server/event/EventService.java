@@ -95,7 +95,7 @@ public class EventService implements IEventService {
 
 		if (null != pendingAttendee && pendingAttendee.length > 0) {
 			for (int i = 0; i < pendingAttendee.length; i++) {
-				final Long pendingUserAttendee = (Long) pendingOrganizer[i][1];
+				final Long pendingUserAttendee = (Long) pendingAttendee[i][1];
 				if (!users.containsKey(pendingUserAttendee)) {
 					users.put(pendingUserAttendee, 0);
 				}
