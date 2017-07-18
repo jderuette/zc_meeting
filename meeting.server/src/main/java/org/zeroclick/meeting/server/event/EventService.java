@@ -38,15 +38,15 @@ public class EventService implements IEventService {
 	private EventTablePageData getEvents(final SearchFilter filter, final String eventStatusCriteria) {
 		final EventTablePageData pageData = new EventTablePageData();
 
-		String OwnerFilter = "";
+		String ownerFilter = "";
 		Long currentConnectedUserId = 0L;
 		if (ACCESS.getLevel(new ReadEventPermission((Long) null)) != ReadEventPermission.LEVEL_ALL) {
-			OwnerFilter = SQLs.EVENT_PAGE_SELECT_FILTER_USER_OR_RECIPIENT;
+			ownerFilter = SQLs.EVENT_PAGE_SELECT_FILTER_USER_OR_RECIPIENT;
 			final AccessControlService acs = BEANS.get(AccessControlService.class);
 			currentConnectedUserId = acs.getZeroClickUserIdOfCurrentSubject();
 		}
 
-		final String sql = SQLs.EVENT_PAGE_SELECT + OwnerFilter + eventStatusCriteria
+		final String sql = SQLs.EVENT_PAGE_SELECT + ownerFilter + eventStatusCriteria
 				+ SQLs.EVENT_PAGE_DATA_SELECT_INTO;
 
 		SQL.selectInto(sql, new NVPair("page", pageData), new NVPair("currentUser", currentConnectedUserId),
@@ -84,12 +84,12 @@ public class EventService implements IEventService {
 
 		if (null != pendingOrganizer && pendingOrganizer.length > 0) {
 			for (int i = 0; i < pendingOrganizer.length; i++) {
-				final Long pendingUserAttendee = (Long) pendingOrganizer[i][1];
-				if (!users.containsKey(pendingUserAttendee)) {
-					users.put(pendingUserAttendee, 0);
+				final Long pendingUserOrganizer = (Long) pendingOrganizer[i][1];
+				if (!users.containsKey(pendingUserOrganizer)) {
+					users.put(pendingUserOrganizer, 0);
 				}
-				Integer currentNbEvent = users.get(pendingUserAttendee);
-				users.put(pendingUserAttendee, ++currentNbEvent);
+				Integer currentNbEvent = users.get(pendingUserOrganizer);
+				users.put(pendingUserOrganizer, ++currentNbEvent);
 			}
 		}
 
@@ -136,7 +136,7 @@ public class EventService implements IEventService {
 		}
 		// add a unique event id if necessary
 		if (null == formData.getEventId()) {
-			formData.setEventId(new Long(SQL.getSequenceNextval("EVENT_ID_SEQ")));
+			formData.setEventId(Long.valueOf(SQL.getSequenceNextval("EVENT_ID_SEQ")));
 		}
 
 		// retrieve guest UserID

@@ -52,7 +52,7 @@ public class ConfirmPasswordField extends AbstractStringField {
 	 * @throws VetoException
 	 *             if passwords don't match
 	 */
-	protected void CheckPasswordMatches(final String password, final String confirmedPassword) {
+	protected void checkPasswordMatches(final String password, final String confirmedPassword) {
 		if (password != null && !password.equals(confirmedPassword)) {
 			throw new VetoException(TEXTS.get("zc.user.passwordsDontMatch"));
 		}

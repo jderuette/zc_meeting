@@ -10,8 +10,7 @@
  ******************************************************************************/
 package org.zeroclick.meeting.server.sql;
 
-//tag::createDB[]
-//tag::organizationListing[]
+@SuppressWarnings("PMD.LongVariable")
 public interface SQLs {
 
 	String SELECT_TABLE_NAMES_DERBY = "SELECT UPPER(tablename) FROM sys.systables INTO :result";
@@ -27,12 +26,11 @@ public interface SQLs {
 	 * EVENT
 	 */
 
-	String EVENT_CREATE_TABLE = ""
-			+ "CREATE TABLE EVENT (event_id INTEGER NOT NULL CONSTRAINT EVENT_PK PRIMARY KEY, organizer INTEGER, organizer_email VARCHAR(120), duration INTEGER, slot INTEGER, email VARCHAR(120), guest_id INTEGER, state VARCHAR(50), subject VARCHAR(250), startDate TIMESTAMP, endDate TIMESTAMP, externalIdRecipient VARCHAR(250), externalIdOrganizer VARCHAR(250))";
+	String EVENT_CREATE_TABLE = "CREATE TABLE EVENT (event_id INTEGER NOT NULL CONSTRAINT EVENT_PK PRIMARY KEY, organizer INTEGER, organizer_email VARCHAR(120), duration INTEGER, slot INTEGER, email VARCHAR(120), guest_id INTEGER, state VARCHAR(50), subject VARCHAR(250), startDate TIMESTAMP, endDate TIMESTAMP, externalIdRecipient VARCHAR(250), externalIdOrganizer VARCHAR(250))";
 
-	String ORGANIZATION_LOOKUP = "" + "SELECT   organization_id, " + "         name " + "FROM     ORGANIZATION "
-			+ "WHERE    1 = 1 " + "<key>    AND organization_id = :key</key> "
-			+ "<text>   AND UPPER(name) LIKE UPPER(:text||'%') </text> " + "<all></all>";
+	String ORGANIZATION_LOOKUP = "SELECT   organization_id, name FROM ORGANIZATION "
+			+ "WHERE 1=1<key> AND organization_id = :key</key> "
+			+ "<text> AND UPPER(name) LIKE UPPER(:text||'%') </text> <all></all>";
 
 	String AND_LIKE_CAUSE = "AND LOWER(%s) LIKE LOWER(:%s || '%%') ";
 
@@ -267,7 +265,7 @@ public interface SQLs {
 	String USER_INSERT = "INSERT INTO APP_USER (user_id) VALUES (:userId)";
 
 	/**
-	 * Password not updtaded use USER_UPDATE_PASSWORD
+	 * Password not updated use USER_UPDATE_PASSWORD
 	 */
 	String USER_UPDATE = "UPDATE APP_USER SET email=:email, login=:login, time_zone=:timeZone WHERE user_id=:userId ";
 	String USER_UPDATE_ONBOARDING = "UPDATE APP_USER SET login=:login, time_zone=:timeZone WHERE user_id=:userId ";

@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 
-public class AbstractCombinedMultiSqlLookupService<T> extends AbstractSqlLookupService<T> {
+public abstract class AbstractCombinedMultiSqlLookupService<T> extends AbstractSqlLookupService<T> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(AbstractCombinedMultiSqlLookupService.class);
 

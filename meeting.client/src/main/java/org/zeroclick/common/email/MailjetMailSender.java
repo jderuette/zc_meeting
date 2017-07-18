@@ -75,10 +75,9 @@ public class MailjetMailSender implements IMailSender {
 	public void sendEmail(final String recipientTo, String subject, String messageBody,
 			final Boolean includeDefaultFooter) throws MailException {
 		if (includeDefaultFooter) {
-			final StringBuffer sbMessageBodyWithFooter = new StringBuffer();
-			sbMessageBodyWithFooter.append(messageBody);
-			sbMessageBodyWithFooter.append(this.addDefaultFooter());
-			messageBody = sbMessageBodyWithFooter.toString();
+			final StringBuilder builder = new StringBuilder(250);
+			builder.append(messageBody).append(this.addDefaultFooter());
+			messageBody = builder.toString();
 		}
 
 		final String currentEnvDisplay = new ApplicationEnvProperty().displayAsText();

@@ -44,6 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UserFormData;
+import org.zeroclick.configuration.shared.user.UserFormData.Password;
 
 /**
  * Credential verifier against credentials configured in <i>Scout Service</i>
@@ -58,36 +59,42 @@ public class ScoutServiceCredentialVerifier implements ICredentialVerifier {
 	@Override
 	public int verify(final String username, final char[] passwordPlainText) {
 		if (StringUtility.isNullOrEmpty(username) || passwordPlainText == null || passwordPlainText.length == 0) {
-			String logDisplayedPassword = null;
+			String logDisplayedPass = null;
 			if (null != passwordPlainText) {
-				logDisplayedPassword = new String(passwordPlainText).substring(0, 4);
+				logDisplayedPass = new String(passwordPlainText).substring(0, 4);
 			}
 			LOG.warn("Try to authenticate without username or password. Username : " + username
-					+ ", (partial) password : " + logDisplayedPassword);
+					+ ", (partial) password : " + logDisplayedPass);
 			return AUTH_CREDENTIALS_REQUIRED;
 		}
 
 		IPassword password = null;
 		UserFormData savedPassword = null;
-		if (BEANS.get(IServiceTunnel.class).isActive()) {
-			final IFuture<UserFormData> servicePasswordCaller = Jobs.schedule(new Callable<UserFormData>() {
+
+		if (this.isTunnelServiceActive()) {
+			final IFuture<UserFormData> passwordCaller = Jobs.schedule(new Callable<UserFormData>() {
 
 				@Override
+				@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 				public UserFormData call() throws Exception {
 					final IUserService userService = BEANS.get(IUserService.class);
-					return userService.getPassword(username);
+					final UserFormData userFormDataInput = new UserFormData();
+					userFormDataInput.getLogin().setValue(username);
+					userFormDataInput.getEmail().setValue(username);
+					final UserFormData sserPassFormData = userService.getPassword(userFormDataInput);
+					return sserPassFormData;
 				}
 			}, Jobs.newInput()
-					.withRunContext(ClientRunContexts.copyCurrent()
-							.withSubject(BEANS.get(PasswordCheckerSubjectProperty.class).getValue())
+					.withRunContext(ClientRunContexts.copyCurrent().withSubject(this.retrievePasswordCheckerSubject())
 							.withUserAgent(UserAgents.createDefault()).withSession(null, false))
-					.withName(ScoutServiceCredentialVerifier.class.getSimpleName()));
+					.withName(this.buildJobName()));
 
-			savedPassword = servicePasswordCaller.awaitDoneAndGet(30, TimeUnit.SECONDS);
+			savedPassword = passwordCaller.awaitDoneAndGet(30, TimeUnit.SECONDS);
 
 			// final String savedPassword = userService.getPassword(username);
 			if (null != savedPassword) {
-				password = this.createPassword(savedPassword.getPassword().getValue());
+				final Password passwordField = savedPassword.getPassword();
+				password = this.createPassword(passwordField.getValue());
 			} else {
 				LOG.warn("No saved user with ID : " + username);
 			}
@@ -96,12 +103,30 @@ public class ScoutServiceCredentialVerifier implements ICredentialVerifier {
 					+ username + ")");
 		}
 
-		if (password == null || !password.isEqual(passwordPlainText)) {
+		final Boolean isPasswordMatch = password.isEqual(passwordPlainText);
+
+		if (password == null || !isPasswordMatch) {
 			LOG.warn("Bad password for user : " + username);
 			return AUTH_FORBIDDEN;
 		}
 		LOG.info("User : " + username + " with correct password");
 		return AUTH_OK;
+	}
+
+	private Boolean isTunnelServiceActive() {
+		final IServiceTunnel tunnelService = BEANS.get(IServiceTunnel.class);
+		final Boolean isTunelActive = tunnelService.isActive();
+		return isTunelActive;
+	}
+
+	private Subject retrievePasswordCheckerSubject() {
+		final PasswordCheckerSubjectProperty property = BEANS.get(PasswordCheckerSubjectProperty.class);
+		final Subject subject = property.getValue();
+		return subject;
+	}
+
+	private String buildJobName() {
+		return ScoutServiceCredentialVerifier.class.getSimpleName();
 	}
 
 	/**
@@ -168,7 +193,7 @@ public class ScoutServiceCredentialVerifier implements ICredentialVerifier {
 	 */
 	protected static class HashedPassword implements IPassword {
 
-		protected static Charset CHARSET = StandardCharsets.UTF_16;
+		protected static final Charset CHARSET = StandardCharsets.UTF_16;
 
 		private final byte[] m_salt;
 		private final byte[] m_hash;

@@ -68,10 +68,9 @@ public class JavaMailSender implements IMailSender {
 	public void sendEmail(final String recipientTo, final String subject, String messageBody,
 			final Boolean includeDefaultFooter) throws MailException {
 		if (includeDefaultFooter) {
-			final StringBuffer sbMessageBodyWithFooter = new StringBuffer();
-			sbMessageBodyWithFooter.append(messageBody);
-			sbMessageBodyWithFooter.append(this.addDefaultFooter());
-			messageBody = sbMessageBodyWithFooter.toString();
+			final StringBuilder builder = new StringBuilder();
+			builder.append(messageBody).append(this.addDefaultFooter());
+			messageBody = builder.toString();
 		}
 
 		LOG.info("Sending mail to : " + recipientTo + " subject : " + subject + " BodySize : " + messageBody.length());

@@ -80,6 +80,7 @@ public class SuperUserRunContextProducer extends ServerRunContextProducer {
 		return superUserRunContext.withSession(this.session.setIfAbsent(new Callable<IServerSession>() {
 
 			@Override
+			@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 			public IServerSession call() throws Exception {
 				return SuperUserRunContextProducer.this.createServerSession(superUserRunContext);
 			}

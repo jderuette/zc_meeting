@@ -30,7 +30,7 @@ import org.zeroclick.configuration.shared.user.IUserService;
 public class LoginField extends AbstractStringField {
 
 	private static final String LOGIN_PATTERN = "^[A-Za-z0-9\\-_]*$";
-	private String initialValue = null;
+	private String initialValue;
 
 	@Override
 	protected String getConfiguredLabel() {

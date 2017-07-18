@@ -62,7 +62,7 @@ public class ServerAccessControlService extends AccessControlService {
 				final Class<? extends Permission> clazz = (Class<? extends Permission>) Class.forName(name);
 				permissions.add(this.createPermission(clazz, name, level));
 			} catch (final ClassNotFoundException cnfe) {
-				LOG.error("Cannot create permission from saved data. Name : " + name + "level : " + level, cnfe);
+				LOG.error(this.buildErrorMessage(name, level), cnfe);
 			}
 
 		}
@@ -85,17 +85,17 @@ public class ServerAccessControlService extends AccessControlService {
 								+ name + " level : " + level);
 			}
 		} catch (final NoSuchMethodException e) {
-			LOG.error("Cannot create permission from saved data. Name : " + name + "level : " + level, e);
+			LOG.error(this.buildErrorMessage(name, level), e);
 		} catch (final SecurityException e) {
-			LOG.error("Cannot create permission from saved data. Name : " + name + "level : " + level, e);
+			LOG.error(this.buildErrorMessage(name, level), e);
 		} catch (final InstantiationException e) {
-			LOG.error("Cannot create permission from saved data. Name : " + name + "level : " + level, e);
+			LOG.error(this.buildErrorMessage(name, level), e);
 		} catch (final IllegalAccessException e) {
-			LOG.error("Cannot create permission from saved data. Name : " + name + "level : " + level, e);
+			LOG.error(this.buildErrorMessage(name, level), e);
 		} catch (final IllegalArgumentException e) {
-			LOG.error("Cannot create permission from saved data. Name : " + name + "level : " + level, e);
+			LOG.error(this.buildErrorMessage(name, level), e);
 		} catch (final InvocationTargetException e) {
-			LOG.error("Cannot create permission from saved data. Name : " + name + "level : " + level, e);
+			LOG.error(this.buildErrorMessage(name, level), e);
 		}
 		return permissionObject;
 	}
@@ -114,5 +114,13 @@ public class ServerAccessControlService extends AccessControlService {
 		if (cacheKeys != null && !cacheKeys.isEmpty()) {
 			this.getCache().invalidate(new KeyCacheEntryFilter<String, PermissionCollection>(cacheKeys), true);
 		}
+	}
+
+	private String buildErrorMessage(final String name, final Integer level) {
+		final StringBuilder builder = new StringBuilder(100);
+		builder.append("Cannot create permission from saved data. Name : ").append(name).append(", level : ")
+				.append(level);
+
+		return builder.toString();
 	}
 }

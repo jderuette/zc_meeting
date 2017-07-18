@@ -81,9 +81,9 @@ public class GlobalConfig {
 			if ("prod".equals(this.getValue())) {
 				return "";
 			}
-			final StringBuffer sb = new StringBuffer();
-			sb.append("[").append(this.getValue()).append("]");
-			return sb.toString();
+			final StringBuilder builder = new StringBuilder();
+			builder.append('[').append(this.getValue()).append(']');
+			return builder.toString();
 		}
 	}
 

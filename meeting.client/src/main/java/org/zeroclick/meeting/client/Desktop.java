@@ -11,8 +11,6 @@ import org.eclipse.scout.rt.client.ui.desktop.AbstractDesktop;
 import org.eclipse.scout.rt.client.ui.desktop.OpenUriAction;
 import org.eclipse.scout.rt.client.ui.desktop.outline.AbstractOutlineViewButton;
 import org.eclipse.scout.rt.client.ui.desktop.outline.IOutline;
-import org.eclipse.scout.rt.client.ui.form.FormEvent;
-import org.eclipse.scout.rt.client.ui.form.FormListener;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
@@ -255,7 +253,6 @@ public class Desktop extends AbstractDesktop {
 						.getZeroClickUserIdOfCurrentSubject();
 				final UserForm form = new UserForm();
 				form.getUserIdField().setValue(currentUserId);
-				form.addFormListener(new UserFormListener());
 				form.setEnabledPermission(new UpdateUserPermission(currentUserId));
 				form.startModify();
 			}
@@ -279,19 +276,6 @@ public class Desktop extends AbstractDesktop {
 					LOG.warn("Logout already in progress");
 				} else {
 					ClientSession.get().stop();
-				}
-			}
-		}
-
-		public class UserFormListener implements FormListener {
-
-			@Override
-			public void formChanged(final FormEvent e) {
-				if (FormEvent.TYPE_CLOSED == e.getType() && e.getForm().isFormStored()) {
-					// refresh the "me"s displayed texts ??
-					// ClientSession.get().getDesktop().refreshPages(
-					// CollectionUtility.arrayList(EventProcessedTablePage.class,
-					// EventTablePage.class));
 				}
 			}
 		}

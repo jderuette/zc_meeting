@@ -30,6 +30,8 @@ public interface IUserService extends IService {
 
 	UserFormData getPassword(String userName);
 
+	UserFormData getPassword(UserFormData userPassFormData);
+
 	Long getUserIdByEmail(String email);
 
 	boolean isEmailAlreadyUsed(String email);

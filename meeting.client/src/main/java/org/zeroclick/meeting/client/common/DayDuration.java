@@ -124,13 +124,26 @@ public class DayDuration {
 				if (this.isBeforeEnd(localCheckdDateTime)) {
 					isInperiod = Boolean.TRUE;
 				} else {
-					LOG.debug(checkedDate + " not valid beacuase is after period end " + this);
+					if (LOG.isDebugEnabled()) {
+						final StringBuilder builder = new StringBuilder(100);
+						builder.append(checkedDate).append(" not valid beacuase is after period end ").append(this);
+						LOG.debug(builder.toString());
+					}
 				}
 			} else {
-				LOG.debug(checkedDate + " not valid beacuase is before period start " + this);
+				if (LOG.isDebugEnabled()) {
+					final StringBuilder builder = new StringBuilder(100);
+					builder.append(checkedDate).append(" not valid beacuase is before period start ").append(this);
+					LOG.debug(builder.toString());
+				}
 			}
 		} else {
-			LOG.debug(checkedDate + "(" + checkedDate.getDayOfWeek() + ") is not in a valid day for period " + this);
+			if (LOG.isDebugEnabled()) {
+				final StringBuilder builder = new StringBuilder(100);
+				builder.append(checkedDate).append('(').append(checkedDate.getDayOfWeek())
+						.append(") is not in a valid day for period ").append(this);
+				LOG.debug(builder.toString());
+			}
 		}
 
 		return isInperiod;
@@ -155,9 +168,9 @@ public class DayDuration {
 	 */
 	@Override
 	public String toString() {
-		final StringBuilder builder = new StringBuilder();
+		final StringBuilder builder = new StringBuilder(75);
 		builder.append("DayDuration [start=").append(this.start).append(", end=").append(this.end)
-				.append(", validDayOfWeek=").append(this.validDayOfWeek).append("]");
+				.append(", validDayOfWeek=").append(this.validDayOfWeek).append(']');
 		return builder.toString();
 	}
 

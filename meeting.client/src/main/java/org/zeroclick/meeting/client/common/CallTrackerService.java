@@ -34,22 +34,21 @@ public class CallTrackerService<KEY_TYPE> {
 	private static final Logger LOG = LoggerFactory.getLogger(CallTrackerService.class);
 
 	private final Integer maxSuccessiveCall;
-	private final Duration timeBeforeAutoReset;
+	private final Duration timeToLive;
 	private final String context;
 
 	private final Map<KEY_TYPE, CallTracker> alreadyAsk = new HashMap<>();
 
-	public CallTrackerService(final Integer maxSuccessiveCall, final Duration timeBeforeAutoReset) {
+	public CallTrackerService(final Integer maxSuccessiveCall, final Duration timeToLive) {
 		this.maxSuccessiveCall = maxSuccessiveCall;
-		this.timeBeforeAutoReset = timeBeforeAutoReset;
+		this.timeToLive = timeToLive;
 		this.context = null;
 	}
 
-	public CallTrackerService(final Integer maxSuccessiveCall, final Duration timeBeforeAutoReset,
-			final String context) {
+	public CallTrackerService(final Integer maxSuccessiveCall, final Duration timeToLive, final String context) {
 		super();
 		this.maxSuccessiveCall = maxSuccessiveCall;
-		this.timeBeforeAutoReset = timeBeforeAutoReset;
+		this.timeToLive = timeToLive;
 		this.context = context;
 	}
 
@@ -65,8 +64,11 @@ public class CallTrackerService<KEY_TYPE> {
 	 */
 	public void validateCanCall(final KEY_TYPE key) {
 		if (!this.canIncrementNbCall(key)) {
-			LOG.warn(this.context + " limit of " + this.maxSuccessiveCall + " reached. Calls locked for "
-					+ this.timeBeforeAutoReset.get(ChronoUnit.SECONDS) + " secondes");
+			final StringBuilder builder = new StringBuilder();
+			builder.append(this.context).append(" limit of ").append(this.maxSuccessiveCall)
+					.append(" reached. Calls locked for ").append(this.timeToLive.get(ChronoUnit.SECONDS))
+					.append(" secondes");
+			LOG.warn(builder.toString());
 			throw new VetoException(this.context + " Too many successive Call");
 		}
 	}
@@ -83,32 +85,49 @@ public class CallTrackerService<KEY_TYPE> {
 			this.alreadyAsk.put(key, new CallTracker());
 		}
 		// check for auto reset
-		if (this.alreadyAsk.get(key).getLastCall().plus(this.timeBeforeAutoReset).isBefore(LocalDateTime.now())) {
-			LOG.debug(this.context + " Last call was more than " + this.timeBeforeAutoReset
-					+ " reseting the call Tracker");
+		if (this.alreadyAsk.get(key).getLastCall().plus(this.timeToLive).isBefore(LocalDateTime.now())) {
+			if (LOG.isDebugEnabled()) {
+				final StringBuilder builder = new StringBuilder(50);
+				builder.append(this.context).append(" Last call was more than ").append(this.timeToLive)
+						.append(" reseting the call Tracker");
+				LOG.debug(builder.toString());
+			}
 			this.alreadyAsk.get(key).reset();
 		}
 		// Check for Max call
 		if (this.alreadyAsk.get(key).getValue() >= this.maxSuccessiveCall) {
-			LOG.error(this.context + " Probable Loop for key " + key + ", " + this.maxSuccessiveCall + " reached");
+			final StringBuilder builder = new StringBuilder(50);
+			builder.append(this.context).append(" Probable Loop for key ").append(key).append(", ")
+					.append(this.maxSuccessiveCall).append(" reached");
+			LOG.error(builder.toString());
 			return Boolean.FALSE;
 		}
 		// increment for the next check
 		this.alreadyAsk.put(key, this.alreadyAsk.get(key).increment());
-		LOG.debug(this.context + " Tracker state " + this.alreadyAsk.get(key) + "(max configured :"
-				+ this.maxSuccessiveCall + ")");
+		if (LOG.isDebugEnabled()) {
+			final StringBuilder builder = new StringBuilder(50);
+			builder.append(this.context).append(" Tracker state ").append(this.alreadyAsk.get(key))
+					.append(" (max configured : ").append(this.maxSuccessiveCall).append(')');
+			LOG.debug(builder.toString());
+		}
 
 		return Boolean.TRUE;
 	}
 
 	public void resetNbCall(final KEY_TYPE key) {
 		final CallTracker realNbCalls = this.alreadyAsk.remove(key);
+		final StringBuilder builder = new StringBuilder(100);
 		if (null == realNbCalls) {
-			LOG.warn(this.context + " Resting without controlling nbCall (value Null in map for this key : " + key
-					+ ")");
+			builder.append(this.context)
+					.append(" Resting without controlling nbCall (value Null in map for this key : ").append(key)
+					.append(')');
+			LOG.info(builder.toString());
 		} else {
-			LOG.info(this.context + " Reseting after " + realNbCalls + " for key : " + key);
+			builder.append(this.context).append(" Reseting after ").append(realNbCalls).append(" for key : ")
+					.append(key);
+			LOG.warn(builder.toString());
 		}
+
 	}
 
 	public class CallTracker {
@@ -143,9 +162,9 @@ public class CallTrackerService<KEY_TYPE> {
 
 		@Override
 		public String toString() {
-			final StringBuilder builder = new StringBuilder();
+			final StringBuilder builder = new StringBuilder(60);
 			builder.append("CallTracker [value=").append(this.value).append(", lastCall=").append(this.lastCall)
-					.append("]");
+					.append(']');
 			return builder.toString();
 		}
 

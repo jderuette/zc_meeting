@@ -506,7 +506,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 		protected String getUserTimeZone(final Long userId) {
 			final IUserService userService = BEANS.get(IUserService.class);
-			return userService.getUserTimeZone(userId);
+			String userZoneId = userService.getUserTimeZone(userId);
+			if (null == userZoneId) {
+				userZoneId = "UTC";
+			}
+			return userZoneId;
 		}
 
 		protected ZoneId getUserZoneId(final Long userId) {

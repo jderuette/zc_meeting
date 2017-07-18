@@ -97,14 +97,14 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 	}
 
 	protected void incNbEventToProcess() {
-		Integer currentNbEventToProcess = this.getNbEventToProcess();
-		this.setNbEventToProcess(++currentNbEventToProcess);
+		Integer nbEventToProcess = this.getNbEventToProcess();
+		this.setNbEventToProcess(++nbEventToProcess);
 		this.refreshTitle();
 	}
 
 	protected void decNbEventToProcess() {
-		Integer currentNbEventToProcess = this.getNbEventToProcess();
-		this.setNbEventToProcess(--currentNbEventToProcess);
+		Integer nbEventToProcess = this.getNbEventToProcess();
+		this.setNbEventToProcess(--nbEventToProcess);
 		this.refreshTitle();
 	}
 
@@ -415,23 +415,24 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		 */
 		private ZonedDateTime tryCreateEvent(final ZonedDateTime startDate, final ZonedDateTime endDate,
 				final Duration eventDuration, final Long userId) throws IOException {
-			LOG.info("Cheking for (Google) calendars events from : " + startDate + " to " + endDate + " for user : "
-					+ userId);
+			final StringBuilder builder = new StringBuilder(150);
+			builder.append("Cheking for (Google) calendars events from : ").append(startDate).append(" to ")
+					.append(endDate).append(" for user : ").append(userId);
+			LOG.info(builder.toString());
 
 			final GoogleApiHelper googleHelper = GoogleApiHelper.get();
-			Calendar googleCalendarService;
-			ZonedDateTime recommendedNewDate = null;
-			final String ReadEventCalendarId = "primary";
+			Calendar gCalendarService;
 
 			try {
-				googleCalendarService = googleHelper.getCalendarService(userId);
+				gCalendarService = googleHelper.getCalendarService(userId);
 			} catch (final UserAccessRequiredException uare) {
 				throw new VetoException(TEXTS.get("zc.meeting.calendarProviderRequired"));
 			}
 
 			// getEvent from start to End for each calendar
-			final List<CalendarListEntry> synchronizedCalendars = CollectionUtility
-					.arrayList(googleCalendarService.calendarList().get(ReadEventCalendarId).execute());
+			final String readEventCalendarId = "primary";
+			final List<CalendarListEntry> userGCalendars = CollectionUtility
+					.arrayList(gCalendarService.calendarList().get(readEventCalendarId).execute());
 
 			// final DateTime googledStartDate = new
 			// DateTime(Date.from(startDate.toInstant(ZoneOffset.UTC)),
@@ -446,13 +447,14 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			final DateTime googledEndDate = googleHelper.toDateTime(endDate);
 
 			final List<Event> allConcurentEvent = new ArrayList<>();
-			for (final CalendarListEntry calendar : synchronizedCalendars) {
-				final Events events = googleCalendarService.events().list(calendar.getId()).setMaxResults(50)
+			for (final CalendarListEntry calendar : userGCalendars) {
+				final Events events = gCalendarService.events().list(calendar.getId()).setMaxResults(50)
 						.setTimeMin(googledStartDate).setTimeMax(googledEndDate).setOrderBy("startTime")
 						.setSingleEvents(true).execute();
 				allConcurentEvent.addAll(events.getItems());
 			}
 			// if no exiting event, a new one can be created
+			ZonedDateTime recommendedNewDate = null;
 			if (allConcurentEvent.isEmpty()) {
 				LOG.info(
 						"No event found in calendars from : " + startDate + " to " + endDate + " for user : " + userId);
@@ -460,13 +462,21 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				// provided periods is OK
 			} else {
 				// else try to find a new appropriate new startDate
-				LOG.debug(allConcurentEvent.size() + " event(s) found in calendars from : " + startDate + " to "
-						+ endDate + " for user : " + userId);
+				if (LOG.isDebugEnabled()) {
+					final StringBuilder builderDebug = new StringBuilder(100);
+					builderDebug.append(allConcurentEvent.size()).append(" event(s) found in calendars from : ")
+							.append(startDate).append(" to ").append(endDate).append(" for user : ").append(userId);
+					LOG.debug(builderDebug.toString());
+				}
 				final List<DayDuration> freeTimes = this.getFreeTime(startDate, endDate, allConcurentEvent, userZoneId);
 
 				if (!freeTimes.isEmpty()) {
-					LOG.debug("FreeTime found in calendars from : " + startDate + " to " + endDate + " with periods : "
-							+ freeTimes);
+					if (LOG.isDebugEnabled()) {
+						final StringBuilder builderDebug = new StringBuilder(100);
+						builderDebug.append("FreeTime found in calendars from : ").append(startDate).append(" to ")
+								.append(endDate).append(" with periods : ").append(freeTimes);
+						LOG.debug(builderDebug.toString());
+					}
 					recommendedNewDate = SlotHelper.get().getNextValidDateTime(freeTimes, startDate, endDate);
 					if (null != recommendedNewDate) {
 						LOG.info("Recommanding new search from : " + recommendedNewDate + " (cause : " + userId
@@ -474,11 +484,19 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					}
 				}
 				if (null == recommendedNewDate) {
-					LOG.debug("No avilable periods found in freeTime from : " + startDate + " to " + endDate
-							+ " for user : " + userId);
+					if (LOG.isDebugEnabled()) {
+						final StringBuilder builderDebug = new StringBuilder(100);
+						builderDebug.append("No avilable periods found in freeTime from : ").append(startDate)
+								.append(" to ").append(endDate).append(" for user : ").append(userId);
+						LOG.debug(builderDebug.toString());
+					}
 					// The new potential start is the end of the last event
 					final Event lastEvent = this.getLastEvent(allConcurentEvent);
-					LOG.debug("Last (Google) blocking event " + googleHelper.aslog(lastEvent));
+					if (LOG.isDebugEnabled()) {
+						final StringBuilder builderDebug = new StringBuilder(100);
+						builderDebug.append("Last (Google) blocking event ").append(googleHelper.aslog(lastEvent));
+						LOG.debug(builderDebug.toString());
+					}
 					final ZonedDateTime endLastEvent = googleHelper.fromEventDateTime(lastEvent.getEnd());
 					// TODO Djer13 is required to add 1 minute ?
 					recommendedNewDate = endLastEvent.plus(Duration.ofMinutes(1));

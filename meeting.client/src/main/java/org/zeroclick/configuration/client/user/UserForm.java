@@ -9,10 +9,12 @@ import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractOkButton;
 import org.eclipse.scout.rt.client.ui.form.fields.groupbox.AbstractGroupBox;
 import org.eclipse.scout.rt.client.ui.form.fields.listbox.AbstractListBox;
 import org.eclipse.scout.rt.client.ui.form.fields.longfield.AbstractLongField;
+import org.eclipse.scout.rt.client.ui.messagebox.MessageBoxes;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.security.SecurityUtility;
+import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.platform.util.Base64Utility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.security.IAccessControlService;
@@ -38,7 +40,9 @@ import org.zeroclick.configuration.shared.user.CreateUserPermission;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.configuration.shared.user.UserFormData;
+import org.zeroclick.meeting.client.ClientSession;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
+import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
 @FormData(value = UserFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
@@ -166,7 +170,7 @@ public class UserForm extends AbstractForm {
 	private Boolean isMyself() {
 		final Long currentUserId = ((AccessControlService) BEANS.get(IAccessControlService.class))
 				.getZeroClickUserIdOfCurrentSubject();
-		return currentUserId.equals(UserForm.this.getUserIdField().getValue());
+		return null != currentUserId && currentUserId.equals(UserForm.this.getUserIdField().getValue());
 	}
 
 	private Boolean isPasswordMandatory() {
@@ -232,7 +236,7 @@ public class UserForm extends AbstractForm {
 			protected String execValidateValue(final String rawValue) {
 				final String password = UserForm.this.getPasswordField().getValue();
 
-				super.CheckPasswordMatches(password, rawValue);
+				super.checkPasswordMatches(password, rawValue);
 
 				return rawValue;
 			}
@@ -313,7 +317,25 @@ public class UserForm extends AbstractForm {
 			if (null != modifiedPassword) {
 				formData.setHashedPassword(UserForm.this.hashPassword(modifiedPassword));
 			}
+
+			final String currentUserId = ((AccessControlService) BEANS.get(IAccessControlService.class))
+					.getUserIdOfCurrentUser();
+			// if loggedIn with Email can change login, else can change email.
+			// Else user session NEED to be reloaded with new login/email.
+			final Boolean userLoginChanged = !currentUserId.equals(formData.getLogin().getValue());
+			final Boolean userEmailChanged = !currentUserId.equals(formData.getEmail().getValue());
+
+			// hard to know if user use login or email to login. If ONE changed,
+			// we reset session.
+			final Boolean needSessionReload = userLoginChanged || userEmailChanged;
+
 			service.store(formData);
+			if (needSessionReload) {
+				MessageBoxes.createOk().withHeader(TEXTS.get("zc.user.session.needReload.title"))
+						.withBody(TEXTS.get("zc.user.session.needReload")).withIconId(Icons.ExclamationMark)
+						.withSeverity(IStatus.WARNING).withAutoCloseMillis(10000L).show();
+				ClientSession.get().stop();
+			}
 		}
 	}
 

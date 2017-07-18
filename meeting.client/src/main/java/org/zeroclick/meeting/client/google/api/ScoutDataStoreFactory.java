@@ -46,8 +46,8 @@ public class ScoutDataStoreFactory extends AbstractDataStoreFactory {
 	private static final Logger LOG = LoggerFactory.getLogger(ScoutDataStoreFactory.class);
 
 	@Override
-	protected <V extends Serializable> DataStore<V> createDataStore(final String id) throws IOException {
-		return new ScoutDataStore<>(this, id);
+	protected <V extends Serializable> DataStore<V> createDataStore(final String dataStoreId) throws IOException {
+		return new ScoutDataStore<>(this, dataStoreId);
 	}
 
 	public class ScoutDataStore<V extends Serializable> extends AbstractDataStore<V> {
@@ -55,23 +55,27 @@ public class ScoutDataStoreFactory extends AbstractDataStoreFactory {
 		// TODO Djer13 use a real cache manager (TTL, maxItems ?)
 		private final Map<String, V> cache;
 
-		protected ScoutDataStore(final DataStoreFactory dataStoreFactory, final String id) {
-			super(dataStoreFactory, id);
+		protected ScoutDataStore(final DataStoreFactory dataStoreFactory, final String dataStoreId) {
+			super(dataStoreFactory, dataStoreId);
 			this.cache = new HashMap<>();
 		}
 
 		@Override
 		public Set<String> keySet() throws IOException {
-			LOG.debug("Entering keySet()");
-			final IApiService oAuthCredentialService = BEANS.get(IApiService.class);
-			return oAuthCredentialService.getAllUserId();
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Entering keySet()");
+			}
+			final IApiService apiService = BEANS.get(IApiService.class);
+			return apiService.getAllUserId();
 		}
 
 		@Override
 		public Collection<V> values() throws IOException {
-			LOG.debug("Entering values()");
-			final IApiService oAuthCredentialService = BEANS.get(IApiService.class);
-			final Collection<ApiFormData> apiFormDatas = oAuthCredentialService.loadGoogleData();
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Entering values()");
+			}
+			final IApiService apiService = BEANS.get(IApiService.class);
+			final Collection<ApiFormData> apiFormDatas = apiService.loadGoogleData();
 
 			// extract only Google usefull datas
 			final List<V> result = Lists.newArrayList();
@@ -84,19 +88,22 @@ public class ScoutDataStoreFactory extends AbstractDataStoreFactory {
 
 		@Override
 		public V get(final String key) throws IOException {
-			LOG.debug("Entering get(" + key + ")");
-			V retValue = null;
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Entering get(" + key + ")");
+			}
 
 			if (this.cache.containsKey(key)) {
-				LOG.debug("returning credential from local cache for (" + key + ")");
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("returning credential from local cache for (" + key + ")");
+				}
 				return this.cache.get(key);
 			}
-			final IApiService oAuthCredentialService = BEANS.get(IApiService.class);
+			final IApiService apiService = BEANS.get(IApiService.class);
 
 			final ApiFormData input = new ApiFormData();
-			input.setUserId(new Long(key));
+			input.setUserId(Long.valueOf(key));
 
-			final ApiFormData data = oAuthCredentialService.load(input);
+			final ApiFormData data = apiService.load(input);
 			/*
 			 * if (null != data.getAccessToken().getValue()) { exitingCredential
 			 * = this.createBaseCredential(key);
@@ -106,7 +113,7 @@ public class ScoutDataStoreFactory extends AbstractDataStoreFactory {
 			 * ()); exitingCredential.setExpirationTimeMilliseconds(data.
 			 * getExpirationTimeMilliseconds().getValue()); }
 			 */
-			retValue = IOUtils.deserialize(data.getProviderData());
+			final V retValue = IOUtils.deserialize(data.getProviderData());
 			if (null != retValue && !this.cache.containsKey(key)) {
 				this.cache.put(key, retValue);
 			}
@@ -121,11 +128,11 @@ public class ScoutDataStoreFactory extends AbstractDataStoreFactory {
 			final IApiService apiService = BEANS.get(IApiService.class);
 
 			final ApiFormData input = new ApiFormData();
-			input.setUserId(new Long(key));
+			input.setUserId(Long.valueOf(key));
 			input.getProvider().setValue(1);
 
 			final ApiFormData createdData = apiService.create(input);
-			createdData.setUserId(new Long(key));
+			createdData.setUserId(Long.valueOf(key));
 			createdData.setProviderData(IOUtils.serialize(value));
 			createdData.getProvider().setValue(1);
 
@@ -151,7 +158,6 @@ public class ScoutDataStoreFactory extends AbstractDataStoreFactory {
 		@Override
 		public DataStore<V> clear() throws IOException {
 			LOG.debug("Entering clear()");
-			// TODO Auto-generated method stub
 			LOG.warn("Clear not implemented");
 			this.cache.clear(); // partial implementation !
 			return null;
@@ -160,10 +166,10 @@ public class ScoutDataStoreFactory extends AbstractDataStoreFactory {
 		@Override
 		public DataStore<V> delete(final String key) throws IOException {
 			LOG.debug("Entering delete(" + key + ")");
-			final IApiService oAuthCredentialService = BEANS.get(IApiService.class);
+			final IApiService apiService = BEANS.get(IApiService.class);
 			final ApiFormData input = new ApiFormData();
-			input.setUserId(new Long(key));
-			oAuthCredentialService.delete(input);
+			input.setUserId(Long.valueOf(key));
+			apiService.delete(input);
 			if (this.cache.containsKey(key)) {
 				this.cache.remove(key);
 			}

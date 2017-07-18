@@ -22,25 +22,25 @@ public class KnowEmailLookupCallTest {
 
 	@Test
 	public void testLookupByAll() {
-		KnowEmailLookupCall call = createLookupCall();
+		final KnowEmailLookupCall call = this.createLookupCall();
 		// TODO [djer] fill call
-		List<? extends ILookupRow<String>> data = call.getDataByAll();
+		final List<? extends ILookupRow<String>> data = call.getDataByAll();
 		// TODO [djer] verify data
 	}
 
 	@Test
 	public void testLookupByKey() {
-		KnowEmailLookupCall call = createLookupCall();
+		final KnowEmailLookupCall call = this.createLookupCall();
 		// TODO [djer] fill call
-		List<? extends ILookupRow<String>> data = call.getDataByKey();
+		final List<? extends ILookupRow<String>> data = call.getDataByKey();
 		// TODO [djer] verify data
 	}
 
 	@Test
 	public void testLookupByText() {
-		KnowEmailLookupCall call = createLookupCall();
+		final KnowEmailLookupCall call = this.createLookupCall();
 		// TODO [djer] fill call
-		List<? extends ILookupRow<String>> data = call.getDataByText();
+		final List<? extends ILookupRow<String>> data = call.getDataByText();
 		// TODO [djer] verify data
 	}
 

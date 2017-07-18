@@ -15,8 +15,6 @@ limitations under the License.
  */
 package org.zeroclick.configuration.shared.user;
 
-import org.zeroclick.configuration.shared.user.UserFormData;
-
 /**
  * @author djer
  *
@@ -31,8 +29,8 @@ public class UserModifiedNotification extends AbstractUserNotification {
 
 	@Override
 	public String toString() {
-		final StringBuilder builder = new StringBuilder();
-		builder.append("UserModifiedNotification [userForm=").append(super.getUserForm()).append("]");
+		final StringBuilder builder = new StringBuilder(75);
+		builder.append("UserModifiedNotification [userForm=").append(super.getUserForm()).append(']');
 		return builder.toString();
 	}
 }

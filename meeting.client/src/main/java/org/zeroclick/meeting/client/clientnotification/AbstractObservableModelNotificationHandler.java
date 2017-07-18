@@ -41,7 +41,7 @@ public abstract class AbstractObservableModelNotificationHandler<NotificationTyp
 			final IClientSession session) {
 		Jobs.schedule(new IRunnable() {
 
-			@SuppressWarnings("unchecked")
+			@SuppressWarnings({ "unchecked", "PMD.SignatureDeclareThrowsException" })
 			@Override
 			public void run() throws Exception {
 				if (list != null && list.getListenerCount(INotificationListener.class) > 0) {

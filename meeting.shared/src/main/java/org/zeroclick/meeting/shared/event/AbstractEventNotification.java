@@ -17,13 +17,11 @@ package org.zeroclick.meeting.shared.event;
 
 import java.io.Serializable;
 
-import org.zeroclick.meeting.shared.event.EventFormData;
-
 /**
  * @author djer
  *
  */
-public class AbstractEventNotification implements Serializable {
+public abstract class AbstractEventNotification implements Serializable {
 
 	private static final long serialVersionUID = -2546211635305638271L;
 
@@ -39,8 +37,8 @@ public class AbstractEventNotification implements Serializable {
 
 	@Override
 	public String toString() {
-		final StringBuilder builder = new StringBuilder();
-		builder.append("EventNotification [eventForm=").append(this.eventForm).append("]");
+		final StringBuilder builder = new StringBuilder(50);
+		builder.append("EventNotification [eventForm=").append(this.eventForm).append(']');
 		return builder.toString();
 	}
 

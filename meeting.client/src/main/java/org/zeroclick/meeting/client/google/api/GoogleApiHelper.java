@@ -90,7 +90,9 @@ public class GoogleApiHelper {
 		final String fileName = CONFIG.getPropertyValue(GoogleClientCredentialFileProperty.class);
 		final File clientSecretFile = new File(fileName);
 		final Reader reader = Files.newBufferedReader(clientSecretFile.toPath());
-		LOG.debug("Getting Client credentails using : " + fileName);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Getting Client credentails using : " + fileName);
+		}
 
 		final GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JacksonFactory.getDefaultInstance(), reader);
 
@@ -98,7 +100,9 @@ public class GoogleApiHelper {
 	}
 
 	private AuthorizationCodeFlow initializeFlow() throws IOException {
-		LOG.debug("Initilazing Google APi Flow");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Initilazing Google API Flow");
+		}
 		final Collection<String> scopes = Collections.singleton(CalendarScopes.CALENDAR);
 
 		return new GoogleAuthorizationCodeFlow.Builder(new NetHttpTransport(), JacksonFactory.getDefaultInstance(),
@@ -142,7 +146,9 @@ public class GoogleApiHelper {
 	 */
 	public void askUserCredential(final HttpServletRequest req, final HttpServletResponse resp)
 			throws IOException, ServletException {
-		LOG.info("Asking user credential throught Google OAuth2 Authoriszation Flow");
+		if (LOG.isDebugEnabled()) {
+			LOG.info("Asking user credential throught Google OAuth2 Authoriszation Flow");
+		}
 
 		this.lock.lock();
 		try {
@@ -170,13 +176,17 @@ public class GoogleApiHelper {
 	}
 
 	public Credential getCredential(final Long userId) throws IOException {
-		LOG.debug("Searching for Credential for user : " + userId);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Searching for Credential for user : " + userId);
+		}
 
 		Credential exitingCredential = null;
 		if (null == this.flow) {
 			this.flow = this.initializeFlow();
 		}
-		LOG.debug("Loading Credential from Google Flow for user : " + userId);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Loading Credential from Google Flow for user : " + userId);
+		}
 		exitingCredential = this.flow.loadCredential(userId.toString());
 		if (null == exitingCredential) {
 			LOG.warn("No save credential (Google) for user : " + userId);
@@ -194,7 +204,9 @@ public class GoogleApiHelper {
 	 */
 	public Credential tryStoreCredential(final HttpServletRequest req, final HttpServletResponse resp,
 			final Long userId) throws ServletException, IOException {
-		LOG.debug("Trying to store credential for user : " + userId);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Trying to store credential for user : " + userId);
+		}
 		this.callTracker.validateCanCall(userId);
 		Credential result = null;
 		final StringBuffer buf = req.getRequestURL();
@@ -206,9 +218,11 @@ public class GoogleApiHelper {
 		if (responseUrl.getError() != null) {
 			// onError(req, resp, responseUrl);
 			// DO nothing default return is false;
+			LOG.warn("Google response contain error : " + responseUrl.getError() + " for userId : " + userId);
 		} else if (code == null) {
 			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			resp.getWriter().print("Missing authorization code");
+			LOG.warn("Missing authorization code");
+			resp.getWriter().print("Missing authorization code for userId : " + userId);
 		} else {
 			this.lock.lock();
 			try {
@@ -218,7 +232,9 @@ public class GoogleApiHelper {
 				final String redirectUri = this.getRedirectUri(req);
 				final TokenResponse response = this.flow.newTokenRequest(code).setRedirectUri(redirectUri).execute();
 				result = this.flow.createAndStoreCredential(response, userId.toString());
-				LOG.debug("Credential Stored in default dataStore for : " + userId);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Credential Stored in default dataStore for : " + userId);
+				}
 
 				this.callTracker.resetNbCall(userId);
 
@@ -251,10 +267,6 @@ public class GoogleApiHelper {
 		return localDate;
 	}
 
-	// public EventDateTime toEventDateTime(final LocalDateTime dateTime) {
-	// return this.toEventDateTime(dateTime, ZoneOffset.UTC);
-	// }
-
 	public EventDateTime toEventDateTime(final LocalDateTime dateTime, final ZoneId zoneId) {
 		final ZoneOffset zoneOffset = ZoneOffset.from(dateTime.atZone(zoneId));
 
@@ -262,8 +274,6 @@ public class GoogleApiHelper {
 	}
 
 	public EventDateTime toEventDateTime(final ZonedDateTime dateTime, final ZoneOffset zoneOffset) {
-		// return new EventDateTime().setDateTime(new
-		// DateTime(Date.from(dateTime.toInstant(zoneOffset))));
 		final DateTime date = this.toDateTime(dateTime, zoneOffset);
 		return new EventDateTime().setDateTime(date);
 	}
@@ -271,10 +281,6 @@ public class GoogleApiHelper {
 	public EventDateTime toEventDateTime(final ZonedDateTime dateTime) {
 		return this.toEventDateTime(dateTime, dateTime.getOffset());
 	}
-
-	// public DateTime toDateTime(final LocalDateTime dateTime) {
-	// return this.toDateTime(dateTime, ZoneOffset.UTC);
-	// }
 
 	public DateTime toDateTime(final ZonedDateTime dateTime) {
 
@@ -318,11 +324,12 @@ public class GoogleApiHelper {
 		final Credential credential = this.getCredential(userId);
 		if (null != credential) {
 			return new Calendar.Builder(new NetHttpTransport(), JacksonFactory.getDefaultInstance(), credential)
-					.setApplicationName("0Click Meeting Dev").build();
+					.setApplicationName("0Click Meeting").build();
 		}
 		throw new UserAccessRequiredException();
 	}
 
+	@SuppressWarnings("PMD.EmptyCatchBlock")
 	public Boolean isCalendarConfigured(final Long userId) {
 		Boolean isConfigured = Boolean.FALSE;
 		try {
@@ -349,8 +356,12 @@ public class GoogleApiHelper {
 
 	public String aslog(final Event event) {
 		if (null != event) {
-			return "Google Event : " + event.getId() + ", start : " + event.getStart() + ", end : " + event.getEnd()
-					+ ", status : " + event.getStatus() + ", summary : " + event.getSummary();
+			final StringBuilder builder = new StringBuilder(100);
+			builder.append("Google Event : ").append(event.getId()).append(", start : ").append(event.getStart())
+					.append(", end : ").append(event.getEnd()).append(", status : ").append(event.getStatus())
+					.append(", summary : ").append(event.getSummary());
+
+			return builder.toString();
 		}
 		return "";
 

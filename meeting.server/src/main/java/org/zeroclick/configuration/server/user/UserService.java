@@ -31,7 +31,7 @@ public class UserService implements IUserService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(UserService.class);
 
-	protected static Charset CHARSET = StandardCharsets.UTF_16;
+	protected static final Charset CHARSET = StandardCharsets.UTF_16;
 
 	public static final Long[] DEFAULT_ROLES_VALUES = new Long[] { 2l };
 	public static final Set<Long> DEFAULT_ROLES = new HashSet<>(Arrays.asList(DEFAULT_ROLES_VALUES));
@@ -39,15 +39,15 @@ public class UserService implements IUserService {
 	@Override
 	public UserTablePageData getUserTableData(final SearchFilter filter) {
 		final UserTablePageData pageData = new UserTablePageData();
-		String OwnerFilter = "";
+		String ownerFilter = "";
 		Long currentConnectedUserId = 0L;
 		if (ACCESS.getLevel(new ReadUserPermission((Long) null)) != ReadUserPermission.LEVEL_ALL) {
-			OwnerFilter = SQLs.USER_SELECT_FILTER_ID;
+			ownerFilter = SQLs.USER_SELECT_FILTER_ID;
 			final AccessControlService acs = BEANS.get(AccessControlService.class);
 			currentConnectedUserId = acs.getZeroClickUserIdOfCurrentSubject();
 		}
 
-		final String sql = SQLs.USER_PAGE_SELECT + OwnerFilter + SQLs.USER_PAGE_DATA_SELECT_INTO;
+		final String sql = SQLs.USER_PAGE_SELECT + ownerFilter + SQLs.USER_PAGE_DATA_SELECT_INTO;
 
 		SQL.selectInto(sql, new NVPair("page", pageData), new NVPair("currentUser", currentConnectedUserId));
 
@@ -302,6 +302,13 @@ public class UserService implements IUserService {
 		LOG.debug("Retriving password for User " + username);
 		final UserFormData formData = this.loadPassword(username);
 
+		return formData;
+	}
+
+	@Override
+	public UserFormData getPassword(final UserFormData userPassFormData) {
+		LOG.debug("Retriving password for User " + userPassFormData.getLogin().getValue());
+		final UserFormData formData = this.loadPassword(userPassFormData.getLogin().getValue());
 		return formData;
 	}
 

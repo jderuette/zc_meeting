@@ -92,8 +92,8 @@ public class RejectEventForm extends AbstractForm {
 	}
 
 	@FormData
-	public void setExternalIdOrganizer(final String externalIdOrganizer) {
-		this.externalIdOrganizer = externalIdOrganizer;
+	public void setExternalIdOrganizer(final String extIdOrganizer) {
+		this.externalIdOrganizer = extIdOrganizer;
 	}
 
 	@FormData
@@ -102,8 +102,8 @@ public class RejectEventForm extends AbstractForm {
 	}
 
 	@FormData
-	public void setExternalIdRecipient(final String externalIdRecipient) {
-		this.externalIdRecipient = externalIdRecipient;
+	public void setExternalIdRecipient(final String extIdAttendee) {
+		this.externalIdRecipient = extIdAttendee;
 	}
 
 	@FormData
@@ -152,9 +152,11 @@ public class RejectEventForm extends AbstractForm {
 		this.startInternalExclusive(new ModifyHandler());
 	}
 
-	// public void startNew() {
-	// this.startInternal(new NewHandler());
-	// }
+	private String buildUnknowSubActionMessage() {
+		final StringBuilder builder = new StringBuilder(50);
+		builder.append("Unknow sub action ").append(RejectEventForm.this.subAction).append(" for reject Action");
+		return builder.toString();
+	}
 
 	public MainBox getMainBox() {
 		return this.getFieldByClass(MainBox.class);
@@ -292,7 +294,7 @@ public class RejectEventForm extends AbstractForm {
 					this.setLabel(TEXTS.get("zc.meeting.cancelEvent"));
 					break;
 				default:
-					LOG.warn("Unknow sub action " + RejectEventForm.this.subAction + " for reject Action");
+					LOG.warn(RejectEventForm.this.buildUnknowSubActionMessage());
 					break;
 				}
 			}
@@ -310,8 +312,8 @@ public class RejectEventForm extends AbstractForm {
 	}
 
 	public class ModifyHandler extends AbstractFormHandler {
-		Calendar attendeeCalendarService;
-		Calendar hostCalendarService;
+		Calendar attendeeGCalSrv;
+		Calendar hostGCalSrv;
 
 		@Override
 		protected void execLoad() {
@@ -334,45 +336,41 @@ public class RejectEventForm extends AbstractForm {
 				RejectEventForm.this.setSubTitle(TEXTS.get("zc.meeting.confirmCancelEvent"));
 				break;
 			default:
-				LOG.warn("Unknow sub action " + RejectEventForm.this.subAction + " for reject Action");
+				LOG.warn(RejectEventForm.this.buildUnknowSubActionMessage());
 				break;
 			}
 
-			final GoogleApiHelper googleHelper = GoogleApiHelper.get();
-			final Long hostId = formData.getOrganizer();
-			final Long attendeeId = formData.getGuestId();
+			this.attendeeGCalSrv = this.getCalendarService(formData.getGuestId());
+			this.hostGCalSrv = this.getCalendarService(formData.getOrganizer());
 
+		}
+
+		private Calendar getCalendarService(final Long userId) {
+			Calendar gCalendarSrv = null;
+			final GoogleApiHelper googleHelper = GoogleApiHelper.get();
 			try {
-				if (null != attendeeId) {
-					this.attendeeCalendarService = googleHelper.getCalendarService(attendeeId);
+				if (null != userId) {
+					gCalendarSrv = googleHelper.getCalendarService(userId);
 				}
 			} catch (final UserAccessRequiredException uare) {
-				LOG.debug("No calendar provider for user " + attendeeId);
+				LOG.debug("No calendar provider for user " + userId);
 			} catch (final IOException e) {
 				throw new VetoException(TEXTS.get("ErrorAndRetryTextDefault"));
 			}
-			try {
-				if (null != hostId) {
-					this.hostCalendarService = googleHelper.getCalendarService(hostId);
-				}
-			} catch (final UserAccessRequiredException uare) {
-				LOG.debug("No calendar provider for user " + hostId);
-			} catch (final IOException e) {
-				throw new VetoException(TEXTS.get("ErrorAndRetryTextDefault"));
-			}
+
+			return gCalendarSrv;
 		}
 
 		@Override
 		protected void execStore() {
-			final IEventService service = BEANS.get(IEventService.class);
 			final RejectEventFormData formData = new RejectEventFormData();
 			RejectEventForm.this.exportFormData(formData);
 
-			if (null != RejectEventForm.this.getExternalIdOrganizer() && null != this.hostCalendarService) {
+			if (null != RejectEventForm.this.getExternalIdOrganizer() && null != this.hostGCalSrv) {
 				try {
 					LOG.info(this.buildRejectLog("Deleting", RejectEventForm.this.getEventId(),
 							RejectEventForm.this.getExternalIdOrganizer(), RejectEventForm.this.getOrganizer()));
-					this.hostCalendarService.events().delete("primary", RejectEventForm.this.getExternalIdOrganizer())
+					this.hostGCalSrv.events().delete("primary", RejectEventForm.this.getExternalIdOrganizer())
 							.execute();
 				} catch (final IOException e) {
 					LOG.error(
@@ -383,12 +381,12 @@ public class RejectEventForm extends AbstractForm {
 				}
 			}
 
-			if (null != RejectEventForm.this.getExternalIdRecipient() && null != this.attendeeCalendarService) {
+			if (null != RejectEventForm.this.getExternalIdRecipient() && null != this.attendeeGCalSrv) {
 				try {
 					LOG.info(this.buildRejectLog("Deleting", RejectEventForm.this.getEventId(),
 							RejectEventForm.this.getExternalIdRecipient(), RejectEventForm.this.getGuestId()));
-					this.attendeeCalendarService.events()
-							.delete("primary", RejectEventForm.this.getExternalIdRecipient()).execute();
+					this.attendeeGCalSrv.events().delete("primary", RejectEventForm.this.getExternalIdRecipient())
+							.execute();
 				} catch (final IOException e) {
 					LOG.error(
 							this.buildRejectLog("Error while deleting", RejectEventForm.this.getEventId(),
@@ -397,31 +395,23 @@ public class RejectEventForm extends AbstractForm {
 					throw new VetoException(TEXTS.get("zc.meeting.error.deletingEvent"));
 				}
 			}
-			formData.setState("REFUSED");
-			final EventFormData fulleEventFormData = service.storeNewState(formData);
 
-			RejectEventForm.this.sendEmail(fulleEventFormData);
+			final IEventService service = BEANS.get(IEventService.class);
+
+			formData.setState("REFUSED");
+			final EventFormData fullEventFormData = service.storeNewState(formData);
+
+			RejectEventForm.this.sendEmail(fullEventFormData);
 		}
 
 		private String buildRejectLog(final String prefix, final Long eventId, final String externalId,
 				final Long userId) {
-			final StringBuilder sb = new StringBuilder();
-			sb.append(prefix).append(" (Google) event : Id ").append(eventId).append(", external ID : ")
+			final StringBuilder builder = new StringBuilder(75);
+			builder.append(prefix).append(" (Google) event : Id ").append(eventId).append(", external ID : ")
 					.append(externalId).append("for user : ").append(userId);
-			return sb.toString();
+			return builder.toString();
 		}
 	}
-
-	// public class NewHandler extends AbstractFormHandler {
-	//
-	// @Override
-	// protected void execLoad() {
-	// }
-	//
-	// @Override
-	// protected void execStore() {
-	// }
-	// }
 
 	private void sendEmail(final EventFormData formData) {
 		final IMailSender mailSender = BEANS.get(IMailSender.class);

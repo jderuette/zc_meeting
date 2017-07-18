@@ -17,13 +17,11 @@ package org.zeroclick.configuration.shared.user;
 
 import java.io.Serializable;
 
-import org.zeroclick.configuration.shared.user.UserFormData;
-
 /**
  * @author djer
  *
  */
-public class AbstractUserNotification implements Serializable {
+public abstract class AbstractUserNotification implements Serializable {
 
 	private static final long serialVersionUID = 8907899874848943474L;
 
@@ -39,8 +37,8 @@ public class AbstractUserNotification implements Serializable {
 
 	@Override
 	public String toString() {
-		final StringBuilder builder = new StringBuilder();
-		builder.append("UserNotification [userForm=").append(this.userForm).append("]");
+		final StringBuilder builder = new StringBuilder(50);
+		builder.append("UserNotification [userForm=").append(this.userForm).append(']');
 		return builder.toString();
 	}
 

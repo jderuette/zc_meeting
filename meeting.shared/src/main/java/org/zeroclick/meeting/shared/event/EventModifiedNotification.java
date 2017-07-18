@@ -15,8 +15,6 @@ limitations under the License.
  */
 package org.zeroclick.meeting.shared.event;
 
-import org.zeroclick.meeting.shared.event.EventFormData;
-
 /**
  * @author djer
  *
@@ -31,8 +29,8 @@ public class EventModifiedNotification extends AbstractEventNotification {
 
 	@Override
 	public String toString() {
-		final StringBuilder builder = new StringBuilder();
-		builder.append("EventModifiedNotification [eventForm=").append(super.getEventForm()).append("]");
+		final StringBuilder builder = new StringBuilder(50);
+		builder.append("EventModifiedNotification [eventForm=").append(super.getEventForm()).append(']');
 		return builder.toString();
 	}
 }
