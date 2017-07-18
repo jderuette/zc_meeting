@@ -365,6 +365,13 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 				this.getEmailColumn().updateDisplayText(row, TEXTS.get("zc.common.me"));
 			}
+
+			final ZonedDateTime currentStartDate = this.getStartDateColumn().getZonedValue(row.getRowIndex());
+			this.getStartDateColumn().updateDisplayText(row, this.toUserDate(currentStartDate));
+
+			final ZonedDateTime currentEndDate = this.getEndDateColumn().getZonedValue(row.getRowIndex());
+			this.getEndDateColumn().updateDisplayText(row, this.toUserDate(currentEndDate));
+
 		}
 
 		private List<Object> getListFromForm(final EventFormData formData) {
@@ -795,7 +802,19 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		}
 
 		protected Date toDate(final ZonedDateTime zonedDateTime) {
-			return Date.from(zonedDateTime.toInstant());
+			Date date = null;
+			if (null != zonedDateTime) {
+				date = Date.from(zonedDateTime.toInstant());
+			}
+			return date;
+		}
+
+		protected Date toUserDate(final ZonedDateTime zonedDateTime) {
+			Date date = null;
+			if (null != zonedDateTime) {
+				date = Date.from(zonedDateTime.plusSeconds(zonedDateTime.getOffset().getTotalSeconds()).toInstant());
+			}
+			return date;
 		}
 
 		public DurationColumn getDurationColumn() {
