@@ -177,6 +177,16 @@ public class UserForm extends AbstractForm {
 		return null == UserForm.this.getHashedPassword();
 	}
 
+	private Boolean isUserLoggedWithEmail() {
+		final AccessControlService acs = BEANS.get(AccessControlService.class);
+		final IUserService userServcie = BEANS.get(IUserService.class);
+
+		final String curentUserId = acs.getUserIdOfCurrentUser();
+		final UserFormData userData = userServcie.getCurrentUserDetails();
+
+		return userData.getEmail().getValue().equalsIgnoreCase(curentUserId);
+	}
+
 	@Order(1000)
 	public class MainBox extends AbstractGroupBox {
 
@@ -324,10 +334,12 @@ public class UserForm extends AbstractForm {
 			// Else user session NEED to be reloaded with new login/email.
 			final Boolean userLoginChanged = !currentUserId.equals(formData.getLogin().getValue());
 			final Boolean userEmailChanged = !currentUserId.equals(formData.getEmail().getValue());
+			final Boolean loggedWithEmail = UserForm.this.isUserLoggedWithEmail();
 
 			// hard to know if user use login or email to login. If ONE changed,
 			// we reset session.
-			final Boolean needSessionReload = userLoginChanged || userEmailChanged;
+			final Boolean needSessionReload = userLoginChanged && !loggedWithEmail
+					|| userEmailChanged && loggedWithEmail;
 
 			service.store(formData);
 			if (needSessionReload) {
