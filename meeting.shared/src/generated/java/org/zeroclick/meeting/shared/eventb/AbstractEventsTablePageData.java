@@ -58,7 +58,6 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 		public static final String email = "email";
 		public static final String subject = "subject";
 		public static final String guestId = "guestId";
-		public static final String slot = "slot";
 		public static final String duration = "duration";
 		public static final String held = "held";
 		public static final String guest = "guest";
@@ -66,6 +65,7 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 		public static final String startDate = "startDate";
 		public static final String endDate = "endDate";
 		public static final String externalIdOrganizer = "externalIdOrganizer";
+		public static final String slot = "slot";
 		public static final String externalIdRecipient = "externalIdRecipient";
 		private Long m_eventId;
 		private Long m_organizer;
@@ -73,7 +73,6 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 		private String m_email;
 		private String m_subject;
 		private Long m_guestId;
-		private Integer m_slot;
 		private Integer m_duration;
 		private Boolean m_held;
 		private Boolean m_guest;
@@ -81,6 +80,7 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 		private Date m_startDate;
 		private Date m_endDate;
 		private String m_externalIdOrganizer;
+		private Integer m_slot;
 		private String m_externalIdRecipient;
 
 		public Long getEventId() {
@@ -129,14 +129,6 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 
 		public void setGuestId(Long newGuestId) {
 			m_guestId = newGuestId;
-		}
-
-		public Integer getSlot() {
-			return m_slot;
-		}
-
-		public void setSlot(Integer newSlot) {
-			m_slot = newSlot;
 		}
 
 		public Integer getDuration() {
@@ -193,6 +185,14 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 
 		public void setExternalIdOrganizer(String newExternalIdOrganizer) {
 			m_externalIdOrganizer = newExternalIdOrganizer;
+		}
+
+		public Integer getSlot() {
+			return m_slot;
+		}
+
+		public void setSlot(Integer newSlot) {
+			m_slot = newSlot;
 		}
 
 		public String getExternalIdRecipient() {

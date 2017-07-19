@@ -34,7 +34,7 @@ public class LoginField extends AbstractStringField {
 
 	@Override
 	protected String getConfiguredLabel() {
-		return TEXTS.get("Login");
+		return TEXTS.get("zc.user.login");
 	}
 
 	@Override

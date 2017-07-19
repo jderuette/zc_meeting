@@ -27,7 +27,6 @@ import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractDateColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractLongColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractSmartColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractStringColumn;
-import org.eclipse.scout.rt.client.ui.desktop.OpenUriAction;
 import org.eclipse.scout.rt.client.ui.desktop.outline.pages.AbstractPageWithTable;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
@@ -44,7 +43,6 @@ import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.configuration.shared.user.UserModifiedNotification;
-import org.zeroclick.meeting.client.ClientSession;
 import org.zeroclick.meeting.client.common.CallTrackerService;
 import org.zeroclick.meeting.client.common.DurationLookupCall;
 import org.zeroclick.meeting.client.common.EventStateLookupCall;
@@ -53,7 +51,6 @@ import org.zeroclick.meeting.client.event.EventTablePage.Table.NewMenu;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
-import org.zeroclick.meeting.shared.calendar.CreateApiPermission;
 import org.zeroclick.meeting.shared.event.EventCreatedNotification;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.EventModifiedNotification;
@@ -139,11 +136,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		@Override
 		protected boolean getConfiguredTableStatusVisible() {
 			return Boolean.FALSE;
-		}
-
-		@Override
-		protected String getConfiguredDefaultIconId() {
-			return Icons.User;
 		}
 
 		@Override
@@ -352,19 +344,23 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		@Override
 		protected void execDecorateRow(final ITableRow row) {
 
-			if (this.isHeldByCurrentUser(row)) {
-				row.setCellValue(this.getHeldColumn().getColumnIndex(), Boolean.TRUE);
-				row.setIconId(Icons.AngleDoubleLeft);
-
-				this.getOrganizerEmailColumn().updateDisplayText(row, TEXTS.get("zc.common.me"));
-			}
-
-			if (this.isGuestCurrentUser(row)) {
-				row.setCellValue(this.getGuestColumn().getColumnIndex(), Boolean.TRUE);
-				row.setIconId(Icons.AngleDoubleRight);
-
-				this.getEmailColumn().updateDisplayText(row, TEXTS.get("zc.common.me"));
-			}
+			// if (this.isHeldByCurrentUser(row)) {
+			// row.setCellValue(this.getHeldColumn().getColumnIndex(),
+			// Boolean.TRUE);
+			// row.setIconId(Icons.AngleDoubleLeft);
+			//
+			// this.getOrganizerEmailColumn().updateDisplayText(row,
+			// TEXTS.get("zc.common.me"));
+			// }
+			//
+			// if (this.isGuestCurrentUser(row)) {
+			// row.setCellValue(this.getGuestColumn().getColumnIndex(),
+			// Boolean.TRUE);
+			// row.setIconId(Icons.AngleDoubleRight);
+			//
+			// this.getEmailColumn().updateDisplayText(row,
+			// TEXTS.get("zc.common.me"));
+			// }
 
 			final ZonedDateTime currentStartDate = this.getStartDateColumn().getZonedValue(row.getRowIndex());
 			this.getStartDateColumn().updateDisplayText(row, this.toUserDate(currentStartDate));
@@ -572,10 +568,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				if (null != newEventMenu) {
 					newEventMenu.setVisible(Boolean.TRUE);
 				}
-				final IMenu eventAddGCalendar = this.getMenuByClass(AddGoogleCalendarMenu.class);
-				if (null != eventAddGCalendar) {
-					eventAddGCalendar.setVisible(Boolean.FALSE);
-				}
 			}
 		}
 
@@ -612,41 +604,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 		public abstract class AbstractRowAwareMenu extends AbstractMenu {
 			public abstract void handleRowChanged(final ITableRow row);
-		}
-
-		@Order(1000)
-		public class AddGoogleCalendarMenu extends AbstractMenu {
-			@Override
-			protected String getConfiguredText() {
-				return TEXTS.get("zc.meeting.addGoogleCalendar");
-			}
-
-			@Override
-			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-				return CollectionUtility.hashSet(TableMenuType.SingleSelection, TableMenuType.EmptySpace);
-			}
-
-			@Override
-			protected String getConfiguredIconId() {
-				return Icons.Calendar;
-			}
-
-			@Override
-			protected void execAction() {
-				ClientSession.get().getDesktop().openUri("/addGoogleCalendar", OpenUriAction.NEW_WINDOW);
-			}
-
-			@Override
-			protected void execOwnerValueChanged(final Object newOwnerValue) {
-				this.setVisible(!AbstractEventsTablePage.this.isUserCalendarConfigured());
-			}
-
-			@Override
-			protected void execInitAction() {
-				super.execInitAction();
-				this.setVisiblePermission(new CreateApiPermission());
-				this.setVisible(!AbstractEventsTablePage.this.isUserCalendarConfigured());
-			}
 		}
 
 		@Order(3000)
@@ -974,24 +931,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			}
 		}
 
-		@Order(100)
-		public class SlotColumn extends AbstractSmartColumn<Integer> {
-			@Override
-			protected String getConfiguredHeaderText() {
-				return TEXTS.get("zc.meeting.slot");
-			}
-
-			@Override
-			protected int getConfiguredWidth() {
-				return 150;
-			}
-
-			@Override
-			protected Class<? extends ILookupCall<Integer>> getConfiguredLookupCall() {
-				return SlotLookupCall.class;
-			}
-		}
-
 		@Order(200)
 		public class DurationColumn extends AbstractSmartColumn<Integer> {
 			@Override
@@ -1219,6 +1158,24 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			@Override
 			protected int getConfiguredWidth() {
 				return 140;
+			}
+		}
+
+		@Order(4000)
+		public class SlotColumn extends AbstractSmartColumn<Integer> {
+			@Override
+			protected String getConfiguredHeaderText() {
+				return TEXTS.get("zc.meeting.slot");
+			}
+
+			@Override
+			protected int getConfiguredWidth() {
+				return 150;
+			}
+
+			@Override
+			protected Class<? extends ILookupCall<Integer>> getConfiguredLookupCall() {
+				return SlotLookupCall.class;
 			}
 		}
 
