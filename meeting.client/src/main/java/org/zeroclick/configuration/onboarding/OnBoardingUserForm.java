@@ -9,16 +9,16 @@ import org.eclipse.scout.rt.client.ui.form.fields.longfield.AbstractLongField;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
-import org.zeroclick.configuration.onboarding.OnBoradingUserForm.MainBox.LoginField;
-import org.zeroclick.configuration.onboarding.OnBoradingUserForm.MainBox.OkButton;
-import org.zeroclick.configuration.onboarding.OnBoradingUserForm.MainBox.TimeZoneField;
-import org.zeroclick.configuration.onboarding.OnBoradingUserForm.MainBox.UserIdField;
-import org.zeroclick.configuration.shared.onboarding.OnBoradingUserFormData;
+import org.zeroclick.configuration.onboarding.OnBoardingUserForm.MainBox.LoginField;
+import org.zeroclick.configuration.onboarding.OnBoardingUserForm.MainBox.OkButton;
+import org.zeroclick.configuration.onboarding.OnBoardingUserForm.MainBox.TimeZoneField;
+import org.zeroclick.configuration.onboarding.OnBoardingUserForm.MainBox.UserIdField;
+import org.zeroclick.configuration.shared.onboarding.OnBoardingUserFormData;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 
-@FormData(value = OnBoradingUserFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
-public class OnBoradingUserForm extends AbstractForm {
+@FormData(value = OnBoardingUserFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
+public class OnBoardingUserForm extends AbstractForm {
 
 	@Override
 	protected String getConfiguredTitle() {
@@ -114,19 +114,19 @@ public class OnBoradingUserForm extends AbstractForm {
 		@Override
 		protected void execLoad() {
 			final IUserService service = BEANS.get(IUserService.class);
-			OnBoradingUserFormData formData = new OnBoradingUserFormData();
-			OnBoradingUserForm.this.exportFormData(formData);
+			OnBoardingUserFormData formData = new OnBoardingUserFormData();
+			OnBoardingUserForm.this.exportFormData(formData);
 			formData = service.load(formData);
-			OnBoradingUserForm.this.importFormData(formData);
+			OnBoardingUserForm.this.importFormData(formData);
 
-			OnBoradingUserForm.this.setEnabledPermission(new UpdateUserPermission(formData.getUserId().getValue()));
+			OnBoardingUserForm.this.setEnabledPermission(new UpdateUserPermission(formData.getUserId().getValue()));
 		}
 
 		@Override
 		protected void execStore() {
 			final IUserService service = BEANS.get(IUserService.class);
-			final OnBoradingUserFormData formData = new OnBoradingUserFormData();
-			OnBoradingUserForm.this.exportFormData(formData);
+			final OnBoardingUserFormData formData = new OnBoardingUserFormData();
+			OnBoardingUserForm.this.exportFormData(formData);
 
 			service.store(formData);
 		}

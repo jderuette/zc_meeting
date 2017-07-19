@@ -6,7 +6,7 @@ import org.eclipse.scout.rt.platform.ApplicationScoped;
 import org.eclipse.scout.rt.platform.service.IService;
 import org.eclipse.scout.rt.shared.TunnelToServer;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
-import org.zeroclick.configuration.shared.onboarding.OnBoradingUserFormData;
+import org.zeroclick.configuration.shared.onboarding.OnBoardingUserFormData;
 
 @ApplicationScoped
 @TunnelToServer
@@ -42,8 +42,8 @@ public interface IUserService extends IService {
 
 	boolean isLoginAlreadyUsed(String login);
 
-	OnBoradingUserFormData load(OnBoradingUserFormData formData);
+	OnBoardingUserFormData load(OnBoardingUserFormData formData);
 
-	OnBoradingUserFormData store(OnBoradingUserFormData formData);
+	OnBoardingUserFormData store(OnBoardingUserFormData formData);
 
 }

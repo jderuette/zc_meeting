@@ -16,7 +16,7 @@ import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeroclick.configuration.shared.onboarding.OnBoradingUserFormData;
+import org.zeroclick.configuration.shared.onboarding.OnBoardingUserFormData;
 import org.zeroclick.configuration.shared.user.CreateUserPermission;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.ReadUserPermission;
@@ -145,7 +145,7 @@ public class UserService implements IUserService {
 	}
 
 	@Override
-	public OnBoradingUserFormData load(final OnBoradingUserFormData formData) {
+	public OnBoardingUserFormData load(final OnBoardingUserFormData formData) {
 		UserFormData userFormData = new UserFormData();
 		userFormData.getUserId().setValue(formData.getUserId().getValue());
 
@@ -212,7 +212,7 @@ public class UserService implements IUserService {
 	}
 
 	@Override
-	public OnBoradingUserFormData store(final OnBoradingUserFormData formData) {
+	public OnBoardingUserFormData store(final OnBoardingUserFormData formData) {
 		if (!ACCESS.check(new UpdateUserPermission(formData.getUserId().getValue()))) {
 			throw new VetoException(TEXTS.get("AuthorizationFailed"));
 		}
