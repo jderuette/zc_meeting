@@ -463,11 +463,12 @@ public class UserForm extends AbstractForm {
 
 		String plainRandomPassword = this.generatePasword();
 
-		if (null == plainRandomPassword || "".equals(plainRandomPassword)) {
+		if (null == plainRandomPassword || "".equals(plainRandomPassword.trim())) {
 			LOG.warn("Generated Plain Password is null or empty ! Trying again ...");
 			plainRandomPassword = this.generatePasword();
-			if (null == plainRandomPassword || "".equals(plainRandomPassword)) {
-				LOG.warn("Generated Plain Password is STILL null or empty !");
+			if (null == plainRandomPassword || "".equals(plainRandomPassword.trim())) {
+				LOG.warn("Generated Plain Password is STILL null or empty (last try) !");
+				plainRandomPassword = this.generatePasword();
 			}
 		}
 
