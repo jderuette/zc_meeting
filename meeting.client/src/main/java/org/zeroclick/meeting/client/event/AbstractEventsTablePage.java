@@ -824,7 +824,12 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 			@Override
 			protected boolean getConfiguredDisplayable() {
-				return false;
+				return Boolean.TRUE;
+			}
+
+			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.FALSE;
 			}
 
 			@Override

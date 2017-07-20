@@ -7,6 +7,7 @@ import org.eclipse.scout.rt.client.ui.desktop.outline.pages.IPage;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
+import org.zeroclick.meeting.client.event.EventAdminTablePage;
 import org.zeroclick.meeting.client.event.EventProcessedTablePage;
 import org.zeroclick.meeting.client.event.EventTablePage;
 import org.zeroclick.meeting.shared.Icons;
@@ -22,19 +23,22 @@ public class MeetingOutline extends AbstractOutline {
 
 	@Override
 	protected void execCreateChildPages(final List<IPage<?>> pageList) {
-		// super.execCreateChildPages(pageList);
 		final int currentUserEventLevel = ACCESS.getLevel(new ReadEventPermission((Long) null));
 		final Boolean isEventUser = currentUserEventLevel >= ReadEventPermission.LEVEL_OWN;
 		final Boolean isEventAdmin = currentUserEventLevel > ReadEventPermission.LEVEL_OWN;
+
 		final EventTablePage eventTablePage = new EventTablePage();
 		eventTablePage.setVisibleGranted(isEventUser);
 
 		final EventProcessedTablePage eventProcessedTablePage = new EventProcessedTablePage();
 		eventProcessedTablePage.setVisibleGranted(isEventUser);
 
+		final EventAdminTablePage eventAdminTablePage = new EventAdminTablePage();
+		eventProcessedTablePage.setVisibleGranted(isEventAdmin);
+
 		pageList.add(eventTablePage);
 		pageList.add(eventProcessedTablePage);
-		// pageList.add(new TestNodePage());
+		pageList.add(eventAdminTablePage);
 	}
 
 	@Override

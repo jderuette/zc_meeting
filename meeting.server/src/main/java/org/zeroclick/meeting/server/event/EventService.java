@@ -35,12 +35,14 @@ public class EventService implements IEventService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(EventService.class);
 
-	private EventTablePageData getEvents(final SearchFilter filter, final String eventStatusCriteria) {
+	private EventTablePageData getEvents(final SearchFilter filter, final String eventStatusCriteria,
+			final Boolean displayAllForAdmin) {
 		final EventTablePageData pageData = new EventTablePageData();
 
 		String ownerFilter = "";
 		Long currentConnectedUserId = 0L;
-		if (ACCESS.getLevel(new ReadEventPermission((Long) null)) != ReadEventPermission.LEVEL_ALL) {
+		if (!displayAllForAdmin
+				|| ACCESS.getLevel(new ReadEventPermission((Long) null)) != ReadEventPermission.LEVEL_ALL) {
 			ownerFilter = SQLs.EVENT_PAGE_SELECT_FILTER_USER_OR_RECIPIENT;
 			final AccessControlService acs = BEANS.get(AccessControlService.class);
 			currentConnectedUserId = acs.getZeroClickUserIdOfCurrentSubject();
@@ -57,12 +59,17 @@ public class EventService implements IEventService {
 
 	@Override
 	public EventTablePageData getEventTableData(final SearchFilter filter) {
-		return this.getEvents(filter, " AND state = 'ASKED'");
+		return this.getEvents(filter, " AND state = 'ASKED'", Boolean.FALSE);
 	}
 
 	@Override
 	public AbstractTablePageData getEventProcessedTableData(final SearchFilter filter) {
-		return this.getEvents(filter, " AND state <> 'ASKED'");
+		return this.getEvents(filter, " AND state <> 'ASKED'", Boolean.FALSE);
+	}
+
+	@Override
+	public AbstractTablePageData getEventAdminTableData(final SearchFilter filter) {
+		return this.getEvents(filter, "", Boolean.TRUE);
 	}
 
 	@Override
