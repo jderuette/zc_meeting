@@ -59,8 +59,6 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 		public static final String subject = "subject";
 		public static final String guestId = "guestId";
 		public static final String duration = "duration";
-		public static final String held = "held";
-		public static final String guest = "guest";
 		public static final String state = "state";
 		public static final String startDate = "startDate";
 		public static final String endDate = "endDate";
@@ -74,8 +72,6 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 		private String m_subject;
 		private Long m_guestId;
 		private Integer m_duration;
-		private Boolean m_held;
-		private Boolean m_guest;
 		private String m_state;
 		private Date m_startDate;
 		private Date m_endDate;
@@ -137,22 +133,6 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 
 		public void setDuration(Integer newDuration) {
 			m_duration = newDuration;
-		}
-
-		public Boolean getHeld() {
-			return m_held;
-		}
-
-		public void setHeld(Boolean newHeld) {
-			m_held = newHeld;
-		}
-
-		public Boolean getGuest() {
-			return m_guest;
-		}
-
-		public void setGuest(Boolean newGuest) {
-			m_guest = newGuest;
 		}
 
 		public String getState() {

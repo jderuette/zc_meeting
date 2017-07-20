@@ -22,7 +22,6 @@ import org.eclipse.scout.rt.client.ui.basic.cell.ICell;
 import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
 import org.eclipse.scout.rt.client.ui.basic.table.ITableRow;
 import org.eclipse.scout.rt.client.ui.basic.table.TableRow;
-import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractBooleanColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractDateColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractLongColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractSmartColumn;
@@ -151,8 +150,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			this.getEventIdColumn().setVisiblePermission(new ReadEventExtendedPropsPermission());
 			this.getExternalIdOrganizerColumn().setVisiblePermission(new ReadEventExtendedPropsPermission());
 			this.getExternalIdRecipientColumn().setVisiblePermission(new ReadEventExtendedPropsPermission());
-			this.getHeldColumn().setVisiblePermission(new ReadEventExtendedPropsPermission());
-			this.getGuestColumn().setVisiblePermission(new ReadEventExtendedPropsPermission());
 
 			final EventCreatedNotificationHandler eventCreatedNotificationHandler = BEANS
 					.get(EventCreatedNotificationHandler.class);
@@ -345,16 +342,12 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		protected void execDecorateRow(final ITableRow row) {
 
 			if (this.isHeldByCurrentUser(row)) {
-				row.setCellValue(this.getHeldColumn().getColumnIndex(), Boolean.TRUE);
 				// row.setIconId(Icons.AngleDoubleLeft);
-
 				this.getOrganizerEmailColumn().updateDisplayText(row, TEXTS.get("zc.common.me"));
 			}
 
 			if (this.isGuestCurrentUser(row)) {
-				row.setCellValue(this.getGuestColumn().getColumnIndex(), Boolean.TRUE);
 				// row.setIconId(Icons.AngleDoubleRight);
-
 				this.getEmailColumn().updateDisplayText(row, TEXTS.get("zc.common.me"));
 			}
 
@@ -373,13 +366,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			// SubjectField [Subject ]
 			// EmailColumn[Attendee],
 			// GuestIdColumn[Attendee],
-			// SlotColumn[Slot],
 			// DurationColumn[Duration],
-			// HeldColumn[Host],
-			// GuestColumn[Attendee ],
 			// StateColumn[State ],
 			// StartDateColumn[Start ],
 			// EndDateColumn[End],
+			// SlotColumn[Slot],
 			// ExternalIdOrganizerColumn[External Id],
 			// ExternalIdRecipientColumn[External Id]
 			final List<Object> datas = new ArrayList<>();
@@ -390,8 +381,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			datas.add(formData.getSubject().getValue());
 			datas.add(formData.getGuestId().getValue());
 			datas.add(formData.getDuration().getValue());
-			datas.add(null);// HeldColumn
-			datas.add(null);// GuestColumn
 			datas.add(formData.getState().getValue());
 			datas.add(formData.getStartDate().getValue());
 			datas.add(formData.getEndDate().getValue());
@@ -798,14 +787,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			return this.getColumnSet().getColumnByClass(ExternalIdOrganizerColumn.class);
 		}
 
-		public HeldColumn getHeldColumn() {
-			return this.getColumnSet().getColumnByClass(HeldColumn.class);
-		}
-
-		public GuestColumn getGuestColumn() {
-			return this.getColumnSet().getColumnByClass(GuestColumn.class);
-		}
-
 		public ExternalIdRecipientColumn getExternalIdRecipientColumn() {
 			return this.getColumnSet().getColumnByClass(ExternalIdRecipientColumn.class);
 		}
@@ -942,32 +923,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			@Override
 			protected Class<? extends ILookupCall<Integer>> getConfiguredLookupCall() {
 				return DurationLookupCall.class;
-			}
-		}
-
-		@Order(300)
-		public class HeldColumn extends AbstractBooleanColumn {
-			@Override
-			protected String getConfiguredHeaderText() {
-				return TEXTS.get("zc.meeting.hosted");
-			}
-
-			@Override
-			protected int getConfiguredWidth() {
-				return 64;
-			}
-		}
-
-		@Order(400)
-		public class GuestColumn extends AbstractBooleanColumn {
-			@Override
-			protected String getConfiguredHeaderText() {
-				return TEXTS.get("zc.meeting.attendee");
-			}
-
-			@Override
-			protected int getConfiguredWidth() {
-				return 64;
 			}
 		}
 
