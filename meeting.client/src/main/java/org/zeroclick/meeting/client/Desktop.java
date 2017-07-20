@@ -33,14 +33,12 @@ import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.ReadUserPermission;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.configuration.shared.user.UserFormData;
-import org.zeroclick.meeting.client.event.EventForm;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
 import org.zeroclick.meeting.client.meeting.MeetingOutline;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CreateApiPermission;
 import org.zeroclick.meeting.shared.calendar.ReadApiPermission;
-import org.zeroclick.meeting.shared.event.CreateEventPermission;
 import org.zeroclick.meeting.shared.event.ReadEventPermission;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
@@ -129,7 +127,6 @@ public class Desktop extends AbstractDesktop {
 					final ApiFormData eventForm = notification.getApiForm();
 					LOG.debug("Created Api prepare to modify desktop menus (" + this.getClass().getName() + ") : "
 							+ eventForm.getUserId());
-					Desktop.this.getMenu(CreateEventMenu.class).setVisible(Boolean.TRUE);
 					Desktop.this.getMenu(AddGoogleCalendarMenu.class).setVisible(Boolean.FALSE);
 				} catch (final RuntimeException e) {
 					LOG.error("Could not handle new api. (" + this.getClass().getName() + ")", e);
@@ -138,31 +135,6 @@ public class Desktop extends AbstractDesktop {
 		};
 
 		return this.apiCreatedListener;
-	}
-
-	@Order(1000)
-	public class CreateEventMenu extends AbstractMenu {
-		@Override
-		protected String getConfiguredText() {
-			return TEXTS.get("zc.meeting.addEvent");
-		}
-
-		@Override
-		protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-			return CollectionUtility.hashSet();
-		}
-
-		@Override
-		protected void execAction() {
-			new EventForm().startNew();
-		}
-
-		@Override
-		protected void execInitAction() {
-			super.execInitAction();
-			this.setVisiblePermission(new CreateEventPermission());
-			this.setVisible(GoogleApiHelper.get().isCalendarConfigured());
-		}
 	}
 
 	@Order(2000)

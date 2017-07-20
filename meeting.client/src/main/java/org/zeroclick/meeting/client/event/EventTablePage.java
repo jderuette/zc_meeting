@@ -681,7 +681,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		public class NewMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {
-				return TEXTS.get("New");
+				return TEXTS.get("zc.meeting.addEvent");
 			}
 
 			@Override
@@ -718,7 +718,25 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			}
 		}
 
-		@Order(2000)
+		@Order(2100)
+		public class SeparatorMenu extends AbstractMenu {
+			@Override
+			protected String getConfiguredText() {
+				return "";
+			}
+
+			@Override
+			protected boolean getConfiguredSeparator() {
+				return Boolean.TRUE;
+			}
+
+			@Override
+			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+				return CollectionUtility.hashSet(TableMenuType.SingleSelection, TableMenuType.MultiSelection);
+			}
+		}
+
+		@Order(2500)
 		public class AcceptMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {
