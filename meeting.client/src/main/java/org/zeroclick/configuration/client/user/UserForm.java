@@ -220,12 +220,41 @@ public class UserForm extends AbstractForm {
 
 		@Order(1500)
 		public class LoginField extends org.zeroclick.ui.form.fields.loginfield.LoginField {
+			private Boolean valueChanged = Boolean.FALSE;
 
+			protected Boolean getValueChanged() {
+				return this.valueChanged;
+			}
+
+			protected void setValueChanged(final Boolean valueChanged) {
+				this.valueChanged = valueChanged;
+			}
+
+			@Override
+			protected void execChangedValue() {
+				super.execChangedValue();
+				this.setValueChanged(Boolean.TRUE);
+			}
 		}
 
 		@Order(2000)
 		public class EmailField extends org.zeroclick.ui.form.fields.emailfield.EmailField {
 
+			private Boolean valueChanged = Boolean.FALSE;
+
+			protected Boolean getValueChanged() {
+				return this.valueChanged;
+			}
+
+			protected void setValueChanged(final Boolean valueChanged) {
+				this.valueChanged = valueChanged;
+			}
+
+			@Override
+			protected void execChangedValue() {
+				super.execChangedValue();
+				this.setValueChanged(Boolean.TRUE);
+			}
 		}
 
 		@Order(2500)
@@ -332,14 +361,16 @@ public class UserForm extends AbstractForm {
 					.getUserIdOfCurrentUser();
 			// if loggedIn with Email can change login, else can change email.
 			// Else user session NEED to be reloaded with new login/email.
-			final Boolean userLoginChanged = !currentUserId.equals(formData.getLogin().getValue());
-			final Boolean userEmailChanged = !currentUserId.equals(formData.getEmail().getValue());
+			final Boolean userLoginChanged = UserForm.this.getLoginField().getValueChanged();
+			final Boolean userLoginNotCurrent = !currentUserId.equals(formData.getLogin().getValue());
+			final Boolean emailChanged = UserForm.this.getEmailField().getValueChanged();
+			final Boolean userEmailNotCurrent = !currentUserId.equals(formData.getEmail().getValue());
 			final Boolean loggedWithEmail = UserForm.this.isUserLoggedWithEmail();
 
 			// hard to know if user use login or email to login. If ONE changed,
 			// we reset session.
-			final Boolean needSessionReload = userLoginChanged && !loggedWithEmail
-					|| userEmailChanged && loggedWithEmail;
+			final Boolean needSessionReload = userLoginChanged && userLoginNotCurrent && !loggedWithEmail
+					|| emailChanged && userEmailNotCurrent && loggedWithEmail;
 
 			service.store(formData);
 			if (needSessionReload) {
