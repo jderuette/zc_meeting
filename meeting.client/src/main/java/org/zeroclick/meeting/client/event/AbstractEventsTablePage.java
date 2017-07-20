@@ -344,23 +344,19 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		@Override
 		protected void execDecorateRow(final ITableRow row) {
 
-			// if (this.isHeldByCurrentUser(row)) {
-			// row.setCellValue(this.getHeldColumn().getColumnIndex(),
-			// Boolean.TRUE);
-			// row.setIconId(Icons.AngleDoubleLeft);
-			//
-			// this.getOrganizerEmailColumn().updateDisplayText(row,
-			// TEXTS.get("zc.common.me"));
-			// }
-			//
-			// if (this.isGuestCurrentUser(row)) {
-			// row.setCellValue(this.getGuestColumn().getColumnIndex(),
-			// Boolean.TRUE);
-			// row.setIconId(Icons.AngleDoubleRight);
-			//
-			// this.getEmailColumn().updateDisplayText(row,
-			// TEXTS.get("zc.common.me"));
-			// }
+			if (this.isHeldByCurrentUser(row)) {
+				row.setCellValue(this.getHeldColumn().getColumnIndex(), Boolean.TRUE);
+				// row.setIconId(Icons.AngleDoubleLeft);
+
+				this.getOrganizerEmailColumn().updateDisplayText(row, TEXTS.get("zc.common.me"));
+			}
+
+			if (this.isGuestCurrentUser(row)) {
+				row.setCellValue(this.getGuestColumn().getColumnIndex(), Boolean.TRUE);
+				// row.setIconId(Icons.AngleDoubleRight);
+
+				this.getEmailColumn().updateDisplayText(row, TEXTS.get("zc.common.me"));
+			}
 
 			final ZonedDateTime currentStartDate = this.getStartDateColumn().getZonedValue(row.getRowIndex());
 			this.getStartDateColumn().updateDisplayText(row, this.toUserDate(currentStartDate));
