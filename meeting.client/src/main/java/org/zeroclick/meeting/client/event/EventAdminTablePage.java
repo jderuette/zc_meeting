@@ -38,6 +38,9 @@ public class EventAdminTablePage extends AbstractEventsTablePage<Table> {
 		protected void initConfig() {
 			super.initConfig();
 			this.getEventIdColumn().setVisible(Boolean.TRUE);
+
+			this.getExternalIdOrganizerColumn().setVisible(Boolean.TRUE);
+			this.getExternalIdRecipientColumn().setVisible(Boolean.TRUE);
 		}
 
 		@Override

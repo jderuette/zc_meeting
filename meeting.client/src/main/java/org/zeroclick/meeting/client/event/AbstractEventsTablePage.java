@@ -146,7 +146,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		@Override
 		protected void initConfig() {
 			super.initConfig();
-			this.setRowIconVisible(Boolean.TRUE);
+			this.setRowIconVisible(Boolean.FALSE);
 			this.getEventIdColumn().setVisiblePermission(new ReadEventExtendedPropsPermission());
 			this.getExternalIdOrganizerColumn().setVisiblePermission(new ReadEventExtendedPropsPermission());
 			this.getExternalIdRecipientColumn().setVisiblePermission(new ReadEventExtendedPropsPermission());
@@ -1143,6 +1143,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			}
 
 			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.FALSE;
+			}
+
+			@Override
 			protected int getConfiguredWidth() {
 				return 100;
 			}
@@ -1153,6 +1158,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.externalId");
+			}
+
+			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.FALSE;
 			}
 
 			@Override
