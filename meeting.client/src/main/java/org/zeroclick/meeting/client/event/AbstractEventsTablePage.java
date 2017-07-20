@@ -389,13 +389,13 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			datas.add(formData.getEmail().getValue());
 			datas.add(formData.getSubject().getValue());
 			datas.add(formData.getGuestId().getValue());
-			datas.add(formData.getSlot().getValue());
 			datas.add(formData.getDuration().getValue());
 			datas.add(null);// HeldColumn
 			datas.add(null);// GuestColumn
 			datas.add(formData.getState().getValue());
 			datas.add(formData.getStartDate().getValue());
 			datas.add(formData.getEndDate().getValue());
+			datas.add(formData.getSlot().getValue());
 			datas.add(formData.getExternalIdOrganizer());
 			datas.add(formData.getExternalIdRecipient());
 			return datas;
@@ -1175,7 +1175,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			}
 		}
 
-		@Order(4000)
+		@Order(4500)
 		public class ExternalIdOrganizerColumn extends AbstractStringColumn {
 			@Override
 			protected String getConfiguredHeaderText() {

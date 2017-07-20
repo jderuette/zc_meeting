@@ -64,8 +64,8 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 		public static final String state = "state";
 		public static final String startDate = "startDate";
 		public static final String endDate = "endDate";
-		public static final String externalIdOrganizer = "externalIdOrganizer";
 		public static final String slot = "slot";
+		public static final String externalIdOrganizer = "externalIdOrganizer";
 		public static final String externalIdRecipient = "externalIdRecipient";
 		private Long m_eventId;
 		private Long m_organizer;
@@ -79,8 +79,8 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 		private String m_state;
 		private Date m_startDate;
 		private Date m_endDate;
-		private String m_externalIdOrganizer;
 		private Integer m_slot;
+		private String m_externalIdOrganizer;
 		private String m_externalIdRecipient;
 
 		public Long getEventId() {
@@ -179,20 +179,20 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 			m_endDate = newEndDate;
 		}
 
-		public String getExternalIdOrganizer() {
-			return m_externalIdOrganizer;
-		}
-
-		public void setExternalIdOrganizer(String newExternalIdOrganizer) {
-			m_externalIdOrganizer = newExternalIdOrganizer;
-		}
-
 		public Integer getSlot() {
 			return m_slot;
 		}
 
 		public void setSlot(Integer newSlot) {
 			m_slot = newSlot;
+		}
+
+		public String getExternalIdOrganizer() {
+			return m_externalIdOrganizer;
+		}
+
+		public void setExternalIdOrganizer(String newExternalIdOrganizer) {
+			m_externalIdOrganizer = newExternalIdOrganizer;
 		}
 
 		public String getExternalIdRecipient() {
