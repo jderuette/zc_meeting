@@ -68,7 +68,7 @@ public class RoleService implements IRoleService {
 		if (!ACCESS.check(new ReadRolePermission())) {
 			throw new VetoException(TEXTS.get("AuthorizationFailed"));
 		}
-		SQL.selectInto(SQLs.ROLE_SELECT, formData);
+		SQL.selectInto(SQLs.ROLE_SELECT + SQLs.ROLE_SELECT_INTO, formData);
 		return formData;
 	}
 

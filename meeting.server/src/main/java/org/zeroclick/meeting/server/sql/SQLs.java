@@ -137,7 +137,8 @@ public interface SQLs {
 
 	String ROLE_UPDATE = "UPDATE ROLE SET name=:roleName WHERE role_id=:roleId";
 
-	String ROLE_SELECT = "SELECT role_id, name FROM ROLE WHERE 1=1";
+	String ROLE_SELECT = "SELECT role_id, name FROM ROLE WHERE 1=1 AND role_id = :roleId";
+	String ROLE_SELECT_INTO = " INTO :roleId, :roleName";
 
 	String ROLE_LOOKUP = "SELECT role_id,  name FROM ROLE WHERE 1=1 <key>   AND role_id = :key </key>"
 			+ " <text>  AND UPPER(name) LIKE UPPER('%'||:text||'%') </text> <all> </all>";

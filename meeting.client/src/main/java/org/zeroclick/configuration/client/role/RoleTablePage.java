@@ -71,7 +71,7 @@ public class RoleTablePage extends AbstractPageWithTable<Table> {
 		public class EditMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {
-				return TEXTS.get("zc.common.edit");
+				return TEXTS.get("zc.user.editRole");
 			}
 
 			@Override

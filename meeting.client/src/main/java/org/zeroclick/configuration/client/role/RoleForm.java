@@ -105,6 +105,7 @@ public class RoleForm extends AbstractForm {
 			final IRoleService service = BEANS.get(IRoleService.class);
 			RoleFormData formData = new RoleFormData();
 			RoleForm.this.exportFormData(formData);
+			formData.setRoleId(RoleForm.this.getRoleId());
 			formData = service.load(formData);
 			RoleForm.this.importFormData(formData);
 
