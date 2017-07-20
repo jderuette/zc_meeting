@@ -1,6 +1,7 @@
 package org.zeroclick.configuration.onboarding;
 
 import org.eclipse.scout.rt.client.dto.FormData;
+import org.eclipse.scout.rt.client.ui.desktop.OpenUriAction;
 import org.eclipse.scout.rt.client.ui.form.AbstractForm;
 import org.eclipse.scout.rt.client.ui.form.AbstractFormHandler;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractOkButton;
@@ -16,6 +17,7 @@ import org.zeroclick.configuration.onboarding.OnBoardingUserForm.MainBox.UserIdF
 import org.zeroclick.configuration.shared.onboarding.OnBoardingUserFormData;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
+import org.zeroclick.meeting.client.ClientSession;
 
 @FormData(value = OnBoardingUserFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class OnBoardingUserForm extends AbstractForm {
@@ -91,22 +93,20 @@ public class OnBoardingUserForm extends AbstractForm {
 		}
 
 		@Order(2000)
-		public class LoginField extends org.zeroclick.ui.form.fields.loginfield.LoginField {
+		public class TimeZoneField extends org.zeroclick.ui.form.fields.timezonefield.TimeZoneField {
 		}
 
 		@Order(3000)
-		public class TimeZoneField extends org.zeroclick.ui.form.fields.timezonefield.TimeZoneField {
+		public class LoginField extends org.zeroclick.ui.form.fields.loginfield.LoginField {
 		}
 
 		@Order(100000)
 		public class OkButton extends AbstractOkButton {
-
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("zc.common.updateAction");
+				return TEXTS.get("zc.onboarding.updateAndAddGoogle");
 			}
 		}
-
 	}
 
 	public class ModifyHandler extends AbstractFormHandler {
@@ -129,6 +129,8 @@ public class OnBoardingUserForm extends AbstractForm {
 			OnBoardingUserForm.this.exportFormData(formData);
 
 			service.store(formData);
+
+			ClientSession.get().getDesktop().openUri("/addGoogleCalendar", OpenUriAction.NEW_WINDOW);
 		}
 	}
 }
