@@ -25,7 +25,7 @@ public class MeetingOutline extends AbstractOutline {
 	protected void execCreateChildPages(final List<IPage<?>> pageList) {
 		final int currentUserEventLevel = ACCESS.getLevel(new ReadEventPermission((Long) null));
 		final Boolean isEventUser = currentUserEventLevel >= ReadEventPermission.LEVEL_OWN;
-		final Boolean isEventAdmin = currentUserEventLevel > ReadEventPermission.LEVEL_OWN;
+		final Boolean isEventAdmin = currentUserEventLevel == ReadEventPermission.LEVEL_ALL;
 
 		final EventTablePage eventTablePage = new EventTablePage();
 		eventTablePage.setVisibleGranted(isEventUser);
@@ -34,7 +34,7 @@ public class MeetingOutline extends AbstractOutline {
 		eventProcessedTablePage.setVisibleGranted(isEventUser);
 
 		final EventAdminTablePage eventAdminTablePage = new EventAdminTablePage();
-		eventProcessedTablePage.setVisibleGranted(isEventAdmin);
+		eventAdminTablePage.setVisibleGranted(isEventAdmin);
 
 		pageList.add(eventTablePage);
 		pageList.add(eventProcessedTablePage);
