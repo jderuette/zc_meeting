@@ -736,6 +736,9 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 						throw new VetoException(TEXTS.get("zc.meeting.chooseDateFirst"));
 					}
 
+					Table.this.getStateColumn().setValue(Table.this.getSelectedRow(), "ACCEPTED");
+					final EventFormData savedData = Table.this.saveEventCurrentRow();
+
 					if (null == eventGuest) {
 						eventGuest = userService.getUserIdByEmail(eventGuestEmail);
 					}
@@ -744,8 +747,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 							subject);
 					Table.this.getExternalIdRecipientColumn().setValue(Table.this.getSelectedRow(),
 							externalGuestEvent.getId());
-
-					this.sendConfirmationEmail(eventGuestEmail, externalGuestEvent);
+					this.sendConfirmationEmail(eventGuestEmail, externalGuestEvent, savedData);
 
 					if (null == eventHeldBy) {
 						eventHeldBy = userService.getUserIdByEmail(eventHeldEmail);
@@ -755,11 +757,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 							eventGuestEmail, subject);
 					Table.this.getExternalIdOrganizerColumn().setValue(Table.this.getSelectedRow(),
 							externalOrganizerEvent.getId());
-					this.sendConfirmationEmail(eventHeldEmail, externalOrganizerEvent);
-
-					Table.this.getStateColumn().setValue(Table.this.getSelectedRow(), "ACCEPTED");
-
-					Table.this.saveEventCurrentRow();
+					this.sendConfirmationEmail(eventHeldEmail, externalOrganizerEvent, savedData);
 
 					Table.this.resetInvalidatesEvent(start, end);
 					Table.this.autoFillDates();
@@ -769,11 +767,15 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				}
 			}
 
-			private void sendConfirmationEmail(final String recipient, final Event event) {
+			private void sendConfirmationEmail(final String recipient, final Event event,
+					final EventFormData formData) {
 				final IMailSender mailSender = BEANS.get(IMailSender.class);
-				final String subject = "ZeroClick Meeting : meeting Confirmation";
-				final String content = "Confirmation : " + event.getHtmlLink()
-						+ " <br /> <br />Best Regards<br /> ZeroClickMeeting Team";
+
+				final String meetingSubject = formData.getSubject().getValue();
+
+				final String subject = TEXTS.get("zc.meeting.email.event.confirm.subject");
+				final String content = TEXTS.get("zc.meeting.email.event.confirm.html", recipient, meetingSubject,
+						event.getHtmlLink());
 				try {
 					mailSender.sendEmail(recipient, subject, content);
 				} catch (final MailException e) {

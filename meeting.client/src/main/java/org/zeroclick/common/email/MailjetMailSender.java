@@ -80,7 +80,10 @@ public class MailjetMailSender implements IMailSender {
 			messageBody = builder.toString();
 		}
 
-		final String currentEnvDisplay = new ApplicationEnvProperty().displayAsText();
+		String currentEnvDisplay = new ApplicationEnvProperty().displayAsText();
+		if (!currentEnvDisplay.isEmpty()) {
+			currentEnvDisplay = currentEnvDisplay + " ";
+		}
 		subject = currentEnvDisplay + subject;
 
 		LOG.info("Sending mail to : " + recipientTo + " subject : " + subject + " BodySize : " + messageBody.length());
