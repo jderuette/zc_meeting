@@ -17,6 +17,7 @@ import org.eclipse.scout.rt.platform.security.SecurityUtility;
 import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.platform.util.Base64Utility;
 import org.eclipse.scout.rt.shared.TEXTS;
+import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.eclipse.scout.rt.shared.services.common.security.IAccessControlService;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.slf4j.Logger;
@@ -38,6 +39,7 @@ import org.zeroclick.configuration.shared.role.CreateAssignToRolePermission;
 import org.zeroclick.configuration.shared.role.RoleLookupCall;
 import org.zeroclick.configuration.shared.user.CreateUserPermission;
 import org.zeroclick.configuration.shared.user.IUserService;
+import org.zeroclick.configuration.shared.user.ReadUserPermission;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.meeting.client.ClientSession;
@@ -160,6 +162,8 @@ public class UserForm extends AbstractForm {
 	public void initForm() {
 		super.initForm();
 		this.getSendUserInviteEmailField().setVisible(!this.isMyself());
+		this.getUserIdField().setVisibleGranted(
+				ACCESS.getLevel(new ReadUserPermission((Long) null)) == ReadUserPermission.LEVEL_ALL);
 	}
 
 	private void initFormAfterLoad() {
@@ -369,8 +373,8 @@ public class UserForm extends AbstractForm {
 
 			// hard to know if user use login or email to login. If ONE changed,
 			// we reset session.
-			final Boolean needSessionReload = userLoginChanged && userLoginNotCurrent && !loggedWithEmail
-					|| emailChanged && userEmailNotCurrent && loggedWithEmail;
+			final Boolean needSessionReload = UserForm.this.isMyself() && userLoginChanged && userLoginNotCurrent
+					&& !loggedWithEmail || emailChanged && userEmailNotCurrent && loggedWithEmail;
 
 			service.store(formData);
 			if (needSessionReload) {
