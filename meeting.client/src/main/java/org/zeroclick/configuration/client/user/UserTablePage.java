@@ -161,7 +161,7 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 		public class LoginColumn extends AbstractStringColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("Login");
+				return TEXTS.get("zc.user.login");
 			}
 
 			@Override
