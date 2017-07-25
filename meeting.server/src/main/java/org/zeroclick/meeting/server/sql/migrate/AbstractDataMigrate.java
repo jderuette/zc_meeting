@@ -15,10 +15,15 @@ limitations under the License.
  */
 package org.zeroclick.meeting.server.sql.migrate;
 
+import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.config.CONFIG;
+import org.eclipse.scout.rt.platform.context.RunContext;
+import org.eclipse.scout.rt.platform.exception.ExceptionHandler;
+import org.eclipse.scout.rt.platform.util.concurrent.IRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.comon.config.AbstractVersionConfigProperty;
+import org.zeroclick.meeting.server.sql.SuperUserRunContextProducer;
 
 import com.github.zafarkhaja.semver.Version;
 
@@ -45,8 +50,23 @@ public abstract class AbstractDataMigrate implements IDataMigrate {
 	@Override
 	public void apply() {
 		LOG.info("Launching migration");
-		this.execute();
-		LOG.info("Launching migration ENDS");
+		final RunContext context = BEANS.get(SuperUserRunContextProducer.class).produce();
+		try {
+			final IRunnable runnable = new IRunnable() {
+
+				@Override
+				@SuppressWarnings("PMD.SignatureDeclareThrowsException")
+				public void run() throws Exception {
+					AbstractDataMigrate.this.execute();
+				}
+			};
+
+			context.run(runnable);
+		} catch (final RuntimeException e) {
+			BEANS.get(ExceptionHandler.class).handle(e);
+		}
+
+		LOG.info("Launching migration END");
 	}
 
 	@Override

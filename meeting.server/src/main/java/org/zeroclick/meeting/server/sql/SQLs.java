@@ -86,6 +86,8 @@ public interface SQLs {
 
 	String EVENT_DROP_TABLE = "DROP TABLE EVENT CASCADE";
 
+	String EVENT_ALTER_TABLE_ADD_REASON = "ALTER TABLE EVENT ADD COLUMN reason VARCHAR(250)";
+
 	/**
 	 * OAuth credential
 	 */

@@ -70,7 +70,7 @@ public class DatabaseSetupService implements IDataStoreService {
 							LOG.info(event + " occurs");
 							if (JobState.DONE == event.getData().getState()) {
 								LOG.info(event
-										+ " compelted, checking if database need to be populated and populate if required");
+										+ " completed, checking if database need to be populated and populate if required");
 								DatabaseSetupService.this.populateDataBase();
 							}
 

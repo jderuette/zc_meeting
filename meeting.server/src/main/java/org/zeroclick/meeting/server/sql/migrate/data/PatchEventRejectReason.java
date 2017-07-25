@@ -15,8 +15,10 @@ limitations under the License.
  */
 package org.zeroclick.meeting.server.sql.migrate.data;
 
+import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.server.sql.migrate.AbstractDataMigrate;
 
 import com.github.zafarkhaja.semver.Version;
@@ -25,12 +27,12 @@ import com.github.zafarkhaja.semver.Version;
  * @author djer
  *
  */
-public class DataMigratePatch1 extends AbstractDataMigrate {
+public class PatchEventRejectReason extends AbstractDataMigrate {
 
-	private static final Logger LOG = LoggerFactory.getLogger(DataMigratePatch1.class);
+	private static final Logger LOG = LoggerFactory.getLogger(PatchEventRejectReason.class);
 
-	public DataMigratePatch1() {
-		this.setDescription("Add reason colum on event when refusing user refuse/cancel event");
+	public PatchEventRejectReason() {
+		this.setDescription("Add reason column on event when user refuse/cancel event");
 	}
 
 	@Override
@@ -48,11 +50,13 @@ public class DataMigratePatch1 extends AbstractDataMigrate {
 	}
 
 	private void migrateStrucutre() {
-		LOG.info("Patch 1 upgrading data strcuture");
+		LOG.info("Event reject Reason upgrading data strcuture");
+		SQL.insert(SQLs.EVENT_ALTER_TABLE_ADD_REASON);
+
 	}
 
 	private void migrateData() {
-		LOG.info("Patch 1 upgrading data");
+		LOG.info("Event reject Reason No data migration needed");
 	}
 
 }
