@@ -95,7 +95,7 @@ public class Desktop extends AbstractDesktop {
 		final AccessControlService acs = BEANS.get(AccessControlService.class);
 		final Long currentUserId = acs.getZeroClickUserIdOfCurrentSubject();
 		final String currentUserTimeZone = userService.getUserTimeZone(currentUserId);
-		if (null == currentUserTimeZone) {
+		if (null == currentUserTimeZone || !GoogleApiHelper.get().isCalendarConfigured()) {
 			final OnBoardingUserForm form = new OnBoardingUserForm();
 			form.getUserIdField().setValue(currentUserId);
 			form.setEnabledPermission(new UpdateUserPermission(currentUserId));
