@@ -41,6 +41,7 @@ import org.eclipse.scout.rt.platform.config.AbstractStringConfigProperty;
 import org.eclipse.scout.rt.platform.config.CONFIG;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
 import org.zeroclick.meeting.client.common.CallTrackerService;
 import org.zeroclick.meeting.client.common.UserAccessRequiredException;
 import org.zeroclick.meeting.shared.security.AccessControlService;
@@ -121,11 +122,14 @@ public class GoogleApiHelper {
 		return acs.getZeroClickUserIdOfCurrentSubject();
 	}
 
-	private String getRedirectUri(final HttpServletRequest req) throws ServletException, IOException {
-		final GenericUrl url = new GenericUrl(req.getRequestURL().toString());
+	private String getRedirectUri() throws ServletException, IOException {
+		final String frontUrl = CONFIG.getPropertyValue(ApplicationUrlProperty.class);
+		final GenericUrl url = new GenericUrl(frontUrl);
 		final String callbackUrl = CONFIG.getPropertyValue(GoogleCallbackUrlProperty.class);
 		url.setRawPath(callbackUrl);
-		return url.build();
+		final String urlString = url.build();
+		LOG.debug("Google APi redirect URI : " + urlString);
+		return urlString;
 	}
 
 	/** Lock on the flow and credential. */
@@ -144,8 +148,7 @@ public class GoogleApiHelper {
 	 * getOrRetrieveCredential(javax.servlet.http.HttpServletRequest,
 	 * javax.servlet.http.HttpServletResponse, java.lang.String)
 	 */
-	public void askUserCredential(final HttpServletRequest req, final HttpServletResponse resp)
-			throws IOException, ServletException {
+	public void askUserCredential(final HttpServletResponse resp) throws IOException, ServletException {
 		if (LOG.isDebugEnabled()) {
 			LOG.info("Asking user credential throught Google OAuth2 Authoriszation Flow");
 		}
@@ -157,7 +160,7 @@ public class GoogleApiHelper {
 				this.flow = this.initializeFlow();
 			}
 			final AuthorizationCodeRequestUrl authorizationUrl = this.flow.newAuthorizationUrl();
-			authorizationUrl.setRedirectUri(this.getRedirectUri(req));
+			authorizationUrl.setRedirectUri(this.getRedirectUri());
 			/**
 			 * <pre>
 			 * &#64;Override
@@ -229,7 +232,7 @@ public class GoogleApiHelper {
 				if (this.flow == null) {
 					this.flow = this.initializeFlow();
 				}
-				final String redirectUri = this.getRedirectUri(req);
+				final String redirectUri = this.getRedirectUri();
 				final TokenResponse response = this.flow.newTokenRequest(code).setRedirectUri(redirectUri).execute();
 				result = this.flow.createAndStoreCredential(response, userId.toString());
 				if (LOG.isDebugEnabled()) {

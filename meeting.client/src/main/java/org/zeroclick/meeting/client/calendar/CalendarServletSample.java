@@ -50,7 +50,7 @@ public class CalendarServletSample extends HttpServlet {
 		try {
 			service = this.googleApiHelper.getCalendarService(this.googleApiHelper.getCurrentUserId());
 		} catch (final UserAccessRequiredException uare) {
-			this.googleApiHelper.askUserCredential(request, response);
+			this.googleApiHelper.askUserCredential(response);
 			return; // early break to let user handle google auth flow
 		}
 
@@ -66,6 +66,13 @@ public class CalendarServletSample extends HttpServlet {
 			return; // not possible to get calendar/token with anonymous
 		}
 
+		this.displayCalendarList(service);
+
+		// List the next 10 events from the primary calendar.
+		this.displayNextEvent(service, "primary", 10);
+	}
+
+	private void displayCalendarList(final Calendar service) throws IOException {
 		// List of calendars
 		final CalendarList calendars = service.calendarList().list().execute();
 
@@ -79,11 +86,13 @@ public class CalendarServletSample extends HttpServlet {
 				System.out.println(calendar.getSummary() + " : " + calendar.getId() + "(" + calendar.isPrimary() + ")");
 			}
 		}
+	}
 
-		// List the next 10 events from the primary calendar.
+	private void displayNextEvent(final Calendar service, final String calendarId, final Integer nbEvent)
+			throws IOException {
 		final DateTime now = new DateTime(System.currentTimeMillis());
-		final Events events = service.events().list("primary").setMaxResults(10).setTimeMin(now).setOrderBy("startTime")
-				.setSingleEvents(true).execute();
+		final Events events = service.events().list(calendarId).setMaxResults(nbEvent).setTimeMin(now)
+				.setOrderBy("startTime").setSingleEvents(true).execute();
 		final List<Event> items = events.getItems();
 		if (items.size() == 0) {
 			System.out.println("No upcoming events found.");
@@ -97,6 +106,6 @@ public class CalendarServletSample extends HttpServlet {
 				System.out.printf("%s (%s)\n", event.getSummary(), start);
 			}
 		}
-
 	}
+
 }
