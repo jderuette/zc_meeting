@@ -37,7 +37,9 @@ Most specific configuration ca be visualiser throught Config.properties files. $
 | ZEROCLICK_BDD_PASS | org.eclipse.scout.rt.server.services.common.jdbc.AbstractSqlService#password | The_password | Server | The password to connect to DataBase | (empty) |
 | ZEROCLICK_BDD_MAPPING | zeroclick.database.jdbc.mapping.name | jdbc:postgresql://127.0.0.1:5432/zcdev | Server | Mapping to conenct to the DataBase | jdbc:derby:memory:zeroclick-database |
 | ZEROCLICK_SERVER_URL | scout.server.url | http://localhost:8080 | Client | BackEnd server URL use by UI servers | (empty) |
+| ZEROCLICK_SERVER_URL_PROTOCOL | zeroclick.server.url.protocol | http | Client | BackEnd server protocol use by UI servers | (empty) |
 | ZEROCLICK_URL | zeroclick.url | http://localhost:8080 | Client | Use to build full URL (for links in emails , ...) | http://localhost:8082 |
+| ZEROCLICK_URL_PROTOCOL | zeroclick.url.protocol | http | Client | Use to build full URL (for links in emails , ...) | (empty) |
 | ZEROCLICK_ENV | zeroclick.env | test, prod, local_dev1 | Client | used to inform the curent environnement kind | Local |
 | MAILJET_USER |  zeroclick.mail.auth.user | 4f08eb4e3a2c9c2gt72f1e45f8c818dd | Client | Api user ID for Mailjet | (empty) |
 | MAILJET_PASS |  zeroclick.mail.auth.password | c836bcbd553284320bf410fbc370a6d3 | Client | APi password for Mailjet | (empty) |
