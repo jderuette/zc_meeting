@@ -13,6 +13,9 @@
         <dependent-module archiveName="meeting.shared-1.0.0-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/meeting.shared/meeting.shared">
             <dependency-type>uses</dependency-type>
         </dependent-module>
+        <dependent-module archiveName="java-semver-0.9.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/jsemver/jsemver">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
         <property name="context-root" value="org.zeroclick.meeting.ui.html"/>
         <property name="java-output-path" value="/meeting.ui.html.app.war/target/classes"/>
     </wb-module>
