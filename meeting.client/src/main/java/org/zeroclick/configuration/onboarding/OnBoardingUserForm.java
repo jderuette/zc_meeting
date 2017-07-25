@@ -106,6 +106,12 @@ public class OnBoardingUserForm extends AbstractForm {
 			protected String getConfiguredLabel() {
 				return TEXTS.get("zc.onboarding.updateAndAddGoogle");
 			}
+
+			@Override
+			protected boolean execIsSaveNeeded() {
+				// to force form save even if no modification done in Fields
+				return Boolean.TRUE;
+			}
 		}
 	}
 
