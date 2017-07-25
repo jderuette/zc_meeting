@@ -24,6 +24,7 @@ import org.eclipse.scout.rt.platform.util.concurrent.IRunnable;
 import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService;
 
 @ApplicationScoped
 @CreateImmediately
@@ -35,6 +36,7 @@ public class DatabaseSetupService implements IDataStoreService {
 	@PostConstruct
 	public void autoCreateDatabase() {
 		final IJobManager jobManager = BEANS.get(IJobManager.class);
+		final DatabaseMigrateService dbms = BEANS.get(DatabaseMigrateService.class);
 		final RunContext context = BEANS.get(SuperUserRunContextProducer.class).produce();
 		IFuture<Void> dropResult = null;
 
@@ -72,12 +74,16 @@ public class DatabaseSetupService implements IDataStoreService {
 								LOG.info(event
 										+ " completed, checking if database need to be populated and populate if required");
 								DatabaseSetupService.this.populateDataBase();
+								// check for dataBase update
+								dbms.checkMigration();
 							}
 
 						}
 					});
 		} else {
 			this.populateDataBase();
+			// check for dataBase update
+			dbms.checkMigration();
 		}
 
 	}

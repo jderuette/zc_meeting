@@ -26,14 +26,38 @@ import com.github.zafarkhaja.semver.Version;
 @ApplicationScoped
 public interface IDataMigrate {
 
+	/**
+	 * A synthetic human readable description of this data Patch
+	 * 
+	 * @return
+	 */
 	String getDescription();
 
+	/**
+	 * Execute the patch actions
+	 */
 	void apply();
 
+	/**
+	 * The (data) version this patch will migrate te dataBase to.
+	 *
+	 * @return
+	 */
 	public Version getVersion();
 
+	/**
+	 * Is this data patch required (should be executed automatically as soon as
+	 * possible)
+	 * 
+	 * @return
+	 */
 	Boolean isRequired();
 
+	/**
+	 * Dose this match match the required "sourceCode" version to migrate ?
+	 * 
+	 * @return
+	 */
 	Boolean canMigrate();
 
 }

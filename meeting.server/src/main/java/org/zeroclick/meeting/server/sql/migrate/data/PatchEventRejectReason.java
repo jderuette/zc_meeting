@@ -38,7 +38,7 @@ public class PatchEventRejectReason extends AbstractDataMigrate {
 	@Override
 	protected void execute() {
 		if (super.canMigrate()) {
-			LOG.info("Patch 1 will be apply to the data");
+			LOG.info("Event reject Reason will be apply to the data");
 			this.migrateStrucutre();
 			this.migrateData();
 		}

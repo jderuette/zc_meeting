@@ -17,11 +17,8 @@ package org.zeroclick.meeting.server.sql.migrate;
 
 import java.util.List;
 
-import javax.annotation.PostConstruct;
-
 import org.eclipse.scout.rt.platform.ApplicationScoped;
 import org.eclipse.scout.rt.platform.BEANS;
-import org.eclipse.scout.rt.platform.CreateImmediately;
 import org.eclipse.scout.rt.platform.IBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,12 +28,10 @@ import org.slf4j.LoggerFactory;
  *
  */
 @ApplicationScoped
-@CreateImmediately
 public class DatabaseMigrateService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(DatabaseMigrateService.class);
 
-	@PostConstruct
 	public void checkMigration() {
 		// getAll patcher
 		final List<IBean<IDataMigrate>> patchs = BEANS.getBeanManager().getBeans(IDataMigrate.class);
