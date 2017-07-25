@@ -6,16 +6,6 @@
 	<artifactId>meeting.shared</artifactId>
 	<name>0ClickMeeting Shared</name>
 
-<<<<<<< HEAD
-=======
-  <parent>
-    <groupId>org.zeroclick</groupId>
-    <artifactId>meeting</artifactId>
-    <version>1.0.1</version>
-    <relativePath>../meeting/pom.xml</relativePath>
-  </parent>
->>>>>>> refs/heads/master
-
 	<parent>
 		<groupId>org.zeroclick</groupId>
 		<artifactId>meeting</artifactId>
