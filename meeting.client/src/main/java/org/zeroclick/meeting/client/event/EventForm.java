@@ -37,6 +37,7 @@ import org.zeroclick.meeting.client.event.EventForm.MainBox.GuestIdField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.OkButton;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.OrganizerEmailField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.OrganizerField;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.ReasonField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.SlotField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.StartDateField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.StateField;
@@ -169,6 +170,10 @@ public class EventForm extends AbstractForm {
 
 	public SubjectField getSubjectField() {
 		return this.getFieldByClass(SubjectField.class);
+	}
+
+	public ReasonField getReasonField() {
+		return this.getFieldByClass(ReasonField.class);
 	}
 
 	public OkButton getOkButton() {
@@ -352,6 +357,24 @@ public class EventForm extends AbstractForm {
 			@Override
 			protected boolean getConfiguredVisible() {
 				return Boolean.FALSE;
+			}
+		}
+
+		@Order(7000)
+		public class ReasonField extends AbstractStringField {
+			@Override
+			protected String getConfiguredLabel() {
+				return TEXTS.get("zc.meeting.rejectReason");
+			}
+
+			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.FALSE;
+			}
+
+			@Override
+			protected int getConfiguredMaxLength() {
+				return 128;
 			}
 		}
 

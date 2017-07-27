@@ -119,6 +119,7 @@ public class DatabaseSetupService implements IDataStoreService {
 			if (CONFIG.getPropertyValue(DatabaseProperties.DatabaseAutoPopulateProperty.class)) {
 				SQL.insert(SQLs.EVENT_INSERT_SAMPLE + SQLs.EVENT_VALUES_01);
 				SQL.insert(SQLs.EVENT_INSERT_SAMPLE + SQLs.EVENT_VALUES_02);
+				SQL.insert(SQLs.EVENT_INSERT_SAMPLE + SQLs.EVENT_VALUES_03);
 				LOG.info("Database table 'EVENT' populated with sample data");
 			}
 		} else {

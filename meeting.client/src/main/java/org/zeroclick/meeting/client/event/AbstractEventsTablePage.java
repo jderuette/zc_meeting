@@ -373,6 +373,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			// SlotColumn[Slot],
 			// ExternalIdOrganizerColumn[External Id],
 			// ExternalIdRecipientColumn[External Id]
+			// reasonColumn [reason]
 			final List<Object> datas = new ArrayList<>();
 			datas.add(formData.getEventId());
 			datas.add(formData.getOrganizer().getValue());
@@ -387,6 +388,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			datas.add(formData.getSlot().getValue());
 			datas.add(formData.getExternalIdOrganizer());
 			datas.add(formData.getExternalIdRecipient());
+			datas.add(formData.getReason().getValue());
 			return datas;
 		}
 
@@ -803,6 +805,10 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			return this.getColumnSet().getColumnByClass(SubjectColumn.class);
 		}
 
+		public AbstractEventsTablePage<?>.Table.ReasonColumn getReasonColumn() {
+			return this.getColumnSet().getColumnByClass(ReasonColumn.class);
+		}
+
 		public OrganizerColumn getOrganizerColumn() {
 			return this.getColumnSet().getColumnByClass(OrganizerColumn.class);
 		}
@@ -1158,6 +1164,24 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.externalId");
+			}
+
+			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.FALSE;
+			}
+
+			@Override
+			protected int getConfiguredWidth() {
+				return 100;
+			}
+		}
+
+		@Order(6000)
+		public class ReasonColumn extends AbstractStringColumn {
+			@Override
+			protected String getConfiguredHeaderText() {
+				return TEXTS.get("zc.meeting.rejectReason");
 			}
 
 			@Override

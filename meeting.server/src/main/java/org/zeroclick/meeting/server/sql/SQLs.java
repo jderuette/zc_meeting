@@ -34,7 +34,7 @@ public interface SQLs {
 
 	String AND_LIKE_CAUSE = "AND LOWER(%s) LIKE LOWER(:%s || '%%') ";
 
-	String EVENT_PAGE_SELECT = "SELECT event_id, organizer, organizer_email, duration, slot, email, guest_id, state, subject, startDate, endDate, externalIdRecipient, externalIdOrganizer  FROM EVENT WHERE 1=1";
+	String EVENT_PAGE_SELECT = "SELECT event_id, organizer, organizer_email, duration, slot, email, guest_id, state, reason, subject, startDate, endDate, externalIdRecipient, externalIdOrganizer  FROM EVENT WHERE 1=1";
 	// + "CASE WHEN organizer = :currentUser THEN 1 ELSE 0 END AS held"
 	// + "CASE WHEN email = :currentUserEmail THEN 1 ELSE 0 END AS guest FROM
 	// EVENT WHERE 1=1";
@@ -52,7 +52,7 @@ public interface SQLs {
 	String EVENT_PAGE_SELECT_FILTER_RECIPIENT = " OR email = :currentUserEmail";
 	String EVENT_PAGE_SELECT_FILTER_USER_OR_RECIPIENT = " AND (organizer = :currentUser OR email = :currentUserEmail)";
 
-	String EVENT_PAGE_DATA_SELECT_INTO = " INTO :{page.eventId}, :{page.organizer}, :{page.organizerEmail}, :{page.duration}, :{page.slot}, :{page.email}, :{page.guestId}, :{page.state}, :{page.subject}, :{page.startDate}, :{page.endDate}, :{page.externalIdRecipient}, :{page.externalIdOrganizer}";
+	String EVENT_PAGE_DATA_SELECT_INTO = " INTO :{page.eventId}, :{page.organizer}, :{page.organizerEmail}, :{page.duration}, :{page.slot}, :{page.email}, :{page.guestId}, :{page.state}, :{page.reason}, :{page.subject}, :{page.startDate}, :{page.endDate}, :{page.externalIdRecipient}, :{page.externalIdOrganizer}";
 
 	String EVENT_SELECT_USERS_PENDING_EVENT_GUEST = "SELECT event_id, organizer FROM EVENT WHERE guest_id=:currentUser";
 	String EVENT_SELECT_USERS_PENDING_EVENT_HOST = "SELECT event_id, guest_id FROM EVENT WHERE organizer=:currentUser";
@@ -60,11 +60,11 @@ public interface SQLs {
 	String EVENT_INSERT = "INSERT INTO EVENT (event_id, organizer) " + "VALUES (:eventId, :organizer)";
 
 	String EVENT_UPDATE = "UPDATE EVENT SET organizer_email=:organizerEmail, duration=:duration, slot=:slot, email=:email, guest_id=:guestId, state=:state, subject=:subject, startDate=:startDate, endDate=:endDate, externalIdRecipient=:externalIdRecipient, externalIdOrganizer=:externalIdOrganizer WHERE event_id=:eventId";
-	String EVENT_UPDATE_STATE = "UPDATE EVENT SET state=:state WHERE event_id=:eventId";
+	String EVENT_UPDATE_STATE = "UPDATE EVENT SET state=:state, reason=:reason WHERE event_id=:eventId";
 
-	String EVENT_SELECT = "SELECT duration, slot, email, guest_id, state, subject, startDate, endDate, externalIdRecipient, externalIdOrganizer, organizer, organizer_email FROM EVENT"
+	String EVENT_SELECT = "SELECT duration, slot, email, guest_id, state, reason, subject, startDate, endDate, externalIdRecipient, externalIdOrganizer, organizer, organizer_email FROM EVENT"
 			+ " WHERE event_id=:eventId"
-			+ " INTO :duration, :slot, :email, :guestId, :state, :subject, :startDate, :endDate, :externalIdRecipient, :externalIdOrganizer, :organizer, :organizerEmail";
+			+ " INTO :duration, :slot, :email, :guestId, :state, :reason, :subject, :startDate, :endDate, :externalIdRecipient, :externalIdOrganizer, :organizer, :organizerEmail";
 
 	String EVENT_SELECT_REJECT = "SELECT organizer_email, email, subject, organizer, guest_id, externalIdOrganizer, externalIdRecipient FROM EVENT WHERE event_id=:eventId INTO :organizerEmail, :email, :subject, :organizer, :guestId, :externalIdOrganizer, :externalIdRecipient";
 
@@ -83,6 +83,7 @@ public interface SQLs {
 	String EVENT_INSERT_SAMPLE = "INSERT INTO EVENT (event_id, organizer, organizer_email, duration, slot, email, guest_id, state, subject)";
 	String EVENT_VALUES_01 = " VALUES  (nextval('EVENT_ID_SEQ'), 1, 'djer13@gmail.com', 15, 1, 'bob1@gmail.com', 2, 'ASKED', 'Prendre le thé')";
 	String EVENT_VALUES_02 = " VALUES  (nextval('EVENT_ID_SEQ'), 2,'bob1@gmail.com', 120, 3, 'bob2@entreporise.com', 1, 'ASKED', 'Do Something')";
+	String EVENT_VALUES_03 = " VALUES  (nextval('EVENT_ID_SEQ'), 2,'bob1@gmail.com', 120, 3, 'djer13@gmail.com', 1, 'REFUSED', 'Do Something else')";
 
 	String EVENT_DROP_TABLE = "DROP TABLE EVENT CASCADE";
 

@@ -96,6 +96,10 @@ public class EventFormData extends AbstractFormData {
 		return getFieldByClass(OrganizerEmail.class);
 	}
 
+	public Reason getReason() {
+		return getFieldByClass(Reason.class);
+	}
+
 	public Slot getSlot() {
 		return getFieldByClass(Slot.class);
 	}
@@ -153,6 +157,11 @@ public class EventFormData extends AbstractFormData {
 	}
 
 	public static class OrganizerEmail extends AbstractValueFieldData<String> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class Reason extends AbstractValueFieldData<String> {
 
 		private static final long serialVersionUID = 1L;
 	}

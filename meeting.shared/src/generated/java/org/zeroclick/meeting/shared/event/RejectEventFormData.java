@@ -114,6 +114,10 @@ public class RejectEventFormData extends AbstractFormData {
 		return getPropertyByClass(OrganizerProperty.class);
 	}
 
+	public Reason getReason() {
+		return getFieldByClass(Reason.class);
+	}
+
 	/**
 	 * access method for property State.
 	 */
@@ -167,6 +171,11 @@ public class RejectEventFormData extends AbstractFormData {
 	}
 
 	public static class OrganizerProperty extends AbstractPropertyData<Long> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class Reason extends AbstractValueFieldData<String> {
 
 		private static final long serialVersionUID = 1L;
 	}

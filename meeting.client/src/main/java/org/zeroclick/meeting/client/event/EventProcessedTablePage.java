@@ -34,6 +34,7 @@ public class EventProcessedTablePage extends AbstractEventsTablePage<Table> {
 		protected void initConfig() {
 			super.initConfig();
 			this.addDefaultFilters();
+			this.getReasonColumn().setVisible(Boolean.TRUE);
 		}
 
 		protected void addDefaultFilters() {

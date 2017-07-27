@@ -27,6 +27,7 @@ import org.zeroclick.meeting.client.event.EventForm.MainBox.OrganizerField;
 import org.zeroclick.meeting.client.event.RejectEventForm.MainBox.EmailField;
 import org.zeroclick.meeting.client.event.RejectEventForm.MainBox.OkButton;
 import org.zeroclick.meeting.client.event.RejectEventForm.MainBox.OrganizerEmailField;
+import org.zeroclick.meeting.client.event.RejectEventForm.MainBox.ReasonField;
 import org.zeroclick.meeting.client.event.RejectEventForm.MainBox.SubjectField;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
 import org.zeroclick.meeting.shared.Icons;
@@ -182,6 +183,10 @@ public class RejectEventForm extends AbstractForm {
 		return this.getFieldByClass(OrganizerField.class);
 	}
 
+	public ReasonField getReasonField() {
+		return this.getFieldByClass(ReasonField.class);
+	}
+
 	public OkButton getOkButton() {
 		return this.getFieldByClass(OkButton.class);
 	}
@@ -269,6 +274,19 @@ public class RejectEventForm extends AbstractForm {
 			@Override
 			protected int getConfiguredMaxLength() {
 				return 256;
+			}
+		}
+
+		@Order(5000)
+		public class ReasonField extends AbstractStringField {
+			@Override
+			protected String getConfiguredLabel() {
+				return TEXTS.get("zc.meeting.rejectReason");
+			}
+
+			@Override
+			protected int getConfiguredMaxLength() {
+				return 128;
 			}
 		}
 
@@ -418,6 +436,7 @@ public class RejectEventForm extends AbstractForm {
 		final String organizerEmail = formData.getOrganizerEmail().getValue();
 		final String guestEmail = formData.getEmail().getValue();
 		final String eventSubject = formData.getSubject().getValue();
+		final String eventReason = formData.getReason().getValue();
 
 		String destEmail;
 		String senderEmail;
@@ -437,11 +456,11 @@ public class RejectEventForm extends AbstractForm {
 		case ACTION_REJECT:
 			subject = TEXTS.get("zc.meeting.email.refuse.subject", senderEmail);
 			content = TEXTS.get("zc.meeting.email.refuse.html", senderEmail, eventSubject,
-					new ApplicationUrlProperty().getValue());
+					new ApplicationUrlProperty().getValue(), eventReason);
 			break;
 		case ACTION_CANCEL:
 			subject = TEXTS.get("zc.meeting.email.cancel.subject", senderEmail);
-			content = TEXTS.get("zc.meeting.email.cancel.html", senderEmail, eventSubject);
+			content = TEXTS.get("zc.meeting.email.cancel.html", senderEmail, eventSubject, eventReason);
 			break;
 		default:
 			LOG.warn("Unknow sub action " + RejectEventForm.this.subAction + " for reject Action");
