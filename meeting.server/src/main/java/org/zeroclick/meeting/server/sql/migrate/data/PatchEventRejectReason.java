@@ -19,7 +19,7 @@ import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.meeting.server.sql.SQLs;
-import org.zeroclick.meeting.server.sql.migrate.AbstractDataMigrate;
+import org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher;
 
 import com.github.zafarkhaja.semver.Version;
 
@@ -27,7 +27,7 @@ import com.github.zafarkhaja.semver.Version;
  * @author djer
  *
  */
-public class PatchEventRejectReason extends AbstractDataMigrate {
+public class PatchEventRejectReason extends AbstractDataPatcher {
 
 	private static final Logger LOG = LoggerFactory.getLogger(PatchEventRejectReason.class);
 
@@ -46,7 +46,7 @@ public class PatchEventRejectReason extends AbstractDataMigrate {
 
 	@Override
 	public Version getVersion() {
-		return Version.valueOf("1.1.0");
+		return Version.valueOf("1.1.1");
 	}
 
 	private void migrateStrucutre() {
@@ -57,6 +57,14 @@ public class PatchEventRejectReason extends AbstractDataMigrate {
 
 	private void migrateData() {
 		LOG.info("Event reject Reason No data migration needed");
+	}
+
+	@Override
+	public void undo() {
+		LOG.info("Event reject Reason downgrading data strcuture NOT RUN (need bug fix)");
+		// FIXME Djer SQL.update/insert/select "freeze" with DDL statement
+		// "alter Table drop .."
+		// SQL.select(SQLs.EVENT_ALTER_TABLE_REMOVE_REASON);
 	}
 
 }

@@ -1,7 +1,5 @@
 package org.zeroclick.meeting.server.sql;
 
-import java.util.Set;
-
 import javax.annotation.PostConstruct;
 
 import org.eclipse.scout.rt.platform.ApplicationScoped;
@@ -10,8 +8,6 @@ import org.eclipse.scout.rt.platform.CreateImmediately;
 import org.eclipse.scout.rt.platform.config.CONFIG;
 import org.eclipse.scout.rt.platform.context.RunContext;
 import org.eclipse.scout.rt.platform.exception.ExceptionHandler;
-import org.eclipse.scout.rt.platform.holders.NVPair;
-import org.eclipse.scout.rt.platform.holders.StringArrayHolder;
 import org.eclipse.scout.rt.platform.job.IFuture;
 import org.eclipse.scout.rt.platform.job.IJobManager;
 import org.eclipse.scout.rt.platform.job.JobInput;
@@ -19,7 +15,6 @@ import org.eclipse.scout.rt.platform.job.JobState;
 import org.eclipse.scout.rt.platform.job.Jobs;
 import org.eclipse.scout.rt.platform.job.listener.IJobListener;
 import org.eclipse.scout.rt.platform.job.listener.JobEvent;
-import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.platform.util.concurrent.IRunnable;
 import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.slf4j.Logger;
@@ -31,13 +26,15 @@ import org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService;
 public class DatabaseSetupService implements IDataStoreService {
 	private static final Logger LOG = LoggerFactory.getLogger(DatabaseSetupService.class);
 
-	private Set<String> existingTables;
+	private DatabaseHelper databaseHelper;
 
 	@PostConstruct
 	public void autoCreateDatabase() {
 		final IJobManager jobManager = BEANS.get(IJobManager.class);
 		final DatabaseMigrateService dbms = BEANS.get(DatabaseMigrateService.class);
 		final RunContext context = BEANS.get(SuperUserRunContextProducer.class).produce();
+
+		this.databaseHelper = DatabaseHelper.get();
 		IFuture<Void> dropResult = null;
 
 		if (CONFIG.getPropertyValue(DatabaseProperties.DatabaseAutoDropAllProperty.class)) {
@@ -112,9 +109,9 @@ public class DatabaseSetupService implements IDataStoreService {
 	}
 
 	protected void createEventTable() {
-		this.createSequence("EVENT_ID_SEQ");
+		this.databaseHelper.createSequence("EVENT_ID_SEQ");
 
-		if (!this.getExistingTables().contains("EVENT")) {
+		if (!this.databaseHelper.existTable("EVENT")) {
 
 			SQL.insert(SQLs.EVENT_CREATE_TABLE);
 			LOG.info("Database table 'EVENT' created");
@@ -130,10 +127,10 @@ public class DatabaseSetupService implements IDataStoreService {
 	}
 
 	public void createOAuthCredentialTable() {
-		this.createSequence("OAUHTCREDENTIAL_ID_SEQ");
+		this.databaseHelper.createSequence("OAUHTCREDENTIAL_ID_SEQ");
 
-		if (!this.getExistingTables().contains("OAUHTCREDENTIAL")) {
-			final String blobType = this.getBlobType();
+		if (!this.databaseHelper.existTable("OAUHTCREDENTIAL")) {
+			final String blobType = this.databaseHelper.getBlobType();
 			SQL.insert(SQLs.OAUHTCREDENTIAL_CREATE_TABLE.replace("__blobType__", blobType));
 			LOG.info("Database table 'OAUHTCREDENTIAL' created");
 
@@ -148,9 +145,9 @@ public class DatabaseSetupService implements IDataStoreService {
 	}
 
 	protected void createUserTable() {
-		this.createSequence("USER_ID_SEQ");
+		this.databaseHelper.createSequence("USER_ID_SEQ");
 
-		if (!this.getExistingTables().contains("APP_USER")) {
+		if (!this.databaseHelper.existTable("APP_USER")) {
 			SQL.insert(SQLs.USER_CREATE_TABLE);
 			LOG.info("Database table 'USER' created");
 
@@ -165,7 +162,7 @@ public class DatabaseSetupService implements IDataStoreService {
 	}
 
 	protected void createRolePermisisonTables() {
-		if (!this.getExistingTables().contains("ROLE")) {
+		if (!this.databaseHelper.existTable("ROLE")) {
 			SQL.insert(SQLs.ROLE_CREATE_TABLE);
 			LOG.info("Database table 'ROLE' created");
 
@@ -178,7 +175,7 @@ public class DatabaseSetupService implements IDataStoreService {
 			LOG.info("Database table 'ROLE' already exist");
 		}
 
-		if (!this.getExistingTables().contains("ROLE_PERMISSION")) {
+		if (!this.databaseHelper.existTable("ROLE_PERMISSION")) {
 			SQL.insert(SQLs.ROLE_PERMISSION_CREATE_TABLE);
 			LOG.info("Database table 'ROLE_PERMISSION', created");
 
@@ -218,7 +215,7 @@ public class DatabaseSetupService implements IDataStoreService {
 		} else {
 			LOG.info("Database table 'ROLE_PERMISSION' already exist");
 		}
-		if (!this.getExistingTables().contains("USER_ROLE")) {
+		if (!this.databaseHelper.existTable("USER_ROLE")) {
 			SQL.insert(SQLs.USER_ROLE_CREATE_TABLE);
 			LOG.info("Database table 'USER_ROLE', created");
 
@@ -233,66 +230,25 @@ public class DatabaseSetupService implements IDataStoreService {
 
 	}
 
-	private String getBlobType() {
-		final String stylClassName = SQL.getSqlStyle().getClass().getName();
-		String blobType = "BLOB";
-		if ("org.eclipse.scout.rt.server.jdbc.postgresql.PostgreSqlStyle".equals(stylClassName)) {
-			blobType = "bytea";
-		}
-		return blobType;
-	}
-
 	@Override
 	public void dropDataStore() {
 
-		this.dropTable("EVENT");
-		this.dropSequence("EVENT_ID_SEQ");
-		this.dropTable("OAUHTCREDENTIAL");
-		this.dropSequence("OAUHTCREDENTIAL_ID_SEQ");
-		this.dropTable("APP_USER");
-		this.dropSequence("USER_ID_SEQ");
-		this.dropTable("ROLE");
-		this.dropTable("ROLE_PERMISSION");
-		this.dropTable("USER_ROLE");
+		final DatabaseMigrateService databaseMigrateService = BEANS.get(DatabaseMigrateService.class);
 
-		this.existingTables = null;
+		this.databaseHelper.dropTable("EVENT");
+		this.databaseHelper.dropSequence("EVENT_ID_SEQ");
+		this.databaseHelper.dropTable("OAUHTCREDENTIAL");
+		this.databaseHelper.dropSequence("OAUHTCREDENTIAL_ID_SEQ");
+		this.databaseHelper.dropTable("APP_USER");
+		this.databaseHelper.dropSequence("USER_ID_SEQ");
+		this.databaseHelper.dropTable("ROLE");
+		this.databaseHelper.dropTable("ROLE_PERMISSION");
+		this.databaseHelper.dropTable("USER_ROLE");
 
-	}
+		databaseMigrateService.undoMigration();
 
-	private void dropTable(final String tableName) {
-		if (this.getExistingTables(Boolean.TRUE).contains(tableName)) {
-			SQL.update(SQLs.GENERIC_DROP_TABLE.replace("__tableName__", tableName));
-		}
-	}
+		this.databaseHelper.resetExistingTablesCache();
 
-	private void createSequence(final String sequenceName, final Integer start) {
-		if (!this.isSequenceExists(sequenceName)) {
-			SQL.update(SQLs.GENERIC_CREATE_SEQUENCE.replace("__seqName__", sequenceName).replace("__seqStart__",
-					start.toString()));
-		} else {
-			LOG.info("Sequence : " + sequenceName + " already exists, not created");
-		}
-	}
-
-	private void createSequence(final String sequenceName) {
-		this.createSequence(sequenceName, 1);
-	}
-
-	private void dropSequence(final String sequenceName) {
-		if (this.isSequenceExists(sequenceName)) {
-			SQL.update(SQLs.GENERIC_DROP_SEQUENCE.replace("__seqName__", sequenceName));
-		}
-	}
-
-	private Boolean isSequenceExists(final String sequenceName) {
-		Boolean sequenceExists = Boolean.TRUE;
-
-		final Object sequences[][] = SQL.select(SQLs.GENERIC_SEQUENCE_EXISTS.replace("__seqName__", sequenceName));
-
-		if (null == sequences || sequences.length == 0 || sequences[0].length == 0 || null == sequences[0][0]) {
-			sequenceExists = Boolean.FALSE;
-		}
-		return sequenceExists;
 	}
 
 	@Override
@@ -301,44 +257,4 @@ public class DatabaseSetupService implements IDataStoreService {
 		this.createOAuthCredentialTable();
 		this.createRolePermisisonTables();
 	}
-
-	private Set<String> retrieveExistingTables() {
-		final StringArrayHolder tables = new StringArrayHolder();
-		final String stylClassName = SQL.getSqlStyle().getClass().getName();
-		if ("org.eclipse.scout.rt.server.jdbc.postgresql.PostgreSqlStyle".equals(stylClassName)) {
-			SQL.selectInto(SQLs.SELECT_TABLE_NAMES_POSTGRESQL, new NVPair("result", tables));
-		} else if ("org.eclipse.scout.rt.server.jdbc.derby.DerbySqlStyle".equals(stylClassName)) {
-			SQL.selectInto(SQLs.SELECT_TABLE_NAMES_DERBY, new NVPair("result", tables));
-		} else {
-			LOG.error("Unimplemented getExistingTables for SqlStyle : " + stylClassName);
-		}
-
-		return CollectionUtility.hashSet(tables.getValue());
-	}
-
-	/**
-	 * By default existing tables are cached, use
-	 * {@link #getExistingTables(Boolean)} if you need cache refresh
-	 *
-	 * @return
-	 */
-	protected Set<String> getExistingTables() {
-		return this.getExistingTables(Boolean.FALSE);
-	}
-
-	/**
-	 * get exiting tables in DataBase.
-	 *
-	 * @param refreshCache
-	 *            : if FALSE and a cache exist, cached tables are returned.
-	 *
-	 * @return
-	 */
-	protected Set<String> getExistingTables(final Boolean refreshCache) {
-		if (null == this.existingTables || refreshCache) {
-			this.existingTables = this.retrieveExistingTables();
-		}
-		return this.existingTables;
-	}
-
 }

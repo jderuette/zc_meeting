@@ -15,26 +15,14 @@ limitations under the License.
  */
 package org.zeroclick.meeting.server.sql.migrate;
 
-import java.io.InputStream;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Properties;
-
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
-
 import org.eclipse.scout.rt.platform.BEANS;
-import org.eclipse.scout.rt.platform.config.CONFIG;
 import org.eclipse.scout.rt.platform.context.RunContext;
 import org.eclipse.scout.rt.platform.exception.ExceptionHandler;
 import org.eclipse.scout.rt.platform.util.concurrent.IRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.zeroclick.comon.config.AbstractVersionConfigProperty;
+import org.zeroclick.common.VersionHelper;
+import org.zeroclick.meeting.server.sql.DatabaseHelper;
 import org.zeroclick.meeting.server.sql.SuperUserRunContextProducer;
 
 import com.github.zafarkhaja.semver.Version;
@@ -43,33 +31,48 @@ import com.github.zafarkhaja.semver.Version;
  * @author djer
  *
  */
-public abstract class AbstractDataMigrate implements IDataMigrate {
+public abstract class AbstractDataPatcher implements IDataPatcher {
 
-	private static final Logger LOG = LoggerFactory.getLogger(AbstractDataMigrate.class);
+	private static final Logger LOG = LoggerFactory.getLogger(AbstractDataPatcher.class);
 
-	private static final String MAVEN_PACKAGE = "org.zeroclick";
-
-	private static final String MAVEN_ARTIFACT = "meeting.server";
+	private final DatabaseHelper databaseHelper;
 
 	private String description;
 
+	public AbstractDataPatcher() {
+		this.databaseHelper = DatabaseHelper.get();
+	}
+
 	protected abstract void execute();
+
+	protected abstract void undo();
 
 	protected Version getSourceCodeVersion() {
 		String mavenVersion = this.getClass().getPackage().getImplementationVersion();
 		if (null == mavenVersion) {
-			mavenVersion = this.getSourceVersion();
+			mavenVersion = VersionHelper.get().getSourceVersion();
 		}
 		return Version.valueOf(mavenVersion);
 	}
 
 	protected Version getDataVersion() {
-		return CONFIG.getPropertyValue(DataVersionProperty.class);
+		final AppParamsService appParamsService = BEANS.get(AppParamsService.class);
+
+		// Table APP_PARAMS may not be patched yet
+		String versionTxt;
+		if (this.getDatabaseHelper().existTable("APP_PARAMS")) {
+			versionTxt = appParamsService.getValue(AppParamsService.KEY_DATA_VERSION);
+		} else {
+			LOG.warn("Table APP_PARAMS does NOT exist (yet). Returning default dataVersion");
+			versionTxt = "0.0.0";
+		}
+
+		return Version.valueOf(versionTxt);
 	}
 
 	@Override
 	public void apply() {
-		LOG.info("Launching migration");
+		LOG.info("Applying patch : " + this.getDescription() + " ===> " + this.getVersion());
 		final RunContext context = BEANS.get(SuperUserRunContextProducer.class).produce();
 		try {
 			final IRunnable runnable = new IRunnable() {
@@ -77,7 +80,7 @@ public abstract class AbstractDataMigrate implements IDataMigrate {
 				@Override
 				@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 				public void run() throws Exception {
-					AbstractDataMigrate.this.execute();
+					AbstractDataPatcher.this.execute();
 				}
 			};
 
@@ -86,7 +89,32 @@ public abstract class AbstractDataMigrate implements IDataMigrate {
 			BEANS.get(ExceptionHandler.class).handle(e);
 		}
 
-		LOG.info("Launching migration END");
+		LOG.info("Applying patch : END");
+	}
+
+	@Override
+	public void remove() {
+		LOG.info("Removing patch : " + this.getDescription() + " <=== " + this.getVersion());
+		final RunContext context = BEANS.get(SuperUserRunContextProducer.class).produce();
+		try {
+			final IRunnable runnable = new IRunnable() {
+
+				@Override
+				@SuppressWarnings("PMD.SignatureDeclareThrowsException")
+				public void run() throws Exception {
+					AbstractDataPatcher.this.undo();
+					// TODO Djer how to reliably go back to the real previous
+					// version ? (storing each patch action a specific table ?)
+					// AbstractDataPatcher.this.updateDataVersion(AbstractDataPatcher.this.getVersion());
+				}
+			};
+
+			context.run(runnable);
+		} catch (final RuntimeException e) {
+			BEANS.get(ExceptionHandler.class).handle(e);
+		}
+
+		LOG.info("Removing patch END");
 	}
 
 	@Override
@@ -118,69 +146,14 @@ public abstract class AbstractDataMigrate implements IDataMigrate {
 		return this.getSourceCodeVersion().greaterThan(this.getDataVersion());
 	}
 
-	public synchronized final String getSourceVersion() {
-		// Try to get version number from pom.xml (available in Eclipse)
-		try {
-			final String className = this.getClass().getName();
-			final String classfileName = "/" + className.replace('.', '/') + ".class";
-			final URL classfileResource = this.getClass().getResource(classfileName);
-			if (classfileResource != null) {
-				final Path absolutePackagePath = Paths.get(classfileResource.toURI()).getParent();
-				final int packagePathSegments = className.length() - className.replace(".", "").length();
-				// Remove package segments from path, plus two more levels
-				// for "target/classes", which is the standard location for
-				// classes in Eclipse.
-				Path path = absolutePackagePath;
-				for (int i = 0, segmentsToRemove = packagePathSegments + 2; i < segmentsToRemove; i++) {
-					path = path.getParent();
-				}
-				final Path pom = path.resolve("pom.xml");
-				try (InputStream is = Files.newInputStream(pom)) {
-					final Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(is);
-					doc.getDocumentElement().normalize();
-					String version = (String) XPathFactory.newInstance().newXPath().compile("/project/version")
-							.evaluate(doc, XPathConstants.STRING);
-					if (version != null) {
-						version = version.trim();
-						if (!version.isEmpty()) {
-							LOG.debug("SourceCode version loaded from pom.xml file");
-							return version;
-						}
-					}
-				}
-			}
-		} catch (final Exception e) {
-			// Ignore
-		}
+	private void updateDataVersion(final Version version) {
+		final AppParamsService appParamsService = BEANS.get(AppParamsService.class);
 
-		// Try to get version number from maven properties in jar's META-INF
-		try (InputStream is = this.getClass()
-				.getResourceAsStream("/META-INF/maven/" + MAVEN_PACKAGE + "/" + MAVEN_ARTIFACT + "/pom.properties")) {
-			if (is != null) {
-				final Properties p = new Properties();
-				p.load(is);
-				final String version = p.getProperty("version", "").trim();
-				if (!version.isEmpty()) {
-					LOG.debug("SourceCode version loaded from pom.properties file");
-					return version;
-				}
-			}
-		} catch (final Exception e) {
-			// Ignore
-		}
+		appParamsService.store(AppParamsService.KEY_DATA_VERSION, version.toString());
+	}
 
-		// Fallback to using Java API to get version from MANIFEST.MF
-		String version = null;
-		final Package pkg = this.getClass().getPackage();
-		if (pkg != null) {
-			version = pkg.getImplementationVersion();
-			if (version == null) {
-				LOG.debug("SourceCode version loaded from standard getImplementationVersion()");
-				version = pkg.getSpecificationVersion();
-			}
-		}
-		version = version == null ? "" : version.trim();
-		return version.isEmpty() ? "unknown" : version;
+	protected DatabaseHelper getDatabaseHelper() {
+		return this.databaseHelper;
 	}
 
 	@Override
@@ -190,22 +163,6 @@ public abstract class AbstractDataMigrate implements IDataMigrate {
 
 	protected void setDescription(final String description) {
 		this.description = description;
-	}
-
-	/**
-	 * the data(base) version currently used
-	 */
-	public static class DataVersionProperty extends AbstractVersionConfigProperty {
-
-		@Override
-		public String getKey() {
-			return "zeroclick.version.data";
-		}
-
-		@Override
-		protected Version getDefaultValue() {
-			return Version.valueOf("1.0.0");
-		}
 	}
 
 }

@@ -87,6 +87,7 @@ public interface SQLs {
 	String EVENT_DROP_TABLE = "DROP TABLE EVENT CASCADE";
 
 	String EVENT_ALTER_TABLE_ADD_REASON = "ALTER TABLE EVENT ADD COLUMN reason VARCHAR(250)";
+	String EVENT_ALTER_TABLE_REMOVE_REASON = "ALTER TABLE EVENT DROP COLUMN reason";
 
 	/**
 	 * OAuth credential
@@ -279,4 +280,23 @@ public interface SQLs {
 	String USER_VALUES_02 = " VALUES(nextval('USER_ID_SEQ'), 'bob1', 'bob1@gmail.com', null, 'I/ocgG3Cp6QhLzIkrmYOQg==.GIxlDVNe8rl4r8WnnhT197qSBWaQIRvKnn4lNt6dqVWJ/aHDBCyxltXCNuWjYyyaynI34FM5x9Uz4hBBWMjYZw==')"; // Bob001
 
 	String USER_CREATE_DROP = "CREATE TABLE APP_USE CASCADE";
+
+	/**
+	 * App params table
+	 */
+
+	String PARAMS_CREATE_TABLE = "CREATE TABLE APP_PARAMS (param_id INTEGER NOT NULL, key VARCHAR(150), value VARCHAR(250), CONSTRAINT APP_PARAMS_PK PRIMARY KEY (param_id), CONSTRAINT APP_PARAMS_UNIQUE_KEY UNIQUE (key))";
+
+	String PARAMS_SELECT = "SELECT param_id, key, value FROM APP_PARAMS WHERE 1=1";
+	String PARAMS_SELECT_FILTER_KEY = " AND key =:key";
+
+	String PARAMS_INSERT = "INSERT INTO APP_PARAMS (param_id) VALUES (:key)";
+
+	String PARAMS_UPDATE = "UPDATE APP_PARAMS SET key=:key, value=:value WHERE key=:key";
+
+	String PARAMS_INSERT_SAMPLE = "INSERT INTO APP_PARAMS (param_id, key, value)";
+	String PARAMS_INSERT_VALUES_DATAVERSION = " VALUES(nextval('APP_PARAMS_ID_SEQ'), 'dataVersion', '1.0.0')";
+
+	String PARAMS_DROP_TABLE = "DROP TABLE APP_PARAMS";
+
 }

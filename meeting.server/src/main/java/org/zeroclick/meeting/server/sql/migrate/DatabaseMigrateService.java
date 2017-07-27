@@ -33,15 +33,34 @@ public class DatabaseMigrateService {
 	private static final Logger LOG = LoggerFactory.getLogger(DatabaseMigrateService.class);
 
 	public void checkMigration() {
-		// getAll patcher
-		final List<IBean<IDataMigrate>> patchs = BEANS.getBeanManager().getBeans(IDataMigrate.class);
-		// order patch versions
-		patchs.sort((vers1, vers2) -> vers1.getInstance().getVersion().compareTo(vers2.getInstance().getVersion()));
+		final List<IBean<IDataPatcher>> patchs = this.getPatchers();
 		// apply each patch
-		for (final IBean<IDataMigrate> beanPatch : patchs) {
-			final IDataMigrate patch = beanPatch.getInstance();
-			LOG.info("Applying patch : " + patch.getDescription());
+		for (final IBean<IDataPatcher> beanPatch : patchs) {
+			final IDataPatcher patch = beanPatch.getInstance();
 			patch.apply();
 		}
 	}
+
+	public void undoMigration() {
+		final List<IBean<IDataPatcher>> patchs = this.getPatchers();
+		// apply each patch
+		for (final IBean<IDataPatcher> beanPatch : patchs) {
+			final IDataPatcher patch = beanPatch.getInstance();
+			patch.remove();
+			// this.updateDataVersion(patch.getVersion());
+		}
+	}
+
+	/**
+	 * Retrieve all patchers and order then
+	 *
+	 * @return
+	 */
+	private final List<IBean<IDataPatcher>> getPatchers() {
+		final List<IBean<IDataPatcher>> patchs = BEANS.getBeanManager().getBeans(IDataPatcher.class);
+		// order patch versions
+		patchs.sort((vers1, vers2) -> vers1.getInstance().getVersion().compareTo(vers2.getInstance().getVersion()));
+		return patchs;
+	}
+
 }
