@@ -130,12 +130,6 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 	public class Table extends AbstractEventsTablePage<Table>.Table {
 
 		@Override
-		protected void execInitTable() {
-			// this.importFromTableRowBeanData(rowDatas, rowType);
-			// this.importPageData(BEANS.get(IEventService.class).getEventTableData(null));
-		}
-
-		@Override
 		protected void initConfig() {
 			super.initConfig();
 			this.addDefaultFilters();
