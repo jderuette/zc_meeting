@@ -451,6 +451,20 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 						.setSingleEvents(true).execute();
 				allConcurentEvent.addAll(events.getItems());
 			}
+
+			final Boolean ignoreFullDayEvents = Boolean.TRUE;
+
+			if (!allConcurentEvent.isEmpty() && ignoreFullDayEvents) {
+				final Iterator<Event> itEvents = allConcurentEvent.iterator();
+				while (itEvents.hasNext()) {
+					final Event event = itEvents.next();
+					if (null != event.getStart().getDate()) {
+						LOG.debug("FullDay Event removed : " + googleHelper.aslog(event));
+						itEvents.remove();
+					}
+				}
+			}
+
 			// if no exiting event, a new one can be created
 			ZonedDateTime recommendedNewDate = null;
 			if (allConcurentEvent.isEmpty()) {
