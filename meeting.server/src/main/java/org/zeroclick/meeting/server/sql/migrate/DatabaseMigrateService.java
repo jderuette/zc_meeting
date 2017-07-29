@@ -15,6 +15,7 @@ limitations under the License.
  */
 package org.zeroclick.meeting.server.sql.migrate;
 
+import java.util.Comparator;
 import java.util.List;
 
 import org.eclipse.scout.rt.platform.ApplicationScoped;
@@ -59,7 +60,19 @@ public class DatabaseMigrateService {
 	private final List<IBean<IDataPatcher>> getPatchers() {
 		final List<IBean<IDataPatcher>> patchs = BEANS.getBeanManager().getBeans(IDataPatcher.class);
 		// order patch versions
-		patchs.sort((vers1, vers2) -> vers1.getInstance().getVersion().compareTo(vers2.getInstance().getVersion()));
+		// Java 8 version, not great in scout 6.0 as source 1.7 (annimal-sniffer
+		// complain) :
+		// https://stackoverflow.com/questions/2784514/sort-arraylist-of-custom-objects-by-property/2784576#2784576
+		// patchs.sort((vers1, vers2) ->
+		// vers1.getInstance().getVersion().compareTo(vers2.getInstance().getVersion()));
+
+		patchs.sort(new Comparator<IBean<IDataPatcher>>() {
+			@Override
+			public int compare(final IBean<IDataPatcher> vers1, final IBean<IDataPatcher> vers2) {
+				return vers1.getInstance().getVersion().compareTo(vers2.getInstance().getVersion());
+			}
+		});
+
 		return patchs;
 	}
 

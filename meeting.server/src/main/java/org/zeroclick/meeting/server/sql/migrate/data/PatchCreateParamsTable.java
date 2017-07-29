@@ -29,6 +29,8 @@ import com.github.zafarkhaja.semver.Version;
  */
 public class PatchCreateParamsTable extends AbstractDataPatcher {
 
+	private static final String APP_PARAMS_TABLE_NAME = "APP_PARAMS";
+	private static final String APP_PARAMS_ID_SEQ = "APP_PARAMS_ID_SEQ";
 	private static final Logger LOG = LoggerFactory.getLogger(PatchCreateParamsTable.class);
 
 	public PatchCreateParamsTable() {
@@ -55,18 +57,30 @@ public class PatchCreateParamsTable extends AbstractDataPatcher {
 	protected void execute() {
 		if (super.canMigrate()) {
 			LOG.info("Create param table will be apply to the data");
-			this.migrateStrucutre();
-			this.migrateData();
+			final Boolean strtcureAltered = this.migrateStrucutre();
+			if (strtcureAltered) {
+				this.migrateData();
+			}
 		}
 	}
 
-	private void migrateStrucutre() {
+	private Boolean migrateStrucutre() {
 		LOG.info("Create param table upgrading data strcuture");
-		this.getDatabaseHelper().createSequence("APP_PARAMS_ID_SEQ");
-		SQL.insert(SQLs.PARAMS_CREATE_TABLE);
+		Boolean structureAltered = Boolean.FALSE;
+		if (!this.getDatabaseHelper().isSequenceExists(APP_PARAMS_ID_SEQ)) {
+			this.getDatabaseHelper().createSequence(APP_PARAMS_ID_SEQ);
+			structureAltered = Boolean.TRUE;
+		}
+
+		if (!this.getDatabaseHelper().existTable(APP_PARAMS_TABLE_NAME)) {
+			SQL.insert(SQLs.PARAMS_CREATE_TABLE);
+			structureAltered = Boolean.TRUE;
+		}
 
 		// as it create a Table force a refresh of Table Cache
 		this.getDatabaseHelper().resetExistingTablesCache();
+
+		return structureAltered;
 	}
 
 	private void migrateData() {
@@ -77,10 +91,10 @@ public class PatchCreateParamsTable extends AbstractDataPatcher {
 	@Override
 	public void undo() {
 		LOG.info("Create param table downgrading data strcuture");
-		if (this.getDatabaseHelper().isSequenceExists("APP_PARAMS_ID_SEQ")) {
-			this.getDatabaseHelper().dropSequence("APP_PARAMS_ID_SEQ");
+		if (this.getDatabaseHelper().isSequenceExists(APP_PARAMS_ID_SEQ)) {
+			this.getDatabaseHelper().dropSequence(APP_PARAMS_ID_SEQ);
 		}
-		if (this.getDatabaseHelper().existTable("APP_PARAMS")) {
+		if (this.getDatabaseHelper().existTable(APP_PARAMS_TABLE_NAME)) {
 			SQL.insert(SQLs.PARAMS_DROP_TABLE);
 		}
 	}

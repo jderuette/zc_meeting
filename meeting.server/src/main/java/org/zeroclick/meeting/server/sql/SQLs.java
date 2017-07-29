@@ -16,6 +16,8 @@ public interface SQLs {
 	String SELECT_TABLE_NAMES_DERBY = "SELECT UPPER(tablename) FROM sys.systables INTO :result";
 	String SELECT_TABLE_NAMES_POSTGRESQL = "select UPPER(tables.table_name) from information_schema.tables INTO :result";
 
+	String SELECT_COLUMN_EXISTS_POSTGRESQL = "SELECT column_name FROM information_schema.columns WHERE table_name='__table__' and column_name='__column__'";
+
 	String GENERIC_DROP_TABLE = "DROP TABLE __tableName__ CASCADE";
 	String GENERIC_CREATE_SEQUENCE = "CREATE SEQUENCE __seqName__ START __seqStart__";
 	String GENERIC_DROP_SEQUENCE = "DROP SEQUENCE __seqName__";

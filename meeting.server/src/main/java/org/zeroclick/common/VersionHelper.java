@@ -15,6 +15,7 @@ limitations under the License.
  */
 package org.zeroclick.common;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
@@ -65,27 +66,8 @@ public class VersionHelper {
 	 *
 	 * @return
 	 */
-	public synchronized final String getSourceVersion() {
-		String version;
-		version = this.getPomXmlVersion();
-		if (null == version) {
-			version = this.getpomPropertiesVersion();
-		}
-		if (null == version) {
-			version = this.getJavaApiVersion();
-		}
-
-		version = version == null ? "" : version.trim();
-		return version.isEmpty() ? DEFAULT_UNKNOW_VERSION : version;
-	}
-
-	/**
-	 * Try to get version number from pom.xml (available in Eclipse)
-	 *
-	 * @return
-	 */
-	private String getPomXmlVersion() {
-		String pomXmlVersion = null;
+	public synchronized final String getSourceVersionOrig() {
+		// Try to get version number from pom.xml (available in Eclipse)
 		try {
 			final String className = this.getClass().getName();
 			final String classfileName = "/" + className.replace('.', '/') + ".class";
@@ -109,9 +91,81 @@ public class VersionHelper {
 					if (version != null) {
 						version = version.trim();
 						if (!version.isEmpty()) {
-							LOG.debug("SourceCode version loaded from pom.xml file");
-							pomXmlVersion = version;
+							return version;
 						}
+					}
+				}
+			}
+		} catch (final Exception e) {
+			// Ignore
+		}
+
+		// Try to get version number from maven properties in jar's META-INF
+		try (InputStream is = this.getClass()
+				.getResourceAsStream("/META-INF/maven/" + MAVEN_PACKAGE + "/" + MAVEN_ARTIFACT + "/pom.properties")) {
+			if (is != null) {
+				final Properties p = new Properties();
+				p.load(is);
+				final String version = p.getProperty("version", "").trim();
+				if (!version.isEmpty()) {
+					return version;
+				}
+			}
+		} catch (final Exception e) {
+			// Ignore
+		}
+
+		// Fallback to using Java API to get version from MANIFEST.MF
+		String version = null;
+		final Package pkg = this.getClass().getPackage();
+		if (pkg != null) {
+			version = pkg.getImplementationVersion();
+			if (version == null) {
+				version = pkg.getSpecificationVersion();
+			}
+		}
+		version = version == null ? "" : version.trim();
+		return version.isEmpty() ? "unknown" : version;
+	}
+
+	public synchronized final String getSourceVersion() {
+		String version;
+		version = this.getPomXmlVersion();
+		if (null == version) {
+			version = this.getPomPropertiesVersion();
+		}
+		if (null == version) {
+			version = this.getJavaApiVersion();
+		}
+
+		if (null == version) {
+			version = this.getMavenArchiverVersion();
+		}
+
+		version = version == null ? "" : version.trim();
+		return version.isEmpty() ? DEFAULT_UNKNOW_VERSION : version;
+	}
+
+	/**
+	 * Try to get version number from pom.xml (available in Eclipse)
+	 *
+	 * @return
+	 */
+	private String getPomXmlVersion() {
+		String pomXmlVersion = null;
+		try {
+			final Path path = this.getProjectFolder();
+			final Path pom = path.resolve("pom.xml");
+			try (InputStream is = Files.newInputStream(pom)) {
+				final Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(is);
+				doc.getDocumentElement().normalize();
+				String version = (String) XPathFactory.newInstance().newXPath().compile("/project/version")
+						.evaluate(doc, XPathConstants.STRING);
+				if (version != null) {
+					version = version.trim();
+					if (!version.isEmpty()) {
+						LOG.debug("SourceCode version loaded from pom.xml file");
+						pomXmlVersion = version;
 					}
 				}
 			}
@@ -126,19 +180,15 @@ public class VersionHelper {
 	 *
 	 * @return
 	 */
-	private String getpomPropertiesVersion() {
+	private String getPomPropertiesVersion() {
 
 		String pomPropertiesVersion = null;
 		try (InputStream is = this.getClass()
 				.getResourceAsStream("/META-INF/maven/" + MAVEN_PACKAGE + "/" + MAVEN_ARTIFACT + "/pom.properties")) {
-			if (is != null) {
-				final Properties p = new Properties();
-				p.load(is);
-				final String version = p.getProperty("version", "").trim();
-				if (!version.isEmpty()) {
-					LOG.debug("SourceCode version loaded from pom.properties file");
-					pomPropertiesVersion = version;
-				}
+			final String version = this.searchVersionFromProps(is);
+			if (!version.isEmpty()) {
+				LOG.debug("SourceCode version loaded from pom.properties file");
+				pomPropertiesVersion = version;
 			}
 		} catch (final Exception e) {
 			LOG.debug("Exception while searching version in pom.properties file", e);
@@ -164,5 +214,68 @@ public class VersionHelper {
 			}
 		}
 		return javaApiVersion;
+	}
+
+	private String getMavenArchiverVersion() {
+		String mavenArchiverPomPropertiesVersion = null;
+		try {
+			final Path projectPath = this.getProjectFolder();
+			final Path mvnArchiver = Paths.get(projectPath.toString() + "/target/maven-archiver/");
+			final Path mvnArchiverProps = mvnArchiver.resolve("pom.properties");
+			try (InputStream is = Files.newInputStream(mvnArchiverProps)) {
+				final String version = this.searchVersionFromProps(is);
+				if (!version.isEmpty()) {
+					LOG.debug("SourceCode version loaded from maven archiver pom.properties file");
+					mavenArchiverPomPropertiesVersion = version;
+				}
+			}
+		} catch (final Exception e) {
+			LOG.debug("Exception while searching version in maven archiver pom.properties file", e);
+		}
+		return mavenArchiverPomPropertiesVersion;
+	}
+
+	private Path getProjectFolder() {
+		Path path = null;
+		try {
+			final String className = this.getClass().getName();
+			final String classfileName = "/" + className.replace('.', '/') + ".class";
+			final URL classfileResource = this.getClass().getResource(classfileName);
+			if (classfileResource != null) {
+				final Path absolutePackagePath = Paths.get(classfileResource.toURI()).getParent();
+				final int packagePathSegments = className.length() - className.replace(".", "").length();
+				// Remove package segments from path, plus two more levels
+				// for "target/classes", which is the standard location for
+				// classes in Eclipse.
+				path = absolutePackagePath;
+				for (int i = 0, segmentsToRemove = packagePathSegments + 2; i < segmentsToRemove; i++) {
+					path = path.getParent();
+				}
+			}
+		} catch (final Exception e) {
+			LOG.debug("Exception while resolbving projectFolder to search version in pom.xml file", e);
+		}
+
+		return path;
+	}
+
+	private String searchVersionFromProps(final InputStream is) {
+
+		String propertiesVersion = "";
+		if (is != null) {
+			final Properties p = new Properties();
+			try {
+				p.load(is);
+
+				final String version = p.getProperty("version", "").trim();
+				if (!version.isEmpty()) {
+					LOG.debug("SourceCode version loaded from pom.properties file");
+					propertiesVersion = version;
+				}
+			} catch (final IOException e) {
+				LOG.debug("Exception while loading properties from InputTream :" + is, e);
+			}
+		}
+		return propertiesVersion;
 	}
 }

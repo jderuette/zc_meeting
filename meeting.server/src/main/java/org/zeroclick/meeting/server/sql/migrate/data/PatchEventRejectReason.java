@@ -51,7 +51,9 @@ public class PatchEventRejectReason extends AbstractDataPatcher {
 
 	private void migrateStrucutre() {
 		LOG.info("Event reject Reason upgrading data strcuture");
-		SQL.insert(SQLs.EVENT_ALTER_TABLE_ADD_REASON);
+		if (!this.getDatabaseHelper().isColumnExists("event", "reason")) {
+			SQL.insert(SQLs.EVENT_ALTER_TABLE_ADD_REASON);
+		}
 
 	}
 

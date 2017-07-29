@@ -120,6 +120,23 @@ public class DatabaseHelper {
 	}
 
 	/**
+	 * Check if column "column" exists in the table/relation "table"
+	 *
+	 * @param table
+	 * @param column
+	 * @return
+	 */
+	public boolean isColumnExists(final String table, final String column) {
+		Boolean columnExists = Boolean.TRUE;
+		final Object[][] columnName = SQL.select(
+				SQLs.SELECT_COLUMN_EXISTS_POSTGRESQL.replace("__table__", table).replaceAll("__column__", column));
+		if (null == columnName || columnName.length == 0 || columnName[0].length == 0 || null == columnName[0][0]) {
+			columnExists = Boolean.FALSE;
+		}
+		return columnExists;
+	}
+
+	/**
 	 * get exiting tables in DataBase.
 	 *
 	 * @param refreshCache
