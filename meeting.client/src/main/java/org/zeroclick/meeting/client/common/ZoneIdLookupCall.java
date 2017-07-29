@@ -1,28 +1,54 @@
 package org.zeroclick.meeting.client.common;
 
 import java.time.ZoneId;
+import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.eclipse.scout.rt.shared.services.lookup.ILookupRow;
 import org.eclipse.scout.rt.shared.services.lookup.LocalLookupCall;
 import org.eclipse.scout.rt.shared.services.lookup.LookupRow;
+import org.zeroclick.meeting.client.ClientSession;
 
 public class ZoneIdLookupCall extends LocalLookupCall<String> {
 
 	private static final long serialVersionUID = 1L;
 
+	private final Boolean displayFullText = Boolean.TRUE;
+	private final Boolean displayCustomText = Boolean.TRUE;
+
 	@Override
 	protected List<LookupRow<String>> execCreateLookupRows() {
+		// TODO Djer : cache rows because they not change during runtime.
 		final List<LookupRow<String>> rows = new ArrayList<>();
 
 		final Set<String> existingZoneids = ZoneId.getAvailableZoneIds();
 
 		for (final String zoneId : existingZoneids) {
-			rows.add(new LookupRow<>(zoneId, zoneId));
+			@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
+			final StringBuilder builder = new StringBuilder();
+			if (this.displayFullText) {
+				Locale currentUserLocale = ClientSession.get().getLocale();
+				if (null == currentUserLocale) {
+					currentUserLocale = Locale.ENGLISH;
+				}
+
+				final String zoneDisplayName = ZoneId.of(zoneId).getDisplayName(TextStyle.FULL_STANDALONE,
+						currentUserLocale);
+
+				builder.append(zoneId).append(" (").append(zoneDisplayName).append(')');
+			}
+			if (this.displayCustomText) {
+				if (zoneId.equals("Europe/Paris")) {
+					builder.append(" France");
+				}
+			}
+
+			rows.add(new LookupRow<>(zoneId, builder.toString()));
 		}
 
 		return rows;
