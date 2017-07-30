@@ -290,6 +290,15 @@ public class GoogleApiHelper {
 		return this.toDateTime(dateTime, dateTime.getZone());
 	}
 
+	public ZonedDateTime toZonedDateTime(final Date date, final ZoneId userZoneId) {
+		ZonedDateTime zonedDateTime = null;
+		if (null != date) {
+			zonedDateTime = ZonedDateTime.ofInstant(date.toInstant(), userZoneId);
+		}
+
+		return zonedDateTime;
+	}
+
 	private DateTime toDateTime(final ZonedDateTime dateTime, final ZoneId zoneId) {
 		return new DateTime(Date.from(dateTime.toInstant()), TimeZone.getTimeZone(zoneId));
 	}

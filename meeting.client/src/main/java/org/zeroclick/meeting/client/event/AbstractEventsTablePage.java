@@ -66,7 +66,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	private static final Logger LOG = LoggerFactory.getLogger(AbstractEventsTablePage.class);
 
 	final private Integer maxTry = 20;
-	final protected CallTrackerService<Long> callTracker = new CallTrackerService<>(this.maxTry, Duration.ofHours(1),
+	final protected CallTrackerService<Long> callTracker = new CallTrackerService<>(this.maxTry, Duration.ofMinutes(3),
 			"Get calendar Events");
 
 	// TODO Djer13 caching here is smart ?

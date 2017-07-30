@@ -83,9 +83,9 @@ public interface SQLs {
 	String EVENT_SELECT_KNOWN_HOST_STRICT = "SELECT DISTINCT organizer_email FROM EVENT WHERE guest_id=:currentUser AND organizer_email=:searchEmail";
 
 	String EVENT_INSERT_SAMPLE = "INSERT INTO EVENT (event_id, organizer, organizer_email, duration, slot, email, guest_id, state, subject)";
-	String EVENT_VALUES_01 = " VALUES  (nextval('EVENT_ID_SEQ'), 1, 'djer13@gmail.com', 15, 1, 'bob1@gmail.com', 2, 'ASKED', 'Prendre le thé')";
-	String EVENT_VALUES_02 = " VALUES  (nextval('EVENT_ID_SEQ'), 2,'bob1@gmail.com', 120, 3, 'bob2@entreporise.com', 1, 'ASKED', 'Do Something')";
-	String EVENT_VALUES_03 = " VALUES  (nextval('EVENT_ID_SEQ'), 2,'bob1@gmail.com', 120, 3, 'djer13@gmail.com', 1, 'REFUSED', 'Do Something else')";
+	String EVENT_VALUES_01 = " VALUES  (nextval('EVENT_ID_SEQ'), 1, 'djer13@gmail.com', 15, 1, 'jeremie.deruette@gmail.com', 2, 'ASKED', 'Prendre le thé')";
+	String EVENT_VALUES_02 = " VALUES  (nextval('EVENT_ID_SEQ'), 2,'jeremie.deruette@gmail.com', 120, 3, 'bob2@entreporise.com', 1, 'ASKED', 'Do Something')";
+	String EVENT_VALUES_03 = " VALUES  (nextval('EVENT_ID_SEQ'), 2,'jeremie.deruette@gmail.com', 120, 3, 'djer13@gmail.com', 1, 'REFUSED', 'Do Something else')";
 
 	String EVENT_DROP_TABLE = "DROP TABLE EVENT CASCADE";
 
@@ -280,7 +280,7 @@ public interface SQLs {
 
 	String USER_INSERT_SAMPLE = "INSERT INTO APP_USER (user_id, login, email, time_zone, password)";
 	String USER_VALUES_01 = " VALUES(nextval('USER_ID_SEQ'), 'djer13', 'djer13@gmail.com', 'Europe/Paris', 'kv6kmSYn4jnCyoQK/4cQjA==.7bXNiiq6QcbGKFge/UdQ7T5cFud69Wp+qRBGZLnMU8VZ3UMgFuWtb/BpVsFBlpUSfYBd8t06uOkmHAliGKisOA==')"; // Djer13
-	String USER_VALUES_02 = " VALUES(nextval('USER_ID_SEQ'), 'bob1', 'bob1@gmail.com', null, 'I/ocgG3Cp6QhLzIkrmYOQg==.GIxlDVNe8rl4r8WnnhT197qSBWaQIRvKnn4lNt6dqVWJ/aHDBCyxltXCNuWjYyyaynI34FM5x9Uz4hBBWMjYZw==')"; // Bob001
+	String USER_VALUES_02 = " VALUES(nextval('USER_ID_SEQ'), 'jeremie', 'jeremie.deruette@gmail.com', null, 'I/ocgG3Cp6QhLzIkrmYOQg==.GIxlDVNe8rl4r8WnnhT197qSBWaQIRvKnn4lNt6dqVWJ/aHDBCyxltXCNuWjYyyaynI34FM5x9Uz4hBBWMjYZw==')"; // Bob001
 
 	String USER_CREATE_DROP = "CREATE TABLE APP_USE CASCADE";
 

@@ -419,51 +419,10 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			LOG.info(builder.toString());
 
 			final GoogleApiHelper googleHelper = GoogleApiHelper.get();
-			Calendar gCalendarService;
-
-			try {
-				gCalendarService = googleHelper.getCalendarService(userId);
-			} catch (final UserAccessRequiredException uare) {
-				throw new VetoException(TEXTS.get("zc.meeting.calendarProviderRequired"));
-			}
-
-			// getEvent from start to End for each calendar
-			final String readEventCalendarId = "primary";
-			final List<CalendarListEntry> userGCalendars = CollectionUtility
-					.arrayList(gCalendarService.calendarList().get(readEventCalendarId).execute());
-
-			// final DateTime googledStartDate = new
-			// DateTime(Date.from(startDate.toInstant(ZoneOffset.UTC)),
-			// TimeZone.getTimeZone(ZoneOffset.UTC));
-			// final DateTime googledEndDate = new
-			// DateTime(Date.from(endDate.toInstant(ZoneOffset.UTC)),
-			// TimeZone.getTimeZone(ZoneOffset.UTC));
 
 			final ZoneId userZoneId = this.getUserZoneId(userId);
 
-			final DateTime googledStartDate = googleHelper.toDateTime(startDate);
-			final DateTime googledEndDate = googleHelper.toDateTime(endDate);
-
-			final List<Event> allConcurentEvent = new ArrayList<>();
-			for (final CalendarListEntry calendar : userGCalendars) {
-				final Events events = gCalendarService.events().list(calendar.getId()).setMaxResults(50)
-						.setTimeMin(googledStartDate).setTimeMax(googledEndDate).setOrderBy("startTime")
-						.setSingleEvents(true).execute();
-				allConcurentEvent.addAll(events.getItems());
-			}
-
-			final Boolean ignoreFullDayEvents = Boolean.TRUE;
-
-			if (!allConcurentEvent.isEmpty() && ignoreFullDayEvents) {
-				final Iterator<Event> itEvents = allConcurentEvent.iterator();
-				while (itEvents.hasNext()) {
-					final Event event = itEvents.next();
-					if (null != event.getStart().getDate()) {
-						LOG.debug("FullDay Event removed : " + googleHelper.aslog(event));
-						itEvents.remove();
-					}
-				}
-			}
+			final List<Event> allConcurentEvent = this.getEvents(startDate, endDate, userId);
 
 			// if no exiting event, a new one can be created
 			ZonedDateTime recommendedNewDate = null;
@@ -520,6 +479,53 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			return recommendedNewDate;
 		}
 
+		private String getUserCreateEventCalendar(final Long userId) {
+			return "primary";
+		}
+
+		private List<Event> getEvents(final ZonedDateTime startDate, final ZonedDateTime endDate, final Long userId)
+				throws IOException {
+			final GoogleApiHelper googleHelper = GoogleApiHelper.get();
+			Calendar gCalendarService;
+
+			try {
+				gCalendarService = googleHelper.getCalendarService(userId);
+			} catch (final UserAccessRequiredException uare) {
+				throw new VetoException(TEXTS.get("zc.meeting.calendarProviderRequired"));
+			}
+
+			// getEvent from start to End for each calendar
+			final String readEventCalendarId = this.getUserCreateEventCalendar(userId);
+			final List<CalendarListEntry> userGCalendars = CollectionUtility
+					.arrayList(gCalendarService.calendarList().get(readEventCalendarId).execute());
+
+			final DateTime googledStartDate = googleHelper.toDateTime(startDate);
+			final DateTime googledEndDate = googleHelper.toDateTime(endDate);
+
+			final List<Event> allConcurentEvent = new ArrayList<>();
+			for (final CalendarListEntry calendar : userGCalendars) {
+				final Events events = gCalendarService.events().list(calendar.getId()).setMaxResults(50)
+						.setTimeMin(googledStartDate).setTimeMax(googledEndDate).setOrderBy("startTime")
+						.setSingleEvents(true).execute();
+				allConcurentEvent.addAll(events.getItems());
+			}
+
+			final Boolean ignoreFullDayEvents = Boolean.TRUE;
+
+			if (!allConcurentEvent.isEmpty() && ignoreFullDayEvents) {
+				final Iterator<Event> itEvents = allConcurentEvent.iterator();
+				while (itEvents.hasNext()) {
+					final Event event = itEvents.next();
+					if (null != event.getStart().getDate()) {
+						LOG.debug("FullDay Event removed : " + googleHelper.aslog(event));
+						itEvents.remove();
+					}
+				}
+			}
+
+			return allConcurentEvent;
+		}
+
 		private Event getLastEvent(final List<Event> allConcurentEvent) {
 			final Event lastEvent = allConcurentEvent.get(allConcurentEvent.size() - 1);
 			return lastEvent;
@@ -574,7 +580,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 							nextEventLocalStartDate = GoogleApiHelper.get().fromEventDateTime(nextEvent.getStart());
 							offset = GoogleApiHelper.get().timeOffset(nextEvent.getStart());
 						}
-						freeTime.add(new DayDuration(eventZonedStartDate.toLocalTime().atOffset(offset),
+						freeTime.add(new DayDuration(eventZonedEndDate.toLocalTime().atOffset(offset),
 								nextEventLocalStartDate.toLocalTime().atOffset(offset),
 								CollectionUtility.arrayList(eventLocalStartDateDay), Boolean.FALSE));
 						event = nextEvent;
@@ -591,8 +597,8 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 		private Event createEvent(final ZonedDateTime startDate, final ZonedDateTime endDate, final Long forUserId,
 				final String withEmail, final String subject) throws IOException {
-			LOG.debug("Creating (Google) Event from : " + startDate + " to " + endDate + ", for :" + forUserId + "("
-					+ withEmail + ")");
+			LOG.debug("Creating (Google) Event from : " + startDate + " to " + endDate + ", for :" + forUserId
+					+ " (attendee :" + withEmail + ")");
 
 			final GoogleApiHelper googleHelper = GoogleApiHelper.get();
 
@@ -605,12 +611,12 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			}
 
 			final String EnvDisplay = new ApplicationEnvProperty().displayAsText();
-			final String createdEventCalendarId = "primary";
+			final String createdEventCalendarId = this.getUserCreateEventCalendar(forUserId);
 
 			final Event newEvent = new Event();
 			newEvent.setStart(googleHelper.toEventDateTime(startDate));
 			newEvent.setEnd(googleHelper.toEventDateTime(endDate));
-			newEvent.setSummary(EnvDisplay + subject + TEXTS.get("zc.common.email.subject.suffix"));
+			newEvent.setSummary(EnvDisplay + " " + subject + TEXTS.get("zc.common.email.subject.suffix"));
 			newEvent.setDescription(subject);
 
 			final EventAttendee[] attendees = new EventAttendee[] { new EventAttendee().setEmail(withEmail) };
@@ -624,6 +630,35 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					+ createdEvent.getHtmlLink());
 
 			return createdEvent;
+		}
+
+		private Event acceptCreatedEvent(final Event organizerEvent, final String organizerCalendarId,
+				final Long userId, final String attendeeEmail) throws IOException {
+			LOG.debug("Acceptiing (Google) Event from (" + organizerEvent.getOrganizer().getEmail() + "), for :"
+					+ userId);
+
+			final GoogleApiHelper googleHelper = GoogleApiHelper.get();
+
+			Calendar gCalendarService;
+
+			try {
+				gCalendarService = googleHelper.getCalendarService(userId);
+			} catch (final UserAccessRequiredException uare) {
+				throw new VetoException(TEXTS.get("zc.meeting.calendarProviderRequired"));
+			}
+
+			final List<EventAttendee> attendees = organizerEvent.getAttendees();
+			for (final EventAttendee eventAttendee : attendees) {
+				if (attendeeEmail.equals(eventAttendee.getEmail())) {
+					eventAttendee.setResponseStatus("accepted");
+				}
+			}
+
+			// Update the event
+			final Event updatedEvent = gCalendarService.events()
+					.update(organizerCalendarId, organizerEvent.getId(), organizerEvent).execute();
+
+			return updatedEvent;
 		}
 
 		@Order(2000)
@@ -751,17 +786,6 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					}
 
 					Table.this.getStateColumn().setValue(Table.this.getSelectedRow(), "ACCEPTED");
-					final EventFormData savedData = Table.this.saveEventCurrentRow();
-
-					if (null == eventGuest) {
-						eventGuest = userService.getUserIdByEmail(eventGuestEmail);
-					}
-					// external event for guest
-					final Event externalGuestEvent = Table.this.createEvent(start, end, eventGuest, eventHeldEmail,
-							subject);
-					Table.this.getExternalIdRecipientColumn().setValue(Table.this.getSelectedRow(),
-							externalGuestEvent.getId());
-					this.sendConfirmationEmail(eventGuestEmail, externalGuestEvent, savedData);
 
 					if (null == eventHeldBy) {
 						eventHeldBy = userService.getUserIdByEmail(eventHeldEmail);
@@ -771,21 +795,37 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 							eventGuestEmail, subject);
 					Table.this.getExternalIdOrganizerColumn().setValue(Table.this.getSelectedRow(),
 							externalOrganizerEvent.getId());
-					this.sendConfirmationEmail(eventHeldEmail, externalOrganizerEvent, savedData);
+					this.sendConfirmationEmail(eventHeldEmail, externalOrganizerEvent, subject);
+
+					if (null == eventGuest) {
+						eventGuest = userService.getUserIdByEmail(eventGuestEmail);
+					}
+					// external event for guest
+					// final Event externalGuestEvent =
+					// Table.this.createEvent(start, end, eventGuest,
+					// eventHeldEmail,
+					// subject);
+
+					final Event externalGuestEvent = Table.this.acceptCreatedEvent(externalOrganizerEvent,
+							Table.this.getUserCreateEventCalendar(eventHeldBy), eventGuest, eventGuestEmail);
+					Table.this.getExternalIdRecipientColumn().setValue(Table.this.getSelectedRow(),
+							externalGuestEvent.getId());
+
+					this.sendConfirmationEmail(eventGuestEmail, externalOrganizerEvent, subject);
+
+					// Save at the end to save external IDs !
+					Table.this.saveEventCurrentRow();
 
 					Table.this.resetInvalidatesEvent(start, end);
 					Table.this.autoFillDates();
 
 				} catch (final IOException e) {
-					throw new VetoException("Canno't get calendar details, re-try later");
+					throw new VetoException("Canno't get calendar details, re-try later", e);
 				}
 			}
 
-			private void sendConfirmationEmail(final String recipient, final Event event,
-					final EventFormData formData) {
+			private void sendConfirmationEmail(final String recipient, final Event event, final String meetingSubject) {
 				final IMailSender mailSender = BEANS.get(IMailSender.class);
-
-				final String meetingSubject = formData.getSubject().getValue();
 
 				final String subject = TEXTS.get("zc.meeting.email.event.confirm.subject");
 				final String content = TEXTS.get("zc.meeting.email.event.confirm.html", recipient, meetingSubject,
@@ -849,7 +889,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					Table.this.changeDatesNext();
 					Table.this.reloadMenus(Table.this.getSelectedRow());
 				} catch (final IOException e) {
-					throw new VetoException("Canno't get calendar details, re-try later");
+					throw new VetoException("Canno't get calendar details, re-try later", e);
 				}
 			}
 
