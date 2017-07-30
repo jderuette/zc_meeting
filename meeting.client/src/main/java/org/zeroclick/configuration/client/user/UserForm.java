@@ -413,7 +413,14 @@ public class UserForm extends AbstractForm {
 		final IUserService service = BEANS.get(IUserService.class);
 		final UserFormData formData = new UserFormData();
 		UserForm.this.exportFormData(formData);
-		formData.setHashedPassword(UserForm.this.hashPassword(formData.getPassword().getValue()));
+
+		final String plainPassword = formData.getPassword().getValue();
+
+		if (null == plainPassword) {
+			LOG.warn("No Generated Plain Paswword during saving new User. Generating one");
+			this.generateAndAddFormPassword();
+		}
+		formData.setHashedPassword(UserForm.this.hashPassword(plainPassword));
 
 		if (null == formData.getAutofilled()) {
 			formData.setAutofilled(Boolean.FALSE);
@@ -496,6 +503,19 @@ public class UserForm extends AbstractForm {
 		this.getEmailField().setValue(email);
 		// this.getUserIdField().setValue(userId);
 
+		this.generateAndAddFormPassword();
+
+		this.getRolesBox().checkKey(defaultRole);
+		this.getRolesBox().touch();
+
+		this.setAutofilled(isAutoFileld);
+
+		super.doSave();
+
+		return this;
+	}
+
+	private void generateAndAddFormPassword() {
 		String plainRandomPassword = this.generatePasword();
 
 		if (null == plainRandomPassword || "".equals(plainRandomPassword.trim())) {
@@ -509,15 +529,6 @@ public class UserForm extends AbstractForm {
 
 		this.getPasswordField().setValue(plainRandomPassword);
 		this.getConfirmPasswordField().setValue(plainRandomPassword);
-
-		this.getRolesBox().checkKey(defaultRole);
-		this.getRolesBox().touch();
-
-		this.setAutofilled(isAutoFileld);
-
-		super.doSave();
-
-		return this;
 	}
 
 	private String generatePasword() {
