@@ -249,15 +249,15 @@ public interface SQLs {
 	 */
 	String USER_CREATE_TABLE = "CREATE TABLE APP_USER (user_id INTEGER NOT NULL, login VARCHAR(50), email VARCHAR(120), password VARCHAR(256), time_zone VARCHAR(120), CONSTRAINT USER_PK PRIMARY KEY (user_id), CONSTRAINT USER_UNIQUE_EMAIL UNIQUE (email))";
 
-	String USER_PAGE_SELECT = "select user_id, login, email, time_zone FROM APP_USER WHERE 1=1";
-	String USER_PAGE_DATA_SELECT_INTO = " INTO :{page.userId}, :{page.login}, :{page.email}, :{page.timeZone}";
+	String USER_PAGE_SELECT = "select user_id, login, email, time_zone, invited_by FROM APP_USER WHERE 1=1";
+	String USER_PAGE_DATA_SELECT_INTO = " INTO :{page.userId}, :{page.login}, :{page.email}, :{page.timeZone}, :{page.invitedBy}";
 
-	String USER_SELECT = "SELECT user_id, login, email, password, time_zone FROM APP_USER WHERE 1=1";
+	String USER_SELECT = "SELECT user_id, login, email, password, time_zone, invited_by FROM APP_USER WHERE 1=1";
 
 	String USER_SELECT_FILTER_ID = " AND user_id=:currentUser";
 	String USER_SELECT_FILTER_EMAIL = " AND email=:email";
 	String USER_SELECT_FILTER_LOGIN = " AND login=:login";
-	String USER_SELECT_INTO = " INTO :userId, :login, :email, :hashedPassword, :timeZone";
+	String USER_SELECT_INTO = " INTO :userId, :login, :email, :hashedPassword, :timeZone, :invitedBy";
 
 	String USER_SELECT_TIME_ZONE = "SELECT time_zone FROM APP_USER WHERE 1=1";
 	String USER_SELECT_INTO_TIME_ZONE = " INTO :timeZone";
@@ -271,10 +271,13 @@ public interface SQLs {
 
 	String USER_INSERT = "INSERT INTO APP_USER (user_id) VALUES (:userId)";
 
+	String USER_ALTER_TABLE_INVITED_BY = "ALTER TABLE APP_USER ADD COLUMN invited_by INTEGER";
+	String USER_ALTER_TABLE_INVITED_BY_CONSTRAINT = "ALTER TABLE APP_USER ADD CONSTRAINT FK_INVITED_BY FOREIGN KEY (invited_by) REFERENCES APP_USER(user_id)";
+
 	/**
 	 * Password not updated use USER_UPDATE_PASSWORD
 	 */
-	String USER_UPDATE = "UPDATE APP_USER SET email=:email, login=:login, time_zone=:timeZone WHERE user_id=:userId ";
+	String USER_UPDATE = "UPDATE APP_USER SET email=:email, login=:login, time_zone=:timeZone, invited_by=:invitedBy WHERE user_id=:userId ";
 	String USER_UPDATE_ONBOARDING = "UPDATE APP_USER SET login=:login, time_zone=:timeZone WHERE user_id=:userId ";
 	String USER_UPDATE_PASSWORD = "UPDATE APP_USER SET password=:hashedPassword WHERE user_id=:userId";
 

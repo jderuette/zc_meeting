@@ -62,6 +62,24 @@ public class UserFormData extends AbstractFormData {
 		return getPropertyByClass(HashedPasswordProperty.class);
 	}
 
+	/**
+	 * access method for property InvitedBy.
+	 */
+	public Long getInvitedBy() {
+		return getInvitedByProperty().getValue();
+	}
+
+	/**
+	 * access method for property InvitedBy.
+	 */
+	public void setInvitedBy(Long invitedBy) {
+		getInvitedByProperty().setValue(invitedBy);
+	}
+
+	public InvitedByProperty getInvitedByProperty() {
+		return getPropertyByClass(InvitedByProperty.class);
+	}
+
 	public Login getLogin() {
 		return getFieldByClass(Login.class);
 	}
@@ -102,6 +120,11 @@ public class UserFormData extends AbstractFormData {
 	}
 
 	public static class HashedPasswordProperty extends AbstractPropertyData<String> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class InvitedByProperty extends AbstractPropertyData<Long> {
 
 		private static final long serialVersionUID = 1L;
 	}

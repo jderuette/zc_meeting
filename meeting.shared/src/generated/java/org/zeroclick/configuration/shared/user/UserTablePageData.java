@@ -56,10 +56,12 @@ public class UserTablePageData extends AbstractTablePageData {
 		public static final String login = "login";
 		public static final String email = "email";
 		public static final String timeZone = "timeZone";
+		public static final String invitedBy = "invitedBy";
 		private Long m_userId;
 		private String m_login;
 		private String m_email;
 		private String m_timeZone;
+		private Long m_invitedBy;
 
 		public Long getUserId() {
 			return m_userId;
@@ -91,6 +93,14 @@ public class UserTablePageData extends AbstractTablePageData {
 
 		public void setTimeZone(String newTimeZone) {
 			m_timeZone = newTimeZone;
+		}
+
+		public Long getInvitedBy() {
+			return m_invitedBy;
+		}
+
+		public void setInvitedBy(Long newInvitedBy) {
+			m_invitedBy = newInvitedBy;
 		}
 	}
 }

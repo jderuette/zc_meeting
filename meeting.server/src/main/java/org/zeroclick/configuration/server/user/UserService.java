@@ -70,6 +70,11 @@ public class UserService implements IUserService {
 			// created user ?
 			LOG.info("Create user autoFilled enabled reseting advanced value (role forced to 'Standard')");
 			formData.getRolesBox().setValue(DEFAULT_ROLES);
+
+			final AccessControlService acs = BEANS.get(AccessControlService.class);
+			final Long currenUserId = acs.getZeroClickUserIdOfCurrentSubject();
+
+			formData.setInvitedBy(currenUserId);
 		} else {
 			if (!ACCESS.check(new CreateUserPermission())) {
 				throw new VetoException(TEXTS.get("AuthorizationFailed"));

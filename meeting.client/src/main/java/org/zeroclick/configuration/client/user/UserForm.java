@@ -61,6 +61,8 @@ public class UserForm extends AbstractForm {
 	 */
 	private Boolean autofilled;
 
+	private Long invitedBy;
+
 	@FormData
 	public String getHashedPassword() {
 		return this.hashedPassword;
@@ -84,6 +86,16 @@ public class UserForm extends AbstractForm {
 	@FormData
 	public void setAutofilled(final Boolean autofilled) {
 		this.autofilled = autofilled;
+	}
+
+	@FormData
+	public Long getInvitedBy() {
+		return this.invitedBy;
+	}
+
+	@FormData
+	public void setInvitedBy(final Long invitedBy) {
+		this.invitedBy = invitedBy;
 	}
 
 	public UserForm() {

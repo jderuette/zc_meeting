@@ -136,6 +136,10 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 			return this.getColumnSet().getColumnByClass(LoginColumn.class);
 		}
 
+		public InvitedByColumn getInvitedByColumn() {
+			return this.getColumnSet().getColumnByClass(InvitedByColumn.class);
+		}
+
 		public TimeZoneColumn getTimeZoneColumn() {
 			return this.getColumnSet().getColumnByClass(TimeZoneColumn.class);
 		}
@@ -196,5 +200,17 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 			}
 		}
 
+		@Order(4000)
+		public class InvitedByColumn extends AbstractLongColumn {
+			@Override
+			protected String getConfiguredHeaderText() {
+				return TEXTS.get("zc.user.invitedBy");
+			}
+
+			@Override
+			protected int getConfiguredWidth() {
+				return 100;
+			}
+		}
 	}
 }
