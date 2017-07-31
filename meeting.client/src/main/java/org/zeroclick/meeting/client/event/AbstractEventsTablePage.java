@@ -111,8 +111,24 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	 *
 	 * @param formData
 	 */
-	protected void onModifiedEvent(final EventFormData formData, final ITableRow row) {
+	protected void onModifiedEvent(final EventFormData formData, final String previousStateRow) {
 
+	}
+
+	/**
+	 * Is row event (formData) held by CurrentUser ?
+	 *
+	 * @param row
+	 * @return
+	 */
+	protected Boolean isHeldByCurrentUser(final EventFormData formData) {
+		return this.isOrganizer(formData.getOrganizer().getValue());
+	}
+
+	protected Boolean isOrganizer(final Long userId) {
+		final AccessControlService acs = BEANS.get(AccessControlService.class);
+		final Long currentUser = acs.getZeroClickUserIdOfCurrentSubject();
+		return currentUser.equals(userId);
 	}
 
 	public class Table extends AbstractTable {
@@ -205,11 +221,13 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 								+ ") for event Id : " + eventForm.getEventId());
 
 						final ITableRow row = AbstractEventsTablePage.this.getTable().getRow(eventForm.getEventId());
+						final String previousStateRow = (String) row
+								.getCellValue(Table.this.getStateColumn().getColumnIndex());
 						Table.this.updateTableRowFromForm(row, eventForm);
 
 						AbstractEventsTablePage.this.getTable().applyRowFilters();
 
-						AbstractEventsTablePage.this.onModifiedEvent(eventForm, row);
+						AbstractEventsTablePage.this.onModifiedEvent(eventForm, previousStateRow);
 
 					} catch (final RuntimeException e) {
 						LOG.error("Could not update event. (" + Table.this.getTitle() + ")", e);
@@ -429,11 +447,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		 * @return
 		 */
 		protected Boolean isHeldByCurrentUser(final ITableRow row) {
-			final AccessControlService acs = BEANS.get(AccessControlService.class);
-			final Long currentUser = acs.getZeroClickUserIdOfCurrentSubject();
-
-			final Long rowCurrentUserId = this.getOrganizerColumn().getValue(row.getRowIndex());
-			return currentUser.equals(rowCurrentUserId);
+			return AbstractEventsTablePage.this.isOrganizer(this.getOrganizerColumn().getValue(row.getRowIndex()));
 		}
 
 		/**
@@ -510,6 +524,16 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				LOG.warn("No timeZone configured or user : " + acs.getZeroClickUserIdOfCurrentSubject());
 			}
 			return userZoneId;
+		}
+
+		protected List<String> getCurrentUserEmails() {
+			final List<String> emails = new ArrayList<>();
+			final IUserService userService = BEANS.get(IUserService.class);
+			final UserFormData userDetails = userService.getCurrentUserDetails();
+
+			emails.add(userDetails.getEmail().getValue());
+
+			return emails;
 		}
 
 		protected ZonedDateTime getZonedValue(final ZoneId userZoneId, final Date value) {

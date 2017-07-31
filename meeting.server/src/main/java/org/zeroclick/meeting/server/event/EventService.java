@@ -44,8 +44,7 @@ public class EventService implements IEventService {
 		if (!displayAllForAdmin
 				|| ACCESS.getLevel(new ReadEventPermission((Long) null)) != ReadEventPermission.LEVEL_ALL) {
 			ownerFilter = SQLs.EVENT_PAGE_SELECT_FILTER_USER_OR_RECIPIENT;
-			final AccessControlService acs = BEANS.get(AccessControlService.class);
-			currentConnectedUserId = acs.getZeroClickUserIdOfCurrentSubject();
+			currentConnectedUserId = this.getCurrentUserId();
 		}
 
 		final String sql = SQLs.EVENT_PAGE_SELECT + ownerFilter + eventStatusCriteria
@@ -59,7 +58,12 @@ public class EventService implements IEventService {
 
 	@Override
 	public EventTablePageData getEventTableData(final SearchFilter filter) {
-		return this.getEvents(filter, " AND state = 'ASKED'", Boolean.FALSE);
+		return this.getEvents(filter, " AND state = 'ASKED' AND guest_id=:currentUser", Boolean.FALSE);
+	}
+
+	@Override
+	public AbstractTablePageData getEventAskedTableData(final SearchFilter filter) {
+		return this.getEvents(filter, " AND state = 'ASKED' AND guest_id!=:currentUser", Boolean.FALSE);
 	}
 
 	@Override
@@ -76,8 +80,7 @@ public class EventService implements IEventService {
 	public Map<Long, Integer> getUsersWithPendingMeeting() {
 		final Map<Long, Integer> users = new HashMap<>();
 
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-		final Long currentUser = acs.getZeroClickUserIdOfCurrentSubject();
+		final Long currentUser = this.getCurrentUserId();
 
 		LOG.debug("Loading pending meeting users with : " + currentUser);
 
@@ -130,8 +133,7 @@ public class EventService implements IEventService {
 		// TODO Djer move SlotLookup to shared Part ?
 		formData.getSlot().setValue(1);
 
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-		formData.getOrganizer().setValue(acs.getZeroClickUserIdOfCurrentSubject());
+		formData.getOrganizer().setValue(this.getCurrentUserId());
 
 		return formData;
 	}
@@ -257,8 +259,7 @@ public class EventService implements IEventService {
 
 	protected Set<String> getKnowEmail(final ILookupCall<String> call, final Boolean strict) {
 		final Set<String> knowEmail = new HashSet<>();
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-		final Long currentUserId = acs.getZeroClickUserIdOfCurrentSubject();
+		final Long currentUserId = this.getCurrentUserId();
 
 		final Object[][] attendeesData = SQL.select(SQLs.EVENT_SELECT_KNOWN_ATTENDEE_LOOKUP,
 				new NVPair("currentUser", currentUserId), new NVPair("call", call));
@@ -289,8 +290,7 @@ public class EventService implements IEventService {
 	@Override
 	public boolean isOwn(final Long eventId) {
 		Boolean isOwn = Boolean.FALSE;
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-		final Long currentUserId = acs.getZeroClickUserIdOfCurrentSubject();
+		final Long currentUserId = this.getCurrentUserId();
 
 		final Long eventOwner = this.getOwner(eventId);
 
@@ -323,6 +323,11 @@ public class EventService implements IEventService {
 		final UserFormData userDetails = userService.getCurrentUserDetails();
 
 		return userDetails.getEmail().getValue();
+	}
+
+	private Long getCurrentUserId() {
+		final AccessControlService acs = BEANS.get(AccessControlService.class);
+		return acs.getZeroClickUserIdOfCurrentSubject();
 	}
 
 }

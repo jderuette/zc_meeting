@@ -14,6 +14,8 @@ public interface IEventService extends IService {
 
 	EventTablePageData getEventTableData(SearchFilter filter);
 
+	AbstractTablePageData getEventAskedTableData(SearchFilter filter);
+
 	AbstractTablePageData getEventProcessedTableData(SearchFilter filter);
 
 	AbstractTablePageData getEventAdminTableData(SearchFilter filter);

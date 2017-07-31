@@ -86,7 +86,8 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 	}
 
 	protected String buildTitle() {
-		return TEXTS.get("zc.meeting.events", null == this.nbEventToProcess ? "0" : this.nbEventToProcess.toString());
+		return TEXTS.get("zc.meeting.events",
+				null == this.getNbEventToProcess() ? "0" : this.getNbEventToProcess().toString());
 	}
 
 	@Override
@@ -113,17 +114,21 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 	@Override
 	protected void onNewEvent(final EventFormData formData) {
-		LOG.debug("New event detected incrementing nb Event to Process");
-		this.incNbEventToProcess();
+		if (!super.isHeldByCurrentUser(formData)) {
+			LOG.debug("New event detected NOT Organized by current User incrementing nb Event to Process");
+			this.incNbEventToProcess();
+		}
 	}
 
 	@Override
-	protected void onModifiedEvent(final EventFormData formData, final ITableRow previousState) {
-		LOG.debug("Modified event detected changing nb Event to Process");
-		if ("ASKED".equals(formData.getState())) {
-			this.incNbEventToProcess();
-		} else if (null != previousState && "ACCEPTED".equals(this.getTable().getState(previousState))) {
-			this.decNbEventToProcess();
+	protected void onModifiedEvent(final EventFormData formData, final String previousState) {
+		if (!super.isHeldByCurrentUser(formData)) {
+			LOG.debug("Modified event detected NOT Organized by current User changing nb Event to Process");
+			if ("ASKED".equals(formData.getState())) {
+				this.incNbEventToProcess();
+			} else if (null != previousState && !"ACCEPTED".equals(previousState)) {
+				this.decNbEventToProcess();
+			}
 		}
 	}
 
@@ -144,6 +149,11 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		}
 
 		protected void addDefaultFilters() {
+			this.addAskedStateFilter();
+			this.addIamAttendeeFilter();
+		}
+
+		protected void addAskedStateFilter() {
 			if (null == this.getUserFilterManager()) {
 				this.setUserFilterManager(this.createUserFilterManager());
 			}
@@ -154,6 +164,23 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				askedFilter.setSelectedValues(selectedValues);
 				// askedFilter.setFreeText(TEXTS.get("zc.meeting.state.asked"));
 				this.getUserFilterManager().addFilter(askedFilter);
+			}
+		}
+
+		protected void addIamAttendeeFilter() {
+			if (null == this.getUserFilterManager()) {
+				this.setUserFilterManager(this.createUserFilterManager());
+			}
+			if (this.getUserFilterManager().getFilter(this.getEmailColumn().getColumnId()) == null) {
+				final TextColumnUserFilterState iamAttendeeFilter = new TextColumnUserFilterState(
+						this.getEmailColumn());
+
+				final Set<Object> selectedValues = new HashSet<>();
+				selectedValues.addAll(this.getCurrentUserEmails());
+				selectedValues.add(TEXTS.get("zc.common.me"));
+				iamAttendeeFilter.setSelectedValues(selectedValues);
+
+				this.getUserFilterManager().addFilter(iamAttendeeFilter);
 			}
 		}
 
