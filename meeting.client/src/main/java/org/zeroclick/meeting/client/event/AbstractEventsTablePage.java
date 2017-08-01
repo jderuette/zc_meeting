@@ -18,6 +18,7 @@ import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
 import org.eclipse.scout.rt.client.ui.action.menu.IMenu;
 import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.action.menu.TableMenuType;
+import org.eclipse.scout.rt.client.ui.basic.cell.Cell;
 import org.eclipse.scout.rt.client.ui.basic.cell.ICell;
 import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
 import org.eclipse.scout.rt.client.ui.basic.table.ITableRow;
@@ -34,6 +35,7 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.notification.INotificationListener;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
+import org.eclipse.scout.rt.shared.services.lookup.ILookupRow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.client.api.ApiCreatedNotificationHandler;
@@ -971,6 +973,23 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			@Override
 			protected int getConfiguredWidth() {
 				return 100;
+			}
+
+			@Override
+			protected void execDecorateCell(final Cell cell, final ITableRow row) {
+				super.execDecorateCell(cell, row);
+
+				final String stateColumnValue = (String) cell.getValue();
+
+				// TODO Djer13 optimization, useful to create a new lookup for
+				// each cell ?
+				final EventStateLookupCall stateLookUpCall = new EventStateLookupCall();
+				final ILookupRow<String> stateLookupValue = stateLookUpCall.getDataById(stateColumnValue);
+
+				cell.setIconId(stateLookupValue.getIconId());
+				cell.setBackgroundColor(stateLookupValue.getBackgroundColor());
+				cell.setForegroundColor(stateLookupValue.getForegroundColor());
+
 			}
 
 			@Override
