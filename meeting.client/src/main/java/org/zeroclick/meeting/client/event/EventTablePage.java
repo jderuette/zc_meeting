@@ -1,7 +1,6 @@
 package org.zeroclick.meeting.client.event;
 
 import java.io.IOException;
-import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.ZoneId;
@@ -28,6 +27,7 @@ import org.eclipse.scout.rt.client.ui.form.FormListener;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.exception.VetoException;
+import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
@@ -36,6 +36,8 @@ import org.slf4j.LoggerFactory;
 import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
 import org.zeroclick.configuration.shared.user.IUserService;
+import org.zeroclick.meeting.client.ClientSession;
+import org.zeroclick.meeting.client.Desktop;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationEnvProperty;
 import org.zeroclick.meeting.client.calendar.GoogleEventStartComparator;
 import org.zeroclick.meeting.client.common.DayDuration;
@@ -117,6 +119,10 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		if (!super.isHeldByCurrentUser(formData)) {
 			LOG.debug("New event detected NOT Organized by current User incrementing nb Event to Process");
 			this.incNbEventToProcess();
+
+			final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
+			desktop.addNotification(IStatus.OK, 0l, Boolean.TRUE, this.getDesktopNotificationModifiedEventKey(formData),
+					this.buildValuesForLocaleMessages(formData));
 		}
 	}
 
@@ -129,6 +135,10 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			} else if (null != previousState && !"ACCEPTED".equals(previousState)) {
 				this.decNbEventToProcess();
 			}
+
+			final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
+			desktop.addNotification(IStatus.OK, 0l, Boolean.TRUE, this.getDesktopNotificationModifiedEventKey(formData),
+					this.buildValuesForLocaleMessages(formData));
 		}
 	}
 
@@ -274,23 +284,20 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			}
 		}
 
-		protected ZonedDateTime getUserNow(final Long userId) {
-			return ZonedDateTime.now(Clock.system(this.getUserZoneId(userId)));
-		}
-
 		protected void changeDatesNext(final ITableRow row) throws IOException {
 			final Long eventId = this.getEventIdColumn().getValue(row.getRowIndex());
 			final Long guestId = this.getGuestIdColumn().getValue(row.getRowIndex());
 
-			final ZonedDateTime currentStartDate = this.toZonedDateTime(
-					this.getStartDateColumn().getValue(row.getRowIndex()), this.getUserZoneId(guestId));
+			final ZonedDateTime currentStartDate = EventTablePage.this.getDateHelper().getZonedValue(
+					EventTablePage.this.getAppUserHelper().getUserZoneId(guestId),
+					this.getStartDateColumn().getValue(row.getRowIndex()));
 
 			LOG.debug("Changing Next date for Event ID : " + eventId + " with start Date : " + currentStartDate);
 
 			ZonedDateTime nextStartDate = null;
 			DateReturn newPossibleDate;
 			if (null == currentStartDate) {
-				nextStartDate = this.addReactionTime(this.getUserNow(guestId));
+				nextStartDate = this.addReactionTime(EventTablePage.this.getAppUserHelper().getUserNow(guestId));
 			} else {
 				// TODO Djer13 : try to stick endOfPeriod if (Set next.end to
 				// period.end, if next.start is after previous.start this a
@@ -314,9 +321,11 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			if (newPossibleDate.isCreated()) {
 				// update start and end date
-				row.setCellValue(this.getStartDateColumn().getColumnIndex(), this.toDate(newPossibleDate.getStart()));
+				row.setCellValue(this.getStartDateColumn().getColumnIndex(),
+						EventTablePage.this.getDateHelper().toDate(newPossibleDate.getStart()));
 				this.getStartDateColumn().updateDisplayTexts(CollectionUtility.arrayList(row));
-				row.setCellValue(this.getEndDateColumn().getColumnIndex(), this.toDate(newPossibleDate.getEnd()));
+				row.setCellValue(this.getEndDateColumn().getColumnIndex(),
+						EventTablePage.this.getDateHelper().toDate(newPossibleDate.getEnd()));
 				this.getEndDateColumn().updateDisplayTexts(CollectionUtility.arrayList(row));
 			}
 		}
@@ -447,7 +456,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			final GoogleApiHelper googleHelper = GoogleApiHelper.get();
 
-			final ZoneId userZoneId = this.getUserZoneId(userId);
+			final ZoneId userZoneId = EventTablePage.this.getAppUserHelper().getUserZoneId(userId);
 
 			final List<Event> allConcurentEvent = this.getEvents(startDate, endDate, userId);
 
@@ -797,6 +806,10 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			@Override
 			protected void execAction() {
+
+				final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
+				desktop.addNotification(IStatus.INFO, 5000l, Boolean.TRUE, "zc.meeting.notification.acceptingEvent");
+
 				final IUserService userService = BEANS.get(IUserService.class);
 				final ZonedDateTime start = Table.this.getStartDateColumn().getSelectedZonedValue();
 				final ZonedDateTime end = Table.this.getEndDateColumn().getSelectedZonedValue();
@@ -912,6 +925,9 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			@Override
 			protected void execAction() {
+				final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
+				desktop.addNotification(IStatus.INFO, 5000l, Boolean.TRUE,
+						"zc.meeting.notification.searchingNextEvent");
 				try {
 					Table.this.changeDatesNext();
 					Table.this.reloadMenus(Table.this.getSelectedRow());

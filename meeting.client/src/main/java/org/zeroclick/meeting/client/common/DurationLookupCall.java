@@ -17,10 +17,10 @@ public class DurationLookupCall extends LocalLookupCall<Integer> {
 	protected List<LookupRow<Integer>> execCreateLookupRows() {
 		final List<LookupRow<Integer>> rows = new ArrayList<>();
 
-		rows.add(new LookupRow<>(15, TEXTS.get("zc.meeting.duration.15Min")));
-		rows.add(new LookupRow<>(30, TEXTS.get("zc.meeting.duration.30Min")));
-		rows.add(new LookupRow<>(60, TEXTS.get("zc.meeting.duration.1Hour")));
-		rows.add(new LookupRow<>(120, TEXTS.get("zc.meeting.duration.2Hours")));
+		rows.add(new LookupRow<>(15, TEXTS.get("zc.meeting.duration.15")));
+		rows.add(new LookupRow<>(30, TEXTS.get("zc.meeting.duration.30")));
+		rows.add(new LookupRow<>(60, TEXTS.get("zc.meeting.duration.60")));
+		rows.add(new LookupRow<>(120, TEXTS.get("zc.meeting.duration.120")));
 
 		return rows;
 	}

@@ -17,10 +17,10 @@ public class SlotLookupCall extends LocalLookupCall<Integer> {
 	protected List<LookupRow<Integer>> execCreateLookupRows() {
 		final List<LookupRow<Integer>> rows = new ArrayList<>();
 
-		rows.add(new LookupRow<>(1, TEXTS.get("zc.meeting.slot.duringDay")));
-		rows.add(new LookupRow<>(2, TEXTS.get("zc.meeting.slot.duringLunch")));
-		rows.add(new LookupRow<>(3, TEXTS.get("zc.meeting.slot.duringNight")));
-		rows.add(new LookupRow<>(4, TEXTS.get("zc.meeting.slot.duringWeekend")));
+		rows.add(new LookupRow<>(1, TEXTS.get("zc.meeting.slot.1")));
+		rows.add(new LookupRow<>(2, TEXTS.get("zc.meeting.slot.2")));
+		rows.add(new LookupRow<>(3, TEXTS.get("zc.meeting.slot.3")));
+		rows.add(new LookupRow<>(4, TEXTS.get("zc.meeting.slot.4")));
 
 		return rows;
 	}

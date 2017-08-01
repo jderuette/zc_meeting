@@ -4,16 +4,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.scout.rt.client.context.ClientRunContexts;
+import org.eclipse.scout.rt.client.job.ModelJobs;
 import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
 import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
 import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.desktop.AbstractDesktop;
 import org.eclipse.scout.rt.client.ui.desktop.OpenUriAction;
+import org.eclipse.scout.rt.client.ui.desktop.notification.DesktopNotification;
 import org.eclipse.scout.rt.client.ui.desktop.outline.AbstractOutlineViewButton;
 import org.eclipse.scout.rt.client.ui.desktop.outline.IOutline;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
+import org.eclipse.scout.rt.platform.job.Jobs;
+import org.eclipse.scout.rt.platform.status.IStatus;
+import org.eclipse.scout.rt.platform.status.Status;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
+import org.eclipse.scout.rt.platform.util.concurrent.IRunnable;
 import org.eclipse.scout.rt.shared.AbstractIcons;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.notification.INotificationListener;
@@ -117,6 +124,32 @@ public class Desktop extends AbstractDesktop {
 				break;
 			}
 		}
+	}
+
+	public void addNotification(final Integer severity, final Long duration, final Boolean closable,
+			final String messageKey) {
+		final IStatus status = new Status(TEXTS.get(messageKey), severity);
+		this.addNotification(status, duration, closable);
+	}
+
+	public void addNotification(final Integer severity, final Long duration, final Boolean closable,
+			final String messageKey, final String... messageArguments) {
+		final IStatus status = new Status(TEXTS.get(messageKey, messageArguments), severity);
+		this.addNotification(status, duration, closable);
+	}
+
+	private void addNotification(final IStatus status, final Long duration, final Boolean closable) {
+
+		Jobs.schedule(new IRunnable() {
+
+			@Override
+			public void run() throws Exception {
+				LOG.debug("Adding desktop notification : " + status.getMessage());
+				final DesktopNotification desktopNotification = new DesktopNotification(status, duration, closable);
+				ClientSession.get().getDesktop().addNotification(desktopNotification);
+			}
+		}, ModelJobs.newInput(ClientRunContexts.copyCurrent()).withName("adding desktop notification (in ModelJob)"));
+
 	}
 
 	private INotificationListener<ApiCreatedNotification> createApiCreatedListener() {

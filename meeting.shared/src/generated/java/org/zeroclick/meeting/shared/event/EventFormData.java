@@ -88,6 +88,24 @@ public class EventFormData extends AbstractFormData {
 		return getFieldByClass(GuestId.class);
 	}
 
+	/**
+	 * access method for property LastModifier.
+	 */
+	public Long getLastModifier() {
+		return getLastModifierProperty().getValue();
+	}
+
+	/**
+	 * access method for property LastModifier.
+	 */
+	public void setLastModifier(Long lastModifier) {
+		getLastModifierProperty().setValue(lastModifier);
+	}
+
+	public LastModifierProperty getLastModifierProperty() {
+		return getPropertyByClass(LastModifierProperty.class);
+	}
+
 	public Organizer getOrganizer() {
 		return getFieldByClass(Organizer.class);
 	}
@@ -147,6 +165,11 @@ public class EventFormData extends AbstractFormData {
 	}
 
 	public static class GuestId extends AbstractValueFieldData<Long> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class LastModifierProperty extends AbstractPropertyData<Long> {
 
 		private static final long serialVersionUID = 1L;
 	}

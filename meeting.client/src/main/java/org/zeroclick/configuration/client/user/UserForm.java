@@ -43,6 +43,7 @@ import org.zeroclick.configuration.shared.user.ReadUserPermission;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.meeting.client.ClientSession;
+import org.zeroclick.meeting.client.Desktop;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.security.AccessControlService;
@@ -341,6 +342,12 @@ public class UserForm extends AbstractForm {
 
 		@Order(100000)
 		public class OkButton extends AbstractOkButton {
+
+			@Override
+			protected void execClickAction() {
+				final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
+				desktop.addNotification(IStatus.INFO, 5000l, Boolean.TRUE, "zc.user.notification.modifyingUser");
+			}
 		}
 
 		@Order(101000)
@@ -365,6 +372,7 @@ public class UserForm extends AbstractForm {
 
 		@Override
 		protected void execStore() {
+
 			final IUserService service = BEANS.get(IUserService.class);
 			final UserFormData formData = new UserFormData();
 			UserForm.this.exportFormData(formData);
@@ -395,6 +403,10 @@ public class UserForm extends AbstractForm {
 						.withSeverity(IStatus.WARNING).withAutoCloseMillis(10000L).show();
 				ClientSession.get().stop();
 			}
+
+			final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
+			desktop.addNotification(IStatus.OK, 0l, Boolean.TRUE, "zc.user.notification.modifiedUser",
+					UserForm.this.getEmailField().getValue());
 		}
 	}
 
@@ -486,6 +498,10 @@ public class UserForm extends AbstractForm {
 		}
 		try {
 			mailSender.sendEmail(newUser.getEmailField().getValue(), subject, messageBody);
+
+			final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
+			desktop.addNotification(IStatus.OK, 0l, Boolean.TRUE, "zc.user.notification.invitedUser",
+					newUser.getEmailField().getValue());
 		} catch (final MailException e) {
 			throw new VetoException(TEXTS.get("zc.common.cannotSendEmail"));
 		}

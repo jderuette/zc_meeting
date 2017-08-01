@@ -23,6 +23,7 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupRow;
 import org.eclipse.scout.rt.shared.services.lookup.LocalLookupCall;
 import org.eclipse.scout.rt.shared.services.lookup.LookupRow;
+import org.zeroclick.meeting.shared.Icons;
 
 /**
  * @author djer
@@ -33,17 +34,19 @@ public class EventStateLookupCall extends LocalLookupCall<String> {
 	private static final long serialVersionUID = 1L;
 
 	@Override
-	protected List<LookupRow<String>> execCreateLookupRows() {
-		final List<LookupRow<String>> rows = new ArrayList<>();
+	protected List<ILookupRow<String>> execCreateLookupRows() {
+		final List<ILookupRow<String>> rows = new ArrayList<>();
 
-		rows.add(new LookupRow<>("ASKED", TEXTS.get("zc.meeting.state.asked")));
-		rows.add(new LookupRow<>("ACCEPTED", TEXTS.get("zc.meeting.state.Accepted")));
-		rows.add(new LookupRow<>("REFUSED", TEXTS.get("zc.meeting.state.refused")));
+		rows.add(new LookupRow<>("ASKED", TEXTS.get("zc.meeting.state.asked")).withIconId(Icons.Clock));
+		rows.add(new LookupRow<>("ACCEPTED", TEXTS.get("zc.meeting.state.accepted")).withIconId(Icons.Checked)
+				.withBackgroundColor("#4b8e34"));
+		rows.add(new LookupRow<>("REFUSED", TEXTS.get("zc.meeting.state.refused")).withIconId(Icons.Remove)
+				.withBackgroundColor("#db4a15"));
 
 		return rows;
 	}
 
-	public ILookupRow<String> getDataById(final Integer searchedId) {
+	public ILookupRow<String> getDataById(final String searchedId) {
 		final List<? extends ILookupRow<String>> datas = this.getDataByAll();
 
 		final Iterator<? extends ILookupRow<String>> it = datas.iterator();
@@ -56,7 +59,7 @@ public class EventStateLookupCall extends LocalLookupCall<String> {
 		return null;
 	}
 
-	public String getText(final Integer searchedId) {
+	public String getText(final String searchedId) {
 		String label = "";
 		final ILookupRow<String> data = this.getDataById(searchedId);
 		if (null != data) {

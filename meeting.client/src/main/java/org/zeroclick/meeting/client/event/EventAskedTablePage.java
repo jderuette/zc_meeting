@@ -6,11 +6,14 @@ import java.util.Set;
 import org.eclipse.scout.rt.client.dto.Data;
 import org.eclipse.scout.rt.client.ui.basic.table.userfilter.TextColumnUserFilterState;
 import org.eclipse.scout.rt.platform.BEANS;
+import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.data.page.AbstractTablePageData;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.meeting.client.ClientSession;
+import org.zeroclick.meeting.client.Desktop;
 import org.zeroclick.meeting.shared.event.EventAskedTablePageData;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.IEventService;
@@ -48,6 +51,11 @@ public class EventAskedTablePage extends EventTablePage {
 	protected void onNewEvent(final EventFormData formData) {
 		if (this.isHeldByCurrentUser(formData)) {
 			LOG.debug("New event detected Organized by current User incrementing nb Event to Process");
+
+			final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
+			desktop.addNotification(IStatus.OK, 0l, Boolean.TRUE, this.getDesktopNotificationModifiedEventKey(formData),
+					this.buildValuesForLocaleMessages(formData));
+
 			this.incNbEventToProcess();
 		}
 	}
@@ -61,6 +69,10 @@ public class EventAskedTablePage extends EventTablePage {
 			} else if (null != previousState && !"ACCEPTED".equals(previousState)) {
 				this.decNbEventToProcess();
 			}
+
+			final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
+			desktop.addNotification(IStatus.OK, 0l, Boolean.TRUE, this.getDesktopNotificationModifiedEventKey(formData),
+					this.buildValuesForLocaleMessages(formData));
 		}
 	}
 

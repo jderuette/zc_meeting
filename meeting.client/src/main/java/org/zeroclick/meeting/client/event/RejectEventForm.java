@@ -13,12 +13,14 @@ import org.eclipse.scout.rt.client.ui.form.fields.stringfield.AbstractStringFiel
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.exception.VetoException;
+import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
 import org.zeroclick.meeting.client.ClientSession;
+import org.zeroclick.meeting.client.Desktop;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
 import org.zeroclick.meeting.client.common.UserAccessRequiredException;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.CancelButton;
@@ -381,6 +383,10 @@ public class RejectEventForm extends AbstractForm {
 
 		@Override
 		protected void execStore() {
+
+			final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
+			desktop.addNotification(IStatus.INFO, 5000l, Boolean.TRUE, "zc.meeting.notification.rejectingEvent");
+
 			final RejectEventFormData formData = new RejectEventFormData();
 			RejectEventForm.this.exportFormData(formData);
 
@@ -399,20 +405,27 @@ public class RejectEventForm extends AbstractForm {
 				}
 			}
 
-			if (null != RejectEventForm.this.getExternalIdRecipient() && null != this.attendeeGCalSrv) {
-				try {
-					LOG.info(this.buildRejectLog("Deleting", RejectEventForm.this.getEventId(),
-							RejectEventForm.this.getExternalIdRecipient(), RejectEventForm.this.getGuestId()));
-					this.attendeeGCalSrv.events().delete("primary", RejectEventForm.this.getExternalIdRecipient())
-							.execute();
-				} catch (final IOException e) {
-					LOG.error(
-							this.buildRejectLog("Error while deleting", RejectEventForm.this.getEventId(),
-									RejectEventForm.this.getExternalIdRecipient(), RejectEventForm.this.getGuestId()),
-							e);
-					throw new VetoException(TEXTS.get("zc.meeting.error.deletingEvent"));
-				}
-			}
+			// if (null != RejectEventForm.this.getExternalIdRecipient() && null
+			// != this.attendeeGCalSrv) {
+			// try {
+			// LOG.info(this.buildRejectLog("Deleting",
+			// RejectEventForm.this.getEventId(),
+			// RejectEventForm.this.getExternalIdRecipient(),
+			// RejectEventForm.this.getGuestId()));
+			// this.attendeeGCalSrv.events().delete("primary",
+			// RejectEventForm.this.getExternalIdRecipient())
+			// .execute();
+			// } catch (final IOException e) {
+			// LOG.error(
+			// this.buildRejectLog("Error while deleting",
+			// RejectEventForm.this.getEventId(),
+			// RejectEventForm.this.getExternalIdRecipient(),
+			// RejectEventForm.this.getGuestId()),
+			// e);
+			// throw new
+			// VetoException(TEXTS.get("zc.meeting.error.deletingEvent"));
+			// }
+			// }
 
 			final IEventService service = BEANS.get(IEventService.class);
 

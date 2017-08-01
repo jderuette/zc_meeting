@@ -151,6 +151,8 @@ public class EventService implements IEventService {
 		// retrieve guest UserID
 		formData.getGuestId().setValue(this.retrieveUserId(formData.getEmail().getValue()));
 
+		formData.setLastModifier(this.getCurrentUserId());
+
 		SQL.insert(SQLs.EVENT_INSERT, formData);
 		final EventFormData storedData = this.store(formData, Boolean.TRUE);
 
@@ -211,9 +213,13 @@ public class EventService implements IEventService {
 		if (!ACCESS.check(new UpdateEventPermission(formData.getEventId()))) {
 			throw new VetoException(TEXTS.get("AuthorizationFailed"));
 		}
+		if (null == formData.getLastModifier()) {
+			formData.setLastModifier(this.getCurrentUserId());
+		}
 		SQL.update(SQLs.EVENT_UPDATE, formData);
 
 		if (!duringCreate) {
+
 			this.sendModifiedNotifications(formData);
 		}
 		return formData;
@@ -234,6 +240,7 @@ public class EventService implements IEventService {
 		// reload the **full** event data after update
 		final EventFormData eventFormData = new EventFormData();
 		eventFormData.setEventId(formData.getEventId());
+		eventFormData.setLastModifier(this.getCurrentUserId());
 		this.load(eventFormData);
 
 		this.sendModifiedNotifications(eventFormData);
