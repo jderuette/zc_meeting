@@ -38,11 +38,7 @@ public class EventStateLookupCall extends LocalLookupCall<String> {
 		final List<ILookupRow<String>> rows = new ArrayList<>();
 
 		rows.add(new LookupRow<>("ASKED", TEXTS.get("zc.meeting.state.asked")).withIconId(Icons.Clock));
-<<<<<<< HEAD
 		rows.add(new LookupRow<>("ACCEPTED", TEXTS.get("zc.meeting.state.accepted")).withIconId(Icons.Checked)
-=======
-		rows.add(new LookupRow<>("ACCEPTED", TEXTS.get("zc.meeting.state.Accepted")).withIconId(Icons.Checked)
->>>>>>> branch 'staging' of https://github.com/jderuette/zc_meeting.git
 				.withBackgroundColor("#4b8e34"));
 		rows.add(new LookupRow<>("REFUSED", TEXTS.get("zc.meeting.state.refused")).withIconId(Icons.Remove)
 				.withBackgroundColor("#db4a15"));
