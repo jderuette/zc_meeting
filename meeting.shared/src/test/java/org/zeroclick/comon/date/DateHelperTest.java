@@ -174,7 +174,7 @@ public class DateHelperTest {
 		final DateHelper dateHelper = DateHelper.get();
 
 		final ZonedDateTime ZonedNow = this.getZonedNow(DEFAULT_TEST_TIME_ZONE, 13, 8, 15);
-		final ZonedDateTime ZonedMeetingStart = this.buildZonedDateTime(DEFAULT_TEST_TIME_ZONE, "15-08-2017 08:15:00");
+		final ZonedDateTime ZonedMeetingStart = ZonedNow.plusDays(7);
 
 		final long nbDays = dateHelper.getRelativeTimeShift(ZonedMeetingStart, Boolean.TRUE, ChronoUnit.DAYS);
 

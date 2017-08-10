@@ -12,6 +12,11 @@
 		<version>1.1.2</version>
 		<relativePath>../meeting/pom.xml</relativePath>
 	</parent>
+	
+	<properties>
+		<!-- TODO Djer13 allow check when I found a solution for java 8 Date API -->
+		<master_sanityCheck_skip>true</master_sanityCheck_skip>
+	</properties>
 
 	<dependencies>
 		<dependency>
