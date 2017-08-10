@@ -39,13 +39,14 @@ import org.eclipse.scout.rt.shared.services.lookup.ILookupRow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.comon.date.DateHelper;
-import org.zeroclick.comon.user.appUserHelper;
+import org.zeroclick.comon.user.AppUserHelper;
 import org.zeroclick.configuration.client.api.ApiCreatedNotificationHandler;
 import org.zeroclick.configuration.client.user.UserModifiedNotificationHandler;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.configuration.shared.user.UserModifiedNotification;
+import org.zeroclick.meeting.client.NotificationHelper;
 import org.zeroclick.meeting.client.common.CallTrackerService;
 import org.zeroclick.meeting.client.common.DurationLookupCall;
 import org.zeroclick.meeting.client.common.EventStateLookupCall;
@@ -54,6 +55,7 @@ import org.zeroclick.meeting.client.event.EventTablePage.Table.NewMenu;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
+import org.zeroclick.meeting.shared.event.AbstractEventNotification;
 import org.zeroclick.meeting.shared.event.EventCreatedNotification;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.EventModifiedNotification;
@@ -73,7 +75,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			"Get calendar Events");
 
 	private DateHelper dateHelper;
-	private appUserHelper appUserHelper;
+	private AppUserHelper appUserHelper;
 
 	// TODO Djer13 caching here is smart ?
 	private final Map<Long, String> cachedUserTimeZone = new HashMap<>();
@@ -103,15 +105,32 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			this.dateHelper = DateHelper.get();
 		}
 		if (null == this.appUserHelper) {
-			this.appUserHelper = this.appUserHelper.get();
+			this.appUserHelper = AppUserHelper.get();
 		}
 	}
 
-	// protected abstract INotificationListener<EventCreatedNotification>
-	// createEventCreatedListener();
-	//
-	// protected abstract INotificationListener<EventModifiedNotification>
-	// createEventModifiedListener();
+	/**
+	 * Allow subClass to defined if they want to handle notification for this
+	 * kind of event
+	 *
+	 * @param formdata
+	 * @return true if this (sub) tablePage want handle the event
+	 */
+	protected Boolean canHandleNew(final AbstractEventNotification notification) {
+		return Boolean.FALSE;
+	}
+
+	/**
+	 * Allow subClass to defined if they want to handle notification for this
+	 * kind of event
+	 *
+	 * @param formdata
+	 * @param previousStateRow
+	 * @return true if this (sub) tablePage want handle the event
+	 */
+	protected Boolean canHandleModified(final AbstractEventNotification notification) {
+		return Boolean.FALSE;
+	}
 
 	/**
 	 * Propagate new Events to child page if implemented.Default do Nothing
@@ -333,6 +352,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		}
 
 		@Override
+		protected boolean getConfiguredAutoResizeColumns() {
+			return Boolean.TRUE;
+		}
+
+		@Override
 		protected void execInitTable() {
 			super.execInitTable();
 			this.setTableStatusVisible(Boolean.FALSE);
@@ -368,12 +392,15 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			this.eventCreatedListener = new INotificationListener<EventCreatedNotification>() {
 				@Override
 				public void handleNotification(final EventCreatedNotification notification) {
+
+					if (!AbstractEventsTablePage.this.canHandleNew(notification)) {
+						return; // Early Break
+					}
+
+					final EventFormData eventForm = notification.getEventForm();
+					LOG.debug("New event prepare to add to table (in " + Table.this.getTitle() + ") for event Id : "
+							+ eventForm.getEventId());
 					try {
-						final EventFormData eventForm = notification.getEventForm();
-
-						LOG.debug("New event prepare to add to table (in " + Table.this.getTitle() + ") for event Id : "
-								+ eventForm.getEventId());
-
 						AbstractEventsTablePage.this.getTable()
 								.addRow(AbstractEventsTablePage.this.getTable().createTableRowFromForm(eventForm));
 						AbstractEventsTablePage.this.getTable().applyRowFilters();
@@ -381,6 +408,17 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 						// ClientSession.get().getDesktop().refreshPages(EventTablePage.class);
 
 						AbstractEventsTablePage.this.onNewEvent(eventForm);
+
+						final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+						notificationHelper.addProccessedNotification(
+								AbstractEventsTablePage.this.getDesktopNotificationModifiedEventKey(eventForm),
+								AbstractEventsTablePage.this.buildValuesForLocaleMessages(eventForm));
+
+						// final Desktop desktop = (Desktop)
+						// ClientSession.get().getDesktop();
+						// desktop.addNotification(IStatus.OK, 0l, Boolean.TRUE,
+						// AbstractEventsTablePage.this.getDesktopNotificationModifiedEventKey(eventForm),
+						// AbstractEventsTablePage.this.buildValuesForLocaleMessages(eventForm));
 					} catch (final RuntimeException e) {
 						LOG.error("Could not add new event. (" + Table.this.getTitle() + ")", e);
 					}
@@ -394,8 +432,27 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				@Override
 				public void handleNotification(final EventModifiedNotification notification) {
 					final EventFormData eventForm = notification.getEventForm();
-					try {
+					if (!AbstractEventsTablePage.this.canHandleModified(notification)) {
+						// remove row if exists
 						final ITableRow row = AbstractEventsTablePage.this.getTable().getRow(eventForm.getEventId());
+						if (null != row) {
+							LOG.debug("Modified event prepare to remove table row (in " + Table.this.getTitle()
+									+ ") for event Id : " + eventForm.getEventId());
+							AbstractEventsTablePage.this.getTable().deleteRow(row);
+
+							// TODO Djer13 not really a "modified" event, just a
+							// row removed
+							AbstractEventsTablePage.this.onModifiedEvent(eventForm, eventForm.getPreviousState());
+						}
+						return; // early break
+					}
+
+					try {
+						ITableRow row = AbstractEventsTablePage.this.getTable().getRow(eventForm.getEventId());
+						if (null == row) {
+							row = AbstractEventsTablePage.this.getTable()
+									.addRow(AbstractEventsTablePage.this.getTable().createTableRowFromForm(eventForm));
+						}
 						if (null != row) {
 							LOG.debug("Modified event prepare to modify table row (in " + Table.this.getTitle()
 									+ ") for event Id : " + eventForm.getEventId());
@@ -404,13 +461,26 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 							// TODO Djer13 perf : avoid handling notification in
 							// child xxxEventTablePage if this event is not the
 							// current Table
-							final String previousStateRow = (String) row
-									.getCellValue(Table.this.getStateColumn().getColumnIndex());
+							final String previousStateRow = eventForm.getPreviousState();
+
 							Table.this.updateTableRowFromForm(row, eventForm);
 
 							AbstractEventsTablePage.this.getTable().applyRowFilters();
 
 							AbstractEventsTablePage.this.onModifiedEvent(eventForm, previousStateRow);
+
+							final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+							notificationHelper.addProccessedNotification(
+									AbstractEventsTablePage.this.getDesktopNotificationModifiedEventKey(eventForm),
+									AbstractEventsTablePage.this.buildValuesForLocaleMessages(eventForm));
+							//
+							// final Desktop desktop = (Desktop)
+							// ClientSession.get().getDesktop();
+							// desktop.addNotification(IStatus.OK, 0l,
+							// Boolean.TRUE,
+							// AbstractEventsTablePage.this.getDesktopNotificationModifiedEventKey(eventForm),
+							// AbstractEventsTablePage.this.buildValuesForLocaleMessages(eventForm));
+
 						} else {
 							LOG.debug("Modified event ignored because it's not a current table row (in "
 									+ Table.this.getTitle() + ") for event Id : " + eventForm.getEventId());
@@ -571,11 +641,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			// OrganizerColumn[Host],
 			// OrganizerEmailColumn[Host],
 			// SubjectField [Subject ]
+			// GuestIdColumn[AttendeeId],
 			// EmailColumn[Attendee],
-			// GuestIdColumn[Attendee],
 			// DurationColumn[Duration],
-			// StateColumn[State ],
-			// StartDateColumn[Start ],
+			// StateColumn[State],
+			// StartDateColumn[Start],
 			// EndDateColumn[End],
 			// SlotColumn[Slot],
 			// ExternalIdOrganizerColumn[External Id],
@@ -585,14 +655,14 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			datas.add(formData.getEventId());
 			datas.add(formData.getOrganizer().getValue());
 			datas.add(formData.getOrganizerEmail().getValue());
+			datas.add(formData.getGuestId().getValue());
 			datas.add(formData.getEmail().getValue());
 			datas.add(formData.getSubject().getValue());
-			datas.add(formData.getGuestId().getValue());
+			datas.add(formData.getSlot().getValue());
 			datas.add(formData.getDuration().getValue());
 			datas.add(formData.getState().getValue());
 			datas.add(formData.getStartDate().getValue());
 			datas.add(formData.getEndDate().getValue());
-			datas.add(formData.getSlot().getValue());
 			datas.add(formData.getExternalIdOrganizer());
 			datas.add(formData.getExternalIdRecipient());
 			datas.add(formData.getReason().getValue());
@@ -1004,7 +1074,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		public class OrganizerColumn extends AbstractLongColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("zc.meeting.host");
+				return TEXTS.get("zc.meeting.hostId");
 			}
 
 			@Override
@@ -1026,8 +1096,31 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			}
 
 			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.FALSE;
+			}
+
+			@Override
 			protected int getConfiguredWidth() {
 				return 150;
+			}
+		}
+
+		@Order(40)
+		public class GuestIdColumn extends AbstractLongColumn {
+			@Override
+			protected String getConfiguredHeaderText() {
+				return TEXTS.get("zc.meeting.attendeeId");
+			}
+
+			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.FALSE;
+			}
+
+			@Override
+			protected int getConfiguredWidth() {
+				return 128;
 			}
 		}
 
@@ -1036,6 +1129,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.attendee");
+			}
+
+			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.FALSE;
 			}
 
 			@Override
@@ -1057,21 +1155,21 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			}
 		}
 
-		@Order(75)
-		public class GuestIdColumn extends AbstractLongColumn {
+		@Order(100)
+		public class SlotColumn extends AbstractSmartColumn<Integer> {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("zc.meeting.attendeeId");
-			}
-
-			@Override
-			protected boolean getConfiguredVisible() {
-				return Boolean.FALSE;
+				return TEXTS.get("zc.meeting.slot");
 			}
 
 			@Override
 			protected int getConfiguredWidth() {
-				return 128;
+				return 150;
+			}
+
+			@Override
+			protected Class<? extends ILookupCall<Integer>> getConfiguredLookupCall() {
+				return SlotLookupCall.class;
 			}
 		}
 
@@ -1103,6 +1201,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			@Override
 			protected int getConfiguredWidth() {
 				return 100;
+			}
+
+			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.FALSE;
 			}
 
 			@Override
@@ -1306,24 +1409,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			}
 		}
 
-		@Order(4000)
-		public class SlotColumn extends AbstractSmartColumn<Integer> {
-			@Override
-			protected String getConfiguredHeaderText() {
-				return TEXTS.get("zc.meeting.slot");
-			}
-
-			@Override
-			protected int getConfiguredWidth() {
-				return 150;
-			}
-
-			@Override
-			protected Class<? extends ILookupCall<Integer>> getConfiguredLookupCall() {
-				return SlotLookupCall.class;
-			}
-		}
-
 		@Order(4500)
 		public class ExternalIdOrganizerColumn extends AbstractStringColumn {
 			@Override
@@ -1385,7 +1470,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		return this.dateHelper;
 	}
 
-	protected appUserHelper getAppUserHelper() {
+	protected AppUserHelper getAppUserHelper() {
 		return this.appUserHelper;
 	}
 

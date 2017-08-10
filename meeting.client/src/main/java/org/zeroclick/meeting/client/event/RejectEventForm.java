@@ -13,15 +13,14 @@ import org.eclipse.scout.rt.client.ui.form.fields.stringfield.AbstractStringFiel
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.exception.VetoException;
-import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
 import org.zeroclick.meeting.client.ClientSession;
-import org.zeroclick.meeting.client.Desktop;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
+import org.zeroclick.meeting.client.NotificationHelper;
 import org.zeroclick.meeting.client.common.UserAccessRequiredException;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.CancelButton;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.GuestIdField;
@@ -384,8 +383,8 @@ public class RejectEventForm extends AbstractForm {
 		@Override
 		protected void execStore() {
 
-			final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
-			desktop.addNotification(IStatus.INFO, 5000l, Boolean.TRUE, "zc.meeting.notification.rejectingEvent");
+			final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+			notificationHelper.addProcessingNotification("zc.meeting.notification.rejectingEvent");
 
 			final RejectEventFormData formData = new RejectEventFormData();
 			RejectEventForm.this.exportFormData(formData);

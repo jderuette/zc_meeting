@@ -55,28 +55,28 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 		public static final String eventId = "eventId";
 		public static final String organizer = "organizer";
 		public static final String organizerEmail = "organizerEmail";
+		public static final String guestId = "guestId";
 		public static final String email = "email";
 		public static final String subject = "subject";
-		public static final String guestId = "guestId";
+		public static final String slot = "slot";
 		public static final String duration = "duration";
 		public static final String state = "state";
 		public static final String startDate = "startDate";
 		public static final String endDate = "endDate";
-		public static final String slot = "slot";
 		public static final String externalIdOrganizer = "externalIdOrganizer";
 		public static final String externalIdRecipient = "externalIdRecipient";
 		public static final String reason = "reason";
 		private Long m_eventId;
 		private Long m_organizer;
 		private String m_organizerEmail;
+		private Long m_guestId;
 		private String m_email;
 		private String m_subject;
-		private Long m_guestId;
+		private Integer m_slot;
 		private Integer m_duration;
 		private String m_state;
 		private Date m_startDate;
 		private Date m_endDate;
-		private Integer m_slot;
 		private String m_externalIdOrganizer;
 		private String m_externalIdRecipient;
 		private String m_reason;
@@ -105,6 +105,14 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 			m_organizerEmail = newOrganizerEmail;
 		}
 
+		public Long getGuestId() {
+			return m_guestId;
+		}
+
+		public void setGuestId(Long newGuestId) {
+			m_guestId = newGuestId;
+		}
+
 		public String getEmail() {
 			return m_email;
 		}
@@ -121,12 +129,12 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 			m_subject = newSubject;
 		}
 
-		public Long getGuestId() {
-			return m_guestId;
+		public Integer getSlot() {
+			return m_slot;
 		}
 
-		public void setGuestId(Long newGuestId) {
-			m_guestId = newGuestId;
+		public void setSlot(Integer newSlot) {
+			m_slot = newSlot;
 		}
 
 		public Integer getDuration() {
@@ -159,14 +167,6 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 
 		public void setEndDate(Date newEndDate) {
 			m_endDate = newEndDate;
-		}
-
-		public Integer getSlot() {
-			return m_slot;
-		}
-
-		public void setSlot(Integer newSlot) {
-			m_slot = newSlot;
 		}
 
 		public String getExternalIdOrganizer() {

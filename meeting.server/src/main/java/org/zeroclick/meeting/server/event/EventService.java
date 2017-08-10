@@ -243,6 +243,8 @@ public class EventService implements IEventService {
 		eventFormData.setLastModifier(this.getCurrentUserId());
 		this.load(eventFormData);
 
+		eventFormData.setPreviousState(formData.getState());
+
 		this.sendModifiedNotifications(eventFormData);
 
 		return eventFormData;

@@ -14,6 +14,7 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.zeroclick.meeting.client.event.EventAdminTablePage.Table;
 import org.zeroclick.meeting.shared.Icons;
+import org.zeroclick.meeting.shared.event.AbstractEventNotification;
 import org.zeroclick.meeting.shared.event.EventAdminTablePageData;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
@@ -32,6 +33,16 @@ public class EventAdminTablePage extends AbstractEventsTablePage<Table> {
 		this.importPageData(BEANS.get(IEventService.class).getEventAdminTableData(filter));
 	}
 
+	@Override
+	protected Boolean canHandleNew(final AbstractEventNotification notification) {
+		return Boolean.FALSE;
+	}
+
+	@Override
+	protected Boolean canHandleModified(final AbstractEventNotification notification) {
+		return Boolean.FALSE;
+	}
+
 	public class Table extends AbstractEventsTablePage<Table>.Table {
 
 		@Override
@@ -42,6 +53,11 @@ public class EventAdminTablePage extends AbstractEventsTablePage<Table> {
 			this.getExternalIdOrganizerColumn().setVisible(Boolean.TRUE);
 			this.getExternalIdRecipientColumn().setVisible(Boolean.TRUE);
 			this.getReasonColumn().setVisible(Boolean.TRUE);
+			super.getStateColumn().setVisible(Boolean.TRUE);
+			this.getOrganizerColumn().setVisible(Boolean.TRUE);
+			this.getOrganizerEmailColumn().setVisible(Boolean.TRUE);
+			this.getEmailColumn().setVisible(Boolean.TRUE);
+			this.getGuestIdColumn().setVisible(Boolean.TRUE);
 		}
 
 		@Override

@@ -29,19 +29,19 @@ import org.zeroclick.meeting.shared.security.AccessControlService;
  * @author djer
  *
  */
-public class appUserHelper {
+public class AppUserHelper {
 
-	private static final Logger LOG = LoggerFactory.getLogger(appUserHelper.class);
+	private static final Logger LOG = LoggerFactory.getLogger(AppUserHelper.class);
 
-	static appUserHelper instance;
+	static AppUserHelper instance;
 
-	private appUserHelper() {
+	private AppUserHelper() {
 
 	}
 
-	public static appUserHelper get() {
+	public static AppUserHelper get() {
 		if (null == instance) {
-			instance = new appUserHelper();
+			instance = new AppUserHelper();
 		}
 		return instance;
 	}

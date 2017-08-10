@@ -17,7 +17,6 @@ import org.eclipse.scout.rt.client.ui.form.fields.stringfield.AbstractStringFiel
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.exception.VetoException;
-import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.platform.util.StringUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
@@ -26,9 +25,8 @@ import org.zeroclick.common.email.MailException;
 import org.zeroclick.configuration.client.user.UserForm;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UserFormData;
-import org.zeroclick.meeting.client.ClientSession;
-import org.zeroclick.meeting.client.Desktop;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
+import org.zeroclick.meeting.client.NotificationHelper;
 import org.zeroclick.meeting.client.common.DurationLookupCall;
 import org.zeroclick.meeting.client.common.EventStateLookupCall;
 import org.zeroclick.meeting.client.common.SlotLookupCall;
@@ -64,6 +62,7 @@ public class EventForm extends AbstractForm {
 	private String externalIdRecipient;
 	/** to know who performed the last action (for notification) **/
 	private Long lastModifier;
+	private String previousState;
 
 	@FormData
 	public Long getEventId() {
@@ -103,6 +102,16 @@ public class EventForm extends AbstractForm {
 	@FormData
 	public void setLastModifier(final Long lastModifier) {
 		this.lastModifier = lastModifier;
+	}
+
+	@FormData
+	public String getPreviousState() {
+		return this.previousState;
+	}
+
+	@FormData
+	public void setPreviousState(final String previousState) {
+		this.previousState = previousState;
 	}
 
 	@Override
@@ -402,8 +411,8 @@ public class EventForm extends AbstractForm {
 
 			@Override
 			protected void execClickAction() {
-				final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
-				desktop.addNotification(IStatus.INFO, 5000l, Boolean.TRUE, "zc.meeting.notification.creatingEvent");
+				final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+				notificationHelper.addProcessingNotification("zc.meeting.notification.creatingEvent");
 			}
 		}
 

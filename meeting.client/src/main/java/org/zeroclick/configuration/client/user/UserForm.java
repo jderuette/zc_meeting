@@ -43,8 +43,8 @@ import org.zeroclick.configuration.shared.user.ReadUserPermission;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.meeting.client.ClientSession;
-import org.zeroclick.meeting.client.Desktop;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
+import org.zeroclick.meeting.client.NotificationHelper;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
@@ -345,8 +345,8 @@ public class UserForm extends AbstractForm {
 
 			@Override
 			protected void execClickAction() {
-				final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
-				desktop.addNotification(IStatus.INFO, 5000l, Boolean.TRUE, "zc.user.notification.modifyingUser");
+				final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+				notificationHelper.addProcessingNotification("zc.user.notification.modifyingUser");
 			}
 		}
 
@@ -404,9 +404,9 @@ public class UserForm extends AbstractForm {
 				ClientSession.get().stop();
 			}
 
-			final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
-			desktop.addNotification(IStatus.OK, 0l, Boolean.TRUE, "zc.user.notification.modifiedUser",
-					UserForm.this.getEmailField().getValue());
+			final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+			notificationHelper.addProcessingNotification("zc.user.notification.modifiedUser", UserForm.this.getEmailField().getValue());
+
 		}
 	}
 
@@ -499,8 +499,8 @@ public class UserForm extends AbstractForm {
 		try {
 			mailSender.sendEmail(newUser.getEmailField().getValue(), subject, messageBody);
 
-			final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
-			desktop.addNotification(IStatus.OK, 0l, Boolean.TRUE, "zc.user.notification.invitedUser",
+			final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+			notificationHelper.addProcessingNotification("zc.user.notification.invitedUser",
 					newUser.getEmailField().getValue());
 		} catch (final MailException e) {
 			throw new VetoException(TEXTS.get("zc.common.cannotSendEmail"));

@@ -114,6 +114,24 @@ public class EventFormData extends AbstractFormData {
 		return getFieldByClass(OrganizerEmail.class);
 	}
 
+	/**
+	 * access method for property PreviousState.
+	 */
+	public String getPreviousState() {
+		return getPreviousStateProperty().getValue();
+	}
+
+	/**
+	 * access method for property PreviousState.
+	 */
+	public void setPreviousState(String previousState) {
+		getPreviousStateProperty().setValue(previousState);
+	}
+
+	public PreviousStateProperty getPreviousStateProperty() {
+		return getPropertyByClass(PreviousStateProperty.class);
+	}
+
 	public Reason getReason() {
 		return getFieldByClass(Reason.class);
 	}
@@ -180,6 +198,11 @@ public class EventFormData extends AbstractFormData {
 	}
 
 	public static class OrganizerEmail extends AbstractValueFieldData<String> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class PreviousStateProperty extends AbstractPropertyData<String> {
 
 		private static final long serialVersionUID = 1L;
 	}

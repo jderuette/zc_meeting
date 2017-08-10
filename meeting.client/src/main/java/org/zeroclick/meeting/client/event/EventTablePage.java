@@ -9,7 +9,6 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -21,13 +20,11 @@ import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.action.menu.TableMenuType;
 import org.eclipse.scout.rt.client.ui.basic.cell.Cell;
 import org.eclipse.scout.rt.client.ui.basic.table.ITableRow;
-import org.eclipse.scout.rt.client.ui.basic.table.userfilter.TextColumnUserFilterState;
 import org.eclipse.scout.rt.client.ui.form.FormEvent;
 import org.eclipse.scout.rt.client.ui.form.FormListener;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.exception.VetoException;
-import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
@@ -36,9 +33,8 @@ import org.slf4j.LoggerFactory;
 import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
 import org.zeroclick.configuration.shared.user.IUserService;
-import org.zeroclick.meeting.client.ClientSession;
-import org.zeroclick.meeting.client.Desktop;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationEnvProperty;
+import org.zeroclick.meeting.client.NotificationHelper;
 import org.zeroclick.meeting.client.calendar.GoogleEventStartComparator;
 import org.zeroclick.meeting.client.common.DayDuration;
 import org.zeroclick.meeting.client.common.SlotHelper;
@@ -46,6 +42,7 @@ import org.zeroclick.meeting.client.common.UserAccessRequiredException;
 import org.zeroclick.meeting.client.event.EventTablePage.Table;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
 import org.zeroclick.meeting.shared.Icons;
+import org.zeroclick.meeting.shared.event.AbstractEventNotification;
 import org.zeroclick.meeting.shared.event.CreateEventPermission;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.EventTablePageData;
@@ -115,31 +112,15 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 	}
 
 	@Override
-	protected void onNewEvent(final EventFormData formData) {
-		if (!super.isHeldByCurrentUser(formData)) {
-			LOG.debug("New event detected NOT Organized by current User incrementing nb Event to Process");
-			this.incNbEventToProcess();
-
-			final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
-			desktop.addNotification(IStatus.OK, 0l, Boolean.TRUE, this.getDesktopNotificationModifiedEventKey(formData),
-					this.buildValuesForLocaleMessages(formData));
-		}
+	protected Boolean canHandleNew(final AbstractEventNotification notification) {
+		final EventFormData formData = notification.getEventForm();
+		return !super.isHeldByCurrentUser(formData) && "ASKED".equals(formData.getState().getValue());
 	}
 
 	@Override
-	protected void onModifiedEvent(final EventFormData formData, final String previousState) {
-		if (!super.isHeldByCurrentUser(formData)) {
-			LOG.debug("Modified event detected NOT Organized by current User changing nb Event to Process");
-			if ("ASKED".equals(formData.getState())) {
-				this.incNbEventToProcess();
-			} else if (null != previousState && !"ACCEPTED".equals(previousState)) {
-				this.decNbEventToProcess();
-			}
-
-			final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
-			desktop.addNotification(IStatus.OK, 0l, Boolean.TRUE, this.getDesktopNotificationModifiedEventKey(formData),
-					this.buildValuesForLocaleMessages(formData));
-		}
+	protected Boolean canHandleModified(final AbstractEventNotification notification) {
+		final EventFormData formData = notification.getEventForm();
+		return !super.isHeldByCurrentUser(formData) && "ASKED".equals(formData.getState().getValue());
 	}
 
 	public class Table extends AbstractEventsTablePage<Table>.Table {
@@ -153,45 +134,24 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		@Override
 		protected void initConfig() {
 			super.initConfig();
-			this.addDefaultFilters();
-			// TODO Djer allow filtering on not visible column
-			// super.getStateColumn().setVisible(Boolean.FALSE);
+			// this.addDefaultFilters();
+			this.getOrganizerEmailColumn().setVisible(Boolean.TRUE);
+			this.getStartDateColumn().setVisible(Boolean.TRUE);
+			this.getEndDateColumn().setVisible(Boolean.TRUE);
 		}
 
-		protected void addDefaultFilters() {
-			this.addAskedStateFilter();
-			this.addIamAttendeeFilter();
+		@Override
+		public void deleteRow(final ITableRow row) {
+			super.deleteRow(row);
+			EventTablePage.this.decNbEventToProcess();
 		}
 
-		protected void addAskedStateFilter() {
-			if (null == this.getUserFilterManager()) {
-				this.setUserFilterManager(this.createUserFilterManager());
-			}
-			if (this.getUserFilterManager().getFilter(this.getStateColumn().getColumnId()) == null) {
-				final TextColumnUserFilterState askedFilter = new TextColumnUserFilterState(this.getStateColumn());
-				final Set<Object> selectedValues = new HashSet<>();
-				selectedValues.add(TEXTS.get("zc.meeting.state.asked"));
-				askedFilter.setSelectedValues(selectedValues);
-				// askedFilter.setFreeText(TEXTS.get("zc.meeting.state.asked"));
-				this.getUserFilterManager().addFilter(askedFilter);
-			}
-		}
+		@Override
+		public ITableRow addRow(final ITableRow newRow, final boolean markAsInserted) {
+			final ITableRow insertedRow = super.addRow(newRow, markAsInserted);
 
-		protected void addIamAttendeeFilter() {
-			if (null == this.getUserFilterManager()) {
-				this.setUserFilterManager(this.createUserFilterManager());
-			}
-			if (this.getUserFilterManager().getFilter(this.getEmailColumn().getColumnId()) == null) {
-				final TextColumnUserFilterState iamAttendeeFilter = new TextColumnUserFilterState(
-						this.getEmailColumn());
-
-				final Set<Object> selectedValues = new HashSet<>();
-				selectedValues.addAll(this.getCurrentUserEmails());
-				selectedValues.add(TEXTS.get("zc.common.me"));
-				iamAttendeeFilter.setSelectedValues(selectedValues);
-
-				this.getUserFilterManager().addFilter(iamAttendeeFilter);
-			}
+			EventTablePage.this.incNbEventToProcess();
+			return insertedRow;
 		}
 
 		@Override
@@ -807,8 +767,8 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			@Override
 			protected void execAction() {
 
-				final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
-				desktop.addNotification(IStatus.INFO, 5000l, Boolean.TRUE, "zc.meeting.notification.acceptingEvent");
+				final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+				notificationHelper.addProcessingNotification("zc.meeting.notification.acceptingEvent");
 
 				final IUserService userService = BEANS.get(IUserService.class);
 				final ZonedDateTime start = Table.this.getStartDateColumn().getSelectedZonedValue();
@@ -925,9 +885,9 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			@Override
 			protected void execAction() {
-				final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
-				desktop.addNotification(IStatus.INFO, 5000l, Boolean.TRUE,
-						"zc.meeting.notification.searchingNextEvent");
+
+				final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+				notificationHelper.addProcessingNotification("zc.meeting.notification.searchingNextEvent");
 				try {
 					Table.this.changeDatesNext();
 					Table.this.reloadMenus(Table.this.getSelectedRow());
