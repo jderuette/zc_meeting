@@ -8,6 +8,7 @@ import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.action.menu.TableMenuType;
 import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractLongColumn;
+import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractNumberColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractSmartColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractStringColumn;
 import org.eclipse.scout.rt.client.ui.desktop.outline.pages.AbstractPageWithTable;
@@ -18,6 +19,7 @@ import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
+import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.zeroclick.configuration.client.api.ApiTablePage.ApisTable;
 import org.zeroclick.configuration.shared.api.ApiTablePageData;
@@ -60,6 +62,11 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 			}
 
 			@Override
+			protected boolean getConfiguredEnabled() {
+				return ACCESS.getLevel(new UpdateApiPermission((Long) null)) > UpdateApiPermission.LEVEL_OWN;
+			}
+
+			@Override
 			protected void execAction() {
 				final ApiForm form = new ApiForm();
 				final Long apiCredentailId = ApisTable.this.getApiCredentialIdColumn().getSelectedValue();
@@ -67,7 +74,6 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 				form.addFormListener(new ApiFormListener());
 				// start the form using its modify handler
 				form.startModify();
-				this.setEnabledPermission(new UpdateApiPermission(apiCredentailId));
 			}
 		}
 
@@ -84,6 +90,11 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 			}
 
 			@Override
+			protected boolean getConfiguredEnabled() {
+				return ACCESS.getLevel(new DeleteApiPermission((Long) null)) > DeleteApiPermission.LEVEL_OWN;
+			}
+
+			@Override
 			protected void execAction() {
 				final ApiForm form = new ApiForm();
 				final Long apiCredentailId = ApisTable.this.getApiCredentialIdColumn().getSelectedValue();
@@ -91,8 +102,6 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 				form.addFormListener(new ApiFormListener());
 				// start the form using its modify handler
 				form.startDelete();
-
-				this.setEnabledPermission(new DeleteApiPermission(apiCredentailId));
 			}
 
 			@Override
@@ -218,7 +227,7 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 		}
 
 		@Order(6000)
-		public class UserIdColumn extends AbstractStringColumn {
+		public class UserIdColumn extends AbstractNumberColumn<Long> {
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.user.userId");
@@ -227,6 +236,17 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 			@Override
 			protected int getConfiguredWidth() {
 				return 128;
+			}
+
+			@Override
+			protected Long getConfiguredMinValue() {
+				return 0l;
+			}
+
+			@Override
+			protected Long getConfiguredMaxValue() {
+				// TODO Auto-generated method stub
+				return Long.MAX_VALUE;
 			}
 		}
 	}

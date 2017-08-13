@@ -31,9 +31,11 @@ import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.client.ConfigurationOutline;
 import org.zeroclick.configuration.client.administration.AdministrationOutline;
 import org.zeroclick.configuration.client.api.ApiCreatedNotificationHandler;
+import org.zeroclick.configuration.client.api.ApiDeletedNotificationHandler;
 import org.zeroclick.configuration.client.user.UserForm;
 import org.zeroclick.configuration.onboarding.OnBoardingUserForm;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
+import org.zeroclick.configuration.shared.api.ApiDeletedNotification;
 import org.zeroclick.configuration.shared.role.ReadPermissionPermission;
 import org.zeroclick.configuration.shared.role.ReadRolePermission;
 import org.zeroclick.configuration.shared.user.IUserService;
@@ -59,6 +61,7 @@ public class Desktop extends AbstractDesktop {
 	private static final Logger LOG = LoggerFactory.getLogger(Desktop.class);
 
 	protected INotificationListener<ApiCreatedNotification> apiCreatedListener;
+	private INotificationListener<ApiDeletedNotification> apiDeletedListener;
 
 	@Override
 	protected String getConfiguredTitle() {
@@ -93,6 +96,10 @@ public class Desktop extends AbstractDesktop {
 				.get(ApiCreatedNotificationHandler.class);
 		apiCreatedNotificationHandler.addListener(this.createApiCreatedListener());
 
+		final ApiDeletedNotificationHandler apiDeletedNotificationHandler = BEANS
+				.get(ApiDeletedNotificationHandler.class);
+		apiDeletedNotificationHandler.addListener(this.createApiDeletedListener());
+
 		this.checkAndUpdateRequiredDatas();
 	}
 
@@ -114,7 +121,11 @@ public class Desktop extends AbstractDesktop {
 	protected void execClosing() {
 		final ApiCreatedNotificationHandler apiCreatedNotificationHandler = BEANS
 				.get(ApiCreatedNotificationHandler.class);
-		apiCreatedNotificationHandler.removeListener(this.createApiCreatedListener());
+		apiCreatedNotificationHandler.removeListener(this.apiCreatedListener);
+
+		final ApiDeletedNotificationHandler apiDeletedNotificationHandler = BEANS
+				.get(ApiDeletedNotificationHandler.class);
+		apiDeletedNotificationHandler.removeListener(this.apiDeletedListener);
 	}
 
 	protected void selectFirstVisibleOutline() {
@@ -168,6 +179,24 @@ public class Desktop extends AbstractDesktop {
 		};
 
 		return this.apiCreatedListener;
+	}
+
+	private INotificationListener<ApiDeletedNotification> createApiDeletedListener() {
+		this.apiDeletedListener = new INotificationListener<ApiDeletedNotification>() {
+			@Override
+			public void handleNotification(final ApiDeletedNotification notification) {
+				try {
+					final ApiFormData eventForm = notification.getApiForm();
+					LOG.debug("Deleted Api prepare to modify desktop menus (" + this.getClass().getName() + ") : "
+							+ eventForm.getUserId());
+					Desktop.this.getMenu(AddGoogleCalendarMenu.class).setVisible(Boolean.TRUE);
+				} catch (final RuntimeException e) {
+					LOG.error("Could not handle new api. (" + this.getClass().getName() + ")", e);
+				}
+			}
+		};
+
+		return this.apiDeletedListener;
 	}
 
 	@Order(2000)

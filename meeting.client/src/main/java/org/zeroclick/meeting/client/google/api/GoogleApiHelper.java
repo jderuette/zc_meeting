@@ -172,7 +172,6 @@ public class GoogleApiHelper {
 			 * </pre>
 			 */
 			resp.sendRedirect(authorizationUrl.build());
-
 		} finally {
 			this.lock.unlock();
 		}
@@ -247,6 +246,13 @@ public class GoogleApiHelper {
 			}
 		}
 		return result;
+	}
+
+	public void removeCredential(final Long userId) throws IOException {
+		if (this.flow == null) {
+			this.flow = this.initializeFlow();
+		}
+		this.flow.getCredentialDataStore().delete(String.valueOf(userId));
 	}
 
 	/**

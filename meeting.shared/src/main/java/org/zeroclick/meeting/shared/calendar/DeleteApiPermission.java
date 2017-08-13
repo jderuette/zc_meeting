@@ -12,7 +12,7 @@ public class DeleteApiPermission extends BasicHierarchyPermission {
 	private Long apiCredentialId;
 
 	public DeleteApiPermission(final Integer level) {
-		super(DeleteApiPermission.class.getSimpleName() + ".*");
+		super(DeleteApiPermission.class.getSimpleName() + ".*", level);
 	}
 
 	public DeleteApiPermission(final Long apiCredentialId) {

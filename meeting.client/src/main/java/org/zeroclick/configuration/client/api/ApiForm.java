@@ -1,5 +1,7 @@
 package org.zeroclick.configuration.client.api;
 
+import java.io.IOException;
+
 import org.eclipse.scout.rt.client.dto.FormData;
 import org.eclipse.scout.rt.client.ui.form.AbstractForm;
 import org.eclipse.scout.rt.client.ui.form.AbstractFormHandler;
@@ -13,7 +15,10 @@ import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.util.ToStringBuilder;
 import org.eclipse.scout.rt.shared.TEXTS;
+import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.client.api.ApiForm.MainBox.AccessTokenField;
 import org.zeroclick.configuration.client.api.ApiForm.MainBox.CancelButton;
 import org.zeroclick.configuration.client.api.ApiForm.MainBox.ExpirationTimeMillisecondsField;
@@ -21,14 +26,16 @@ import org.zeroclick.configuration.client.api.ApiForm.MainBox.OkButton;
 import org.zeroclick.configuration.client.api.ApiForm.MainBox.ProviderField;
 import org.zeroclick.configuration.client.api.ApiForm.MainBox.RefreshTokenField;
 import org.zeroclick.meeting.client.common.ProviderLookupCall;
+import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CreateApiPermission;
 import org.zeroclick.meeting.shared.calendar.DeleteApiPermission;
 import org.zeroclick.meeting.shared.calendar.IApiService;
-import org.zeroclick.meeting.shared.calendar.UpdateApiPermission;
 
 @FormData(value = ApiFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class ApiForm extends AbstractForm {
+
+	private static final Logger LOG = LoggerFactory.getLogger(AbstractForm.class);
 
 	private Long apiCredentialId;
 	private Long userId;
@@ -215,6 +222,13 @@ public class ApiForm extends AbstractForm {
 
 		@Order(100000)
 		public class OkButton extends AbstractOkButton {
+
+			@Override
+			protected boolean execIsSaveNeeded() {
+				// TODO Djer do this only in "delete" useless in "edit".
+				// to force form save even if no modification done in Fields
+				return Boolean.TRUE;
+			}
 		}
 
 		@Order(101000)
@@ -229,10 +243,16 @@ public class ApiForm extends AbstractForm {
 			final IApiService service = BEANS.get(IApiService.class);
 			ApiFormData formData = new ApiFormData();
 			ApiForm.this.exportFormData(formData);
+			formData.setApiCredentialId(ApiForm.this.getApiCredentialId());
+			formData.setUserId(ApiForm.this.getUserId());
 			formData = service.load(formData);
 			ApiForm.this.importFormData(formData);
 
-			ApiForm.this.setEnabledPermission(new UpdateApiPermission(ApiForm.this.getApiCredentialId()));
+			final int userPermissionLevel = ACCESS.getLevel(new DeleteApiPermission((Long) null));
+
+			ApiForm.this.setVisibleGranted(userPermissionLevel > DeleteApiPermission.LEVEL_OWN);
+			ApiForm.this.setEnabledGranted(userPermissionLevel > DeleteApiPermission.LEVEL_OWN);
+
 		}
 
 		@Override
@@ -250,10 +270,14 @@ public class ApiForm extends AbstractForm {
 			final IApiService service = BEANS.get(IApiService.class);
 			ApiFormData formData = new ApiFormData();
 			ApiForm.this.exportFormData(formData);
+			formData.setApiCredentialId(ApiForm.this.getApiCredentialId());
+			formData.setUserId(ApiForm.this.getUserId());
 			formData = service.load(formData);
 			ApiForm.this.importFormData(formData);
+			final int userPermissionLevel = ACCESS.getLevel(new DeleteApiPermission((Long) null));
 
-			ApiForm.this.setEnabledPermission(new DeleteApiPermission(ApiForm.this.getApiCredentialId()));
+			ApiForm.this.setVisibleGranted(userPermissionLevel > DeleteApiPermission.LEVEL_OWN);
+			ApiForm.this.setEnabledGranted(userPermissionLevel > DeleteApiPermission.LEVEL_OWN);
 		}
 
 		@Override
@@ -261,6 +285,16 @@ public class ApiForm extends AbstractForm {
 			final IApiService service = BEANS.get(IApiService.class);
 			final ApiFormData formData = new ApiFormData();
 			ApiForm.this.exportFormData(formData);
+			formData.setApiCredentialId(ApiForm.this.getApiCredentialId());
+			formData.setUserId(ApiForm.this.getUserId());
+
+			// use GoolgleApiHelper to clean cache for this user
+			try {
+				GoogleApiHelper.get().removeCredential(formData.getUserId());
+			} catch (final IOException e) {
+				LOG.error("Error while trying to delete User (Google) Api credential", e);
+			}
+
 			service.delete(formData);
 		}
 	}

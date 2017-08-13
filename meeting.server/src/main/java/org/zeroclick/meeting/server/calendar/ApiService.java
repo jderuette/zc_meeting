@@ -18,6 +18,7 @@ import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
+import org.zeroclick.configuration.shared.api.ApiDeletedNotification;
 import org.zeroclick.configuration.shared.api.ApiTablePageData;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
@@ -87,17 +88,23 @@ public class ApiService implements IApiService {
 		final ApiFormData apiFormCreated = this.store(formData);
 
 		if (isNew) {
-			this.sendModifiedNotifications(apiFormCreated);
+			this.sendCreatedNotifications(apiFormCreated);
 		}
 
 		return apiFormCreated;
 
 	}
 
-	private void sendModifiedNotifications(final ApiFormData formData) {
+	private void sendCreatedNotifications(final ApiFormData formData) {
 		final AccessControlService acs = BEANS.get(AccessControlService.class);
 		BEANS.get(ClientNotificationRegistry.class).putForUsers(acs.getUserNotificationIds(formData.getUserId()),
 				new ApiCreatedNotification(formData));
+	}
+
+	private void sendDeletedNotifications(final ApiFormData formData) {
+		final AccessControlService acs = BEANS.get(AccessControlService.class);
+		BEANS.get(ClientNotificationRegistry.class).putForUsers(acs.getUserNotificationIds(formData.getUserId()),
+				new ApiDeletedNotification(formData));
 	}
 
 	private boolean checkAlreadyExists(final ApiFormData formData) {
@@ -165,21 +172,31 @@ public class ApiService implements IApiService {
 			throw new VetoException(TEXTS.get("AuthorizationFailed"));
 		}
 
-		LOG.debug("Deleting API in DB for user : " + formData.getUserIdProperty().getValue() + " for provider : "
-				+ formData.getProvider().getValue());
+		final ApiFormData dataBeforeDeletion = this.load(formData);
 
-		SQL.delete(SQLs.OAUHTCREDENTIAL_DELETE, formData);
+		LOG.debug("Deleting API in DB for api_id : " + formData.getApiCredentialId() + "(user : "
+				+ formData.getUserIdProperty().getValue() + ") for provider : " + formData.getProvider().getValue());
+
+		SQL.delete(SQLs.OAUHTCREDENTIAL_DELETE, dataBeforeDeletion);
+
+		// the formData BEFORE deletion
+		this.sendDeletedNotifications(dataBeforeDeletion);
 	}
 
 	private Long getApiId(final Long userId) {
-		// Warning no permission check to allow "attendee" to check "host"
-		// calendar
+		// Warning permission check at the end to allow "attendee" to check
+		// "host" calendar
 		LOG.debug("Searching API Id for user : " + userId);
 
 		final ApiFormData formData = new ApiFormData();
 		formData.setUserId(userId);
 		SQL.selectInto(SQLs.OAUHTCREDENTIAL_SELECT_API_ID + SQLs.OAUHTCREDENTIAL_FILTER_USER_ID
 				+ SQLs.OAUHTCREDENTIAL_SELECT_INTO_API_ID, formData);
+
+		if (null != formData.getApiCredentialId()
+				&& !ACCESS.check(new ReadApiPermission(formData.getApiCredentialId()))) {
+			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+		}
 		return formData.getApiCredentialId();
 	}
 
