@@ -64,6 +64,8 @@ import org.zeroclick.meeting.shared.event.ReadEventExtendedPropsPermission;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
 import org.zeroclick.meeting.shared.eventb.AbstractEventsTablePageData;
 
+import com.google.api.services.calendar.model.Event;
+
 @Data(AbstractEventsTablePageData.class)
 public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<T>.Table>
 		extends AbstractPageWithTable<T> {
@@ -77,7 +79,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	private DateHelper dateHelper;
 	private AppUserHelper appUserHelper;
 
-	// TODO Djer13 caching here is smart ?
+	// TODO Djer13 is caching here smart ?
 	private final Map<Long, String> cachedUserTimeZone = new HashMap<>();
 
 	protected boolean isUserCalendarConfigured() {
@@ -226,6 +228,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		values.add(actor); // 0
 		final String stateText = TEXTS.get("zc.meeting.state." + formData.getState().getValue().toLowerCase());
 		values.add(stateText); // 1
+
 		values.add(formData.getSubject().getValue());// 2
 
 		final String slotText = TEXTS.get("zc.meeting.slot." + formData.getSlot().getValue());
@@ -255,6 +258,27 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 		if (null != formData.getEndDate().getValue()) {
 			values.add(DateHelper.get().formatHours(formData.getEndDate().getValue(), userZoneId));// 11
+		}
+
+		return CollectionUtility.toArray(values, String.class);
+	}
+
+	protected String[] buildValuesForLocaleMessages(final EventFormData formData, final Event externalEvent) {
+		final List<String> values = CollectionUtility.arrayList(this.buildValuesForLocaleMessages(formData));
+
+		values.add(externalEvent.getHtmlLink()); // 12
+
+		return CollectionUtility.toArray(values, String.class);
+	}
+
+	protected String[] buildValuesForLocaleMessages(final EventFormData formData, final Event externalEvent,
+			final String... otherParams) {
+		final List<String> values = CollectionUtility.arrayList(this.buildValuesForLocaleMessages(formData));
+
+		values.add(externalEvent.getHtmlLink()); // 12
+
+		for (final String param : otherParams) {
+			values.add(param);
 		}
 
 		return CollectionUtility.toArray(values, String.class);

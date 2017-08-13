@@ -795,7 +795,6 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 							eventGuestEmail, subject);
 					Table.this.getExternalIdOrganizerColumn().setValue(Table.this.getSelectedRow(),
 							externalOrganizerEvent.getId());
-					this.sendConfirmationEmail(eventHeldEmail, externalOrganizerEvent, subject);
 
 					if (null == eventGuest) {
 						eventGuest = userService.getUserIdByEmail(eventGuestEmail);
@@ -811,10 +810,11 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					Table.this.getExternalIdRecipientColumn().setValue(Table.this.getSelectedRow(),
 							externalGuestEvent.getId());
 
-					this.sendConfirmationEmail(eventGuestEmail, externalOrganizerEvent, subject);
-
 					// Save at the end to save external IDs !
-					Table.this.saveEventCurrentRow();
+					final EventFormData formData = Table.this.saveEventCurrentRow();
+
+					this.sendConfirmationEmail(formData, externalOrganizerEvent, eventHeldEmail);
+					this.sendConfirmationEmail(formData, externalOrganizerEvent, eventGuestEmail);
 
 					Table.this.resetInvalidatesEvent(start, end);
 					Table.this.autoFillDates();
@@ -824,12 +824,14 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				}
 			}
 
-			private void sendConfirmationEmail(final String recipient, final Event event, final String meetingSubject) {
+			private void sendConfirmationEmail(final EventFormData formData, final Event event,
+					final String recipient) {
 				final IMailSender mailSender = BEANS.get(IMailSender.class);
 
-				final String subject = TEXTS.get("zc.meeting.email.event.confirm.subject");
-				final String content = TEXTS.get("zc.meeting.email.event.confirm.html", recipient, meetingSubject,
-						event.getHtmlLink());
+				final String[] values = EventTablePage.this.buildValuesForLocaleMessages(formData, event, recipient);
+				final String subject = TEXTS.get("zc.meeting.email.event.confirm.subject", values);
+				final String content = TEXTS.get("zc.meeting.email.event.confirm.html", values);
+
 				try {
 					mailSender.sendEmail(recipient, subject, content);
 				} catch (final MailException e) {
