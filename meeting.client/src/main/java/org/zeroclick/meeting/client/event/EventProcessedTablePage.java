@@ -47,6 +47,7 @@ public class EventProcessedTablePage extends AbstractEventsTablePage<Table> {
 			this.getOrganizerEmailColumn().setVisible(Boolean.TRUE);
 			this.getEmailColumn().setVisible(Boolean.TRUE);
 			super.getStateColumn().setVisible(Boolean.TRUE);
+			super.getStateColumn().setOrder(10);
 		}
 
 		@Override
