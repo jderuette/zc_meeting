@@ -224,12 +224,17 @@ public class UserService implements IUserService {
 		LOG.debug("Store OnBoarding User datas with Id :" + formData.getUserId().getValue() + " (Login : "
 				+ formData.getLogin().getValue() + ")");
 
-		SQL.update(SQLs.USER_UPDATE_ONBOARDING, formData);
-
+		/**
+		 * Collect user data BEFORE update, to allow login/email modifications
+		 * if done after update "isOwn" on load will fail because, no User row
+		 * will have the correct "subject"
+		 **/
 		UserFormData userFormForNotifications = new UserFormData();
-
 		userFormForNotifications.getUserId().setValue(formData.getUserId().getValue());
 		userFormForNotifications = this.load(userFormForNotifications);
+
+		SQL.update(SQLs.USER_UPDATE_ONBOARDING, formData);
+
 		this.sendModifiedNotifications(userFormForNotifications);
 
 		return formData;

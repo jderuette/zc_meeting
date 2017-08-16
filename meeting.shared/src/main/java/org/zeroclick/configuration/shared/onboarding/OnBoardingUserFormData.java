@@ -15,6 +15,10 @@ public class OnBoardingUserFormData extends AbstractFormData {
 
 	private static final long serialVersionUID = 1L;
 
+	public AddCalendar getAddCalendar() {
+		return getFieldByClass(AddCalendar.class);
+	}
+
 	public Login getLogin() {
 		return getFieldByClass(Login.class);
 	}
@@ -25,6 +29,11 @@ public class OnBoardingUserFormData extends AbstractFormData {
 
 	public UserId getUserId() {
 		return getFieldByClass(UserId.class);
+	}
+
+	public static class AddCalendar extends AbstractValueFieldData<String> {
+
+		private static final long serialVersionUID = 1L;
 	}
 
 	public static class Login extends AbstractValueFieldData<String> {

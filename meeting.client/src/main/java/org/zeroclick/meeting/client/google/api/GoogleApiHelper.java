@@ -87,7 +87,7 @@ public class GoogleApiHelper {
 		return instance;
 	}
 
-	private GoogleClientSecrets getCLientSecret() throws IOException {
+	private GoogleClientSecrets getClientSecret() throws IOException {
 		final String fileName = CONFIG.getPropertyValue(GoogleClientCredentialFileProperty.class);
 		final File clientSecretFile = new File(fileName);
 		final Reader reader = Files.newBufferedReader(clientSecretFile.toPath());
@@ -107,8 +107,12 @@ public class GoogleApiHelper {
 		final Collection<String> scopes = Collections.singleton(CalendarScopes.CALENDAR);
 
 		return new GoogleAuthorizationCodeFlow.Builder(new NetHttpTransport(), JacksonFactory.getDefaultInstance(),
-				this.getCLientSecret(), scopes).setDataStoreFactory(this.dataStoreFactory).setAccessType("offline")
+				this.getClientSecret(), scopes).setDataStoreFactory(this.dataStoreFactory).setAccessType("offline")
 						.setApprovalPrompt("force").build();
+	}
+
+	private GoogleAuthorizationCodeFlow initializeGoogleFlow() throws IOException {
+		return (GoogleAuthorizationCodeFlow) this.initializeFlow();
 	}
 
 	/*
