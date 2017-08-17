@@ -13,5 +13,5 @@ public class Icons extends AbstractIcons {
 
 	public static final String Scout = "eclipse_scout";
 	public static final String User = "user";
-	public static final String AppLogo = "application_logo";
+	public static final String AppLogo = "0ClickOrg_compact";
 }

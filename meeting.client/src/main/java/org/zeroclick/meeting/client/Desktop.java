@@ -315,6 +315,28 @@ public class Desktop extends AbstractDesktop {
 		}
 	}
 
+	@Order(4000)
+	public class AppLogoMenu extends AbstractMenu {
+		@Override
+		protected String getConfiguredText() {
+			return "";
+		}
+
+		@Override
+		protected String getConfiguredIconId() {
+			return Icons.AppLogo;
+		}
+
+		@Override
+		protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+			return CollectionUtility.hashSet();
+		}
+
+		@Override
+		protected void execAction() {
+		}
+	}
+
 	@Order(1000)
 	public class MeetingOutlineViewButton extends AbstractOutlineViewButton {
 
