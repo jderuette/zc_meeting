@@ -37,11 +37,11 @@ public class NotificationHelper {
 
 	public void addProccessedNotification(final String messageKey) {
 		final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
-		desktop.addNotification(IStatus.OK, 0l, Boolean.TRUE, messageKey);
+		desktop.addNotification(IStatus.OK, 10000l, Boolean.TRUE, messageKey);
 	}
 
 	public void addProccessedNotification(final String messageKey, final String... messageArguments) {
 		final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
-		desktop.addNotification(IStatus.OK, 0l, Boolean.TRUE, messageKey, messageArguments);
+		desktop.addNotification(IStatus.OK, 10000l, Boolean.TRUE, messageKey, messageArguments);
 	}
 }
