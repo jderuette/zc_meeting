@@ -261,7 +261,10 @@ public class UserService implements IUserService {
 		final Long currentUserId = acs.getZeroClickUserIdOfCurrentSubject();
 
 		if (null == userId) {
-			LOG.error("Cannot check currentUser own an empty or null UserId");
+			LOG.error("Cannot check currentUser own with empty or null UserId");
+			return false;
+		} else if (null == currentUserId) {
+			LOG.error("Cannot check currentUser because he's id is null");
 			return false;
 		} else if (userId.equals(currentUserId)) {
 			return true;
