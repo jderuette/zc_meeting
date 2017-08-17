@@ -182,6 +182,9 @@ public class UserForm extends AbstractForm {
 	private void initFormAfterLoad() {
 		this.getPasswordField().setMandatory(this.isPasswordMandatory());
 		this.getConfirmPasswordField().setMandatory(this.isPasswordMandatory());
+		if (null == this.isAutofilled()) {
+			this.setAutofilled(Boolean.FALSE);
+		}
 	}
 
 	private Boolean isMyself() {
@@ -343,11 +346,6 @@ public class UserForm extends AbstractForm {
 		@Order(100000)
 		public class OkButton extends AbstractOkButton {
 
-			@Override
-			protected void execClickAction() {
-				final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
-				notificationHelper.addProcessingNotification("zc.user.notification.modifyingUser");
-			}
 		}
 
 		@Order(101000)
@@ -368,6 +366,13 @@ public class UserForm extends AbstractForm {
 			UserForm.this.initFormAfterLoad();
 
 			UserForm.this.setEnabledPermission(new UpdateUserPermission(formData.getUserId().getValue()));
+		}
+
+		@Override
+		protected boolean execValidate() {
+			final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+			notificationHelper.addProcessingNotification("zc.user.notification.modifyingUser");
+			return Boolean.TRUE;
 		}
 
 		@Override
@@ -405,7 +410,8 @@ public class UserForm extends AbstractForm {
 			}
 
 			final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
-			notificationHelper.addProcessingNotification("zc.user.notification.modifiedUser", UserForm.this.getEmailField().getValue());
+			notificationHelper.addProcessingNotification("zc.user.notification.modifiedUser",
+					UserForm.this.getEmailField().getValue());
 
 		}
 	}
@@ -425,6 +431,15 @@ public class UserForm extends AbstractForm {
 			UserForm.this.initFormAfterLoad();
 
 			UserForm.this.setEnabledPermission(new CreateUserPermission());
+		}
+
+		@Override
+		protected boolean execValidate() {
+			if (!UserForm.this.isAutofilled()) {
+				final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+				notificationHelper.addProcessingNotification("zc.user.notification.creatingUser");
+			}
+			return Boolean.TRUE;
 		}
 
 		@Override

@@ -409,11 +409,6 @@ public class EventForm extends AbstractForm {
 				return TEXTS.get("zc.meeting.scheduleMeeting");
 			}
 
-			@Override
-			protected void execClickAction() {
-				final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
-				notificationHelper.addProcessingNotification("zc.meeting.notification.creatingEvent");
-			}
 		}
 
 		@Order(101000)
@@ -441,6 +436,13 @@ public class EventForm extends AbstractForm {
 		}
 
 		@Override
+		protected boolean execValidate() {
+			final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+			notificationHelper.addProcessingNotification("zc.meeting.notification.modifyingEvent");
+			return Boolean.TRUE;
+		}
+
+		@Override
 		protected void execStore() {
 			final IEventService service = BEANS.get(IEventService.class);
 
@@ -463,6 +465,13 @@ public class EventForm extends AbstractForm {
 			this.getForm().setDisplayHint(IForm.DISPLAY_HINT_DIALOG);
 
 			EventForm.this.setEnabledPermission(new CreateEventPermission());
+		}
+
+		@Override
+		protected boolean execValidate() {
+			final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+			notificationHelper.addProcessingNotification("zc.meeting.notification.creatingEvent");
+			return Boolean.TRUE;
 		}
 
 		@Override
@@ -523,6 +532,13 @@ public class EventForm extends AbstractForm {
 			EventForm.this.importFormData(formData);
 
 			EventForm.this.setEnabledPermission(new UpdateEventPermission(formData.getEventId()));
+		}
+
+		@Override
+		protected boolean execValidate() {
+			final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+			notificationHelper.addProcessingNotification("zc.meeting.notification.acceptingEvent");
+			return Boolean.TRUE;
 		}
 
 		@Override
