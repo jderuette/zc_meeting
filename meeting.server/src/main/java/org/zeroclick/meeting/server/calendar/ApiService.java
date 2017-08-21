@@ -39,16 +39,18 @@ public class ApiService implements IApiService {
 	public ApiTablePageData getApiTableData(final SearchFilter filter) {
 		final ApiTablePageData pageData = new ApiTablePageData();
 
-		String OwnerFilter = "";
 		Long currentConnectedUserId = 0L;
+		StringBuilder sql = new StringBuilder();
+		sql.append(SQLs.OAUHTCREDENTIAL_PAGE_SELECT);
+
 		if (ACCESS.getLevel(new ReadEventPermission((Long) null)) != ReadEventPermission.LEVEL_ALL) {
-			OwnerFilter = SQLs.OAUHTCREDENTIAL_PAGE_SELECT_FILTER_USER;
+			sql.append(SQLs.OAUHTCREDENTIAL_PAGE_SELECT_FILTER_USER);
 			final AccessControlService acs = BEANS.get(AccessControlService.class);
 			currentConnectedUserId = acs.getZeroClickUserIdOfCurrentSubject();
 		}
 
-		final String sql = SQLs.OAUHTCREDENTIAL_PAGE_SELECT + OwnerFilter + SQLs.OAUHTCREDENTIAL_PAGE_DATA_SELECT_INTO;
-		SQL.selectInto(sql, new NVPair("page", pageData), new NVPair("currentUser", currentConnectedUserId));
+		sql.append(SQLs.OAUHTCREDENTIAL_PAGE_DATA_SELECT_INTO);
+		SQL.selectInto(sql.toString(), new NVPair("page", pageData), new NVPair("currentUser", currentConnectedUserId));
 
 		return pageData;
 	}

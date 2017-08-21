@@ -43,7 +43,6 @@ public class DatabaseSetupService implements IDataStoreService {
 
 				final IRunnable runnable = new IRunnable() {
 					@Override
-					@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 					public void run() throws Exception {
 						DatabaseSetupService.this.dropDataStore();
 					}
@@ -92,7 +91,6 @@ public class DatabaseSetupService implements IDataStoreService {
 				final IRunnable runnable = new IRunnable() {
 
 					@Override
-					@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 					public void run() throws Exception {
 						DatabaseSetupService.this.createEventTable();
 						DatabaseSetupService.this.createOAuthCredentialTable();
