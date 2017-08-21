@@ -20,8 +20,6 @@ import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.action.menu.TableMenuType;
 import org.eclipse.scout.rt.client.ui.basic.cell.Cell;
 import org.eclipse.scout.rt.client.ui.basic.table.ITableRow;
-import org.eclipse.scout.rt.client.ui.form.FormEvent;
-import org.eclipse.scout.rt.client.ui.form.FormListener;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.exception.VetoException;
@@ -903,18 +901,5 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				return combineKeyStrokes(IKeyStroke.SHIFT, IKeyStroke.RIGHT);
 			}
 		}
-
-		private class EventFormListener implements FormListener {
-
-			@Override
-			public void formChanged(final FormEvent e) {
-				// reload page to reflect new/changed data after saving any
-				// changes
-				if (FormEvent.TYPE_CLOSED == e.getType() && e.getForm().isFormStored()) {
-					EventTablePage.this.reloadPage();
-				}
-			}
-		}
-
 	}
 }

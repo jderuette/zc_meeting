@@ -139,8 +139,8 @@ public class PermissionTablePage extends AbstractPageWithTable<Table> {
 		public class AssignToRoleListener implements FormListener {
 
 			@Override
-			public void formChanged(final FormEvent e) {
-				if (FormEvent.TYPE_CLOSED == e.getType() && e.getForm().isFormStored()) {
+			public void formChanged(final FormEvent event) {
+				if (FormEvent.TYPE_CLOSED == event.getType() && event.getForm().isFormStored()) {
 					PermissionTablePage.this.reloadPage();
 				}
 			}

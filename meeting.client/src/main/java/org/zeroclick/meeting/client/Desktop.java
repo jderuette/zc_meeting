@@ -154,6 +154,7 @@ public class Desktop extends AbstractDesktop {
 		Jobs.schedule(new IRunnable() {
 
 			@Override
+			@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 			public void run() throws Exception {
 				LOG.debug("Adding desktop notification : " + status.getMessage());
 				final DesktopNotification desktopNotification = new DesktopNotification(status, duration, closable);

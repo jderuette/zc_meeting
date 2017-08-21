@@ -28,9 +28,9 @@ public class SlotLookupCall extends LocalLookupCall<Integer> {
 	public ILookupRow<Integer> getDataById(final Integer searchedId) {
 		final List<? extends ILookupRow<Integer>> datas = this.getDataByAll();
 
-		final Iterator<? extends ILookupRow<Integer>> it = datas.iterator();
-		while (it.hasNext()) {
-			final ILookupRow<Integer> data = it.next();
+		final Iterator<? extends ILookupRow<Integer>> slotIt = datas.iterator();
+		while (slotIt.hasNext()) {
+			final ILookupRow<Integer> data = slotIt.next();
 			if (data.getKey().equals(searchedId)) {
 				return data; // early break
 			}

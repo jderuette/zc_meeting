@@ -96,10 +96,10 @@ public class RoleTablePage extends AbstractPageWithTable<Table> {
 		private class RoleFormListener implements FormListener {
 
 			@Override
-			public void formChanged(final FormEvent e) {
+			public void formChanged(final FormEvent event) {
 				// reload page to reflect new/changed data after saving any
 				// changes
-				if (FormEvent.TYPE_CLOSED == e.getType() && e.getForm().isFormStored()) {
+				if (FormEvent.TYPE_CLOSED == event.getType() && event.getForm().isFormStored()) {
 					RoleTablePage.this.reloadPage();
 				}
 			}

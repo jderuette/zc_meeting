@@ -64,7 +64,7 @@ public class RolePermissionService implements IRolePermissionService {
 	public void remove(final Integer roleId, final List<String> permissions) {
 		LOG.info("Removing permission(s) to role :" + roleId + " : " + permissions);
 		SQL.insert(SQLs.ROLE_PERMISSION_DELETE, new NVPair("roleId", roleId), new NVPair("permissions", permissions));
-		this.clearCacheOfUsersWithRole(new Long(roleId));
+		this.clearCacheOfUsersWithRole(Long.valueOf(roleId));
 	}
 
 	/**

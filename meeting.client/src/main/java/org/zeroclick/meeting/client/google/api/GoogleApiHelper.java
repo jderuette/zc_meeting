@@ -111,10 +111,6 @@ public class GoogleApiHelper {
 						.setApprovalPrompt("force").build();
 	}
 
-	private GoogleAuthorizationCodeFlow initializeGoogleFlow() throws IOException {
-		return (GoogleAuthorizationCodeFlow) this.initializeFlow();
-	}
-
 	/*
 	 * (non-Javadoc)
 	 *

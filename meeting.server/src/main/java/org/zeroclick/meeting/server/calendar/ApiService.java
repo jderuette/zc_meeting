@@ -40,7 +40,7 @@ public class ApiService implements IApiService {
 		final ApiTablePageData pageData = new ApiTablePageData();
 
 		Long currentConnectedUserId = 0L;
-		StringBuilder sql = new StringBuilder();
+		final StringBuilder sql = new StringBuilder();
 		sql.append(SQLs.OAUHTCREDENTIAL_PAGE_SELECT);
 
 		if (ACCESS.getLevel(new ReadEventPermission((Long) null)) != ReadEventPermission.LEVEL_ALL) {

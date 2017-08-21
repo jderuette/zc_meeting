@@ -233,11 +233,11 @@ public class ScoutServiceCredentialVerifier implements ICredentialVerifier {
 		}
 
 		protected byte[] toBytes(final char[] password) {
-			try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
-				final OutputStreamWriter writer = new OutputStreamWriter(os, CHARSET);
+			try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+				final OutputStreamWriter writer = new OutputStreamWriter(outputStream, CHARSET);
 				writer.write(password);
 				writer.flush();
-				return os.toByteArray();
+				return outputStream.toByteArray();
 			} catch (final IOException e) {
 				throw new RuntimeException(e);
 			}

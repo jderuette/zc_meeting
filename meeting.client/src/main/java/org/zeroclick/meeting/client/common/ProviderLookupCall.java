@@ -44,9 +44,9 @@ public class ProviderLookupCall extends LocalLookupCall<Integer> {
 	public ILookupRow<Integer> getDataById(final Integer searchedId) {
 		final List<? extends ILookupRow<Integer>> datas = this.getDataByAll();
 
-		final Iterator<? extends ILookupRow<Integer>> it = datas.iterator();
-		while (it.hasNext()) {
-			final ILookupRow<Integer> data = it.next();
+		final Iterator<? extends ILookupRow<Integer>> providerIt = datas.iterator();
+		while (providerIt.hasNext()) {
+			final ILookupRow<Integer> data = providerIt.next();
 			if (data.getKey().equals(searchedId)) {
 				return data; // early break
 			}

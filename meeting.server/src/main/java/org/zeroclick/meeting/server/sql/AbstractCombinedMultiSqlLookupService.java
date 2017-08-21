@@ -98,8 +98,8 @@ public abstract class AbstractCombinedMultiSqlLookupService<T> extends AbstractS
 
 			@SuppressWarnings("unchecked")
 			@Override
-			public int compare(final ILookupRow<T> o1, final ILookupRow<T> o2) {
-				return ((Comparable<T>) o1.getKey()).compareTo(o2.getKey());
+			public int compare(final ILookupRow<T> row1, final ILookupRow<T> row2) {
+				return ((Comparable<T>) row1.getKey()).compareTo(row2.getKey());
 			}
 		};
 	}
@@ -122,9 +122,9 @@ public abstract class AbstractCombinedMultiSqlLookupService<T> extends AbstractS
 		for (final String sql : sqls) {
 			// change wildcards in text to db specific wildcards
 			if (call.getText() != null) {
-				final String s = call.getText();
+				final String text = call.getText();
 				final String sqlWildcard = BEANS.get(ISqlService.class).getSqlStyle().getLikeWildcard();
-				call.setText(s.replace(call.getWildcard(), sqlWildcard));
+				call.setText(text.replace(call.getWildcard(), sqlWildcard));
 			}
 			combinedRows.addAll(this.execLoadLookupRows(sql, this.filterSqlByText(sql), call));
 		}

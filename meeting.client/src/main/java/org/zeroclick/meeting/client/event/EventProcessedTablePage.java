@@ -4,8 +4,6 @@ import org.eclipse.scout.rt.client.dto.Data;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zeroclick.meeting.client.event.EventProcessedTablePage.Table;
 import org.zeroclick.meeting.shared.event.AbstractEventNotification;
 import org.zeroclick.meeting.shared.event.EventFormData;
@@ -14,8 +12,6 @@ import org.zeroclick.meeting.shared.eventb.EventsTablePageData;
 
 @Data(EventsTablePageData.class)
 public class EventProcessedTablePage extends AbstractEventsTablePage<Table> {
-
-	private static final Logger LOG = LoggerFactory.getLogger(EventProcessedTablePage.class);
 
 	@Override
 	protected void execLoadData(final SearchFilter filter) {

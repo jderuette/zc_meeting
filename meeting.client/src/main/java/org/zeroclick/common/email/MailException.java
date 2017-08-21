@@ -21,8 +21,8 @@ package org.zeroclick.common.email;
  */
 public class MailException extends RuntimeException {
 
-	public MailException(final String message, final Throwable e) {
-		super(message, e);
+	public MailException(final String message, final Throwable previousException) {
+		super(message, previousException);
 	}
 
 	public MailException(final String message) {

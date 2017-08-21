@@ -29,18 +29,18 @@ import com.google.api.services.calendar.model.Event;
 public class GoogleEventStartComparator implements Comparator<Event> {
 
 	@Override
-	public int compare(final Event e1, final Event e2) {
+	public int compare(final Event event1, final Event event2) {
 		Long e1StartValue;
 		Long e2StartValue;
-		if (null == e1.getStart().getDateTime()) {
-			e1StartValue = e1.getStart().getDate().getValue();
+		if (null == event1.getStart().getDateTime()) {
+			e1StartValue = event1.getStart().getDate().getValue();
 		} else {
-			e1StartValue = e1.getStart().getDateTime().getValue();
+			e1StartValue = event1.getStart().getDateTime().getValue();
 		}
-		if (null == e2.getStart().getDateTime()) {
-			e2StartValue = e2.getStart().getDate().getValue();
+		if (null == event2.getStart().getDateTime()) {
+			e2StartValue = event2.getStart().getDate().getValue();
 		} else {
-			e2StartValue = e2.getStart().getDateTime().getValue();
+			e2StartValue = event2.getStart().getDateTime().getValue();
 		}
 
 		if (e1StartValue < e2StartValue) {

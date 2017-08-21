@@ -7,8 +7,8 @@ import org.zeroclick.meeting.shared.event.IEventAskedService;
 public class EventAskedService implements IEventAskedService {
 
 	@Override
-	public EventAskedTablePageData getEventAskedTableData(SearchFilter filter) {
-		EventAskedTablePageData pageData = new EventAskedTablePageData();
+	public EventAskedTablePageData getEventAskedTableData(final SearchFilter filter) {
+		final EventAskedTablePageData pageData = new EventAskedTablePageData();
 		// TODO [djer] fill pageData.
 		return pageData;
 	}

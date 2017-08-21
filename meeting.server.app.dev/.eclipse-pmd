@@ -10,7 +10,7 @@
     <ruleset name="Import Statements" ref="/pmd-java/src/main/resources/rulesets/java/imports.xml" refcontext="workspace" />
     <ruleset name="JUnit" ref="/pmd-java/src/main/resources/rulesets/java/junit.xml" refcontext="workspace" />
     <ruleset name="Migration" ref="/pmd-java/src/main/resources/rulesets/java/migrating.xml" refcontext="workspace" />
-    <ruleset name="Naming" ref="/pmd-java/src/main/resources/rulesets/java/naming.xml" refcontext="workspace" />
+    <ruleset name="Naming" ref="meeting/pmd/rulesets/naming.xml" refcontext="workspace" />
     <ruleset name="Optimization" ref="/pmd-java/src/main/resources/rulesets/java/optimizations.xml" refcontext="workspace" />
     <ruleset name="Security Code Guidelines" ref="/pmd-java/src/main/resources/rulesets/java/sunsecure.xml" refcontext="workspace" />
     <ruleset name="String and StringBuffer" ref="/pmd-java/src/main/resources/rulesets/java/strings.xml" refcontext="workspace" />

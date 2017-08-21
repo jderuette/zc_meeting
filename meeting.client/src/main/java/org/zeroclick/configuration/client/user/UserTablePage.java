@@ -121,8 +121,8 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 		public class UserFormListener implements FormListener {
 
 			@Override
-			public void formChanged(final FormEvent e) {
-				if (FormEvent.TYPE_CLOSED == e.getType() && e.getForm().isFormStored()) {
+			public void formChanged(final FormEvent event) {
+				if (FormEvent.TYPE_CLOSED == event.getType() && event.getForm().isFormStored()) {
 					UserTablePage.this.reloadPage();
 				}
 			}

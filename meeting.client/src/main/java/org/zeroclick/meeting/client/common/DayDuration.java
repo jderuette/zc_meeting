@@ -64,6 +64,7 @@ public class DayDuration {
 		this.weeklyerpetual = weeklyerpetual;
 	}
 
+	@SuppressWarnings("PMD.CollapsibleIfStatements")
 	private Boolean isBeforeBegin(final LocalDateTime checkedDate) {
 		Boolean result = Boolean.FALSE;
 		if (this.validDayOfWeek.contains(checkedDate.getDayOfWeek())) {
@@ -76,6 +77,7 @@ public class DayDuration {
 		return result;
 	}
 
+	@SuppressWarnings("PMD.")
 	private Boolean isAfterBegin(final LocalDateTime checkedDate) {
 		Boolean result = Boolean.FALSE;
 		if (this.validDayOfWeek.contains(checkedDate.getDayOfWeek())) {
@@ -88,6 +90,7 @@ public class DayDuration {
 		return result;
 	}
 
+	@SuppressWarnings("PMD.")
 	private Boolean isBeforeEnd(final LocalDateTime checkedDate) {
 		Boolean result = Boolean.FALSE;
 		if (this.validDayOfWeek.contains(checkedDate.getDayOfWeek())) {
@@ -100,6 +103,7 @@ public class DayDuration {
 		return result;
 	}
 
+	@SuppressWarnings("PMD.")
 	private Boolean isAfterEnd(final LocalDateTime checkedDate) {
 		Boolean result = Boolean.FALSE;
 		if (this.validDayOfWeek.contains(checkedDate.getDayOfWeek())) {

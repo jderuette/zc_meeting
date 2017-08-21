@@ -49,9 +49,9 @@ public class EventStateLookupCall extends LocalLookupCall<String> {
 	public ILookupRow<String> getDataById(final String searchedId) {
 		final List<? extends ILookupRow<String>> datas = this.getDataByAll();
 
-		final Iterator<? extends ILookupRow<String>> it = datas.iterator();
-		while (it.hasNext()) {
-			final ILookupRow<String> data = it.next();
+		final Iterator<? extends ILookupRow<String>> eventStateIt = datas.iterator();
+		while (eventStateIt.hasNext()) {
+			final ILookupRow<String> data = eventStateIt.next();
 			if (data.getKey().equals(searchedId)) {
 				return data; // early break
 			}

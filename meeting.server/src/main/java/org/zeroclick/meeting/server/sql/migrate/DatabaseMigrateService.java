@@ -34,6 +34,9 @@ public class DatabaseMigrateService {
 	private static final Logger LOG = LoggerFactory.getLogger(DatabaseMigrateService.class);
 
 	public void checkMigration() {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Checking for migration");
+		}
 		final List<IBean<IDataPatcher>> patchs = this.getPatchers();
 		// apply each patch
 		for (final IBean<IDataPatcher> beanPatch : patchs) {
@@ -43,6 +46,9 @@ public class DatabaseMigrateService {
 	}
 
 	public void undoMigration() {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("unDoing migration");
+		}
 		final List<IBean<IDataPatcher>> patchs = this.getPatchers();
 		// apply each patch
 		for (final IBean<IDataPatcher> beanPatch : patchs) {
@@ -58,6 +64,9 @@ public class DatabaseMigrateService {
 	 * @return
 	 */
 	private final List<IBean<IDataPatcher>> getPatchers() {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("retrieving list of existing Patchers");
+		}
 		final List<IBean<IDataPatcher>> patchs = BEANS.getBeanManager().getBeans(IDataPatcher.class);
 		// order patch versions
 		// Java 8 version, not great in scout 6.0 as source 1.7 (annimal-sniffer

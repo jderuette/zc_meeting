@@ -52,11 +52,9 @@ public class LoginField extends AbstractStringField {
 		final IUserService userService = BEANS.get(IUserService.class);
 		Boolean modified = Boolean.FALSE;
 
-		if (null == this.initialValue) {
-			this.initialValue = rawValue;
-		}
+		this.updateInitialValue(rawValue);
 
-		if (null != rawValue && !rawValue.equals(this.initialValue)) {
+		if (this.isModified(rawValue)) {
 			modified = Boolean.TRUE;
 		}
 
@@ -73,6 +71,17 @@ public class LoginField extends AbstractStringField {
 			}
 		}
 		return null == rawValue ? null : rawValue.toLowerCase();
+	}
+
+	private void updateInitialValue(final String rawValue) {
+
+		if (null == this.initialValue) {
+			this.initialValue = rawValue;
+		}
+	}
+
+	private Boolean isModified(final String rawValue) {
+		return null != rawValue && !rawValue.equals(this.initialValue);
 	}
 
 }

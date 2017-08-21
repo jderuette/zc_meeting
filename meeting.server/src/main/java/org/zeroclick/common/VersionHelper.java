@@ -66,68 +66,6 @@ public class VersionHelper {
 	 *
 	 * @return
 	 */
-	public synchronized final String getSourceVersionOrig() {
-		// Try to get version number from pom.xml (available in Eclipse)
-		try {
-			final String className = this.getClass().getName();
-			final String classfileName = "/" + className.replace('.', '/') + ".class";
-			final URL classfileResource = this.getClass().getResource(classfileName);
-			if (classfileResource != null) {
-				final Path absolutePackagePath = Paths.get(classfileResource.toURI()).getParent();
-				final int packagePathSegments = className.length() - className.replace(".", "").length();
-				// Remove package segments from path, plus two more levels
-				// for "target/classes", which is the standard location for
-				// classes in Eclipse.
-				Path path = absolutePackagePath;
-				for (int i = 0, segmentsToRemove = packagePathSegments + 2; i < segmentsToRemove; i++) {
-					path = path.getParent();
-				}
-				final Path pom = path.resolve("pom.xml");
-				try (InputStream is = Files.newInputStream(pom)) {
-					final Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(is);
-					doc.getDocumentElement().normalize();
-					String version = (String) XPathFactory.newInstance().newXPath().compile("/project/version")
-							.evaluate(doc, XPathConstants.STRING);
-					if (version != null) {
-						version = version.trim();
-						if (!version.isEmpty()) {
-							return version;
-						}
-					}
-				}
-			}
-		} catch (final Exception e) {
-			// Ignore
-		}
-
-		// Try to get version number from maven properties in jar's META-INF
-		try (InputStream is = this.getClass()
-				.getResourceAsStream("/META-INF/maven/" + MAVEN_PACKAGE + "/" + MAVEN_ARTIFACT + "/pom.properties")) {
-			if (is != null) {
-				final Properties p = new Properties();
-				p.load(is);
-				final String version = p.getProperty("version", "").trim();
-				if (!version.isEmpty()) {
-					return version;
-				}
-			}
-		} catch (final Exception e) {
-			// Ignore
-		}
-
-		// Fallback to using Java API to get version from MANIFEST.MF
-		String version = null;
-		final Package pkg = this.getClass().getPackage();
-		if (pkg != null) {
-			version = pkg.getImplementationVersion();
-			if (version == null) {
-				version = pkg.getSpecificationVersion();
-			}
-		}
-		version = version == null ? "" : version.trim();
-		return version.isEmpty() ? "unknown" : version;
-	}
-
 	public synchronized final String getSourceVersion() {
 		String version;
 		version = this.getPomXmlVersion();
@@ -142,7 +80,7 @@ public class VersionHelper {
 			version = this.getMavenArchiverVersion();
 		}
 
-		version = version == null ? "" : version.trim();
+		version = null == version ? "" : version.trim();
 		return version.isEmpty() ? DEFAULT_UNKNOW_VERSION : version;
 	}
 
@@ -156,8 +94,8 @@ public class VersionHelper {
 		try {
 			final Path path = this.getProjectFolder();
 			final Path pom = path.resolve("pom.xml");
-			try (InputStream is = Files.newInputStream(pom)) {
-				final Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(is);
+			try (InputStream pomIs = Files.newInputStream(pom)) {
+				final Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(pomIs);
 				doc.getDocumentElement().normalize();
 				String version = (String) XPathFactory.newInstance().newXPath().compile("/project/version")
 						.evaluate(doc, XPathConstants.STRING);
@@ -183,9 +121,9 @@ public class VersionHelper {
 	private String getPomPropertiesVersion() {
 
 		String pomPropertiesVersion = null;
-		try (InputStream is = this.getClass()
+		try (InputStream pomPropertiesIs = this.getClass()
 				.getResourceAsStream("/META-INF/maven/" + MAVEN_PACKAGE + "/" + MAVEN_ARTIFACT + "/pom.properties")) {
-			final String version = this.searchVersionFromProps(is);
+			final String version = this.searchVersionFromProps(pomPropertiesIs);
 			if (!version.isEmpty()) {
 				LOG.debug("SourceCode version loaded from pom.properties file");
 				pomPropertiesVersion = version;
@@ -222,8 +160,8 @@ public class VersionHelper {
 			final Path projectPath = this.getProjectFolder();
 			final Path mvnArchiver = Paths.get(projectPath.toString() + "/target/maven-archiver/");
 			final Path mvnArchiverProps = mvnArchiver.resolve("pom.properties");
-			try (InputStream is = Files.newInputStream(mvnArchiverProps)) {
-				final String version = this.searchVersionFromProps(is);
+			try (InputStream mvnArchiverPropsIs = Files.newInputStream(mvnArchiverProps)) {
+				final String version = this.searchVersionFromProps(mvnArchiverPropsIs);
 				if (!version.isEmpty()) {
 					LOG.debug("SourceCode version loaded from maven archiver pom.properties file");
 					mavenArchiverPomPropertiesVersion = version;
@@ -259,21 +197,21 @@ public class VersionHelper {
 		return path;
 	}
 
-	private String searchVersionFromProps(final InputStream is) {
+	private String searchVersionFromProps(final InputStream propsInputStream) {
 
 		String propertiesVersion = "";
-		if (is != null) {
-			final Properties p = new Properties();
+		if (propsInputStream != null) {
+			final Properties allPropos = new Properties();
 			try {
-				p.load(is);
+				allPropos.load(propsInputStream);
 
-				final String version = p.getProperty("version", "").trim();
+				final String version = allPropos.getProperty("version", "").trim();
 				if (!version.isEmpty()) {
 					LOG.debug("SourceCode version loaded from pom.properties file");
 					propertiesVersion = version;
 				}
 			} catch (final IOException e) {
-				LOG.debug("Exception while loading properties from InputTream :" + is, e);
+				LOG.debug("Exception while loading properties from InputTream :" + propsInputStream, e);
 			}
 		}
 		return propertiesVersion;

@@ -5,8 +5,6 @@ import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.data.page.AbstractTablePageData;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zeroclick.meeting.shared.event.AbstractEventNotification;
 import org.zeroclick.meeting.shared.event.EventAskedTablePageData;
 import org.zeroclick.meeting.shared.event.EventFormData;
@@ -14,8 +12,6 @@ import org.zeroclick.meeting.shared.event.IEventService;
 
 @Data(EventAskedTablePageData.class)
 public class EventAskedTablePage extends EventTablePage {
-
-	private static final Logger LOG = LoggerFactory.getLogger(EventAskedTablePage.class);
 
 	@Override
 	protected void execLoadData(final SearchFilter filter) {
@@ -65,32 +61,5 @@ public class EventAskedTablePage extends EventTablePage {
 			this.getStartDateColumn().setVisible(Boolean.FALSE);
 			this.getEndDateColumn().setVisible(Boolean.FALSE);
 		}
-
-		// @Override
-		// protected void addDefaultFilters() {
-		// this.addAskedStateFilter();
-		// this.addIamOrganizerFilter();
-		// }
-		//
-		// protected void addIamOrganizerFilter() {
-		// if (null == this.getUserFilterManager()) {
-		// this.setUserFilterManager(this.createUserFilterManager());
-		// }
-		// if
-		// (this.getUserFilterManager().getFilter(this.getOrganizerEmailColumn().getColumnId())
-		// == null) {
-		// final TextColumnUserFilterState iamOrganizerFilter = new
-		// TextColumnUserFilterState(
-		// this.getOrganizerEmailColumn());
-		//
-		// final Set<Object> selectedValues = new HashSet<>();
-		// selectedValues.addAll(this.getCurrentUserEmails());
-		// selectedValues.add(TEXTS.get("zc.common.me"));
-		// iamOrganizerFilter.setSelectedValues(selectedValues);
-		//
-		// this.getUserFilterManager().addFilter(iamOrganizerFilter);
-		// }
-		// }
-
 	}
 }

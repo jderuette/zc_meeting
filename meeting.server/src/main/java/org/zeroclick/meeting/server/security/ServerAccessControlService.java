@@ -35,18 +35,13 @@ public class ServerAccessControlService extends AccessControlService {
 
 	@Override
 	protected Permissions execLoadPermissions(final String userId) {
-		final Permissions permissions = new Permissions();
-		permissions.add(new RemoteServiceAccessPermission("*.shared.*", "*"));
-
 		final IAppPermissionService service = BEANS.get(IAppPermissionService.class);
 
-		// final Object[][] permissionData =
-		// service.getPermissionsByUser(this.getUserIdAsLong(userId));
 		final Object[][] permissionData = service.getPermissionsByUser(userId);
 
-		final Permissions p = this.createPermissions(permissionData);
-		p.add(new RemoteServiceAccessPermission("*.shared.*", "*"));
-		return p;
+		final Permissions permissions = this.createPermissions(permissionData);
+		permissions.add(new RemoteServiceAccessPermission("*.shared.*", "*"));
+		return permissions;
 
 	}
 
@@ -77,27 +72,22 @@ public class ServerAccessControlService extends AccessControlService {
 		try {
 			if (BasicHierarchyPermission.class.isAssignableFrom(clazz)) {
 				permissionObject = this.createBasicHierarchyPermission(clazz, level);
-			} else if (BasicPermission.class.isAssignableFrom(clazz) || Permission.class.isAssignableFrom(clazz)) {
+			} else if (this.isBasicPermission(clazz)) {
 				permissionObject = this.createBasicPermission(clazz);
 			} else {
 				LOG.error(
 						"Cannot create permission from saved data (not a (sub)instance of BasicHierarchyPermission/BasicPermission/Permission). Name : "
 								+ name + " level : " + level);
 			}
-		} catch (final NoSuchMethodException e) {
-			LOG.error(this.buildErrorMessage(name, level), e);
-		} catch (final SecurityException e) {
-			LOG.error(this.buildErrorMessage(name, level), e);
-		} catch (final InstantiationException e) {
-			LOG.error(this.buildErrorMessage(name, level), e);
-		} catch (final IllegalAccessException e) {
-			LOG.error(this.buildErrorMessage(name, level), e);
-		} catch (final IllegalArgumentException e) {
-			LOG.error(this.buildErrorMessage(name, level), e);
-		} catch (final InvocationTargetException e) {
+		} catch (final NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException
+				| IllegalArgumentException | InvocationTargetException e) {
 			LOG.error(this.buildErrorMessage(name, level), e);
 		}
 		return permissionObject;
+	}
+
+	private Boolean isBasicPermission(final Class<?> clazz) {
+		return BasicPermission.class.isAssignableFrom(clazz) || Permission.class.isAssignableFrom(clazz);
 	}
 
 	private <T> T createBasicPermission(final Class<? extends T> implType)

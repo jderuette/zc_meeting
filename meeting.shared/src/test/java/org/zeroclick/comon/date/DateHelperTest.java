@@ -39,8 +39,8 @@ public class DateHelperTest {
 
 	private ZonedDateTime buildZonedDateTime(final String zoneId, final String date) throws ParseException {
 		final DateHelper dateHelper = DateHelper.get();
-		final SimpleDateFormat df = new SimpleDateFormat(DEFAULT_DATE_FORMAT);
-		final ZonedDateTime ZonedDateTime = dateHelper.getZonedValue(ZoneId.of(zoneId), df.parse(date));
+		final SimpleDateFormat dateformater = new SimpleDateFormat(DEFAULT_DATE_FORMAT);
+		final ZonedDateTime ZonedDateTime = dateHelper.getZonedValue(ZoneId.of(zoneId), dateformater.parse(date));
 
 		return ZonedDateTime;
 	}

@@ -22,6 +22,7 @@ public class ZoneIdLookupCall extends LocalLookupCall<String> {
 	private final Boolean displayCustomText = Boolean.TRUE;
 
 	@Override
+	@SuppressWarnings("PMD.CollapsibleIfStatements")
 	protected List<LookupRow<String>> execCreateLookupRows() {
 		// TODO Djer : cache rows because they not change during runtime.
 		final List<LookupRow<String>> rows = new ArrayList<>();
@@ -55,19 +56,19 @@ public class ZoneIdLookupCall extends LocalLookupCall<String> {
 	}
 
 	@Override
-	protected Pattern createSearchPattern(String s) {
-		if (s != null && !s.startsWith(this.getWildcard())) {
-			s = this.getWildcard() + s;
+	protected Pattern createSearchPattern(String search) {
+		if (search != null && !search.startsWith(this.getWildcard())) {
+			search = this.getWildcard() + search;
 		}
-		return super.createSearchPattern(s);
+		return super.createSearchPattern(search);
 	}
 
 	public ILookupRow<String> getDataById(final String searchedId) {
 		final List<? extends ILookupRow<String>> datas = this.getDataByAll();
 
-		final Iterator<? extends ILookupRow<String>> it = datas.iterator();
-		while (it.hasNext()) {
-			final ILookupRow<String> data = it.next();
+		final Iterator<? extends ILookupRow<String>> zoneIdIt = datas.iterator();
+		while (zoneIdIt.hasNext()) {
+			final ILookupRow<String> data = zoneIdIt.next();
 			if (data.getKey().equals(searchedId)) {
 				return data; // early break
 			}

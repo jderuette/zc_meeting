@@ -72,31 +72,40 @@ public class MailjetMailSender implements IMailSender {
 	}
 
 	@Override
-	public void sendEmail(final String recipientTo, String subject, String messageBody,
+	public void sendEmail(final String recipientTo, final String subject, final String messageBody,
 			final Boolean includeDefaultFooter) throws MailException {
+		String messageBodyWithFooter = messageBody;
 		if (includeDefaultFooter) {
 			final StringBuilder builder = new StringBuilder(250);
 			builder.append(messageBody).append(this.addDefaultFooter());
-			messageBody = builder.toString();
+			messageBodyWithFooter = builder.toString();
 		}
 
-		String currentEnvDisplay = new ApplicationEnvProperty().displayAsText();
+		final StringBuilder subjectBuilder = new StringBuilder();
+
+		final String currentEnvDisplay = new ApplicationEnvProperty().displayAsText();
 		if (!currentEnvDisplay.isEmpty()) {
-			currentEnvDisplay = currentEnvDisplay + " ";
+			subjectBuilder.append(currentEnvDisplay);
+			subjectBuilder.append(' ');
 		}
-		subject = currentEnvDisplay + subject;
 
-		LOG.info("Sending mail to : " + recipientTo + " subject : " + subject + " BodySize : " + messageBody.length());
+		subjectBuilder.append(subject);
+
+		final String subjectWithEnv = subjectBuilder.toString();
+
+		LOG.info("Sending mail to : " + recipientTo + " subject : " + subjectWithEnv + " BodySize : "
+				+ messageBodyWithFooter.length());
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug(messageBody);
+			LOG.debug(messageBodyWithFooter);
 		}
 
 		final MailjetRequest email = new MailjetRequest(Email.resource)
 				.property(Email.FROMEMAIL, new EmailFromProperty().getValue())
-				.property(Email.FROMNAME, new EmailFromNameProperty().getValue()).property(Email.SUBJECT, subject)
+				.property(Email.FROMNAME, new EmailFromNameProperty().getValue())
+				.property(Email.SUBJECT, subjectWithEnv)
 				.property(Email.TEXTPART, "No message text use an html compliant mail reader")
-				.property(Email.HTMLPART, messageBody)
+				.property(Email.HTMLPART, messageBodyWithFooter)
 				.property(Email.RECIPIENTS, new JSONArray().put(new JSONObject().put(Contact.EMAIL, recipientTo)));
 
 		final String mailBCC = new EmailBccProperty().getValue();
