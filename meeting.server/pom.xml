@@ -10,7 +10,7 @@
 		<version>1.1.2</version>
 		<relativePath>../meeting/pom.xml</relativePath>
 	</parent>
-	
+
 	<properties>
 		<!-- TODO Djer13 allow check when I found a solution for java 7/8 list.sort(Compator) -->
 		<master_sanityCheck_skip>true</master_sanityCheck_skip>
@@ -43,6 +43,12 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
 			<version>3.5</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.github.zafarkhaja</groupId>
+			<artifactId>java-semver</artifactId>
+			<version>0.9.0</version>
 		</dependency>
 
 		<!-- database related dependencies -->
