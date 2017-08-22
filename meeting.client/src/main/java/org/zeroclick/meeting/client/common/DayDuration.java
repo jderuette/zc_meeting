@@ -77,7 +77,7 @@ public class DayDuration {
 		return result;
 	}
 
-	@SuppressWarnings("PMD.")
+	@SuppressWarnings("PMD.CollapsibleIfStatements")
 	private Boolean isAfterBegin(final LocalDateTime checkedDate) {
 		Boolean result = Boolean.FALSE;
 		if (this.validDayOfWeek.contains(checkedDate.getDayOfWeek())) {
@@ -90,7 +90,7 @@ public class DayDuration {
 		return result;
 	}
 
-	@SuppressWarnings("PMD.")
+	@SuppressWarnings("PMD.CollapsibleIfStatements")
 	private Boolean isBeforeEnd(final LocalDateTime checkedDate) {
 		Boolean result = Boolean.FALSE;
 		if (this.validDayOfWeek.contains(checkedDate.getDayOfWeek())) {
@@ -103,7 +103,7 @@ public class DayDuration {
 		return result;
 	}
 
-	@SuppressWarnings("PMD.")
+	@SuppressWarnings("PMD.CollapsibleIfStatements")
 	private Boolean isAfterEnd(final LocalDateTime checkedDate) {
 		Boolean result = Boolean.FALSE;
 		if (this.validDayOfWeek.contains(checkedDate.getDayOfWeek())) {

@@ -8,6 +8,7 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.eclipse.scout.rt.shared.services.common.security.IAccessControlService;
+import org.zeroclick.common.CommonService;
 import org.zeroclick.configuration.shared.role.CreatePermissionPermission;
 import org.zeroclick.configuration.shared.role.IAppPermissionService;
 import org.zeroclick.configuration.shared.role.PermissionFormData;
@@ -18,12 +19,12 @@ import org.zeroclick.configuration.shared.role.UpdatePermissionPermission;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.meeting.server.sql.SQLs;
 
-public class AppPermissionService implements IAppPermissionService {
+public class AppPermissionService extends CommonService implements IAppPermissionService {
 
 	@Override
 	public PermissionFormData prepareCreate(final PermissionFormData formData) {
 		if (!ACCESS.check(new CreatePermissionPermission())) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 		// TODO Djer13 something to prepare ?
 		return formData;
@@ -32,7 +33,7 @@ public class AppPermissionService implements IAppPermissionService {
 	@Override
 	public PermissionFormData create(final PermissionFormData formData) {
 		if (!ACCESS.check(new CreatePermissionPermission())) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 		SQL.insert(SQLs.ROLE_PERMISSION_INSERT, formData);
 		BEANS.get(IAccessControlService.class).clearCache();
@@ -42,7 +43,7 @@ public class AppPermissionService implements IAppPermissionService {
 	@Override
 	public PermissionFormData load(final PermissionFormData formData) {
 		if (!ACCESS.check(new ReadPermissionPermission())) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 		SQL.selectInto(SQLs.ROLE_SELECT, formData);
 		return formData;
@@ -51,7 +52,7 @@ public class AppPermissionService implements IAppPermissionService {
 	@Override
 	public PermissionFormData store(final PermissionFormData formData) {
 		if (!ACCESS.check(new UpdatePermissionPermission())) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 		throw new VetoException(TEXTS.get("zc.user.permissionStoreNotAllowed"));
 		// return formData;

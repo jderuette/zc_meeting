@@ -18,15 +18,15 @@ import org.zeroclick.meeting.shared.calendar.IApiService;
 public class OAuthCredentialFormTest {
 
 	@BeanMock
-	private IApiService m_mockSvc;
+	private IApiService mockSvc;
 
 	@Before
 	public void setup() {
 		final ApiFormData answer = new ApiFormData();
-		Mockito.when(this.m_mockSvc.prepareCreate(Matchers.any(ApiFormData.class))).thenReturn(answer);
-		Mockito.when(this.m_mockSvc.create(Matchers.any(ApiFormData.class))).thenReturn(answer);
-		Mockito.when(this.m_mockSvc.load(Matchers.any(ApiFormData.class))).thenReturn(answer);
-		Mockito.when(this.m_mockSvc.store(Matchers.any(ApiFormData.class))).thenReturn(answer);
+		Mockito.when(this.mockSvc.prepareCreate(Matchers.any(ApiFormData.class))).thenReturn(answer);
+		Mockito.when(this.mockSvc.create(Matchers.any(ApiFormData.class))).thenReturn(answer);
+		Mockito.when(this.mockSvc.load(Matchers.any(ApiFormData.class))).thenReturn(answer);
+		Mockito.when(this.mockSvc.store(Matchers.any(ApiFormData.class))).thenReturn(answer);
 	}
 
 	// TODO [djer] add test cases

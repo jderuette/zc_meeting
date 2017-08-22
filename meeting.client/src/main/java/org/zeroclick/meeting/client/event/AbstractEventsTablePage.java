@@ -1015,31 +1015,31 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
 		}
 
-		public DurationColumn getDurationColumn() {
+		public AbstractEventsTablePage<?>.Table.DurationColumn getDurationColumn() {
 			return this.getColumnSet().getColumnByClass(DurationColumn.class);
 		}
 
-		public EmailColumn getEmailColumn() {
+		public AbstractEventsTablePage<?>.Table.EmailColumn getEmailColumn() {
 			return this.getColumnSet().getColumnByClass(EmailColumn.class);
 		}
 
-		public StartDateColumn getStartDateColumn() {
+		public AbstractEventsTablePage<?>.Table.StartDateColumn getStartDateColumn() {
 			return this.getColumnSet().getColumnByClass(StartDateColumn.class);
 		}
 
-		public EndDateColumn getEndDateColumn() {
+		public AbstractEventsTablePage<?>.Table.EndDateColumn getEndDateColumn() {
 			return this.getColumnSet().getColumnByClass(EndDateColumn.class);
 		}
 
-		public StateColumn getStateColumn() {
+		public AbstractEventsTablePage<?>.Table.StateColumn getStateColumn() {
 			return this.getColumnSet().getColumnByClass(StateColumn.class);
 		}
 
-		public ExternalIdOrganizerColumn getExternalIdOrganizerColumn() {
+		public AbstractEventsTablePage<?>.Table.ExternalIdOrganizerColumn getExternalIdOrganizerColumn() {
 			return this.getColumnSet().getColumnByClass(ExternalIdOrganizerColumn.class);
 		}
 
-		public ExternalIdRecipientColumn getExternalIdRecipientColumn() {
+		public AbstractEventsTablePage<?>.Table.ExternalIdRecipientColumn getExternalIdRecipientColumn() {
 			return this.getColumnSet().getColumnByClass(ExternalIdRecipientColumn.class);
 		}
 
@@ -1059,15 +1059,15 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			return this.getColumnSet().getColumnByClass(ReasonColumn.class);
 		}
 
-		public OrganizerColumn getOrganizerColumn() {
+		public AbstractEventsTablePage<?>.Table.OrganizerColumn getOrganizerColumn() {
 			return this.getColumnSet().getColumnByClass(OrganizerColumn.class);
 		}
 
-		public SlotColumn getSlotColumn() {
+		public AbstractEventsTablePage<?>.Table.SlotColumn getSlotColumn() {
 			return this.getColumnSet().getColumnByClass(SlotColumn.class);
 		}
 
-		public EventIdColumn getEventIdColumn() {
+		public AbstractEventsTablePage<?>.Table.EventIdColumn getEventIdColumn() {
 			return this.getColumnSet().getColumnByClass(EventIdColumn.class);
 		}
 

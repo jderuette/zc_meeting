@@ -32,6 +32,7 @@ import org.junit.Test;
  * @author djer
  *
  */
+@SuppressWarnings("PMD.MethodNamingConventions")
 public class DateHelperTest {
 
 	private static final String DEFAULT_TEST_TIME_ZONE = "Europe/Paris";

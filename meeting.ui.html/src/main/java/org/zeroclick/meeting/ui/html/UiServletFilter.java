@@ -29,17 +29,17 @@ import org.zeroclick.common.security.ScoutServiceCredentialVerifier;
  */
 public class UiServletFilter implements Filter {
 
-	private TrivialAccessController m_trivialAccessController;
-	private FormBasedAccessController m_formBasedAccessController;
-	private DevelopmentAccessController m_developmentAccessController;
+	private TrivialAccessController trivialAccessController;
+	private FormBasedAccessController formBasedAccessController;
+	private DevelopmentAccessController developmentAccessController;
 
 	@Override
 	public void init(final FilterConfig filterConfig) throws ServletException {
-		this.m_trivialAccessController = BEANS.get(TrivialAccessController.class).init(new TrivialAuthConfig()
+		this.trivialAccessController = BEANS.get(TrivialAccessController.class).init(new TrivialAuthConfig()
 				.withExclusionFilter(filterConfig.getInitParameter("filter-exclude")).withLoginPageInstalled(true));
-		this.m_formBasedAccessController = BEANS.get(FormBasedAccessController.class)
+		this.formBasedAccessController = BEANS.get(FormBasedAccessController.class)
 				.init(new FormBasedAuthConfig().withCredentialVerifier(BEANS.get(ConfigFileCredentialVerifier.class)));
-		this.m_formBasedAccessController = BEANS.get(FormBasedAccessController.class)
+		this.formBasedAccessController = BEANS.get(FormBasedAccessController.class)
 				.init(new FormBasedAuthConfig()
 						// .withCredentialVerifier(BEANS.get(ConfigFileCredentialVerifier.class)));
 						.withCredentialVerifier(BEANS.get(ScoutServiceCredentialVerifier.class)));
@@ -49,7 +49,7 @@ public class UiServletFilter implements Filter {
 		// new
 		// FormBasedAuthConfig().withCredentialVerifier(BEANS.get(ScoutServiceCredentialVerifier.class)));
 
-		this.m_developmentAccessController = BEANS.get(DevelopmentAccessController.class).init();
+		this.developmentAccessController = BEANS.get(DevelopmentAccessController.class).init();
 	}
 
 	@Override
@@ -58,15 +58,15 @@ public class UiServletFilter implements Filter {
 		final HttpServletRequest req = (HttpServletRequest) request;
 		final HttpServletResponse resp = (HttpServletResponse) response;
 
-		if (this.m_trivialAccessController.handle(req, resp, chain)) {
+		if (this.trivialAccessController.handle(req, resp, chain)) {
 			return;
 		}
 
-		if (this.m_formBasedAccessController.handle(req, resp, chain)) {
+		if (this.formBasedAccessController.handle(req, resp, chain)) {
 			return;
 		}
 
-		if (this.m_developmentAccessController.handle(req, resp, chain)) {
+		if (this.developmentAccessController.handle(req, resp, chain)) {
 			return;
 		}
 
@@ -75,8 +75,8 @@ public class UiServletFilter implements Filter {
 
 	@Override
 	public void destroy() {
-		this.m_developmentAccessController.destroy();
-		this.m_formBasedAccessController.destroy();
-		this.m_trivialAccessController.destroy();
+		this.developmentAccessController.destroy();
+		this.formBasedAccessController.destroy();
+		this.trivialAccessController.destroy();
 	}
 }

@@ -21,21 +21,21 @@ public class PermissionFormData extends AbstractFormData {
 	}
 
 	/**
-	 * access method for property Role_id.
+	 * access method for property RoleId.
 	 */
-	public Integer getRole_id() {
-		return getRole_idProperty().getValue();
+	public Integer getRoleId() {
+		return getRoleIdProperty().getValue();
 	}
 
 	/**
-	 * access method for property Role_id.
+	 * access method for property RoleId.
 	 */
-	public void setRole_id(Integer role_id) {
-		getRole_idProperty().setValue(role_id);
+	public void setRoleId(Integer roleId) {
+		getRoleIdProperty().setValue(roleId);
 	}
 
-	public Role_idProperty getRole_idProperty() {
-		return getPropertyByClass(Role_idProperty.class);
+	public RoleIdProperty getRoleIdProperty() {
+		return getPropertyByClass(RoleIdProperty.class);
 	}
 
 	public static class Permission extends AbstractValueFieldData<String> {
@@ -43,7 +43,7 @@ public class PermissionFormData extends AbstractFormData {
 		private static final long serialVersionUID = 1L;
 	}
 
-	public static class Role_idProperty extends AbstractPropertyData<Integer> {
+	public static class RoleIdProperty extends AbstractPropertyData<Integer> {
 
 		private static final long serialVersionUID = 1L;
 	}

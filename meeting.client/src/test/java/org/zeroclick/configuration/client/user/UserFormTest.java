@@ -18,15 +18,15 @@ import org.zeroclick.configuration.shared.user.UserFormData;
 public class UserFormTest {
 
 	@BeanMock
-	private IUserService m_mockSvc;
+	private IUserService mockSvc;
 
 	@Before
 	public void setup() {
 		final UserFormData answer = new UserFormData();
-		Mockito.when(this.m_mockSvc.prepareCreate(Matchers.any(UserFormData.class))).thenReturn(answer);
-		Mockito.when(this.m_mockSvc.create(Matchers.any(UserFormData.class))).thenReturn(answer);
-		Mockito.when(this.m_mockSvc.load(Matchers.any(UserFormData.class))).thenReturn(answer);
-		Mockito.when(this.m_mockSvc.store(Matchers.any(UserFormData.class))).thenReturn(answer);
+		Mockito.when(this.mockSvc.prepareCreate(Matchers.any(UserFormData.class))).thenReturn(answer);
+		Mockito.when(this.mockSvc.create(Matchers.any(UserFormData.class))).thenReturn(answer);
+		Mockito.when(this.mockSvc.load(Matchers.any(UserFormData.class))).thenReturn(answer);
+		Mockito.when(this.mockSvc.store(Matchers.any(UserFormData.class))).thenReturn(answer);
 	}
 
 	// TODO [djer] add test cases

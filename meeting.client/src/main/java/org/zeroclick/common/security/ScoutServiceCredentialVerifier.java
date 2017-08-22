@@ -178,7 +178,7 @@ public class ScoutServiceCredentialVerifier implements ICredentialVerifier {
 		private final char[] m_password;
 
 		public PlainTextPassword(final char[] password) {
-			this.m_password = password;
+			this.m_password = password.clone();
 		}
 
 		@Override
@@ -219,7 +219,7 @@ public class ScoutServiceCredentialVerifier implements ICredentialVerifier {
 		 *            SecurityUtility.createRandomBytes()
 		 */
 		public HashedPassword(final String password, final byte[] salt) {
-			this.m_salt = salt;
+			this.m_salt = salt.clone();
 			this.m_hash = this.createPasswordHash(password.toCharArray(), salt);
 		}
 

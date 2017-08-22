@@ -16,6 +16,7 @@ import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.common.CommonService;
 import org.zeroclick.configuration.shared.onboarding.OnBoardingUserFormData;
 import org.zeroclick.configuration.shared.user.CreateUserPermission;
 import org.zeroclick.configuration.shared.user.IUserService;
@@ -25,9 +26,8 @@ import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.configuration.shared.user.UserModifiedNotification;
 import org.zeroclick.configuration.shared.user.UserTablePageData;
 import org.zeroclick.meeting.server.sql.SQLs;
-import org.zeroclick.meeting.shared.security.AccessControlService;
 
-public class UserService implements IUserService {
+public class UserService extends CommonService implements IUserService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(UserService.class);
 
@@ -43,8 +43,7 @@ public class UserService implements IUserService {
 		Long currentConnectedUserId = 0L;
 		if (ACCESS.getLevel(new ReadUserPermission((Long) null)) != ReadUserPermission.LEVEL_ALL) {
 			ownerFilter = SQLs.USER_SELECT_FILTER_ID;
-			final AccessControlService acs = BEANS.get(AccessControlService.class);
-			currentConnectedUserId = acs.getZeroClickUserIdOfCurrentSubject();
+			currentConnectedUserId = super.userHelper.getCurrentUserId();
 		}
 
 		final String sql = SQLs.USER_PAGE_SELECT + ownerFilter + SQLs.USER_PAGE_DATA_SELECT_INTO;
@@ -57,7 +56,7 @@ public class UserService implements IUserService {
 	@Override
 	public UserFormData prepareCreate(final UserFormData formData) {
 		if (!ACCESS.check(new CreateUserPermission())) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 		LOG.debug("PrepareCreate for User");
 		return formData;
@@ -71,13 +70,10 @@ public class UserService implements IUserService {
 			LOG.info("Create user autoFilled enabled reseting advanced value (role forced to 'Standard')");
 			formData.getRolesBox().setValue(DEFAULT_ROLES);
 
-			final AccessControlService acs = BEANS.get(AccessControlService.class);
-			final Long currenUserId = acs.getZeroClickUserIdOfCurrentSubject();
-
-			formData.setInvitedBy(currenUserId);
+			formData.setInvitedBy(super.userHelper.getCurrentUserId());
 		} else {
 			if (!ACCESS.check(new CreateUserPermission())) {
-				throw new VetoException(TEXTS.get("AuthorizationFailed"));
+				super.throwAuthorizationFailed();
 			}
 		}
 
@@ -122,7 +118,7 @@ public class UserService implements IUserService {
 	@Override
 	public UserFormData load(final UserFormData formData) {
 		if (!ACCESS.check(new ReadUserPermission(formData.getUserId().getValue()))) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 		LOG.debug("Load User with Id :" + formData.getUserId().getValue() + " and email : "
 				+ formData.getEmail().getValue() + " (login : " + formData.getLogin().getValue() + ")");
@@ -131,8 +127,7 @@ public class UserService implements IUserService {
 		if (ACCESS.getLevel(new ReadUserPermission((Long) null)) != ReadUserPermission.LEVEL_ALL) {
 			// if not allowed to read ALL User, force currentUser only
 
-			final AccessControlService acs = BEANS.get(AccessControlService.class);
-			final Long currenUserId = acs.getZeroClickUserIdOfCurrentSubject();
+			final Long currenUserId = super.userHelper.getCurrentUserId();
 
 			if (!currenUserId.equals(currentSelectedUserId)) {
 				LOG.warn("User : " + currentSelectedUserId + " not allowed to view : " + currentSelectedUserId
@@ -190,7 +185,7 @@ public class UserService implements IUserService {
 
 	protected UserFormData store(final UserFormData formData, final Boolean isCreation) {
 		if (!isCreation && !ACCESS.check(new UpdateUserPermission(formData.getUserId().getValue()))) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 		LOG.debug("Store User with Id :" + formData.getUserId().getValue() + " and email : "
 				+ formData.getEmail().getValue() + " (Login : " + formData.getLogin().getValue() + ")");
@@ -219,7 +214,7 @@ public class UserService implements IUserService {
 	@Override
 	public OnBoardingUserFormData store(final OnBoardingUserFormData formData) {
 		if (!ACCESS.check(new UpdateUserPermission(formData.getUserId().getValue()))) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 		LOG.debug("Store OnBoarding User datas with Id :" + formData.getUserId().getValue() + " (Login : "
 				+ formData.getLogin().getValue() + ")");
@@ -257,8 +252,7 @@ public class UserService implements IUserService {
 
 	@Override
 	public boolean isOwn(final Long userId) {
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-		final Long currentUserId = acs.getZeroClickUserIdOfCurrentSubject();
+		final Long currentUserId = super.userHelper.getCurrentUserId();
 
 		if (null == userId) {
 			LOG.error("Cannot check currentUser own with empty or null UserId");
@@ -275,10 +269,8 @@ public class UserService implements IUserService {
 
 	@Override
 	public UserFormData getCurrentUserDetails() {
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-
 		final UserFormData formData = new UserFormData();
-		formData.getUserId().setValue(acs.getZeroClickUserIdOfCurrentSubject());
+		formData.getUserId().setValue(super.userHelper.getCurrentUserId());
 		return this.load(formData);
 	}
 

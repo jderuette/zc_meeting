@@ -6,17 +6,16 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.scout.rt.platform.BEANS;
-import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.holders.NVPair;
 import org.eclipse.scout.rt.server.clientnotification.ClientNotificationRegistry;
 import org.eclipse.scout.rt.server.jdbc.SQL;
-import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.data.page.AbstractTablePageData;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.common.CommonService;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.meeting.server.sql.SQLs;
@@ -31,7 +30,7 @@ import org.zeroclick.meeting.shared.event.RejectEventFormData;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
-public class EventService implements IEventService {
+public class EventService extends CommonService implements IEventService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(EventService.class);
 
@@ -44,7 +43,7 @@ public class EventService implements IEventService {
 		if (!displayAllForAdmin
 				|| ACCESS.getLevel(new ReadEventPermission((Long) null)) != ReadEventPermission.LEVEL_ALL) {
 			ownerFilter = SQLs.EVENT_PAGE_SELECT_FILTER_USER_OR_RECIPIENT;
-			currentConnectedUserId = this.getCurrentUserId();
+			currentConnectedUserId = super.userHelper.getCurrentUserId();
 		}
 
 		final String sql = SQLs.EVENT_PAGE_SELECT + ownerFilter + eventStatusCriteria
@@ -80,7 +79,7 @@ public class EventService implements IEventService {
 	public Map<Long, Integer> getUsersWithPendingMeeting() {
 		final Map<Long, Integer> users = new HashMap<>();
 
-		final Long currentUser = this.getCurrentUserId();
+		final Long currentUser = super.userHelper.getCurrentUserId();
 
 		LOG.debug("Loading pending meeting users with : " + currentUser);
 
@@ -122,7 +121,7 @@ public class EventService implements IEventService {
 	@Override
 	public EventFormData prepareCreate(final EventFormData formData) {
 		if (!ACCESS.check(new CreateEventPermission())) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 		LOG.debug("PrepareCreate for Event");
 
@@ -133,7 +132,7 @@ public class EventService implements IEventService {
 		// TODO Djer move SlotLookup to shared Part ?
 		formData.getSlot().setValue(1);
 
-		formData.getOrganizer().setValue(this.getCurrentUserId());
+		formData.getOrganizer().setValue(super.userHelper.getCurrentUserId());
 
 		return formData;
 	}
@@ -141,7 +140,7 @@ public class EventService implements IEventService {
 	@Override
 	public EventFormData create(final EventFormData formData) {
 		if (!ACCESS.check(new CreateEventPermission())) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 		// add a unique event id if necessary
 		if (null == formData.getEventId()) {
@@ -151,7 +150,7 @@ public class EventService implements IEventService {
 		// retrieve guest UserID
 		formData.getGuestId().setValue(this.retrieveUserId(formData.getEmail().getValue()));
 
-		formData.setLastModifier(this.getCurrentUserId());
+		formData.setLastModifier(super.userHelper.getCurrentUserId());
 
 		SQL.insert(SQLs.EVENT_INSERT, formData);
 		final EventFormData storedData = this.store(formData, Boolean.TRUE);
@@ -194,7 +193,7 @@ public class EventService implements IEventService {
 	@Override
 	public EventFormData load(final EventFormData formData) {
 		if (!ACCESS.check(new ReadEventPermission(formData.getEventId()))) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 		SQL.selectInto(SQLs.EVENT_SELECT, formData);
 		return formData;
@@ -203,7 +202,7 @@ public class EventService implements IEventService {
 	@Override
 	public RejectEventFormData load(final RejectEventFormData formData) {
 		if (!ACCESS.check(new ReadEventPermission(formData.getEventId()))) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 		SQL.selectInto(SQLs.EVENT_SELECT_REJECT, formData);
 		return formData;
@@ -211,10 +210,10 @@ public class EventService implements IEventService {
 
 	private EventFormData store(final EventFormData formData, final Boolean duringCreate) {
 		if (!ACCESS.check(new UpdateEventPermission(formData.getEventId()))) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 		if (null == formData.getLastModifier()) {
-			formData.setLastModifier(this.getCurrentUserId());
+			formData.setLastModifier(super.userHelper.getCurrentUserId());
 		}
 		SQL.update(SQLs.EVENT_UPDATE, formData);
 
@@ -233,14 +232,14 @@ public class EventService implements IEventService {
 	@Override
 	public EventFormData storeNewState(final RejectEventFormData formData) {
 		if (!ACCESS.check(new UpdateEventPermission(formData.getEventId()))) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 		SQL.update(SQLs.EVENT_UPDATE_STATE, formData);
 
 		// reload the **full** event data after update
 		final EventFormData eventFormData = new EventFormData();
 		eventFormData.setEventId(formData.getEventId());
-		eventFormData.setLastModifier(this.getCurrentUserId());
+		eventFormData.setLastModifier(super.userHelper.getCurrentUserId());
 		this.load(eventFormData);
 
 		eventFormData.setPreviousState(formData.getState());
@@ -268,7 +267,7 @@ public class EventService implements IEventService {
 
 	protected Set<String> getKnowEmail(final ILookupCall<String> call, final Boolean strict) {
 		final Set<String> knowEmail = new HashSet<>();
-		final Long currentUserId = this.getCurrentUserId();
+		final Long currentUserId = super.userHelper.getCurrentUserId();
 
 		final Object[][] attendeesData = SQL.select(SQLs.EVENT_SELECT_KNOWN_ATTENDEE_LOOKUP,
 				new NVPair("currentUser", currentUserId), new NVPair("call", call));
@@ -299,7 +298,7 @@ public class EventService implements IEventService {
 	@Override
 	public boolean isOwn(final Long eventId) {
 		Boolean isOwn = Boolean.FALSE;
-		final Long currentUserId = this.getCurrentUserId();
+		final Long currentUserId = super.userHelper.getCurrentUserId();
 
 		final Long eventOwner = this.getOwner(eventId);
 
@@ -333,10 +332,4 @@ public class EventService implements IEventService {
 
 		return userDetails.getEmail().getValue();
 	}
-
-	private Long getCurrentUserId() {
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-		return acs.getZeroClickUserIdOfCurrentSubject();
-	}
-
 }

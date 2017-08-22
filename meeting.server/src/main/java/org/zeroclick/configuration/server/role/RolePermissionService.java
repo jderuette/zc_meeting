@@ -19,13 +19,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.scout.rt.platform.BEANS;
-import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.holders.NVPair;
 import org.eclipse.scout.rt.server.jdbc.SQL;
-import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.common.CommonService;
 import org.zeroclick.configuration.shared.role.AssignToRoleFormData;
 import org.zeroclick.configuration.shared.role.CreateAssignToRolePermission;
 import org.zeroclick.configuration.shared.role.IRolePermissionService;
@@ -36,7 +35,7 @@ import org.zeroclick.meeting.server.sql.SQLs;
  * @author djer
  *
  */
-public class RolePermissionService implements IRolePermissionService {
+public class RolePermissionService extends CommonService implements IRolePermissionService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(RolePermissionService.class);
 
@@ -50,7 +49,7 @@ public class RolePermissionService implements IRolePermissionService {
 	@Override
 	public AssignToRoleFormData create(final AssignToRoleFormData formData) {
 		if (!ACCESS.check(new CreateAssignToRolePermission())) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 		final Long roleId = formData.getRoleId().getValue();
 		LOG.info("Adding new permission(s) to role :" + roleId + " : " + formData.getPermission());

@@ -17,6 +17,7 @@ import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.common.CommonService;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
 import org.zeroclick.configuration.shared.api.ApiDeletedNotification;
 import org.zeroclick.configuration.shared.api.ApiTablePageData;
@@ -31,7 +32,7 @@ import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.ReadEventPermission;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
-public class ApiService implements IApiService {
+public class ApiService extends CommonService implements IApiService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ApiService.class);
 
@@ -45,8 +46,7 @@ public class ApiService implements IApiService {
 
 		if (ACCESS.getLevel(new ReadEventPermission((Long) null)) != ReadEventPermission.LEVEL_ALL) {
 			sql.append(SQLs.OAUHTCREDENTIAL_PAGE_SELECT_FILTER_USER);
-			final AccessControlService acs = BEANS.get(AccessControlService.class);
-			currentConnectedUserId = acs.getZeroClickUserIdOfCurrentSubject();
+			currentConnectedUserId = super.userHelper.getCurrentUserId();
 		}
 
 		sql.append(SQLs.OAUHTCREDENTIAL_PAGE_DATA_SELECT_INTO);
@@ -58,7 +58,7 @@ public class ApiService implements IApiService {
 	@Override
 	public ApiFormData prepareCreate(final ApiFormData formData) {
 		if (!ACCESS.check(new CreateApiPermission())) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 		LOG.warn("PrepareCreate for Api");
 		return this.store(formData);
@@ -67,7 +67,7 @@ public class ApiService implements IApiService {
 	@Override
 	public ApiFormData create(final ApiFormData formData) {
 		if (!ACCESS.check(new CreateApiPermission())) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 
 		Boolean isNew = Boolean.FALSE;
@@ -132,10 +132,10 @@ public class ApiService implements IApiService {
 		LOG.debug("Loading credential by ID : " + oAuthId);
 
 		if (!ACCESS.check(new ReadApiPermission(oAuthId))) {
-			final AccessControlService acs = BEANS.get(AccessControlService.class);
-			LOG.error("User :" + acs.getUserIdOfCurrentSubject() + " (id : " + acs.getZeroClickUserIdOfCurrentSubject()
-					+ " try to load Api Data with Id : " + oAuthId + " (user : " + userId + ") wich belong to User "
-					+ userId + " But haven't 'ALL'/'RELATED' read permission");
+			final Long currentUserId = super.userHelper.getCurrentUserId();
+			LOG.error("User :" + currentUserId + " (id : " + currentUserId + " try to load Api Data with Id : "
+					+ oAuthId + " (user : " + userId + ") wich belong to User " + userId
+					+ " But haven't 'ALL'/'RELATED' read permission");
 			throw new VetoException(TEXTS.get("AuthorizationFailed"));
 		}
 
@@ -159,7 +159,7 @@ public class ApiService implements IApiService {
 	@Override
 	public ApiFormData store(final ApiFormData formData) {
 		if (!ACCESS.check(new UpdateApiPermission(formData.getApiCredentialId()))) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 
 		LOG.debug("Storing API in DB for user : " + formData.getUserIdProperty().getValue() + " for provider : "
@@ -171,7 +171,7 @@ public class ApiService implements IApiService {
 	@Override
 	public void delete(final ApiFormData formData) {
 		if (!ACCESS.check(new DeleteApiPermission(formData.getApiCredentialId()))) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 
 		final ApiFormData dataBeforeDeletion = this.load(formData);
@@ -197,7 +197,7 @@ public class ApiService implements IApiService {
 
 		if (null != formData.getApiCredentialId()
 				&& !ACCESS.check(new ReadApiPermission(formData.getApiCredentialId()))) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 		return formData.getApiCredentialId();
 	}
@@ -243,15 +243,12 @@ public class ApiService implements IApiService {
 
 	@Override
 	public boolean isOwn(final Long apiCredentialId) {
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-		final Long currentUserId = acs.getZeroClickUserIdOfCurrentSubject();
-
 		final Long apiCredentialOwner = this.getOwner(apiCredentialId);
 
 		if (null == apiCredentialOwner) {
 			LOG.error("ApiCrentialId " + apiCredentialId + " as NO owner (user_id)");
 			return false;
-		} else if (apiCredentialOwner.equals(currentUserId)) {
+		} else if (apiCredentialOwner.equals(super.userHelper.getCurrentUserId())) {
 			return true;
 		}
 
@@ -267,7 +264,5 @@ public class ApiService implements IApiService {
 		final Map<Long, Integer> pendingUsers = eventService.getUsersWithPendingMeeting();
 
 		return pendingUsers.containsKey(apiCredentialOwner) ? pendingUsers.get(apiCredentialOwner) > 0 : Boolean.FALSE;
-
 	}
-
 }

@@ -71,7 +71,7 @@ public class Desktop extends AbstractDesktop {
 	@Override
 	protected String getConfiguredLogoId() {
 		return null;
-		// return Icons.AppLogo;
+		// return Icons.APP_LOGO;
 	}
 
 	@Override
@@ -325,7 +325,7 @@ public class Desktop extends AbstractDesktop {
 
 		@Override
 		protected String getConfiguredIconId() {
-			return Icons.AppLogo;
+			return Icons.APP_LOGO;
 		}
 
 		@Override

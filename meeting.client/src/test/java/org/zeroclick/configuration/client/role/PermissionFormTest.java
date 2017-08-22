@@ -18,15 +18,15 @@ import org.zeroclick.configuration.shared.role.PermissionFormData;
 public class PermissionFormTest {
 
 	@BeanMock
-	private IAppPermissionService m_mockSvc;
+	private IAppPermissionService mockSvc;
 
 	@Before
 	public void setup() {
 		final PermissionFormData answer = new PermissionFormData();
-		Mockito.when(this.m_mockSvc.prepareCreate(Matchers.any(PermissionFormData.class))).thenReturn(answer);
-		Mockito.when(this.m_mockSvc.create(Matchers.any(PermissionFormData.class))).thenReturn(answer);
-		Mockito.when(this.m_mockSvc.load(Matchers.any(PermissionFormData.class))).thenReturn(answer);
-		Mockito.when(this.m_mockSvc.store(Matchers.any(PermissionFormData.class))).thenReturn(answer);
+		Mockito.when(this.mockSvc.prepareCreate(Matchers.any(PermissionFormData.class))).thenReturn(answer);
+		Mockito.when(this.mockSvc.create(Matchers.any(PermissionFormData.class))).thenReturn(answer);
+		Mockito.when(this.mockSvc.load(Matchers.any(PermissionFormData.class))).thenReturn(answer);
+		Mockito.when(this.mockSvc.store(Matchers.any(PermissionFormData.class))).thenReturn(answer);
 	}
 
 	// TODO [djer] add test cases

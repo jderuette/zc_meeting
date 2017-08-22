@@ -29,16 +29,16 @@ public class ServerServletFilter implements Filter {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ServerServletFilter.class);
 
-	private TrivialAccessController m_trivialAccessController;
-	private ServiceTunnelAccessTokenAccessController m_tunnelAccessController;
-	private DevelopmentAccessController m_developmentAccessController;
+	private TrivialAccessController trivialAccessController;
+	private ServiceTunnelAccessTokenAccessController tunnelAccessController;
+	private DevelopmentAccessController developmentAccessController;
 
 	@Override
 	public void init(final FilterConfig filterConfig) throws ServletException {
-		this.m_trivialAccessController = BEANS.get(TrivialAccessController.class)
+		this.trivialAccessController = BEANS.get(TrivialAccessController.class)
 				.init(new TrivialAuthConfig().withExclusionFilter(filterConfig.getInitParameter("filter-exclude")));
-		this.m_tunnelAccessController = BEANS.get(ServiceTunnelAccessTokenAccessController.class).init();
-		this.m_developmentAccessController = BEANS.get(DevelopmentAccessController.class).init();
+		this.tunnelAccessController = BEANS.get(ServiceTunnelAccessTokenAccessController.class).init();
+		this.developmentAccessController = BEANS.get(DevelopmentAccessController.class).init();
 	}
 
 	@Override
@@ -50,18 +50,18 @@ public class ServerServletFilter implements Filter {
 		LOG.info("Filtering request : " + req.getContentType() + ", " + req.getRequestURL() + " with principal : "
 				+ req.getUserPrincipal() + " with response type : " + resp.getContentType());
 
-		if (this.m_trivialAccessController.handle(req, resp, chain)) {
-			LOG.info("request : " + req + ", handled by m_trivialAccessController");
+		if (this.trivialAccessController.handle(req, resp, chain)) {
+			LOG.info("request : " + req + ", handled by trivialAccessController");
 			return;
 		}
 
-		if (this.m_tunnelAccessController.handle(req, resp, chain)) {
-			LOG.info("request : " + req + ", handled by m_tunnelAccessController");
+		if (this.tunnelAccessController.handle(req, resp, chain)) {
+			LOG.info("request : " + req + ", handled by tunnelAccessController");
 			return;
 		}
 
-		if (this.m_developmentAccessController.handle(req, resp, chain)) {
-			LOG.info("request : " + req + ", handled by m_developmentAccessController");
+		if (this.developmentAccessController.handle(req, resp, chain)) {
+			LOG.info("request : " + req + ", handled by developmentAccessController");
 			return;
 		}
 
@@ -72,8 +72,8 @@ public class ServerServletFilter implements Filter {
 
 	@Override
 	public void destroy() {
-		this.m_developmentAccessController.destroy();
-		this.m_tunnelAccessController.destroy();
-		this.m_trivialAccessController.destroy();
+		this.developmentAccessController.destroy();
+		this.tunnelAccessController.destroy();
+		this.trivialAccessController.destroy();
 	}
 }

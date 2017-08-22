@@ -2,14 +2,13 @@ package org.zeroclick.configuration.server.role;
 
 import java.util.UUID;
 
-import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.holders.NVPair;
 import org.eclipse.scout.rt.server.jdbc.SQL;
-import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.common.CommonService;
 import org.zeroclick.configuration.shared.role.CreateRolePermission;
 import org.zeroclick.configuration.shared.role.IRoleService;
 import org.zeroclick.configuration.shared.role.ReadRolePermission;
@@ -18,7 +17,7 @@ import org.zeroclick.configuration.shared.role.RoleTablePageData;
 import org.zeroclick.configuration.shared.role.UpdateRolePermission;
 import org.zeroclick.meeting.server.sql.SQLs;
 
-public class RoleService implements IRoleService {
+public class RoleService extends CommonService implements IRoleService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(RoleService.class);
 
@@ -43,7 +42,7 @@ public class RoleService implements IRoleService {
 	@Override
 	public RoleFormData create(final RoleFormData formData) {
 		if (!ACCESS.check(new CreateRolePermission())) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 		// add a unique Role id if necessary
 		if (null == formData.getRoleId()) {
@@ -56,7 +55,7 @@ public class RoleService implements IRoleService {
 	@Override
 	public RoleFormData store(final RoleFormData formData) {
 		if (!ACCESS.check(new UpdateRolePermission())) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 		LOG.info("Updating Role with : " + formData.getRoleId() + "(new : " + formData.getRoleName() + ")");
 		SQL.update(SQLs.ROLE_UPDATE, formData);
@@ -66,7 +65,7 @@ public class RoleService implements IRoleService {
 	@Override
 	public RoleFormData load(final RoleFormData formData) {
 		if (!ACCESS.check(new ReadRolePermission())) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 		SQL.selectInto(SQLs.ROLE_SELECT + SQLs.ROLE_SELECT_INTO, formData);
 		return formData;

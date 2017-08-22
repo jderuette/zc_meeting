@@ -18,15 +18,15 @@ import org.zeroclick.meeting.shared.event.IEventService;
 public class EventFormTest {
 
 	@BeanMock
-	private IEventService m_mockSvc;
+	private IEventService mockSvc;
 
 	@Before
 	public void setup() {
 		final EventFormData answer = new EventFormData();
-		Mockito.when(this.m_mockSvc.prepareCreate(Matchers.any(EventFormData.class))).thenReturn(answer);
-		Mockito.when(this.m_mockSvc.create(Matchers.any(EventFormData.class))).thenReturn(answer);
-		Mockito.when(this.m_mockSvc.load(Matchers.any(EventFormData.class))).thenReturn(answer);
-		Mockito.when(this.m_mockSvc.store(Matchers.any(EventFormData.class))).thenReturn(answer);
+		Mockito.when(this.mockSvc.prepareCreate(Matchers.any(EventFormData.class))).thenReturn(answer);
+		Mockito.when(this.mockSvc.create(Matchers.any(EventFormData.class))).thenReturn(answer);
+		Mockito.when(this.mockSvc.load(Matchers.any(EventFormData.class))).thenReturn(answer);
+		Mockito.when(this.mockSvc.store(Matchers.any(EventFormData.class))).thenReturn(answer);
 	}
 
 	// TODO [djer] add test cases
