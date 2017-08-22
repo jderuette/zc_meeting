@@ -7,6 +7,8 @@
   <description>
 The Naming Ruleset contains rules regarding preferred usage of names and identifiers.
   </description>
+  <!-- The generated Scout Data file from Form, TablePage -->
+  <exclude-pattern>.*Data.java</exclude-pattern>
 
 
   <rule name="ShortVariable"
