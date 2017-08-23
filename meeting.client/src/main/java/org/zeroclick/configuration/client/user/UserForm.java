@@ -422,6 +422,8 @@ public class UserForm extends AbstractForm {
 						.withBody(TEXTS.get("zc.user.session.needReload")).withIconId(Icons.ExclamationMark)
 						.withSeverity(IStatus.WARNING).withAutoCloseMillis(10000L).show();
 				ClientSession.get().stop();
+			} else if (UserForm.this.getLanguageField().getValueChanged()) {
+				UserForm.this.getLanguageField().askToReloadSession();
 			}
 
 			final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);

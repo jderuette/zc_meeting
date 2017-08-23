@@ -229,6 +229,10 @@ public class OnBoardingUserForm extends AbstractForm {
 
 			service.store(formData);
 
+			if (OnBoardingUserForm.this.getLanguageField().getValueChanged()) {
+				OnBoardingUserForm.this.getLanguageField().askToReloadSession();
+			}
+
 			// ClientSession.get().getDesktop().openUri("/addGoogleCalendar",
 			// OpenUriAction.NEW_WINDOW);
 		}
