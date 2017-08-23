@@ -227,15 +227,15 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 		values.add(actor); // 0
 		final String stateText = TEXTS.get("zc.meeting.state." + formData.getState().getValue().toLowerCase());
-		values.add(stateText); // 1
+		values.add(stateText.toLowerCase()); // 1
 
 		values.add(formData.getSubject().getValue());// 2
 
 		final String slotText = TEXTS.get("zc.meeting.slot." + formData.getSlot().getValue());
-		values.add(slotText);// 3
+		values.add(slotText.toLowerCase());// 3
 
 		final String durationText = TEXTS.get("zc.meeting.duration." + formData.getDuration().getValue());
-		values.add(durationText);// 4
+		values.add(durationText.toLowerCase());// 4
 
 		String startDate = null;
 		if (null != formData.getStartDate().getValue()) {
