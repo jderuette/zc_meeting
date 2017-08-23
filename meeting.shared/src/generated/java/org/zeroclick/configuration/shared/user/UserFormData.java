@@ -80,6 +80,10 @@ public class UserFormData extends AbstractFormData {
 		return getPropertyByClass(InvitedByProperty.class);
 	}
 
+	public Language getLanguage() {
+		return getFieldByClass(Language.class);
+	}
+
 	public Login getLogin() {
 		return getFieldByClass(Login.class);
 	}
@@ -125,6 +129,11 @@ public class UserFormData extends AbstractFormData {
 	}
 
 	public static class InvitedByProperty extends AbstractPropertyData<Long> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class Language extends AbstractValueFieldData<String> {
 
 		private static final long serialVersionUID = 1L;
 	}

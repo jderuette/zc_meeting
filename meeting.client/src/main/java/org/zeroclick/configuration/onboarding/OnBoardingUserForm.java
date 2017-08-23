@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.client.api.ApiCreatedNotificationHandler;
 import org.zeroclick.configuration.client.api.ApiDeletedNotificationHandler;
 import org.zeroclick.configuration.onboarding.OnBoardingUserForm.MainBox.AddCalendarField;
+import org.zeroclick.configuration.onboarding.OnBoardingUserForm.MainBox.LanguageField;
 import org.zeroclick.configuration.onboarding.OnBoardingUserForm.MainBox.LoginField;
 import org.zeroclick.configuration.onboarding.OnBoardingUserForm.MainBox.OkButton;
 import org.zeroclick.configuration.onboarding.OnBoardingUserForm.MainBox.TimeZoneField;
@@ -63,6 +64,10 @@ public class OnBoardingUserForm extends AbstractForm {
 
 	public AddCalendarField getAddCalendarField() {
 		return this.getFieldByClass(AddCalendarField.class);
+	}
+
+	public LanguageField getLanguageField() {
+		return this.getFieldByClass(LanguageField.class);
 	}
 
 	public OkButton getOkButton() {
@@ -116,6 +121,11 @@ public class OnBoardingUserForm extends AbstractForm {
 
 		@Order(3000)
 		public class LoginField extends org.zeroclick.ui.form.fields.loginfield.LoginField {
+		}
+
+		@Order(3500)
+		public class LanguageField extends org.zeroclick.ui.form.fields.languagefield.LanguageField {
+
 		}
 
 		@Order(4000)

@@ -2,6 +2,7 @@ package org.zeroclick.meeting.client;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import org.eclipse.scout.rt.client.context.ClientRunContexts;
@@ -17,6 +18,7 @@ import org.eclipse.scout.rt.client.ui.desktop.outline.IOutline;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.job.Jobs;
+import org.eclipse.scout.rt.platform.nls.NlsLocale;
 import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.platform.status.Status;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
@@ -33,6 +35,7 @@ import org.zeroclick.configuration.client.administration.AdministrationOutline;
 import org.zeroclick.configuration.client.api.ApiCreatedNotificationHandler;
 import org.zeroclick.configuration.client.api.ApiDeletedNotificationHandler;
 import org.zeroclick.configuration.client.user.UserForm;
+import org.zeroclick.configuration.client.user.UserModifiedNotificationHandler;
 import org.zeroclick.configuration.onboarding.OnBoardingUserForm;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
 import org.zeroclick.configuration.shared.api.ApiDeletedNotification;
@@ -42,6 +45,7 @@ import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.ReadUserPermission;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.configuration.shared.user.UserFormData;
+import org.zeroclick.configuration.shared.user.UserModifiedNotification;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
 import org.zeroclick.meeting.client.meeting.MeetingOutline;
 import org.zeroclick.meeting.shared.Icons;
@@ -62,6 +66,7 @@ public class Desktop extends AbstractDesktop {
 
 	protected INotificationListener<ApiCreatedNotification> apiCreatedListener;
 	private INotificationListener<ApiDeletedNotification> apiDeletedListener;
+	private INotificationListener<UserModifiedNotification> userModifiedListener;
 
 	@Override
 	protected String getConfiguredTitle() {
@@ -70,8 +75,7 @@ public class Desktop extends AbstractDesktop {
 
 	@Override
 	protected String getConfiguredLogoId() {
-		return null;
-		// return Icons.APP_LOGO;
+		return Icons.APP_LOGO;
 	}
 
 	@Override
@@ -100,6 +104,10 @@ public class Desktop extends AbstractDesktop {
 				.get(ApiDeletedNotificationHandler.class);
 		apiDeletedNotificationHandler.addListener(this.createApiDeletedListener());
 
+		final UserModifiedNotificationHandler userModifiedNotificationHandler = BEANS
+				.get(UserModifiedNotificationHandler.class);
+		userModifiedNotificationHandler.addListener(this.createUserModifiedListener());
+
 		this.checkAndUpdateRequiredDatas();
 	}
 
@@ -126,6 +134,10 @@ public class Desktop extends AbstractDesktop {
 		final ApiDeletedNotificationHandler apiDeletedNotificationHandler = BEANS
 				.get(ApiDeletedNotificationHandler.class);
 		apiDeletedNotificationHandler.removeListener(this.apiDeletedListener);
+
+		final UserModifiedNotificationHandler userModifiedNotificationHandler = BEANS
+				.get(UserModifiedNotificationHandler.class);
+		userModifiedNotificationHandler.removeListener(this.userModifiedListener);
 	}
 
 	protected void selectFirstVisibleOutline() {
@@ -198,6 +210,31 @@ public class Desktop extends AbstractDesktop {
 		};
 
 		return this.apiDeletedListener;
+	}
+
+	private INotificationListener<UserModifiedNotification> createUserModifiedListener() {
+		this.userModifiedListener = new INotificationListener<UserModifiedNotification>() {
+			@Override
+			public void handleNotification(final UserModifiedNotification notification) {
+				try {
+					final UserFormData userForm = notification.getUserForm();
+					LOG.debug("User modified prepare to update locale (" + this.getClass().getName() + ") : "
+							+ userForm.getUserId());
+
+					final Locale currentLocale = NlsLocale.get();
+
+					if (null == currentLocale
+							|| !currentLocale.getLanguage().equals(userForm.getLanguage().getValue())) {
+						NlsLocale.set(new Locale(userForm.getLanguage().getValue()));
+					}
+
+				} catch (final RuntimeException e) {
+					LOG.error("Could not handle modified User. (" + this.getClass().getName() + ")", e);
+				}
+			}
+		};
+
+		return this.userModifiedListener;
 	}
 
 	@Order(2000)
@@ -316,27 +353,27 @@ public class Desktop extends AbstractDesktop {
 		}
 	}
 
-	@Order(4000)
-	public class AppLogoMenu extends AbstractMenu {
-		@Override
-		protected String getConfiguredText() {
-			return "";
-		}
-
-		@Override
-		protected String getConfiguredIconId() {
-			return Icons.APP_LOGO;
-		}
-
-		@Override
-		protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-			return CollectionUtility.hashSet();
-		}
-
-		@Override
-		protected void execAction() {
-		}
-	}
+	// @Order(4000)
+	// public class AppLogoMenu extends AbstractMenu {
+	// @Override
+	// protected String getConfiguredText() {
+	// return "";
+	// }
+	//
+	// @Override
+	// protected String getConfiguredIconId() {
+	// return Icons.APP_LOGO;
+	// }
+	//
+	// @Override
+	// protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+	// return CollectionUtility.hashSet();
+	// }
+	//
+	// @Override
+	// protected void execAction() {
+	// }
+	// }
 
 	@Order(1000)
 	public class MeetingOutlineViewButton extends AbstractOutlineViewButton {

@@ -46,4 +46,6 @@ public interface IUserService extends IService {
 
 	OnBoardingUserFormData store(OnBoardingUserFormData formData);
 
+	String getUserLanguage(Long guestId);
+
 }

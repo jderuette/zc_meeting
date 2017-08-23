@@ -9,6 +9,7 @@ import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.action.menu.TableMenuType;
 import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractLongColumn;
+import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractSmartColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractStringColumn;
 import org.eclipse.scout.rt.client.ui.desktop.outline.pages.AbstractPageWithTable;
 import org.eclipse.scout.rt.client.ui.form.FormEvent;
@@ -19,9 +20,11 @@ import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
+import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.zeroclick.configuration.client.user.UserTablePage.Table;
 import org.zeroclick.configuration.shared.user.CreateUserPermission;
 import org.zeroclick.configuration.shared.user.IUserService;
+import org.zeroclick.configuration.shared.user.LanguageLookupCall;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.configuration.shared.user.UserTablePageData;
 
@@ -140,6 +143,10 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 			return this.getColumnSet().getColumnByClass(InvitedByColumn.class);
 		}
 
+		public LanguageColumn getLanguageColumn() {
+			return this.getColumnSet().getColumnByClass(LanguageColumn.class);
+		}
+
 		public TimeZoneColumn getTimeZoneColumn() {
 			return this.getColumnSet().getColumnByClass(TimeZoneColumn.class);
 		}
@@ -212,5 +219,24 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 				return 100;
 			}
 		}
+
+		@Order(5000)
+		public class LanguageColumn extends AbstractSmartColumn<String> {
+			@Override
+			protected String getConfiguredHeaderText() {
+				return TEXTS.get("zc.user.language");
+			}
+
+			@Override
+			protected Class<? extends ILookupCall<String>> getConfiguredLookupCall() {
+				return LanguageLookupCall.class;
+			}
+
+			@Override
+			protected int getConfiguredWidth() {
+				return 100;
+			}
+		}
+
 	}
 }

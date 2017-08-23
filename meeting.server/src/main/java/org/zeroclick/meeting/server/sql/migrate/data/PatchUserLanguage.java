@@ -15,6 +15,7 @@ limitations under the License.
  */
 package org.zeroclick.meeting.server.sql.migrate.data;
 
+import org.eclipse.scout.rt.platform.holders.NVPair;
 import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,12 +28,12 @@ import com.github.zafarkhaja.semver.Version;
  * @author djer
  *
  */
-public class PatchInvitedBy extends AbstractDataPatcher {
+public class PatchUserLanguage extends AbstractDataPatcher {
 
-	private static final Logger LOG = LoggerFactory.getLogger(PatchInvitedBy.class);
+	private static final Logger LOG = LoggerFactory.getLogger(PatchUserLanguage.class);
 
-	public PatchInvitedBy() {
-		this.setDescription("Add Invited by colum on User");
+	public PatchUserLanguage() {
+		this.setDescription("Add Language colum on User");
 	}
 
 	/*
@@ -42,7 +43,7 @@ public class PatchInvitedBy extends AbstractDataPatcher {
 	 */
 	@Override
 	public Version getVersion() {
-		return Version.valueOf("1.1.2");
+		return Version.valueOf("1.1.3");
 	}
 
 	/*
@@ -61,15 +62,15 @@ public class PatchInvitedBy extends AbstractDataPatcher {
 	}
 
 	private void migrateStrucutre() {
-		LOG.info("User Invited By  upgrading data strcuture");
-		if (!this.getDatabaseHelper().isColumnExists("app_user", "invited_by")) {
-			SQL.insert(SQLs.USER_ALTER_TABLE_INVITED_BY);
-			SQL.insert(SQLs.USER_ALTER_TABLE_INVITED_BY_CONSTRAINT);
+		LOG.info("User Language  upgrading data strcuture");
+		if (!this.getDatabaseHelper().isColumnExists("app_user", "language")) {
+			SQL.insert(SQLs.USER_ALTER_TABLE_LANGUAGE);
 		}
 	}
 
 	private void migrateData() {
-		LOG.info("User Invited By No data migration needed");
+		LOG.info("User Language data migration start");
+		SQL.update("UPDATE APP_USER set language='FR' where login=:login", new NVPair("login", "d"));
 	}
 
 	/*
@@ -79,7 +80,7 @@ public class PatchInvitedBy extends AbstractDataPatcher {
 	 */
 	@Override
 	protected void undo() {
-		LOG.info("User Invited By downgrading data strcuture NOT RUN (need bug fix)");
+		LOG.info("User Language downgrading data strcuture NOT RUN (need bug fix)");
 	}
 
 }

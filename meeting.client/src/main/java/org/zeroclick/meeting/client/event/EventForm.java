@@ -22,6 +22,7 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
+import org.zeroclick.common.text.TextsHelper;
 import org.zeroclick.configuration.client.user.UserForm;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UserFormData;
@@ -487,6 +488,7 @@ public class EventForm extends AbstractForm {
 			final String eventHeldEmail = formData.getOrganizerEmail().getValue();
 			final Long eventGuest = userService.getUserIdByEmail(eventGuestEmail);
 			final String meetingSubject = formData.getSubject().getValue();
+			formData.getGuestId().setValue(eventGuest);
 
 			if (null == eventGuest) {
 				final UserForm userForm = new UserForm();
@@ -505,14 +507,11 @@ public class EventForm extends AbstractForm {
 			final String recipient = formData.getEmail().getValue();
 			final String organizerEmail = formData.getOrganizerEmail().getValue();
 			final String meetingSubject = formData.getSubject().getValue();
-			final String subject = TEXTS.get("zc.meeting.email.event.new.subject", organizerEmail);
-			final String content = TEXTS.get("zc.meeting.email.event.new.html", organizerEmail,
-					new ApplicationUrlProperty().getValue(), meetingSubject);
-			// final String subject = "ZeroClick Meeting : " + organizerEmail +
-			// " ask for a meeting";
-			// final String content = "Go to " + new
-			// ApplicationUrlProperty().getValue() + " to answer him."
-			// + " <br /> <br />Best Regards<br /> ZeroClick Meeting Team";
+
+			final String subject = TextsHelper.get(formData.getGuestId().getValue(),
+					"zc.meeting.email.event.new.subject", organizerEmail);
+			final String content = TextsHelper.get(formData.getGuestId().getValue(), "zc.meeting.email.event.new.html",
+					organizerEmail, new ApplicationUrlProperty().getValue(), meetingSubject);
 			try {
 				mailSender.sendEmail(recipient, subject, content);
 			} catch (final MailException e) {

@@ -1,5 +1,7 @@
 package org.zeroclick.configuration.client.user;
 
+import java.util.Locale;
+
 import org.eclipse.scout.rt.client.dto.FormData;
 import org.eclipse.scout.rt.client.ui.form.AbstractForm;
 import org.eclipse.scout.rt.client.ui.form.AbstractFormHandler;
@@ -13,6 +15,7 @@ import org.eclipse.scout.rt.client.ui.messagebox.MessageBoxes;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.exception.VetoException;
+import org.eclipse.scout.rt.platform.nls.NlsLocale;
 import org.eclipse.scout.rt.platform.security.SecurityUtility;
 import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.platform.util.Base64Utility;
@@ -25,9 +28,11 @@ import org.slf4j.LoggerFactory;
 import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
 import org.zeroclick.common.security.ScoutServiceCredentialVerifier;
+import org.zeroclick.common.text.TextsHelper;
 import org.zeroclick.configuration.client.user.UserForm.MainBox.CancelButton;
 import org.zeroclick.configuration.client.user.UserForm.MainBox.ConfirmPasswordField;
 import org.zeroclick.configuration.client.user.UserForm.MainBox.EmailField;
+import org.zeroclick.configuration.client.user.UserForm.MainBox.LanguageField;
 import org.zeroclick.configuration.client.user.UserForm.MainBox.LoginField;
 import org.zeroclick.configuration.client.user.UserForm.MainBox.OkButton;
 import org.zeroclick.configuration.client.user.UserForm.MainBox.PasswordField;
@@ -167,6 +172,10 @@ public class UserForm extends AbstractForm {
 		return this.getFieldByClass(LoginField.class);
 	}
 
+	public LanguageField getLanguageField() {
+		return this.getFieldByClass(LanguageField.class);
+	}
+
 	public OkButton getOkButton() {
 		return this.getFieldByClass(OkButton.class);
 	}
@@ -185,6 +194,7 @@ public class UserForm extends AbstractForm {
 		if (null == this.isAutofilled()) {
 			this.setAutofilled(Boolean.FALSE);
 		}
+		this.getLanguageField().setDefaultLanguage();
 	}
 
 	private Boolean isMyself() {
@@ -306,6 +316,11 @@ public class UserForm extends AbstractForm {
 
 		}
 
+		@Order(3700)
+		public class LanguageField extends org.zeroclick.ui.form.fields.languagefield.LanguageField {
+
+		}
+
 		@Order(4000)
 		public class RolesBox extends AbstractListBox<Long> {
 			@Override
@@ -410,7 +425,7 @@ public class UserForm extends AbstractForm {
 			}
 
 			final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
-			notificationHelper.addProcessingNotification("zc.user.notification.modifiedUser",
+			notificationHelper.addProccessedNotification("zc.user.notification.modifiedUser",
 					UserForm.this.getEmailField().getValue());
 
 		}
@@ -464,7 +479,10 @@ public class UserForm extends AbstractForm {
 		if (null == formData.getAutofilled()) {
 			formData.setAutofilled(Boolean.FALSE);
 		}
-		service.create(formData);
+		final UserFormData savedData = service.create(formData);
+
+		// Update userId field in this form for later use
+		this.getUserIdField().setValue(savedData.getUserId().getValue());
 
 		if (UserForm.this.getSendUserInviteEmailField().getValue()) {
 			UserForm.this.sendUserInviteEmail();
@@ -501,15 +519,18 @@ public class UserForm extends AbstractForm {
 
 		if (this.isAutofilled()) {
 			// invite + meeting
-			subject = TEXTS.get("zc.meeting.email.invit.subject", emailSender);
-			messageBody = TEXTS.get("zc.meeting.email.invit.html", emailSender, new ApplicationUrlProperty().getValue(),
-					newUser.getEmailField().getValue(), newUser.getPasswordField().getValue(), meetinSubject);
+			subject = TextsHelper.get(newUser.getUserIdField().getValue(), "zc.meeting.email.invit.subject",
+					emailSender);
+			messageBody = TextsHelper.get(newUser.getUserIdField().getValue(), "zc.meeting.email.invit.html",
+					emailSender, new ApplicationUrlProperty().getValue(), newUser.getEmailField().getValue(),
+					newUser.getPasswordField().getValue(), meetinSubject);
 		} else {
 			// Simple invite without meeting
-			subject = TEXTS.get("zc.user.email.invit.withoutMeeting.subject", emailSender);
-			messageBody = TEXTS.get("zc.user.email.invit.withoutMeeting.html", emailSender,
-					new ApplicationUrlProperty().getValue(), newUser.getEmailField().getValue(),
-					newUser.getPasswordField().getValue());
+			subject = TextsHelper.get(newUser.getUserIdField().getValue(), "zc.user.email.invit.withoutMeeting.subject",
+					emailSender);
+			messageBody = TextsHelper.get(newUser.getUserIdField().getValue(),
+					"zc.user.email.invit.withoutMeeting.html", emailSender, new ApplicationUrlProperty().getValue(),
+					newUser.getEmailField().getValue(), newUser.getPasswordField().getValue());
 		}
 		try {
 			mailSender.sendEmail(newUser.getEmailField().getValue(), subject, messageBody);
@@ -547,6 +568,14 @@ public class UserForm extends AbstractForm {
 		// this.getUserIdField().setValue(userId);
 
 		this.generateAndAddFormPassword();
+
+		final Locale currentUserLocal = NlsLocale.get();
+		String language = "FR";
+		if (null != currentUserLocal && !currentUserLocal.getLanguage().isEmpty()) {
+			language = currentUserLocal.getLanguage();
+		}
+
+		this.getLanguageField().setValue(language);
 
 		this.getRolesBox().checkKey(defaultRole);
 		this.getRolesBox().touch();

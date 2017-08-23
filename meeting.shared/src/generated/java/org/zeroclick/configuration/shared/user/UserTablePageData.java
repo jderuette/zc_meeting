@@ -57,11 +57,13 @@ public class UserTablePageData extends AbstractTablePageData {
 		public static final String email = "email";
 		public static final String timeZone = "timeZone";
 		public static final String invitedBy = "invitedBy";
+		public static final String language = "language";
 		private Long m_userId;
 		private String m_login;
 		private String m_email;
 		private String m_timeZone;
 		private Long m_invitedBy;
+		private String m_language;
 
 		public Long getUserId() {
 			return m_userId;
@@ -101,6 +103,14 @@ public class UserTablePageData extends AbstractTablePageData {
 
 		public void setInvitedBy(Long newInvitedBy) {
 			m_invitedBy = newInvitedBy;
+		}
+
+		public String getLanguage() {
+			return m_language;
+		}
+
+		public void setLanguage(String newLanguage) {
+			m_language = newLanguage;
 		}
 	}
 }

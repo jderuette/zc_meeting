@@ -287,6 +287,19 @@ public class UserService extends CommonService implements IUserService {
 	}
 
 	@Override
+	public String getUserLanguage(final Long userId) {
+		// No permission check to allow organizer get language of guest (for
+		// email)
+		final UserFormData formData = new UserFormData();
+		formData.getUserId().setValue(userId);
+
+		SQL.selectInto(SQLs.USER_SELECT_LANGUAGE + SQLs.USER_SELECT_FILTER_ID + SQLs.USER_SELECT_INTO_LANGUAGE,
+				formData, new NVPair("currentUser", userId));
+
+		return formData.getLanguage().getValue();
+	}
+
+	@Override
 	public Set<String> getUserNotificationIds(final Long userId) {
 		final Set<String> notificationsIds = new HashSet<>();
 

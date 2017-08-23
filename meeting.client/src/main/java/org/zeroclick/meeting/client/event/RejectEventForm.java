@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
+import org.zeroclick.common.text.TextsHelper;
 import org.zeroclick.meeting.client.ClientSession;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
 import org.zeroclick.meeting.client.NotificationHelper;
@@ -451,14 +452,20 @@ public class RejectEventForm extends AbstractForm {
 		final String eventReason = formData.getReason().getValue();
 
 		String destEmail;
+		Long destId;
 		String senderEmail;
+		Long senderId;
 
 		if (this.isAskByHost()) {
 			senderEmail = organizerEmail;
 			destEmail = guestEmail;
+			destId = this.guestId;
+			senderId = this.organizerId;
 		} else {
 			senderEmail = guestEmail;
 			destEmail = organizerEmail;
+			destId = this.organizerId;
+			senderId = this.guestId;
 		}
 
 		String subject = null;
@@ -466,13 +473,13 @@ public class RejectEventForm extends AbstractForm {
 
 		switch (RejectEventForm.this.subAction) {
 		case ACTION_REJECT:
-			subject = TEXTS.get("zc.meeting.email.refuse.subject", senderEmail);
-			content = TEXTS.get("zc.meeting.email.refuse.html", senderEmail, eventSubject,
+			subject = TextsHelper.get(destId, "zc.meeting.email.refuse.subject", senderEmail);
+			content = TextsHelper.get(destId, "zc.meeting.email.refuse.html", senderEmail, eventSubject,
 					new ApplicationUrlProperty().getValue(), eventReason);
 			break;
 		case ACTION_CANCEL:
-			subject = TEXTS.get("zc.meeting.email.cancel.subject", senderEmail);
-			content = TEXTS.get("zc.meeting.email.cancel.html", senderEmail, eventSubject, eventReason);
+			subject = TextsHelper.get(destId, "zc.meeting.email.cancel.subject", senderEmail);
+			content = TextsHelper.get(destId, "zc.meeting.email.cancel.html", senderEmail, eventSubject, eventReason);
 			break;
 		default:
 			LOG.warn("Unknow sub action " + RejectEventForm.this.subAction + " for reject Action");

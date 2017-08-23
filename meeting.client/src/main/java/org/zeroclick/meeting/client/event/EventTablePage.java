@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
+import org.zeroclick.common.text.TextsHelper;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationEnvProperty;
 import org.zeroclick.meeting.client.NotificationHelper;
@@ -811,8 +812,8 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					// Save at the end to save external IDs !
 					final EventFormData formData = Table.this.saveEventCurrentRow();
 
-					this.sendConfirmationEmail(formData, externalOrganizerEvent, eventHeldEmail);
-					this.sendConfirmationEmail(formData, externalOrganizerEvent, eventGuestEmail);
+					this.sendConfirmationEmail(formData, externalOrganizerEvent, eventHeldEmail, eventHeldBy);
+					this.sendConfirmationEmail(formData, externalOrganizerEvent, eventGuestEmail, eventGuest);
 
 					Table.this.resetInvalidatesEvent(start, end);
 					Table.this.autoFillDates();
@@ -822,13 +823,13 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				}
 			}
 
-			private void sendConfirmationEmail(final EventFormData formData, final Event event,
-					final String recipient) {
+			private void sendConfirmationEmail(final EventFormData formData, final Event event, final String recipient,
+					final Long userId) {
 				final IMailSender mailSender = BEANS.get(IMailSender.class);
 
 				final String[] values = EventTablePage.this.buildValuesForLocaleMessages(formData, event, recipient);
-				final String subject = TEXTS.get("zc.meeting.email.event.confirm.subject", values);
-				final String content = TEXTS.get("zc.meeting.email.event.confirm.html", values);
+				final String subject = TextsHelper.get(userId, "zc.meeting.email.event.confirm.subject", values);
+				final String content = TextsHelper.get(userId, "zc.meeting.email.event.confirm.html", values);
 
 				try {
 					mailSender.sendEmail(recipient, subject, content);
