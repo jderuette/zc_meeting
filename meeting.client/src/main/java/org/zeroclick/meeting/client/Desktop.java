@@ -233,6 +233,9 @@ public class Desktop extends AbstractDesktop {
 					if (null == currentLocale
 							|| !currentLocale.getLanguage().equals(userForm.getLanguage().getValue())) {
 						ClientSession.get().setLocale(new Locale(userForm.getLanguage().getValue()));
+
+						// IUiSession.get().storePreferredLocaleInCookie(new
+						// Locale(userForm.getLanguage().getValue()));
 						Desktop.this.refreshAllPages();
 					}
 
