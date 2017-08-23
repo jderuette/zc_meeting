@@ -15,6 +15,7 @@ import org.eclipse.scout.rt.client.ui.desktop.OpenUriAction;
 import org.eclipse.scout.rt.client.ui.desktop.notification.DesktopNotification;
 import org.eclipse.scout.rt.client.ui.desktop.outline.AbstractOutlineViewButton;
 import org.eclipse.scout.rt.client.ui.desktop.outline.IOutline;
+import org.eclipse.scout.rt.client.ui.desktop.outline.pages.IPage;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.job.Jobs;
@@ -109,6 +110,12 @@ public class Desktop extends AbstractDesktop {
 		userModifiedNotificationHandler.addListener(this.createUserModifiedListener());
 
 		this.checkAndUpdateRequiredDatas();
+	}
+
+	private void refreshAllPages() {
+		for (final IOutline outline : this.getAvailableOutlines()) {
+			outline.refreshPages(IPage.class);
+		}
 	}
 
 	private void checkAndUpdateRequiredDatas() {
@@ -225,7 +232,8 @@ public class Desktop extends AbstractDesktop {
 
 					if (null == currentLocale
 							|| !currentLocale.getLanguage().equals(userForm.getLanguage().getValue())) {
-						NlsLocale.set(new Locale(userForm.getLanguage().getValue()));
+						ClientSession.get().setLocale(new Locale(userForm.getLanguage().getValue()));
+						Desktop.this.refreshAllPages();
 					}
 
 				} catch (final RuntimeException e) {

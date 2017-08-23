@@ -57,7 +57,7 @@ public class TextsHelper extends TEXTS {
 		return ScoutTexts.getInstance().getText(getUserLocal(userId), key, messageArguments);
 	}
 
-	private static Locale getUserLocal(final Long userId) {
+	public static Locale getUserLocal(final Long userId) {
 		Locale destLocal;
 		String destLanguage = null;
 		if (null == userId) {
