@@ -28,6 +28,8 @@ import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractLongColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractSmartColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractStringColumn;
 import org.eclipse.scout.rt.client.ui.desktop.outline.pages.AbstractPageWithTable;
+import org.eclipse.scout.rt.client.ui.form.FormEvent;
+import org.eclipse.scout.rt.client.ui.form.FormListener;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
@@ -99,16 +101,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	@Override
 	protected boolean getConfiguredTableStatusVisible() {
 		return Boolean.FALSE;
-	}
-
-	@Override
-	protected void execInitPage() {
-		if (null == this.dateHelper) {
-			this.dateHelper = DateHelper.get();
-		}
-		if (null == this.appUserHelper) {
-			this.appUserHelper = AppUserHelper.get();
-		}
 	}
 
 	/**
@@ -569,6 +561,33 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			// TODO Auto-generated method stub
 		}
 
+		protected void autoFillDates() {
+			final List<ITableRow> rows = this.getRows();
+			for (final ITableRow row : rows) {
+				this.autoFillDates(row);
+			}
+		}
+
+		protected void resetInvalidatesEvent(final ZonedDateTime start, final ZonedDateTime end) {
+			final List<ITableRow> rows = this.getRows();
+			for (final ITableRow row : rows) {
+				this.invalidateIfSlotAlreadyUsed(row, start, end);
+			}
+		}
+
+		private void invalidateIfSlotAlreadyUsed(final ITableRow row, final ZonedDateTime newAcceptedEventstart,
+				final ZonedDateTime newAcceptedEventEnd) {
+			final ZonedDateTime rowStart = this.getStartDateColumn().getZonedValue(row.getRowIndex());
+			final ZonedDateTime rowEnd = this.getEndDateColumn().getZonedValue(row.getRowIndex());
+
+			if (null != rowStart && null != rowEnd) {
+				if (!rowStart.isBefore(newAcceptedEventstart) && !rowEnd.isAfter(rowEnd)) {
+					this.getStartDateColumn().setValue(row.getRowIndex(), (Date) null);
+					this.getEndDateColumn().setValue(row.getRowIndex(), (Date) null);
+				}
+			}
+		}
+
 		protected Boolean isTimeZoneValid(final Long userId) {
 			Boolean timeZoneValid = Boolean.FALSE;
 
@@ -891,13 +910,13 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 			private Boolean isWorkflowVisible(final String currentState) {
 
-				Boolean iSVisible = Boolean.FALSE;
+				Boolean isVisible = Boolean.FALSE;
 				if ("ASKED".equals(currentState) && Table.this.isGuestCurrentUser(Table.this.getSelectedRow())) {
-					iSVisible = Boolean.TRUE;
+					isVisible = Boolean.TRUE;
 				} else if ("ACCEPTED".equals(currentState)) {
-					iSVisible = Boolean.TRUE;
+					isVisible = Boolean.TRUE;
 				}
-				return iSVisible;
+				return isVisible;
 			}
 
 			@Override
@@ -915,9 +934,14 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			protected void execAction() {
 				final RejectEventForm form = new RejectEventForm();
 				final Long currentEventId = Table.this.getEventIdColumn().getSelectedValue();
+				final ZonedDateTime start = Table.this.getStartDateColumn().getSelectedZonedValue();
+				final ZonedDateTime end = Table.this.getEndDateColumn().getSelectedZonedValue();
 				form.setEventId(currentEventId);
-				// form.addFormListener(new EventFormListener());
+				form.setStart(start);
+				form.setEnd(end);
 				form.setEnabledPermission(new UpdateEventPermission(currentEventId));
+				form.addFormListener(
+						org.zeroclick.meeting.client.event.AbstractEventsTablePage.Table.this.refuseCancelFormListener);
 				// start the form using its modify handler
 				form.startReject(Table.this.isHeldByCurrentUser(Table.this.getSelectedRow()));
 			}
@@ -928,6 +952,33 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			}
 
 		}
+
+		public FormListener refuseCancelFormListener = new FormListener() {
+
+			@Override
+			public void formChanged(final FormEvent event) {
+				if (FormEvent.TYPE_CLOSED == event.getType() && event.getForm().isFormStored()) {
+					try {
+						final RejectEventForm rejectEventForm = (RejectEventForm) event.getForm();
+						if (null == rejectEventForm.getStart()) {
+							LOG.warn(
+									"Cannot re-calculate start/end date after cancel/reject meeting because start date was NULL for event : "
+											+ rejectEventForm.getEventId());
+						} else if (null == rejectEventForm.getEnd()) {
+							LOG.warn(
+									"Cannot re-calculate start/end date after cancel/reject meeting because end date was NULL for event : "
+											+ rejectEventForm.getEventId());
+						} else {
+							Table.this.resetInvalidatesEvent(rejectEventForm.getStart(), rejectEventForm.getEnd());
+							Table.this.autoFillDates();
+						}
+					} catch (final ClassCastException cce) {
+						LOG.warn("Cannot re-calculate start/end date after cancel/reject meeting", cce);
+					}
+				}
+
+			}
+		};
 
 		@Order(4000)
 		public class CancelMenu extends AbstractMenu {
@@ -976,9 +1027,9 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				final RejectEventForm form = new RejectEventForm();
 				final Long currentEventId = Table.this.getEventIdColumn().getSelectedValue();
 				form.setEventId(currentEventId);
-				// form.addFormListener(new EventFormListener());
 				form.setEnabledPermission(new UpdateEventPermission(currentEventId));
-				// start the form using its modify handler
+				// form.addFormListener(
+				// org.zeroclick.meeting.client.event.AbstractEventsTablePage.Table.this.refuseCancelFormListener);
 				form.startCancel(Table.this.isHeldByCurrentUser(Table.this.getSelectedRow()));
 			}
 
@@ -1491,10 +1542,16 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	}
 
 	protected DateHelper getDateHelper() {
+		if (null == this.dateHelper) {
+			this.dateHelper = DateHelper.get();
+		}
 		return this.dateHelper;
 	}
 
 	protected AppUserHelper getAppUserHelper() {
+		if (null == this.appUserHelper) {
+			this.appUserHelper = AppUserHelper.get();
+		}
 		return this.appUserHelper;
 	}
 

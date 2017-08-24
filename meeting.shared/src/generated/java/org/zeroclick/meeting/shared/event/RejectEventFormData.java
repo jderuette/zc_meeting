@@ -1,5 +1,7 @@
 package org.zeroclick.meeting.shared.event;
 
+import java.time.ZonedDateTime;
+
 import javax.annotation.Generated;
 
 import org.eclipse.scout.rt.shared.data.form.AbstractFormData;
@@ -18,6 +20,24 @@ public class RejectEventFormData extends AbstractFormData {
 
 	public Email getEmail() {
 		return getFieldByClass(Email.class);
+	}
+
+	/**
+	 * access method for property End.
+	 */
+	public ZonedDateTime getEnd() {
+		return getEndProperty().getValue();
+	}
+
+	/**
+	 * access method for property End.
+	 */
+	public void setEnd(ZonedDateTime end) {
+		getEndProperty().setValue(end);
+	}
+
+	public EndProperty getEndProperty() {
+		return getPropertyByClass(EndProperty.class);
 	}
 
 	/**
@@ -119,6 +139,24 @@ public class RejectEventFormData extends AbstractFormData {
 	}
 
 	/**
+	 * access method for property Start.
+	 */
+	public ZonedDateTime getStart() {
+		return getStartProperty().getValue();
+	}
+
+	/**
+	 * access method for property Start.
+	 */
+	public void setStart(ZonedDateTime start) {
+		getStartProperty().setValue(start);
+	}
+
+	public StartProperty getStartProperty() {
+		return getPropertyByClass(StartProperty.class);
+	}
+
+	/**
 	 * access method for property State.
 	 */
 	public String getState() {
@@ -141,6 +179,11 @@ public class RejectEventFormData extends AbstractFormData {
 	}
 
 	public static class Email extends AbstractValueFieldData<String> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class EndProperty extends AbstractPropertyData<ZonedDateTime> {
 
 		private static final long serialVersionUID = 1L;
 	}
@@ -176,6 +219,11 @@ public class RejectEventFormData extends AbstractFormData {
 	}
 
 	public static class Reason extends AbstractValueFieldData<String> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class StartProperty extends AbstractPropertyData<ZonedDateTime> {
 
 		private static final long serialVersionUID = 1L;
 	}

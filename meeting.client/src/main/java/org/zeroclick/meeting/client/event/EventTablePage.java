@@ -8,7 +8,6 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -178,33 +177,6 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					this.changeDatesNext(row);
 				} catch (final IOException e) {
 					LOG.warn("Canno't auto calculate start/end meeting for row " + row, e);
-				}
-			}
-		}
-
-		protected void autoFillDates() {
-			final List<ITableRow> rows = this.getRows();
-			for (final ITableRow row : rows) {
-				this.autoFillDates(row);
-			}
-		}
-
-		protected void resetInvalidatesEvent(final ZonedDateTime start, final ZonedDateTime end) {
-			final List<ITableRow> rows = this.getRows();
-			for (final ITableRow row : rows) {
-				this.invalidateIfSlotAlreadyUsed(row, start, end);
-			}
-		}
-
-		private void invalidateIfSlotAlreadyUsed(final ITableRow row, final ZonedDateTime newAcceptedEventstart,
-				final ZonedDateTime newAcceptedEventEnd) {
-			final ZonedDateTime rowStart = this.getStartDateColumn().getZonedValue(row.getRowIndex());
-			final ZonedDateTime rowEnd = this.getEndDateColumn().getZonedValue(row.getRowIndex());
-
-			if (null != rowStart && null != rowEnd) {
-				if (!rowStart.isBefore(newAcceptedEventstart) && !rowEnd.isAfter(rowEnd)) {
-					this.getStartDateColumn().setValue(row.getRowIndex(), (Date) null);
-					this.getEndDateColumn().setValue(row.getRowIndex(), (Date) null);
 				}
 			}
 		}

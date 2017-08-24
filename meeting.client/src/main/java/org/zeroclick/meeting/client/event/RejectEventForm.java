@@ -1,6 +1,7 @@
 package org.zeroclick.meeting.client.event;
 
 import java.io.IOException;
+import java.time.ZonedDateTime;
 
 import org.eclipse.scout.rt.client.dto.FormData;
 import org.eclipse.scout.rt.client.ui.IDisplayParent;
@@ -56,6 +57,8 @@ public class RejectEventForm extends AbstractForm {
 	private String externalIdOrganizer;
 	private String externalIdRecipient;
 	private String state;
+	private ZonedDateTime start;
+	private ZonedDateTime end;
 
 	private Boolean askByHost;
 
@@ -117,6 +120,26 @@ public class RejectEventForm extends AbstractForm {
 	@FormData
 	public void setState(final String state) {
 		this.state = state;
+	}
+
+	@FormData
+	public ZonedDateTime getStart() {
+		return this.start;
+	}
+
+	@FormData
+	public void setStart(final ZonedDateTime start) {
+		this.start = start;
+	}
+
+	@FormData
+	public ZonedDateTime getEnd() {
+		return this.end;
+	}
+
+	@FormData
+	public void setEnd(final ZonedDateTime end) {
+		this.end = end;
 	}
 
 	public Boolean isAskByHost() {
