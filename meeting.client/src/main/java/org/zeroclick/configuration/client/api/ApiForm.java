@@ -74,12 +74,12 @@ public class ApiForm extends AbstractForm {
 
 	@FormData
 	public byte[] getProviderData() {
-		return this.providerData.clone();
+		return null == this.providerData ? null : this.providerData.clone();
 	}
 
 	@FormData
 	public void setProviderData(final byte[] providerData) {
-		this.providerData = providerData.clone();
+		this.providerData = null == providerData ? null : providerData.clone();
 	}
 
 	@Override
