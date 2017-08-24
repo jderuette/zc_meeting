@@ -46,6 +46,10 @@ public class OnBoardingUserForm extends AbstractForm {
 		this.startInternalExclusive(new ModifyHandler());
 	}
 
+	private void initFormAfterLoad() {
+		this.getLanguageField().setDefaultLanguage();
+	}
+
 	public MainBox getMainBox() {
 		return this.getFieldByClass(MainBox.class);
 	}
@@ -217,6 +221,8 @@ public class OnBoardingUserForm extends AbstractForm {
 			OnBoardingUserForm.this.exportFormData(formData);
 			formData = service.load(formData);
 			OnBoardingUserForm.this.importFormData(formData);
+
+			OnBoardingUserForm.this.initFormAfterLoad();
 
 			OnBoardingUserForm.this.setEnabledPermission(new UpdateUserPermission(formData.getUserId().getValue()));
 		}
