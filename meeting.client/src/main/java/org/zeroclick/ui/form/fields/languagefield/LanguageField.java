@@ -64,7 +64,10 @@ public class LanguageField extends AbstractSmartField<String> {
 	@Override
 	protected void execChangedValue() {
 		super.execChangedValue();
-		this.setValueChanged(Boolean.TRUE);
+		final Locale currentLocal = NlsLocale.get();
+		if (null != this.getValue() && !this.getValue().equals(currentLocal.getLanguage())) {
+			this.setValueChanged(Boolean.TRUE);
+		}
 	}
 
 	/**
