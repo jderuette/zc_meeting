@@ -57,6 +57,15 @@ public class DatabaseSetupService implements IDataStoreService {
 			} catch (final RuntimeException e) {
 				BEANS.get(ExceptionHandler.class).handle(e);
 			}
+
+			/**
+			 * Each remove of each patch is done on is OWN thread, and MUST NOT
+			 * run in a global thread, to avoid "dead locks" on DDL
+			 */
+			final DatabaseMigrateService databaseMigrateService = BEANS.get(DatabaseMigrateService.class);
+			databaseMigrateService.undoMigration();
+			this.databaseHelper.resetExistingTablesCache();
+
 		}
 		if (null != dropResult) {
 			// jobManager.awaitDone(Jobs.newFutureFilterBuilder().andMatchFuture(dropResult).toFilter(),
@@ -235,8 +244,6 @@ public class DatabaseSetupService implements IDataStoreService {
 	@Override
 	public void dropDataStore() {
 
-		final DatabaseMigrateService databaseMigrateService = BEANS.get(DatabaseMigrateService.class);
-
 		this.databaseHelper.dropTable("EVENT");
 		this.databaseHelper.dropSequence("EVENT_ID_SEQ");
 		this.databaseHelper.dropTable("OAUHTCREDENTIAL");
@@ -246,8 +253,6 @@ public class DatabaseSetupService implements IDataStoreService {
 		this.databaseHelper.dropTable("ROLE");
 		this.databaseHelper.dropTable("ROLE_PERMISSION");
 		this.databaseHelper.dropTable("USER_ROLE");
-
-		databaseMigrateService.undoMigration();
 
 		this.databaseHelper.resetExistingTablesCache();
 

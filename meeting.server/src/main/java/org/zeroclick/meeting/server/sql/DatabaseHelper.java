@@ -47,8 +47,15 @@ public class DatabaseHelper {
 	}
 
 	public void dropTable(final String tableName) {
-		if (this.getExistingTables(Boolean.TRUE).contains(tableName)) {
+		this.dropTable(tableName, Boolean.TRUE);
+	}
+
+	public void dropTable(final String tableName, final Boolean forceRefreshTableCache) {
+		if (this.getExistingTables(forceRefreshTableCache).contains(tableName)) {
 			SQL.update(SQLs.GENERIC_DROP_TABLE.replace("__tableName__", tableName));
+		} else {
+			LOG.info("Table : " + tableName + " already exists (tested with force refresh ? " + forceRefreshTableCache
+					+ "), not created");
 		}
 	}
 
@@ -68,6 +75,8 @@ public class DatabaseHelper {
 	public void dropSequence(final String sequenceName) {
 		if (this.isSequenceExists(sequenceName)) {
 			SQL.update(SQLs.GENERIC_DROP_SEQUENCE.replace("__seqName__", sequenceName));
+		} else {
+			LOG.warn("Sequence : " + sequenceName + " dosen't exists, no DROP required");
 		}
 	}
 
@@ -137,6 +146,21 @@ public class DatabaseHelper {
 	}
 
 	/**
+	 * remove column "column" from table "table" if exists
+	 * 
+	 * @param table
+	 * @param column
+	 */
+	public void removeColumn(final String table, final String column) {
+		if (this.isColumnExists(table, column)) {
+			SQLs.GENERIC_REMOVE_COLUMN_POSTGRESQL.replace("__table__", table).replaceAll("__column__", column);
+		} else {
+			LOG.warn("Cannot remove column : " + column + " on table : " + table
+					+ " because this column dosen't exists !");
+		}
+	}
+
+	/**
 	 * get exiting tables in DataBase.
 	 *
 	 * @param refreshCache
@@ -153,6 +177,20 @@ public class DatabaseHelper {
 
 	public void resetExistingTablesCache() {
 		this.existingTables = null;
+	}
+
+	public void addAdminPermission(final String permissionName, final Integer level) {
+		this.addPermissionToRole(1, permissionName, level);
+	}
+
+	public void addStandardUserPermission(final String permissionName, final Integer level) {
+		this.addPermissionToRole(2, permissionName, level);
+	}
+
+	public void addPermissionToRole(final Integer roleId, final String permissionName, final Integer level) {
+		SQL.insert(SQLs.ROLE_PERMISSION_INSERT_SAMPLE + SQLs.ROLE_GENERIC_VALUES_ADD
+				.replaceAll("__roleId__", String.valueOf(roleId)).replaceAll("__permissionName__", permissionName)
+				.replaceAll("__level__", String.valueOf(level)));
 	}
 
 }
