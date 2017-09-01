@@ -75,7 +75,7 @@ public class RolePermissionService extends CommonService implements IRolePermiss
 		final Object[][] users = this.getUsersByRole(roleId);
 		final List<String> userIdList = new ArrayList<>();
 		for (int i = 0; i < users.length; i++) {
-			userIdList.add((String) users[i][0]);
+			userIdList.add(String.valueOf(users[i][0]));
 		}
 
 		BEANS.get(ServerAccessControlService.class).clearCacheOfUsersIds(userIdList);
