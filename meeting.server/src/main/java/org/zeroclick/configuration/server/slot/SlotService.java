@@ -42,13 +42,6 @@ public class SlotService extends CommonService implements ISlotService {
 			throw new VetoException(TEXTS.get("AuthorizationFailed"));
 		}
 
-		// SQL.selectInto(
-		// "SELECT slot_id, name, user_id FROM SLOT WHERE 1=1" + " AND
-		// user_id=:currentUser"
-		// + " INTO :{node.slotId}, :{node.name}, :{node.userId}",
-		// formData, new NVPair("currentUser",
-		// this.userHelper.getCurrentUserId()));
-
 		SQL.selectInto(SQLs.SLOT_SELECT + SQLs.SLOT_SELECT_FILTER_USER_ID + SQLs.SLOT_PAGE_SELECT_INTO, formData,
 				new NVPair("node", formData), new NVPair("currentUser", this.userHelper.getCurrentUserId()));
 		return formData;
@@ -59,9 +52,6 @@ public class SlotService extends CommonService implements ISlotService {
 		if (!ACCESS.check(new ReadSlotPermission())) {
 			throw new VetoException(TEXTS.get("AuthorizationFailed"));
 		}
-
-		SQL.select(SQLs.DAY_DURATION_SELECT + SQLs.DAY_DURATION_SELECT_FILTER_DAY_DURATION_ID,
-				new NVPair("dayDurationId", formData.getDayDurationId()));
 
 		SQL.selectInto(
 				SQLs.DAY_DURATION_SELECT + SQLs.DAY_DURATION_SELECT_FILTER_DAY_DURATION_ID
