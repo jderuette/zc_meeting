@@ -43,10 +43,8 @@ import org.zeroclick.configuration.client.slot.SlotForm.MainBox.CloseButton;
 import org.zeroclick.configuration.client.slot.SlotForm.MainBox.OkButton;
 import org.zeroclick.configuration.client.slot.SlotForm.MainBox.SlotsBox;
 import org.zeroclick.configuration.client.slot.SlotForm.MainBox.SlotsBox.SlotSelectorGroupBox.SlotSelectorField;
-import org.zeroclick.configuration.shared.slot.CreateSlotPermission;
 import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.configuration.shared.slot.SlotFormData;
-import org.zeroclick.configuration.shared.slot.UpdateSlotPermission;
 
 @FormData(value = SlotFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class SlotForm extends AbstractForm implements IPageForm {
@@ -54,14 +52,6 @@ public class SlotForm extends AbstractForm implements IPageForm {
 	@Override
 	protected String getConfiguredTitle() {
 		return TEXTS.get("zc.meeting.slot");
-	}
-
-	public void startModify() {
-		this.startInternalExclusive(new ModifyHandler());
-	}
-
-	public void startNew() {
-		this.startInternal(new NewHandler());
 	}
 
 	@Override
@@ -437,50 +427,6 @@ public class SlotForm extends AbstractForm implements IPageForm {
 
 		@Order(50)
 		public class CloseButton extends AbstractCloseButton {
-		}
-	}
-
-	public class ModifyHandler extends AbstractFormHandler {
-
-		@Override
-		protected void execLoad() {
-			final ISlotService service = BEANS.get(ISlotService.class);
-			SlotFormData formData = new SlotFormData();
-			SlotForm.this.exportFormData(formData);
-			formData = service.load(formData);
-			SlotForm.this.importFormData(formData);
-
-			SlotForm.this.setEnabledPermission(new UpdateSlotPermission());
-		}
-
-		@Override
-		protected void execStore() {
-			final ISlotService service = BEANS.get(ISlotService.class);
-			final SlotFormData formData = new SlotFormData();
-			SlotForm.this.exportFormData(formData);
-			service.store(formData);
-		}
-	}
-
-	public class NewHandler extends AbstractFormHandler {
-
-		@Override
-		protected void execLoad() {
-			final ISlotService service = BEANS.get(ISlotService.class);
-			SlotFormData formData = new SlotFormData();
-			SlotForm.this.exportFormData(formData);
-			formData = service.prepareCreate(formData);
-			SlotForm.this.importFormData(formData);
-
-			SlotForm.this.setEnabledPermission(new CreateSlotPermission());
-		}
-
-		@Override
-		protected void execStore() {
-			final ISlotService service = BEANS.get(ISlotService.class);
-			final SlotFormData formData = new SlotFormData();
-			SlotForm.this.exportFormData(formData);
-			service.create(formData);
 		}
 	}
 

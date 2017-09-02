@@ -347,8 +347,16 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			final ZonedDateTime nextEndDate = startDate.plus(Duration.ofMinutes(selectEventDuration));
 
-			if (!SlotHelper.get().isInOneOfPeriods(selectSlotId, startDate, nextEndDate)) {
-				return new DateReturn(SlotHelper.get().getNextValidDateTime(selectSlotId, startDate, nextEndDate));
+			// Check gust slot configuration
+			if (!SlotHelper.get().isInOneOfPeriods(selectSlotId, startDate, nextEndDate, guestUserId)) {
+				return new DateReturn(
+						SlotHelper.get().getNextValidDateTime(selectSlotId, startDate, nextEndDate, guestUserId));
+			}
+
+			// check Organizer Slot configuration
+			if (!SlotHelper.get().isInOneOfPeriods(selectSlotId, startDate, nextEndDate, organizerUserId)) {
+				return new DateReturn(
+						SlotHelper.get().getNextValidDateTime(selectSlotId, startDate, nextEndDate, organizerUserId));
 			}
 
 			// check guest (current connected user) calendars

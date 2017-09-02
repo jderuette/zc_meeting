@@ -26,4 +26,18 @@ public interface ISlotService extends IService {
 	Object[][] getDayDurations(Long slotId);
 
 	Object[][] getDayDurationsLight(Long slotId);
+
+	/**
+	 * retrieve CURRENT USER list of daySuration for the Slot name
+	 *
+	 * @param slotName
+	 * @return
+	 */
+	Object[][] getDayDurations(String slotName);
+
+	Object[][] getDayDurations(String slotName, Long userId);
+
+	boolean isOwn(Long slotId);
+
+	boolean isInvolved(Long slotId);
 }

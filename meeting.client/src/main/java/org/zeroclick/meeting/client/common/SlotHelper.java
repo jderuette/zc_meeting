@@ -24,10 +24,15 @@ import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
+import org.eclipse.scout.rt.platform.BEANS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.configuration.shared.slot.ISlotService;
 
 /**
  * @author djer
@@ -37,9 +42,13 @@ public class SlotHelper {
 	private static final Logger LOG = LoggerFactory.getLogger(SlotHelper.class);
 
 	private static SlotHelper instance;
+	private static ISlotService slotService;
 
 	private SlotHelper() {
 		// Singleton
+		if (null == slotService) {
+			slotService = BEANS.get(ISlotService.class);
+		}
 	}
 
 	public static SlotHelper get() {
@@ -51,23 +60,23 @@ public class SlotHelper {
 
 	private final List<DayDuration> PERIODE_WORK = new ArrayList<>(Arrays.asList(
 			new DayDuration(OffsetTime.of(8, 0, 0, 0, ZoneOffset.UTC), OffsetTime.of(12, 0, 0, 0, ZoneOffset.UTC),
-					DayOfWeekLists.STANDARD_WORK_DAYS),
+					DayOfWeekLists.STANDARD_WORK_DAYS, Boolean.TRUE, Boolean.TRUE),
 			new DayDuration(OffsetTime.of(14, 0, 0, 0, ZoneOffset.UTC), OffsetTime.of(18, 0, 0, 0, ZoneOffset.UTC),
-					DayOfWeekLists.STANDARD_WORK_DAYS)));
+					DayOfWeekLists.STANDARD_WORK_DAYS, Boolean.TRUE, Boolean.TRUE)));
 
-	private final List<DayDuration> PERIODE_LUNCH = new ArrayList<>(
-			Arrays.asList(new DayDuration(OffsetTime.of(12, 0, 0, 0, ZoneOffset.UTC),
-					OffsetTime.of(14, 0, 0, 0, ZoneOffset.UTC), DayOfWeekLists.STANDARD_WORK_DAYS)));
+	private final List<DayDuration> PERIODE_LUNCH = new ArrayList<>(Arrays.asList(
+			new DayDuration(OffsetTime.of(12, 0, 0, 0, ZoneOffset.UTC), OffsetTime.of(14, 0, 0, 0, ZoneOffset.UTC),
+					DayOfWeekLists.STANDARD_WORK_DAYS, Boolean.TRUE, Boolean.TRUE)));
 
-	private final List<DayDuration> PERIODE_NIGHT = new ArrayList<>(
-			Arrays.asList(new DayDuration(OffsetTime.of(20, 0, 0, 0, ZoneOffset.UTC),
-					OffsetTime.of(23, 59, 59, 999999999, ZoneOffset.UTC), DayOfWeekLists.STANDARD_WORK_DAYS)));
+	private final List<DayDuration> PERIODE_NIGHT = new ArrayList<>(Arrays.asList(new DayDuration(
+			OffsetTime.of(20, 0, 0, 0, ZoneOffset.UTC), OffsetTime.of(23, 59, 59, 999999999, ZoneOffset.UTC),
+			DayOfWeekLists.STANDARD_WORK_DAYS, Boolean.TRUE, Boolean.TRUE)));
 
 	private final List<DayDuration> PERIODE_WEEK_END = new ArrayList<>(Arrays.asList(
 			new DayDuration(OffsetTime.of(8, 0, 0, 0, ZoneOffset.UTC), OffsetTime.of(12, 0, 0, 0, ZoneOffset.UTC),
-					DayOfWeekLists.STANDARD_WEEKEND_DAYS),
+					DayOfWeekLists.STANDARD_WEEKEND_DAYS, Boolean.TRUE, Boolean.TRUE),
 			new DayDuration(OffsetTime.of(14, 0, 0, 0, ZoneOffset.UTC), OffsetTime.of(18, 0, 0, 0, ZoneOffset.UTC),
-					DayOfWeekLists.STANDARD_WEEKEND_DAYS)));
+					DayOfWeekLists.STANDARD_WEEKEND_DAYS, Boolean.TRUE, Boolean.TRUE)));
 
 	private List<DayDuration> getPeriods(final Integer durationId) {
 		if (durationId == 1) {
@@ -87,6 +96,74 @@ public class SlotHelper {
 		return new ArrayList<>(1);
 	}
 
+	private List<DayDuration> getUserPeriods(final Integer slotId, final Long userId) {
+		List<DayDuration> daysDurations = new ArrayList<>();
+
+		final String slotName = "zc.meeting.slot." + slotId;
+
+		final Object[][] daysDurationsData = slotService.getDayDurations(slotName, userId);
+
+		if (null == daysDurationsData || daysDurationsData.length == 0) {
+			// return default slots Data
+			daysDurations = this.getPeriods(slotId);
+		} else {
+			final Calendar startCal = new GregorianCalendar();
+			final Calendar endCal = new GregorianCalendar();
+
+			for (final Object[] dayDurationData : daysDurationsData) {
+				final Date startTime = (Date) dayDurationData[2];
+				final Date endTime = (Date) dayDurationData[3];
+
+				startCal.setTime(startTime);
+				endCal.setTime(endTime);
+
+				daysDurations.add(new DayDuration(
+						OffsetTime.of(startCal.get(Calendar.HOUR_OF_DAY), startCal.get(Calendar.MINUTE), 0, 0,
+								ZoneOffset.UTC),
+						OffsetTime.of(endCal.get(Calendar.HOUR_OF_DAY), endCal.get(Calendar.MINUTE), 0, 0,
+								ZoneOffset.UTC),
+						this.buildListOfWeekDay(dayDurationData)));
+			}
+		}
+
+		return daysDurations;
+	}
+
+	private List<DayOfWeek> buildListOfWeekDay(final Object[] dayDurationData) {
+		final List<DayOfWeek> validDays = new ArrayList<>();
+
+		final Boolean monday = (Boolean) dayDurationData[4];
+		final Boolean tuesday = (Boolean) dayDurationData[5];
+		final Boolean wednesday = (Boolean) dayDurationData[6];
+		final Boolean thursday = (Boolean) dayDurationData[7];
+		final Boolean friday = (Boolean) dayDurationData[8];
+		final Boolean saturday = (Boolean) dayDurationData[9];
+		final Boolean sunday = (Boolean) dayDurationData[10];
+
+		if (monday) {
+			validDays.add(DayOfWeek.MONDAY);
+		}
+		if (tuesday) {
+			validDays.add(DayOfWeek.TUESDAY);
+		}
+		if (wednesday) {
+			validDays.add(DayOfWeek.WEDNESDAY);
+		}
+		if (thursday) {
+			validDays.add(DayOfWeek.THURSDAY);
+		}
+		if (friday) {
+			validDays.add(DayOfWeek.FRIDAY);
+		}
+		if (saturday) {
+			validDays.add(DayOfWeek.SATURDAY);
+		}
+		if (sunday) {
+			validDays.add(DayOfWeek.SUNDAY);
+		}
+		return validDays;
+	}
+
 	/**
 	 * Check if the date is in of the periods of the duration List (by ID)
 	 *
@@ -94,8 +171,8 @@ public class SlotHelper {
 	 * @param checkedDate
 	 * @return
 	 */
-	public Boolean isInOneOfPeriods(final Integer slotId, final ZonedDateTime checkedDate) {
-		final List<DayDuration> periods = this.getPeriods(slotId);
+	public Boolean isInOneOfPeriods(final Integer slotId, final ZonedDateTime checkedDate, final Long userId) {
+		final List<DayDuration> periods = this.getUserPeriods(slotId, userId);
 
 		return this.isInOneOfPeriods(periods, checkedDate, null);
 	}
@@ -109,8 +186,9 @@ public class SlotHelper {
 	 * @param endDate
 	 * @return
 	 */
-	public Boolean isInOneOfPeriods(final Integer slotId, final ZonedDateTime startDate, final ZonedDateTime endDate) {
-		final List<DayDuration> periods = this.getPeriods(slotId);
+	public Boolean isInOneOfPeriods(final Integer slotId, final ZonedDateTime startDate, final ZonedDateTime endDate,
+			final Long userId) {
+		final List<DayDuration> periods = this.getUserPeriods(slotId, userId);
 
 		return this.isInOneOfPeriods(periods, startDate, endDate);
 	}
@@ -146,15 +224,16 @@ public class SlotHelper {
 		return isInPeriod;
 	}
 
-	public ZonedDateTime getNextValidDateTime(final Integer slotId, final ZonedDateTime checkedDate) {
-		final List<DayDuration> periods = this.getPeriods(slotId);
+	public ZonedDateTime getNextValidDateTime(final Integer slotId, final ZonedDateTime checkedDate,
+			final Long userId) {
+		final List<DayDuration> periods = this.getUserPeriods(slotId, userId);
 
 		return this.getNextValidDateTime(periods, checkedDate, null);
 	}
 
 	public ZonedDateTime getNextValidDateTime(final Integer slotId, final ZonedDateTime checkedDate,
-			final ZonedDateTime endDate) {
-		final List<DayDuration> periods = this.getPeriods(slotId);
+			final ZonedDateTime endDate, final Long userId) {
+		final List<DayDuration> periods = this.getUserPeriods(slotId, userId);
 
 		return this.getNextValidDateTime(periods, checkedDate, endDate);
 	}
