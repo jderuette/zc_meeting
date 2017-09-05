@@ -296,6 +296,7 @@ public class SlotForm extends AbstractForm implements IPageForm {
 						dayDurationForm.setSubTitle(slotName);
 						dayDurationForm.getMainBox().setGridColumnCountHint(1);
 						dayDurationForm.setDayDurationId(nodeId);
+						dayDurationForm.setSlotId((Long) curentNode.getParentNode().getPrimaryKey());
 						dayDurationForm.setDisplayParent(SlotForm.this.getDesktop().getOutline());
 						dayDurationForm.setDisplayHint(DISPLAY_HINT_VIEW);
 						dayDurationForm.setDisplayViewId(VIEW_ID_E);

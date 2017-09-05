@@ -243,8 +243,11 @@ public class SlotService extends CommonService implements ISlotService {
 	}
 
 	private Long getOwner(final Long slotId) {
-		final Long slotUserId = Long.valueOf(-1l);
-		SQL.selectInto(SQLs.SLOT_SELECT_OWNER, new NVPair("slotId", slotId), new NVPair("userId", slotUserId));
+		Long slotUserId = Long.valueOf(-1l);
+		final Object[][] result = SQL.select(SQLs.SLOT_SELECT_OWNER, new NVPair("slotId", slotId));
+		if (null != result && result.length > 0) {
+			slotUserId = (Long) result[0][0];
+		}
 
 		return slotUserId;
 	}

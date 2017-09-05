@@ -395,4 +395,19 @@ public class UserService extends CommonService implements IUserService {
 		return null != this.getUserId(login);
 	}
 
+	@Override
+	public Set<Long> getAllUserId() {
+		// Used for migration, No permission check (only technical data)
+		final Set<Long> allUserIds = new HashSet<>();
+		final Object[][] result = SQL.select(SQLs.USER_SELECT_ID_ONLY);
+		if (null != result && result.length > 0) {
+			for (int i = 0; i < result.length; i++) {
+				if (null != result[i]) {
+					allUserIds.add((Long) result[i][0]);
+				}
+			}
+		}
+		return allUserIds;
+	}
+
 }

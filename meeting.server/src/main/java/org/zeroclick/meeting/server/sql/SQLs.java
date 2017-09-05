@@ -260,6 +260,7 @@ public interface SQLs {
 	String USER_PAGE_DATA_SELECT_INTO = " INTO :{page.userId}, :{page.login}, :{page.email}, :{page.timeZone}, :{page.invitedBy}, :{page.language}";
 
 	String USER_SELECT = "SELECT user_id, login, email, password, time_zone, invited_by, language FROM APP_USER WHERE 1=1";
+	String USER_SELECT_ID_ONLY = "SELECT user_id FROM APP_USER WHERE 1=1";
 
 	String USER_SELECT_FILTER_ID = " AND user_id=:currentUser";
 	String USER_SELECT_FILTER_EMAIL = " AND email=:email";
@@ -335,16 +336,21 @@ public interface SQLs {
 	String SLOT_SELECT_INTO = " INTO :slotId, :name, :isDefault, :userId";
 
 	String SLOT_PAGE_SELECT = "SELECT " + SLOT_SELECT_FILEDS + " FROM SLOT WHERE 1=1";
-	String SLOT_PAGE_SELECT_INTO = " INTO :{page.slotId}, :{page.name}, :{page.userId}, :{page.isDefault}";
+	String SLOT_PAGE_SELECT_INTO = " INTO :{page.slotId}, :{page.name}, :{page.userId}, :{page.default}";
 
-	String SLOT_SELECT_OWNER = "SELECT user_id FROM SLOT WHERE slot_id=:slotId INTO :userId";
+	String SLOT_SELECT_OWNER = "SELECT user_id FROM SLOT WHERE slot_id=:slotId";
 	String SLOT_SELECT_ID_BY_NAME = "SELECT SLOT.slot_id FROM SLOT WHERE SLOT.name=:slotName AND SLOT.user_id=:userId";
 
 	String SLOT_INSERT_SAMPLE = "INSERT INTO SLOT (slot_id, name, user_id)";
-	String SLOT_VALUES_DAY = " VALUES (nextval('" + PatchSlotTable.SLOT_ID_SEQ + "'), 'zc.meeting.slot.1', 1)";
-	String SLOT_VALUES_LUNCH = " VALUES (nextval('" + PatchSlotTable.SLOT_ID_SEQ + "'), 'zc.meeting.slot.2', 1)";
-	String SLOT_VALUES_EVENING = " VALUES (nextval('" + PatchSlotTable.SLOT_ID_SEQ + "'), 'zc.meeting.slot.3', 1)";
-	String SLOT_VALUES_WEEK_END = " VALUES (nextval('" + PatchSlotTable.SLOT_ID_SEQ + "'), 'zc.meeting.slot.4', 1)";
+	String SLOT_VALUES_GENERIC = " VALUES (__slotId__, '__slotName__', __userId__)";
+	// String SLOT_VALUES_DAY = " VALUES (nextval('" +
+	// PatchSlotTable.SLOT_ID_SEQ + "'), 'zc.meeting.slot.1', 1)";
+	// String SLOT_VALUES_LUNCH = " VALUES (nextval('" +
+	// PatchSlotTable.SLOT_ID_SEQ + "'), 'zc.meeting.slot.2', 1)";
+	// String SLOT_VALUES_EVENING = " VALUES (nextval('" +
+	// PatchSlotTable.SLOT_ID_SEQ + "'), 'zc.meeting.slot.3', 1)";
+	// String SLOT_VALUES_WEEK_END = " VALUES (nextval('" +
+	// PatchSlotTable.SLOT_ID_SEQ + "'), 'zc.meeting.slot.4', 1)";
 
 	String DAY_DURATION_SELECT = "SELECT DAY_DURATION.day_duration_id, DAY_DURATION.name, slot_start, slot_end, "
 			+ "monday, tuesday, wednesday, thursday, friday, saturday, sunday, weekly_perpetual, DAY_DURATION.slot_id";
@@ -366,16 +372,16 @@ public interface SQLs {
 
 	String DAY_DURATION_INSERT_SAMPLE = "INSERT INTO DAY_DURATION (day_duration_id, name, slot_start, slot_end, "
 			+ "monday, tuesday, wednesday, thursday, friday, saturday, sunday, weekly_perpetual, order_in_slot, slot_id)";
-	String DAY_DURATION_VALUES_MORNING = " VALUES (nextval('" + PatchSlotTable.SLOT_ID_SEQ
-			+ "'), 'zc.meeting.dayDuration.morning', '10:00:00', '12:00:00', 'true', 'true', 'true', 'true', 'true', 'false', 'false', 'true', 0, 1)";
-	String DAY_DURATION_VALUES_AFTERNOON = " VALUES (nextval('" + PatchSlotTable.SLOT_ID_SEQ
-			+ "'), 'zc.meeting.dayDuration.afternoon', '14:00:00', '17:00:00', 'true', 'true', 'true', 'true', 'true', 'false', 'false', 'true', 1, 1)";
-	String DAY_DURATION_VALUES_LUNCH = " VALUES (nextval('" + PatchSlotTable.SLOT_ID_SEQ
-			+ "'), 'zc.meeting.dayDuration.default', '12:00:00', '13:30:00', 'true', 'true', 'true', 'true', 'true', 'false', 'false', 'true', 0, 2)";
-	String DAY_DURATION_VALUES_EVENING = " VALUES (nextval('" + PatchSlotTable.SLOT_ID_SEQ
-			+ "'),'zc.meeting.dayDuration.default', '20:00:00', '23:30:00', 'true', 'true', 'true', 'true', 'true', 'false', 'false', 'true', 0, 3)";
-	String DAY_DURATION_VALUES_WWEEKEND = " VALUES (nextval('" + PatchSlotTable.SLOT_ID_SEQ
-			+ "'), 'zc.meeting.dayDuration.default', '10:00:00', '23:00:00', 'false', 'false', 'false', 'false', 'false', 'true', 'true', 'true', 0, 4)";
+	String DAY_DURATION_VALUES_MORNING = " VALUES (nextval('" + PatchSlotTable.DAY_DURATION_ID_SEQ
+			+ "'), 'zc.meeting.dayDuration.morning', '08:00:00', '12:00:00', 'true', 'true', 'true', 'true', 'true', 'false', 'false', 'true', 0, __slotId__)";
+	String DAY_DURATION_VALUES_AFTERNOON = " VALUES (nextval('" + PatchSlotTable.DAY_DURATION_ID_SEQ
+			+ "'), 'zc.meeting.dayDuration.afternoon', '14:00:00', '18:00:00', 'true', 'true', 'true', 'true', 'true', 'false', 'false', 'true', 1, __slotId__)";
+	String DAY_DURATION_VALUES_LUNCH = " VALUES (nextval('" + PatchSlotTable.DAY_DURATION_ID_SEQ
+			+ "'), 'zc.meeting.dayDuration.default', '12:00:00', '14:00:00', 'true', 'true', 'true', 'true', 'true', 'false', 'false', 'true', 0, __slotId__)";
+	String DAY_DURATION_VALUES_EVENING = " VALUES (nextval('" + PatchSlotTable.DAY_DURATION_ID_SEQ
+			+ "'),'zc.meeting.dayDuration.default', '20:00:00', '23:30:00', 'true', 'true', 'true', 'true', 'true', 'false', 'false', 'true', 0, __slotId__)";
+	String DAY_DURATION_VALUES_WWEEKEND = " VALUES (nextval('" + PatchSlotTable.DAY_DURATION_ID_SEQ
+			+ "'), 'zc.meeting.dayDuration.default', '10:00:00', '23:00:00', 'false', 'false', 'false', 'false', 'false', 'true', 'true', 'true', 0, __slotId__)";
 
 	String SLOT_DROP_TABLE = "DROP TABLE SLOT";
 	String DAY_SURATION_DROP_TABLE = "DROP TABLE DAY_SURATION";

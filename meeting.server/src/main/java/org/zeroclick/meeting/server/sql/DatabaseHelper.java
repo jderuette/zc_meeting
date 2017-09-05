@@ -147,7 +147,7 @@ public class DatabaseHelper {
 
 	/**
 	 * remove column "column" from table "table" if exists
-	 * 
+	 *
 	 * @param table
 	 * @param column
 	 */
@@ -158,6 +158,10 @@ public class DatabaseHelper {
 			LOG.warn("Cannot remove column : " + column + " on table : " + table
 					+ " because this column dosen't exists !");
 		}
+	}
+
+	public Long getNextVal(final String sequenceName) {
+		return SQL.getSequenceNextval(sequenceName);
 	}
 
 	/**
@@ -192,5 +196,4 @@ public class DatabaseHelper {
 				.replaceAll("__roleId__", String.valueOf(roleId)).replaceAll("__permissionName__", permissionName)
 				.replaceAll("__level__", String.valueOf(level)));
 	}
-
 }
