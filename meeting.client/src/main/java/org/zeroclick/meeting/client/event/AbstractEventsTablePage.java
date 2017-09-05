@@ -43,8 +43,11 @@ import org.slf4j.LoggerFactory;
 import org.zeroclick.comon.date.DateHelper;
 import org.zeroclick.comon.user.AppUserHelper;
 import org.zeroclick.configuration.client.api.ApiCreatedNotificationHandler;
+import org.zeroclick.configuration.client.slot.DayDurationModifiedNotificationHandler;
 import org.zeroclick.configuration.client.user.UserModifiedNotificationHandler;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
+import org.zeroclick.configuration.shared.slot.DayDurationFormData;
+import org.zeroclick.configuration.shared.slot.DayDurationModifiedNotification;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.configuration.shared.user.UserModifiedNotification;
@@ -351,6 +354,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		protected INotificationListener<EventModifiedNotification> eventModifiedListener;
 		protected INotificationListener<ApiCreatedNotification> apiCreatedListener;
 		protected INotificationListener<UserModifiedNotification> userModifiedListener;
+		protected INotificationListener<DayDurationModifiedNotification> dayDurationModifiedListener;
 
 		@Override
 		protected boolean getConfiguredHeaderEnabled() {
@@ -401,6 +405,10 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			final UserModifiedNotificationHandler userModifiedNotificationHandler = BEANS
 					.get(UserModifiedNotificationHandler.class);
 			userModifiedNotificationHandler.addListener(this.createUserModifiedListener());
+
+			final DayDurationModifiedNotificationHandler createDayDurationModifiedHandler = BEANS
+					.get(DayDurationModifiedNotificationHandler.class);
+			createDayDurationModifiedHandler.addListener(this.createDayDurationModifiedListener());
 
 		}
 
@@ -557,6 +565,25 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			return this.userModifiedListener;
 		}
 
+		private INotificationListener<DayDurationModifiedNotification> createDayDurationModifiedListener() {
+			this.dayDurationModifiedListener = new INotificationListener<DayDurationModifiedNotification>() {
+				@Override
+				public void handleNotification(final DayDurationModifiedNotification notification) {
+					try {
+						final DayDurationFormData dayDurationForm = notification.getDayDurationForm();
+						LOG.debug("Day Duration modified prepare to reset invalid date proposal ("
+								+ Table.this.getTitle() + ") for slotCode : " + notification.getSlotCode() + " ("
+								+ dayDurationForm.getDayDurationId() + ")");
+						Table.this.resetInvalidatesEvent(notification.getSlotCode());
+					} catch (final RuntimeException e) {
+						LOG.error("Could not handle modified DayDuration. (" + Table.this.getTitle() + ")", e);
+					}
+				}
+			};
+
+			return this.dayDurationModifiedListener;
+		}
+
 		protected void autoFillDates(final ITableRow row) {
 			// TODO Auto-generated method stub
 		}
@@ -582,6 +609,24 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 			if (null != rowStart && null != rowEnd) {
 				if (!rowStart.isBefore(newAcceptedEventstart) && !rowEnd.isAfter(rowEnd)) {
+					this.getStartDateColumn().setValue(row.getRowIndex(), (Date) null);
+					this.getEndDateColumn().setValue(row.getRowIndex(), (Date) null);
+				}
+			}
+		}
+
+		protected void resetInvalidatesEvent(final String slotCode) {
+			final List<ITableRow> rows = this.getRows();
+			for (final ITableRow row : rows) {
+				this.invalidateIfSlotMatch(row, slotCode);
+			}
+		}
+
+		private void invalidateIfSlotMatch(final ITableRow row, final String slotCode) {
+			final Integer rowSlotCode = this.getSlotColumn().getValue(row.getRowIndex());
+
+			if (null != rowSlotCode) {
+				if (rowSlotCode.equals(Integer.valueOf(slotCode))) {
 					this.getStartDateColumn().setValue(row.getRowIndex(), (Date) null);
 					this.getEndDateColumn().setValue(row.getRowIndex(), (Date) null);
 				}
@@ -641,6 +686,14 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			final ApiCreatedNotificationHandler apiCreatedNotificationHandler = BEANS
 					.get(ApiCreatedNotificationHandler.class);
 			apiCreatedNotificationHandler.removeListener(this.apiCreatedListener);
+
+			final UserModifiedNotificationHandler userModifeidNotificationHandler = BEANS
+					.get(UserModifiedNotificationHandler.class);
+			userModifeidNotificationHandler.removeListener(this.userModifiedListener);
+
+			final DayDurationModifiedNotificationHandler dayDurationModifiedNotificationHandler = BEANS
+					.get(DayDurationModifiedNotificationHandler.class);
+			dayDurationModifiedNotificationHandler.removeListener(this.dayDurationModifiedListener);
 
 			super.execDisposeTable();
 		}

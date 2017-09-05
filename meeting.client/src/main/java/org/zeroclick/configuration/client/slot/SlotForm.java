@@ -28,23 +28,13 @@ import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.data.form.fields.treefield.TreeNodeData;
 import org.zeroclick.common.ui.form.IPageForm;
-import org.zeroclick.configuration.client.slot.DayDurationForm.MainBox.DaysBox;
-import org.zeroclick.configuration.client.slot.DayDurationForm.MainBox.DaysBox.FridayField;
-import org.zeroclick.configuration.client.slot.DayDurationForm.MainBox.DaysBox.MondayField;
-import org.zeroclick.configuration.client.slot.DayDurationForm.MainBox.DaysBox.SaturdayField;
-import org.zeroclick.configuration.client.slot.DayDurationForm.MainBox.DaysBox.SundayField;
-import org.zeroclick.configuration.client.slot.DayDurationForm.MainBox.DaysBox.ThursdayField;
-import org.zeroclick.configuration.client.slot.DayDurationForm.MainBox.DaysBox.TuesdayField;
-import org.zeroclick.configuration.client.slot.DayDurationForm.MainBox.DaysBox.WednesdayField;
-import org.zeroclick.configuration.client.slot.DayDurationForm.MainBox.HoursBox;
-import org.zeroclick.configuration.client.slot.DayDurationForm.MainBox.HoursBox.SlotEndField;
-import org.zeroclick.configuration.client.slot.DayDurationForm.MainBox.HoursBox.SlotStartField;
 import org.zeroclick.configuration.client.slot.SlotForm.MainBox.CloseButton;
 import org.zeroclick.configuration.client.slot.SlotForm.MainBox.OkButton;
 import org.zeroclick.configuration.client.slot.SlotForm.MainBox.SlotsBox;
 import org.zeroclick.configuration.client.slot.SlotForm.MainBox.SlotsBox.SlotSelectorGroupBox.SlotSelectorField;
 import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.configuration.shared.slot.SlotFormData;
+import org.zeroclick.meeting.shared.security.AccessControlService;
 
 @FormData(value = SlotFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class SlotForm extends AbstractForm implements IPageForm {
@@ -68,67 +58,10 @@ public class SlotForm extends AbstractForm implements IPageForm {
 		return this.getFieldByClass(MainBox.class);
 	}
 
-	public SlotStartField getSlotStartField() {
-		return this.getFieldByClass(SlotStartField.class);
-	}
-
-	public SlotEndField getSlotEndField() {
-		return this.getFieldByClass(SlotEndField.class);
-	}
-
-	public DaysBox getDaysBox() {
-		return this.getFieldByClass(DaysBox.class);
-	}
-
-	public MondayField getMondayField() {
-		return this.getFieldByClass(MondayField.class);
-	}
-
-	public TuesdayField getTuesdayField() {
-		return this.getFieldByClass(TuesdayField.class);
-	}
-
-	public ThursdayField getThursdayField() {
-		return this.getFieldByClass(ThursdayField.class);
-	}
-
-	public WednesdayField getWednesdayField() {
-		return this.getFieldByClass(WednesdayField.class);
-	}
-
-	public FridayField getFridayField() {
-		return this.getFieldByClass(FridayField.class);
-	}
-
-	public SaturdayField getSaturdayField() {
-		return this.getFieldByClass(SaturdayField.class);
-	}
-
-	public SundayField getSundayField() {
-		return this.getFieldByClass(SundayField.class);
-	}
-
-	public HoursBox getHoursBox() {
-		return this.getFieldByClass(HoursBox.class);
-	}
-
-	// public DayDurationBox getDayDurationBox() {
-	// return this.getFieldByClass(DayDurationBox.class);
-	// }
-	//
-	// public SlotsVerticalSplitBox getSlotsVerticalSplitBox() {
-	// return this.getFieldByClass(SlotsVerticalSplitBox.class);
-	// }
-
 	public SlotsBox getSlotsBox() {
 		return this.getFieldByClass(SlotsBox.class);
 	}
 
-	//
-	// public SlotSelectorGroupBox getSlotSelectorGroupBox() {
-	// return this.getFieldByClass(SlotSelectorGroupBox.class);
-	// }
-	//
 	public SlotSelectorField getSlotSelectorField() {
 		return this.getFieldByClass(SlotSelectorField.class);
 	}
@@ -146,25 +79,6 @@ public class SlotForm extends AbstractForm implements IPageForm {
 			protected String getConfiguredLabel() {
 				return TEXTS.get("zc.meeting.slot");
 			}
-
-			// @Order(1000)
-			// public class SlotsVerticalSplitBox extends AbstractSplitBox {
-			//
-			// @Override
-			// protected Class<? extends IFormField>
-			// getConfiguredCollapsibleField() {
-			// return DayDurationBox.class;
-			// }
-			//
-			// @Override
-			// protected double getConfiguredSplitterPosition() {
-			// return 0.3;
-			// }
-			//
-			// @Override
-			// protected String getConfiguredSplitterPositionType() {
-			// return ISplitBox.SPLITTER_POSITION_TYPE_RELATIVE;
-			// }
 
 			@Order(1000)
 			public class SlotSelectorGroupBox extends AbstractGroupBox {
@@ -353,8 +267,6 @@ public class SlotForm extends AbstractForm implements IPageForm {
 					};
 
 					protected void loadDayDurationForm(final Long nodeId) {
-						final DayDurationForm dayDurationForm = new DayDurationForm();
-
 						final List<IForm> forms = SlotForm.this.getDesktop()
 								.getForms(SlotForm.this.getDesktop().getOutline());
 
@@ -377,6 +289,10 @@ public class SlotForm extends AbstractForm implements IPageForm {
 							}
 						}
 
+						final AccessControlService acs = BEANS.get(AccessControlService.class);
+						final DayDurationForm dayDurationForm = new DayDurationForm();
+
+						dayDurationForm.setUserId(acs.getZeroClickUserIdOfCurrentSubject());
 						dayDurationForm.setSubTitle(slotName);
 						dayDurationForm.getMainBox().setGridColumnCountHint(1);
 						dayDurationForm.setDayDurationId(nodeId);
@@ -387,32 +303,6 @@ public class SlotForm extends AbstractForm implements IPageForm {
 						dayDurationForm.startModify();
 					}
 				}
-
-				// @Order(2000)
-				// public class DayDurationBox extends AbstractGroupBox {
-				// @Override
-				// protected String getConfiguredLabel() {
-				// return TEXTS.get("zc.meeting.dayDuration");
-				// }
-				//
-				// @Override
-				// protected boolean getConfiguredLabelVisible() {
-				// return Boolean.FALSE;
-				// }
-				//
-				// @Override
-				// protected int getConfiguredLabelPosition() {
-				// return IFormField.LABEL_POSITION_TOP;
-				// }
-				//
-				// @Override
-				// protected int getConfiguredGridColumnCount() {
-				// return 1;
-				// }
-				// }
-				//
-				// }
-
 			}
 		}
 
@@ -434,13 +324,6 @@ public class SlotForm extends AbstractForm implements IPageForm {
 
 		@Override
 		protected void execLoad() {
-			// final ISlotService service = BEANS.get(ISlotService.class);
-			// SlotFormData formData = new SlotFormData();
-			// SlotForm.this.exportFormData(formData);
-			// formData = service.load(formData);
-			// SlotForm.this.importFormData(formData);
-			//
-			// SlotForm.this.setEnabledPermission(new UpdateSlotPermission());
 		}
 	}
 }

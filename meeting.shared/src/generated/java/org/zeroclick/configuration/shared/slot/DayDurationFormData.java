@@ -104,6 +104,24 @@ public class DayDurationFormData extends AbstractFormData {
 		return getFieldByClass(Tuesday.class);
 	}
 
+	/**
+	 * access method for property UserId.
+	 */
+	public Long getUserId() {
+		return getUserIdProperty().getValue();
+	}
+
+	/**
+	 * access method for property UserId.
+	 */
+	public void setUserId(Long userId) {
+		getUserIdProperty().setValue(userId);
+	}
+
+	public UserIdProperty getUserIdProperty() {
+		return getPropertyByClass(UserIdProperty.class);
+	}
+
 	public Wednesday getWednesday() {
 		return getFieldByClass(Wednesday.class);
 	}
@@ -163,6 +181,11 @@ public class DayDurationFormData extends AbstractFormData {
 	}
 
 	public static class Tuesday extends AbstractValueFieldData<Boolean> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class UserIdProperty extends AbstractPropertyData<Long> {
 
 		private static final long serialVersionUID = 1L;
 	}

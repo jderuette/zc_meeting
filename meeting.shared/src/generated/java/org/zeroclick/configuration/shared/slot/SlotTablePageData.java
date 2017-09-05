@@ -55,11 +55,11 @@ public class SlotTablePageData extends AbstractTablePageData {
 		public static final String slotId = "slotId";
 		public static final String userId = "userId";
 		public static final String name = "name";
-		public static final String isDefault = "isDefault";
+		public static final String default_ = "default";
 		private Long m_slotId;
 		private Long m_userId;
 		private String m_name;
-		private String m_isDefault;
+		private String m_default;
 
 		public Long getSlotId() {
 			return m_slotId;
@@ -85,12 +85,12 @@ public class SlotTablePageData extends AbstractTablePageData {
 			m_name = newName;
 		}
 
-		public String getIsDefault() {
-			return m_isDefault;
+		public String getDefault() {
+			return m_default;
 		}
 
-		public void setIsDefault(String newIsDefault) {
-			m_isDefault = newIsDefault;
+		public void setDefault(String newDefault) {
+			m_default = newDefault;
 		}
 	}
 }

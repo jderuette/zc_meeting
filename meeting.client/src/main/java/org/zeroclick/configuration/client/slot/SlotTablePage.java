@@ -49,8 +49,8 @@ public class SlotTablePage extends AbstractPageWithTable<Table> {
 			return this.getColumnSet().getColumnByClass(UserIdColumn.class);
 		}
 
-		public isDefaultColumn getisDefaultColumn() {
-			return this.getColumnSet().getColumnByClass(isDefaultColumn.class);
+		public DefaultColumn getDefaultColumn() {
+			return this.getColumnSet().getColumnByClass(DefaultColumn.class);
 		}
 
 		@Order(1000)
@@ -99,7 +99,7 @@ public class SlotTablePage extends AbstractPageWithTable<Table> {
 		}
 
 		@Order(4000)
-		public class isDefaultColumn extends AbstractStringColumn {
+		public class DefaultColumn extends AbstractStringColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.slot.isDefault");

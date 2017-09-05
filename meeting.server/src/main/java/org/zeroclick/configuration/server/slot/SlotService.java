@@ -1,10 +1,13 @@
 package org.zeroclick.configuration.server.slot;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.holders.NVPair;
+import org.eclipse.scout.rt.server.clientnotification.ClientNotificationRegistry;
 import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
@@ -14,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.zeroclick.common.CommonService;
 import org.zeroclick.configuration.shared.slot.CreateSlotPermission;
 import org.zeroclick.configuration.shared.slot.DayDurationFormData;
+import org.zeroclick.configuration.shared.slot.DayDurationModifiedNotification;
 import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.configuration.shared.slot.ReadSlotPermission;
 import org.zeroclick.configuration.shared.slot.SlotFormData;
@@ -21,6 +25,7 @@ import org.zeroclick.configuration.shared.slot.SlotTablePageData;
 import org.zeroclick.configuration.shared.slot.UpdateSlotPermission;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.shared.event.IEventService;
+import org.zeroclick.meeting.shared.security.AccessControlService;
 
 public class SlotService extends CommonService implements ISlotService {
 
@@ -56,6 +61,24 @@ public class SlotService extends CommonService implements ISlotService {
 		return formData;
 	}
 
+	private String getSlotCode(final Long slotId) {
+		if (!ACCESS.check(new ReadSlotPermission(slotId))) {
+			super.throwAuthorizationFailed();
+		}
+		String slotCode = null;
+
+		final Object[][] result = SQL.select(SQLs.SLOT_SELECT + SQLs.SLOT_SELECT_FILTER_SLOT_ID,
+				new NVPair("slotId", slotId));
+
+		if (null != result && result.length != 0 && null != result[0] && result[0].length >= 1) {
+			final String slotName = (String) result[0][1];
+			if (null != slotName) {
+				slotCode = slotName.substring(slotName.lastIndexOf('.') + 1);
+			}
+		}
+		return slotCode;
+	}
+
 	@Override
 	public DayDurationFormData load(final DayDurationFormData formData) {
 		// Access on Slot implies access on DayDuration
@@ -64,8 +87,8 @@ public class SlotService extends CommonService implements ISlotService {
 		}
 
 		SQL.selectInto(
-				SQLs.DAY_DURATION_SELECT + SQLs.DAY_DURATION_SELECT_FILTER_DAY_DURATION_ID
-						+ SQLs.DAY_DURATION_SELECT_FROM_PLUS_GENERIC_WHERE + SQLs.DAY_DURATION_SELECT_INTO,
+				SQLs.DAY_DURATION_SELECT + SQLs.DAY_DURATION_SELECT_FROM_PLUS_GENERIC_WHERE
+						+ SQLs.DAY_DURATION_SELECT_FILTER_DAY_DURATION_ID + SQLs.DAY_DURATION_SELECT_INTO,
 				formData, new NVPair("dayDurationId", formData.getDayDurationId()));
 		return formData;
 	}
@@ -86,7 +109,36 @@ public class SlotService extends CommonService implements ISlotService {
 		}
 		SQL.update(SQLs.DAY_DURATION_UPDATE, formData);
 
+		this.sendModifiedNotifications(formData);
+
 		return formData;
+	}
+
+	private Set<String> buildNotifiedUsers(final DayDurationFormData formData) {
+		// Notify Users for DayDuration update
+		final AccessControlService acs = BEANS.get(AccessControlService.class);
+
+		final Set<String> notifiedUsers = new HashSet<>();
+		if (null != formData.getUserId()) {
+			notifiedUsers.addAll(acs.getUserNotificationIds(formData.getUserId()));
+		}
+
+		// inform all attendee with pending event
+		// TODO Djer13 only event with "current" slotId ?
+		final Set<Long> pendingUsers = this.getUserWithPendingEvent();
+		if (null != pendingUsers) {
+			for (final Long userId : pendingUsers) {
+				notifiedUsers.addAll(acs.getUserNotificationIds(userId));
+			}
+		}
+		return notifiedUsers;
+	}
+
+	private void sendModifiedNotifications(final DayDurationFormData formData) {
+		final String sltoCode = this.getSlotCode(formData.getSlotId());
+		final Set<String> notifiedUsers = this.buildNotifiedUsers(formData);
+		BEANS.get(ClientNotificationRegistry.class).putForUsers(notifiedUsers,
+				new DayDurationModifiedNotification(formData, sltoCode));
 	}
 
 	@Override
@@ -105,7 +157,7 @@ public class SlotService extends CommonService implements ISlotService {
 	@Override
 	public Object[][] getSlots() {
 		// Filter in select (currentUser) check if user can at least read own
-		if (ACCESS.getLevel(new ReadSlotPermission((Long) null)) >= ReadSlotPermission.LEVEL_OWN) {
+		if (ACCESS.getLevel(new ReadSlotPermission((Long) null)) < ReadSlotPermission.LEVEL_OWN) {
 			super.throwAuthorizationFailed();
 		}
 
@@ -124,7 +176,7 @@ public class SlotService extends CommonService implements ISlotService {
 		}
 
 		final String sql = SQLs.DAY_DURATION_SELECT + SQLs.DAY_DURATION_SELECT_FROM_PLUS_GENERIC_WHERE
-				+ SQLs.DAY_DURATION_SELECT_FILTER_SLOT_ID;
+				+ SQLs.DAY_DURATION_SELECT_FILTER_SLOT_ID + SQLs.DAY_DURATION_SELECT_ORDER;
 
 		final Object[][] results = SQL.select(sql, new NVPair("slotId", slotId));
 
@@ -138,7 +190,8 @@ public class SlotService extends CommonService implements ISlotService {
 			super.throwAuthorizationFailed();
 		}
 
-		final String sql = SQLs.DAY_DURATION_SELECT_LIGHT + SQLs.DAY_DURATION_SELECT_FILTER_SLOT_ID;
+		final String sql = SQLs.DAY_DURATION_SELECT_LIGHT + SQLs.DAY_DURATION_SELECT_FILTER_SLOT_ID
+				+ SQLs.DAY_DURATION_SELECT_ORDER;
 
 		final Object[][] results = SQL.select(sql, new NVPair("slotId", slotId));
 
@@ -180,7 +233,7 @@ public class SlotService extends CommonService implements ISlotService {
 		sql.append(SQLs.DAY_DURATION_SELECT).append(", ").append(SQLs.SLOT_SELECT_FILEDS)
 				.append(SQLs.DAY_DURATION_SELECT_FROM).append(SQLs.DAY_DURATION_JOIN_SLOT)
 				.append(SQLs.GENERIC_WHERE_FOR_SECURE_AND).append(SQLs.DAY_DURATION_SELECT_FILTER_SLOT_NAME)
-				.append(SQLs.DAY_DURATION_SELECT_FILTER_SLOT_USER_ID);
+				.append(SQLs.DAY_DURATION_SELECT_FILTER_SLOT_USER_ID + SQLs.DAY_DURATION_SELECT_ORDER);
 
 		final Object[][] results = SQL.select(sql.toString(), new NVPair("slotName", slotName),
 				new NVPair("userId", userId));
@@ -217,10 +270,23 @@ public class SlotService extends CommonService implements ISlotService {
 	public boolean isInvolved(final Long slotId) {
 		final Long slotOwner = this.getOwner(slotId);
 
+		final Set<Long> pendingUsers = this.getUserWithPendingEvent();
+
+		return pendingUsers.contains(slotOwner);
+	}
+
+	private Set<Long> getUserWithPendingEvent() {
+		Set<Long> pendingMeetingUser = new HashSet<>();
+
 		final IEventService eventService = BEANS.get(IEventService.class);
 		final Map<Long, Integer> pendingUsers = eventService.getUsersWithPendingMeeting();
 
-		return pendingUsers.containsKey(slotOwner) ? pendingUsers.get(slotOwner) > 0 : Boolean.FALSE;
+		if (null != pendingUsers) {
+			pendingMeetingUser = pendingUsers.keySet();
+		}
+
+		return pendingMeetingUser;
+
 	}
 
 }
