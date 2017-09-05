@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.CommonService;
 import org.zeroclick.configuration.shared.onboarding.OnBoardingUserFormData;
+import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.configuration.shared.user.CreateUserPermission;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.ReadUserPermission;
@@ -103,7 +104,13 @@ public class UserService extends CommonService implements IUserService {
 			throw new VetoException(TEXTS.get("zc.user.userAlreadyExists"));
 		}
 		SQL.insert(SQLs.USER_INSERT, formData);
-		return this.store(formData, Boolean.TRUE);
+		final UserFormData userCreatedData = this.store(formData, Boolean.TRUE);
+
+		// add default slot configuration for the new User
+		final ISlotService slotService = BEANS.get(ISlotService.class);
+		slotService.createDefaultSlot(userCreatedData.getUserId().getValue());
+
+		return userCreatedData;
 	}
 
 	private boolean userAlreadyExists(final String userLogin) {

@@ -23,7 +23,9 @@ import org.zeroclick.configuration.shared.slot.ReadSlotPermission;
 import org.zeroclick.configuration.shared.slot.SlotFormData;
 import org.zeroclick.configuration.shared.slot.SlotTablePageData;
 import org.zeroclick.configuration.shared.slot.UpdateSlotPermission;
+import org.zeroclick.meeting.server.sql.DatabaseHelper;
 import org.zeroclick.meeting.server.sql.SQLs;
+import org.zeroclick.meeting.server.sql.migrate.data.PatchSlotTable;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
@@ -290,6 +292,44 @@ public class SlotService extends CommonService implements ISlotService {
 
 		return pendingMeetingUser;
 
+	}
+
+	@Override
+	public void createDefaultSlot(final Long userId) {
+		Long slotId = this.createSlot("zc.meeting.slot.1", userId);
+		SQL.insert(SQLs.DAY_DURATION_INSERT_SAMPLE + this.forSlot(SQLs.DAY_DURATION_VALUES_MORNING, slotId));
+		SQL.insert(SQLs.DAY_DURATION_INSERT_SAMPLE + this.forSlot(SQLs.DAY_DURATION_VALUES_AFTERNOON, slotId));
+
+		slotId = this.createSlot("zc.meeting.slot.2", userId);
+		SQL.insert(SQLs.DAY_DURATION_INSERT_SAMPLE + this.forSlot(SQLs.DAY_DURATION_VALUES_LUNCH, slotId));
+
+		slotId = this.createSlot("zc.meeting.slot.3", userId);
+		SQL.insert(SQLs.DAY_DURATION_INSERT_SAMPLE + this.forSlot(SQLs.DAY_DURATION_VALUES_EVENING, slotId));
+
+		slotId = this.createSlot("zc.meeting.slot.4", userId);
+		SQL.insert(SQLs.DAY_DURATION_INSERT_SAMPLE + this.forSlot(SQLs.DAY_DURATION_VALUES_WWEEKEND, slotId));
+
+	}
+
+	/**
+	 * Create a new Slot and return the Slot Id
+	 *
+	 * @param slotName
+	 * @param userId
+	 * @return
+	 */
+	private Long createSlot(final String slotName, final Long userId) {
+		// TODO Djer permission check ? (should be against autorisation on
+		// (new)
+		// userId
+		final Long slotId = DatabaseHelper.get().getNextVal(PatchSlotTable.SLOT_ID_SEQ);
+		SQL.insert(SQLs.SLOT_INSERT_SAMPLE + this.forSlot(SQLs.SLOT_VALUES_GENERIC, slotId)
+				.replace("__slotName__", slotName).replace("__userId__", String.valueOf(userId)));
+		return slotId;
+	}
+
+	private String forSlot(final String sql, final Long slotId) {
+		return sql.replace("__slotId__", String.valueOf(slotId));
 	}
 
 }

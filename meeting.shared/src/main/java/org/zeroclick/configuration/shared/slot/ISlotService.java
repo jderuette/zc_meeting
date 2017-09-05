@@ -40,4 +40,6 @@ public interface ISlotService extends IService {
 	boolean isOwn(Long slotId);
 
 	boolean isInvolved(Long slotId);
+
+	void createDefaultSlot(Long userId);
 }

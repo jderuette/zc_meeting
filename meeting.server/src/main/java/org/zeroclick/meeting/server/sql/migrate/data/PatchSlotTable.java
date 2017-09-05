@@ -22,6 +22,7 @@ import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.eclipse.scout.rt.shared.security.BasicHierarchyPermission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher;
@@ -147,36 +148,8 @@ public class PatchSlotTable extends AbstractDataPatcher {
 
 	private void createSlotAndDayDurationForUser(final Long userId) {
 		LOG.info("Creating data for user : " + userId);
-		Long slotId = this.createSlot("zc.meeting.slot.1", userId);
-		SQL.insert(SQLs.DAY_DURATION_INSERT_SAMPLE + this.forSlot(SQLs.DAY_DURATION_VALUES_MORNING, slotId));
-		SQL.insert(SQLs.DAY_DURATION_INSERT_SAMPLE + this.forSlot(SQLs.DAY_DURATION_VALUES_AFTERNOON, slotId));
-
-		slotId = this.createSlot("zc.meeting.slot.2", userId);
-		SQL.insert(SQLs.DAY_DURATION_INSERT_SAMPLE + this.forSlot(SQLs.DAY_DURATION_VALUES_LUNCH, slotId));
-
-		slotId = this.createSlot("zc.meeting.slot.3", userId);
-		SQL.insert(SQLs.DAY_DURATION_INSERT_SAMPLE + this.forSlot(SQLs.DAY_DURATION_VALUES_EVENING, slotId));
-
-		slotId = this.createSlot("zc.meeting.slot.4", userId);
-		SQL.insert(SQLs.DAY_DURATION_INSERT_SAMPLE + this.forSlot(SQLs.DAY_DURATION_VALUES_WWEEKEND, slotId));
-	}
-
-	/**
-	 * Create a new Slot and return the Slot Id
-	 *
-	 * @param slotName
-	 * @param userId
-	 * @return
-	 */
-	private Long createSlot(final String slotName, final Long userId) {
-		final Long slotId = this.getDatabaseHelper().getNextVal(SLOT_ID_SEQ);
-		SQL.insert(SQLs.SLOT_INSERT_SAMPLE + this.forSlot(SQLs.SLOT_VALUES_GENERIC, slotId)
-				.replace("__slotName__", slotName).replace("__userId__", String.valueOf(userId)));
-		return slotId;
-	}
-
-	private String forSlot(final String sql, final Long slotId) {
-		return sql.replace("__slotId__", String.valueOf(slotId));
+		final ISlotService slotService = BEANS.get(ISlotService.class);
+		slotService.createDefaultSlot(userId);
 	}
 
 	@Override
