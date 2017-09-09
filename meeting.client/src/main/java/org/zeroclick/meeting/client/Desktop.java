@@ -292,7 +292,7 @@ public class Desktop extends AbstractDesktop {
 			protected String getConfiguredText() {
 				final IUserService userService = BEANS.get(IUserService.class);
 				final UserFormData userDetails = userService.getCurrentUserDetails();
-				return TEXTS.get("zc.user.logedAs", userDetails.getEmail().getValue());
+				return TEXTS.get("zc.user.loggedAs", userDetails.getEmail().getValue());
 			}
 
 			@Override

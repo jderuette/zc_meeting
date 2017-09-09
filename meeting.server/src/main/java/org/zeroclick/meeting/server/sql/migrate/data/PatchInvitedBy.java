@@ -31,6 +31,9 @@ public class PatchInvitedBy extends AbstractDataPatcher {
 
 	private static final Logger LOG = LoggerFactory.getLogger(PatchInvitedBy.class);
 
+	private static final String PATCHED_TABLE = "app_user";
+	private static final String PATCHED_COLUMN = "invited_by";
+
 	public PatchInvitedBy() {
 		this.setDescription("Add Invited by colum on User");
 	}
@@ -62,7 +65,7 @@ public class PatchInvitedBy extends AbstractDataPatcher {
 
 	private void migrateStrucutre() {
 		LOG.info("User Invited By  upgrading data strcuture");
-		if (!this.getDatabaseHelper().isColumnExists("app_user", "invited_by")) {
+		if (!this.getDatabaseHelper().isColumnExists(PATCHED_TABLE, PATCHED_COLUMN)) {
 			SQL.insert(SQLs.USER_ALTER_TABLE_INVITED_BY);
 			SQL.insert(SQLs.USER_ALTER_TABLE_INVITED_BY_CONSTRAINT);
 		}
@@ -79,7 +82,8 @@ public class PatchInvitedBy extends AbstractDataPatcher {
 	 */
 	@Override
 	protected void undo() {
-		LOG.info("User Invited By downgrading data strcuture NOT RUN (need bug fix)");
+		LOG.info("User Invited By downgrading data strcuture");
+		this.getDatabaseHelper().removeColumn(PATCHED_TABLE, PATCHED_COLUMN);
 	}
 
 }

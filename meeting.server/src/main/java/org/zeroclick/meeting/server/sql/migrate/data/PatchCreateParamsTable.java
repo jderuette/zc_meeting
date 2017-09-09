@@ -91,12 +91,8 @@ public class PatchCreateParamsTable extends AbstractDataPatcher {
 	@Override
 	public void undo() {
 		LOG.info("Create param table downgrading data strcuture");
-		if (this.getDatabaseHelper().isSequenceExists(APP_PARAMS_ID_SEQ)) {
-			this.getDatabaseHelper().dropSequence(APP_PARAMS_ID_SEQ);
-		}
-		if (this.getDatabaseHelper().existTable(APP_PARAMS_TABLE_NAME)) {
-			SQL.insert(SQLs.PARAMS_DROP_TABLE);
-		}
+		this.getDatabaseHelper().dropSequence(APP_PARAMS_ID_SEQ);
+		this.getDatabaseHelper().dropTable(APP_PARAMS_TABLE_NAME);
 	}
 
 }

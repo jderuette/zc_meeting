@@ -48,4 +48,6 @@ public interface IUserService extends IService {
 
 	String getUserLanguage(Long guestId);
 
+	Set<Long> getAllUserId();
+
 }

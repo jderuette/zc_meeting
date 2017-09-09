@@ -10,6 +10,8 @@
  ******************************************************************************/
 package org.zeroclick.meeting.server.sql;
 
+import org.zeroclick.meeting.server.sql.migrate.data.PatchSlotTable;
+
 @SuppressWarnings("PMD.LongVariable")
 public interface SQLs {
 
@@ -17,12 +19,15 @@ public interface SQLs {
 	String SELECT_TABLE_NAMES_POSTGRESQL = "select UPPER(tables.table_name) from information_schema.tables INTO :result";
 
 	String SELECT_COLUMN_EXISTS_POSTGRESQL = "SELECT column_name FROM information_schema.columns WHERE table_name='__table__' and column_name='__column__'";
+	String GENERIC_REMOVE_COLUMN_POSTGRESQL = "ALTER TABLE __table__ DROP COLUMN __column__";
 
 	String GENERIC_DROP_TABLE = "DROP TABLE __tableName__ CASCADE";
 	String GENERIC_CREATE_SEQUENCE = "CREATE SEQUENCE __seqName__ START __seqStart__";
 	String GENERIC_DROP_SEQUENCE = "DROP SEQUENCE __seqName__";
 
 	String GENERIC_SEQUENCE_EXISTS = "SELECT to_regclass('__seqName__')";
+
+	String GENERIC_WHERE_FOR_SECURE_AND = " WHERE 1=1";
 
 	/**
 	 * EVENT
@@ -182,6 +187,8 @@ public interface SQLs {
 
 	String ROLE_PERMISSION_DELETE = "DELETE FROM ROLE_PERMISSION WHERE role_id = :roleId AND permission = :{permissions} ";
 
+	String ROLE_GENERIC_VALUES_ADD = " VALUES(__roleId__, '__permissionName__', __level__)";
+
 	String ROLE_PERMISSION_INSERT_SAMPLE = "INSERT INTO ROLE_PERMISSION (role_id, permission, level)";
 	// -- Admin Role
 	String ROLE_PERMISSION_VALUES_01 = " VALUES(1, 'org.zeroclick.meeting.shared.calendar.CreateApiPermission', 100)";
@@ -253,6 +260,7 @@ public interface SQLs {
 	String USER_PAGE_DATA_SELECT_INTO = " INTO :{page.userId}, :{page.login}, :{page.email}, :{page.timeZone}, :{page.invitedBy}, :{page.language}";
 
 	String USER_SELECT = "SELECT user_id, login, email, password, time_zone, invited_by, language FROM APP_USER WHERE 1=1";
+	String USER_SELECT_ID_ONLY = "SELECT user_id FROM APP_USER WHERE 1=1";
 
 	String USER_SELECT_FILTER_ID = " AND user_id=:currentUser";
 	String USER_SELECT_FILTER_EMAIL = " AND email=:email";
@@ -276,8 +284,10 @@ public interface SQLs {
 
 	String USER_ALTER_TABLE_INVITED_BY = "ALTER TABLE APP_USER ADD COLUMN invited_by INTEGER";
 	String USER_ALTER_TABLE_INVITED_BY_CONSTRAINT = "ALTER TABLE APP_USER ADD CONSTRAINT FK_INVITED_BY FOREIGN KEY (invited_by) REFERENCES APP_USER(user_id)";
+	String USER_ALTER_TABLE_REMOVE_INVITED_BY = "ALTER TABLE APP_USER DROP COLUMN invited_by";
 
 	String USER_ALTER_TABLE_LANGUAGE = "ALTER TABLE APP_USER ADD COLUMN language VARCHAR(5)";
+	String USER_ALTER_TABLE_REMOVE_LANGUAGE = "ALTER TABLE APP_USER DROP COLUMN language";
 	/**
 	 * Password not updated use USER_UPDATE_PASSWORD
 	 */
@@ -309,4 +319,70 @@ public interface SQLs {
 
 	String PARAMS_DROP_TABLE = "DROP TABLE APP_PARAMS";
 
+	/**
+	 * Slot (and dayDuration) table
+	 */
+	String SLOT_CREATE_TABLE = "CREATE TABLE SLOT (slot_id INTEGER NOT NULL, name VARCHAR(50), user_id INTEGER, CONSTRAINT SLOT_PK PRIMARY KEY (slot_id)"
+			+ ", CONSTRAINT SLOT_USER_FK FOREIGN KEY (user_id) REFERENCES APP_USER(user_id))";
+	String DAY_DURATION_CREATE_TABLE = "CREATE TABLE DAY_DURATION (day_duration_id INTEGER NOT NULL, name VARCHAR(50), slot_start TIME, slot_end TIME"
+			+ ", monday BOOLEAN, tuesday BOOLEAN, wednesday BOOLEAN, thursday BOOLEAN, friday BOOLEAN, saturday BOOLEAN, sunday BOOLEAN"
+			+ ", weekly_perpetual BOOLEAN, order_in_slot INTEGER NOT NULL, slot_id INTEGER,"
+			+ " CONSTRAINT DAY_DURATION_PK PRIMARY KEY (day_duration_id), CONSTRAINT DAY_DURATION_SLOT_FK FOREIGN KEY (slot_id) REFERENCES SLOT(slot_id))";
+
+	String SLOT_SELECT_FILEDS = "SLOT.slot_id, SLOT.name, false, SLOT.user_id";
+	String SLOT_SELECT = "SELECT " + SLOT_SELECT_FILEDS + " FROM SLOT WHERE 1=1";
+	String SLOT_SELECT_FILTER_USER_ID = " AND user_id=:currentUser";
+	String SLOT_SELECT_FILTER_SLOT_ID = " AND slot_id=:slotId";
+	String SLOT_SELECT_INTO = " INTO :slotId, :name, :isDefault, :userId";
+
+	String SLOT_PAGE_SELECT = "SELECT " + SLOT_SELECT_FILEDS + " FROM SLOT WHERE 1=1";
+	String SLOT_PAGE_SELECT_INTO = " INTO :{page.slotId}, :{page.name}, :{page.userId}, :{page.default}";
+
+	String SLOT_SELECT_OWNER = "SELECT user_id FROM SLOT WHERE slot_id=:slotId";
+	String SLOT_SELECT_ID_BY_NAME = "SELECT SLOT.slot_id FROM SLOT WHERE SLOT.name=:slotName AND SLOT.user_id=:userId";
+
+	String SLOT_INSERT_SAMPLE = "INSERT INTO SLOT (slot_id, name, user_id)";
+	String SLOT_VALUES_GENERIC = " VALUES (__slotId__, '__slotName__', __userId__)";
+	// String SLOT_VALUES_DAY = " VALUES (nextval('" +
+	// PatchSlotTable.SLOT_ID_SEQ + "'), 'zc.meeting.slot.1', 1)";
+	// String SLOT_VALUES_LUNCH = " VALUES (nextval('" +
+	// PatchSlotTable.SLOT_ID_SEQ + "'), 'zc.meeting.slot.2', 1)";
+	// String SLOT_VALUES_EVENING = " VALUES (nextval('" +
+	// PatchSlotTable.SLOT_ID_SEQ + "'), 'zc.meeting.slot.3', 1)";
+	// String SLOT_VALUES_WEEK_END = " VALUES (nextval('" +
+	// PatchSlotTable.SLOT_ID_SEQ + "'), 'zc.meeting.slot.4', 1)";
+
+	String DAY_DURATION_SELECT = "SELECT DAY_DURATION.day_duration_id, DAY_DURATION.name, slot_start, slot_end, "
+			+ "monday, tuesday, wednesday, thursday, friday, saturday, sunday, weekly_perpetual, DAY_DURATION.slot_id";
+	String DAY_DURATION_SELECT_LIGHT = "SELECT day_duration_id, name, slot_id FROM DAY_DURATION WHERE 1=1";
+	String DAY_DURATION_SELECT_FILTER_SLOT_ID = " AND slot_id=:slotId";
+	String DAY_DURATION_SELECT_FILTER_SLOT_NAME = " AND SLOT.name=:slotName";
+	String DAY_DURATION_SELECT_FILTER_SLOT_USER_ID = " AND SLOT.user_id=:userId";
+	String DAY_DURATION_SELECT_FILTER_DAY_DURATION_ID = " AND day_duration_id=:dayDurationId";
+	String DAY_DURATION_SELECT_ORDER = " ORDER BY order_in_slot";
+	String DAY_DURATION_SELECT_INTO = " INTO :dayDurationId, :name, :slotStart, :slotEnd, :monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday, :weeklyPerpetual, :slotId";
+	String DAY_DURATION_SELECT_FROM = " FROM DAY_DURATION";
+	String DAY_DURATION_SELECT_FROM_PLUS_GENERIC_WHERE = " FROM DAY_DURATION" + GENERIC_WHERE_FOR_SECURE_AND;
+
+	String DAY_DURATION_JOIN_SLOT = " JOIN SLOT on DAY_DURATION.slot_id = SLOT.slot_id";
+
+	String DAY_DURATION_UPDATE = "UPDATE DAY_DURATION SET name=:name, slot_start=:slotStart, slot_end=:slotEnd"
+			+ ", monday=:monday, tuesday=:tuesday, thursday=:thursday, friday=:friday, saturday=:saturday, sunday=:sunday, weekly_perpetual=:weeklyPerpetual"
+			+ " WHERE day_duration_id=:dayDurationId";
+
+	String DAY_DURATION_INSERT_SAMPLE = "INSERT INTO DAY_DURATION (day_duration_id, name, slot_start, slot_end, "
+			+ "monday, tuesday, wednesday, thursday, friday, saturday, sunday, weekly_perpetual, order_in_slot, slot_id)";
+	String DAY_DURATION_VALUES_MORNING = " VALUES (nextval('" + PatchSlotTable.DAY_DURATION_ID_SEQ
+			+ "'), 'zc.meeting.dayDuration.morning', '08:00:00', '12:00:00', 'true', 'true', 'true', 'true', 'true', 'false', 'false', 'true', 0, __slotId__)";
+	String DAY_DURATION_VALUES_AFTERNOON = " VALUES (nextval('" + PatchSlotTable.DAY_DURATION_ID_SEQ
+			+ "'), 'zc.meeting.dayDuration.afternoon', '14:00:00', '18:00:00', 'true', 'true', 'true', 'true', 'true', 'false', 'false', 'true', 1, __slotId__)";
+	String DAY_DURATION_VALUES_LUNCH = " VALUES (nextval('" + PatchSlotTable.DAY_DURATION_ID_SEQ
+			+ "'), 'zc.meeting.dayDuration.default', '12:00:00', '14:00:00', 'true', 'true', 'true', 'true', 'true', 'false', 'false', 'true', 0, __slotId__)";
+	String DAY_DURATION_VALUES_EVENING = " VALUES (nextval('" + PatchSlotTable.DAY_DURATION_ID_SEQ
+			+ "'),'zc.meeting.dayDuration.default', '20:00:00', '23:30:00', 'true', 'true', 'true', 'true', 'true', 'false', 'false', 'true', 0, __slotId__)";
+	String DAY_DURATION_VALUES_WWEEKEND = " VALUES (nextval('" + PatchSlotTable.DAY_DURATION_ID_SEQ
+			+ "'), 'zc.meeting.dayDuration.default', '10:00:00', '23:00:00', 'false', 'false', 'false', 'false', 'false', 'true', 'true', 'true', 0, __slotId__)";
+
+	String SLOT_DROP_TABLE = "DROP TABLE SLOT";
+	String DAY_SURATION_DROP_TABLE = "DROP TABLE DAY_SURATION";
 }
