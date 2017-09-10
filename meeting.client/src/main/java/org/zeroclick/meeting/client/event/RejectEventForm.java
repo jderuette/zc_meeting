@@ -10,6 +10,7 @@ import org.eclipse.scout.rt.client.ui.form.AbstractFormHandler;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractCancelButton;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractOkButton;
 import org.eclipse.scout.rt.client.ui.form.fields.groupbox.AbstractGroupBox;
+import org.eclipse.scout.rt.client.ui.form.fields.smartfield.AbstractProposalField;
 import org.eclipse.scout.rt.client.ui.form.fields.stringfield.AbstractStringField;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
@@ -32,6 +33,7 @@ import org.zeroclick.meeting.client.event.RejectEventForm.MainBox.OkButton;
 import org.zeroclick.meeting.client.event.RejectEventForm.MainBox.OrganizerEmailField;
 import org.zeroclick.meeting.client.event.RejectEventForm.MainBox.ReasonField;
 import org.zeroclick.meeting.client.event.RejectEventForm.MainBox.SubjectField;
+import org.zeroclick.meeting.client.event.RejectEventForm.MainBox.VenueField;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.event.EventFormData;
@@ -212,6 +214,10 @@ public class RejectEventForm extends AbstractForm {
 		return this.getFieldByClass(ReasonField.class);
 	}
 
+	public VenueField getVenueField() {
+		return this.getFieldByClass(VenueField.class);
+	}
+
 	public OkButton getOkButton() {
 		return this.getFieldByClass(OkButton.class);
 	}
@@ -299,6 +305,19 @@ public class RejectEventForm extends AbstractForm {
 			@Override
 			protected int getConfiguredMaxLength() {
 				return 256;
+			}
+		}
+
+		@Order(4500)
+		public class VenueField extends AbstractProposalField<String> {
+			@Override
+			protected String getConfiguredLabel() {
+				return TEXTS.get("zc.meeting.venue");
+			}
+
+			@Override
+			protected boolean getConfiguredEnabled() {
+				return Boolean.FALSE;
 			}
 		}
 

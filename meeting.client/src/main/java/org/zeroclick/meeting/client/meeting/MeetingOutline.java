@@ -49,7 +49,8 @@ public class MeetingOutline extends AbstractOutline {
 		// final SlotTablePage slotTablePage = new SlotTablePage();
 		// slotTablePage.setVisibleGranted(isEventAdmin);
 
-		final FormPage slotForm = new FormPage(SlotForm.class);
+		// TODO Djer13 try to directly use the "configuredTitle"'s form
+		final FormPage slotForm = new FormPage(SlotForm.class, Boolean.TRUE, TEXTS.get("zc.meeting.slot.config"));
 		slotForm.setVisibleGranted(isSlotUser);
 
 		pageList.add(eventTablePage);

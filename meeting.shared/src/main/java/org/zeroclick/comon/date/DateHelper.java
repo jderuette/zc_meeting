@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.scout.rt.platform.ApplicationScoped;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.nls.NlsLocale;
 import org.eclipse.scout.rt.platform.util.date.DateFormatProvider;
@@ -36,21 +37,9 @@ import org.slf4j.LoggerFactory;
  * @author djer
  *
  */
+@ApplicationScoped
 public class DateHelper {
 	private static final Logger LOG = LoggerFactory.getLogger(DateHelper.class);
-
-	static DateHelper instance;
-
-	private DateHelper() {
-
-	}
-
-	public static DateHelper get() {
-		if (null == instance) {
-			instance = new DateHelper();
-		}
-		return instance;
-	}
 
 	public ZonedDateTime getZonedValue(final ZoneId userZoneId, final Date value) {
 		ZonedDateTime zdt = null;

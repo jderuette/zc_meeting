@@ -41,7 +41,7 @@ public class SlotForm extends AbstractForm implements IPageForm {
 
 	@Override
 	protected String getConfiguredTitle() {
-		return TEXTS.get("zc.meeting.slot");
+		return TEXTS.get("zc.meeting.slot.config");
 	}
 
 	@Override
@@ -77,7 +77,7 @@ public class SlotForm extends AbstractForm implements IPageForm {
 		public class SlotsBox extends AbstractGroupBox {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("zc.meeting.slot");
+				return TEXTS.get("zc.meeting.slot.config");
 			}
 
 			@Order(1000)
@@ -85,7 +85,7 @@ public class SlotForm extends AbstractForm implements IPageForm {
 
 				@Override
 				protected String getConfiguredLabel() {
-					return TEXTS.get("zc.meeting.slot");
+					return TEXTS.get("zc.meeting.slot.config");
 				}
 
 				@Override
@@ -134,7 +134,7 @@ public class SlotForm extends AbstractForm implements IPageForm {
 
 						@Override
 						protected String getConfiguredText() {
-							return "edit";
+							return TEXTS.get("zc.meeting.dayDuration.edit");
 						}
 
 						@Override
@@ -173,7 +173,7 @@ public class SlotForm extends AbstractForm implements IPageForm {
 
 					@Override
 					protected String getConfiguredTooltipText() {
-						return "toolTips test";
+						return TEXTS.get("zc.meeting.slot.tree.tooltip");
 					}
 
 					@Override

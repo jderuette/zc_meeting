@@ -32,7 +32,7 @@ public class PatchEventRejectReason extends AbstractDataPatcher {
 	private static final Logger LOG = LoggerFactory.getLogger(PatchEventRejectReason.class);
 
 	private static final String PATCHED_TABLE = "event";
-	private static final String PATCHED_COLUMN = "reason";
+	public static final String PATCHED_COLUMN = "reason";
 
 	public PatchEventRejectReason() {
 		this.setDescription("Add reason column on event when user refuse/cancel event");

@@ -60,6 +60,7 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 		public static final String subject = "subject";
 		public static final String slot = "slot";
 		public static final String duration = "duration";
+		public static final String venue = "venue";
 		public static final String state = "state";
 		public static final String startDate = "startDate";
 		public static final String endDate = "endDate";
@@ -74,6 +75,7 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 		private String m_subject;
 		private Integer m_slot;
 		private Integer m_duration;
+		private String m_venue;
 		private String m_state;
 		private Date m_startDate;
 		private Date m_endDate;
@@ -143,6 +145,14 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 
 		public void setDuration(Integer newDuration) {
 			m_duration = newDuration;
+		}
+
+		public String getVenue() {
+			return m_venue;
+		}
+
+		public void setVenue(String newVenue) {
+			m_venue = newVenue;
 		}
 
 		public String getState() {
