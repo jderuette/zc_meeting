@@ -106,25 +106,6 @@ public abstract class AbstractCombinedMultiSqlLookupService<T> extends AbstractS
 		final List<ILookupRow<T>> combinedRows = new ArrayList<>();
 		final List<SqlLookupConfiguration> sqls = this.getConfiguredSqlSelects();
 		for (final SqlLookupConfiguration sqlConfig : sqls) {
-			// If there a re translation, the "real" key will be missed. Each
-			// translated value will be considered as a new value (instead of a
-			// translation of the same key)
-			// if (sqlConfig.getTranslatedColumn() >= 0) {
-			// final Map<String, String> allTranslations =
-			// ScoutTexts.getInstance().getTextMap(NlsLocale.get());
-			// if (allTranslations.containsValue(call.getKey())) {
-			// final Iterator<String> itKeys =
-			// allTranslations.keySet().iterator();
-			// while (itKeys.hasNext()) {
-			// final String key = itKeys.next();
-			// final String value = allTranslations.get(key);
-			// if (value.equals(call.getKey())) {
-			// call.setKey((T) key);
-			// break;
-			// }
-			// }
-			// }
-			// }
 			this.configureCall(call, sqlConfig);
 
 			final List<ILookupRow<T>> data = this.execLoadLookupRows(sqlConfig, this.filterSqlByKey(sqlConfig.getSql()),
@@ -206,12 +187,11 @@ public abstract class AbstractCombinedMultiSqlLookupService<T> extends AbstractS
 		Object[][] filteredData;
 		if (sqlConfig.getTranslatedColumn() >= 0) {
 			// remove the <text> filter, else will be applied on NLS key
+			// (instead of value)
 			cleanedPreproccesseSql = preprocessedSql.replaceAll(" AND \\S+ LIKE :text", "");
 		}
 		if (!sqlConfig.isCaseSensitive()) {
 			cleanedPreproccesseSql = cleanedPreproccesseSql.replaceAll("(AND )(\\S+)( LIKE :text)", " $1 lower($2) $3");
-			// cleanedPreproccesseSql = cleanedPreproccesseSql.replaceAll("(AND
-			// )(\\S+)(=:key)", "$1 lower($2) $3");
 		}
 		final Object[][] data = SQL.selectLimited(cleanedPreproccesseSql, call.getMaxRowCount(), call, bindBase);
 		if (this.getConfiguredSortColumn() >= 0) {

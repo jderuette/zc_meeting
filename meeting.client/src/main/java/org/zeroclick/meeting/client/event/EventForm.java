@@ -549,20 +549,12 @@ public class EventForm extends AbstractForm {
 		private void sendNewEventEmail(final EventFormData formData) {
 			final IMailSender mailSender = BEANS.get(IMailSender.class);
 			final String recipient = formData.getEmail().getValue();
-			// final String organizerEmail =
-			// formData.getOrganizerEmail().getValue();
-			// final String meetingSubject = formData.getSubject().getValue();
 
 			final String[] values = EventForm.this.getEventMessageHelper().buildValuesForLocaleMessages(formData,
 					formData.getGuestId().getValue());
 
 			final String subject = TextsHelper.get(formData.getGuestId().getValue(),
 					"zc.meeting.email.event.new.subject", values);
-			// final String content =
-			// TextsHelper.get(formData.getGuestId().getValue(),
-			// "zc.meeting.email.event.new.html",
-			// organizerEmail, new ApplicationUrlProperty().getValue(),
-			// meetingSubject);
 
 			final String content = TextsHelper.get(formData.getGuestId().getValue(), "zc.meeting.email.event.new.html",
 					values);

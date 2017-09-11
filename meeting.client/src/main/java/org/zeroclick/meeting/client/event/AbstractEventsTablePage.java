@@ -279,8 +279,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 								.addRow(AbstractEventsTablePage.this.getTable().createTableRowFromForm(eventForm));
 						AbstractEventsTablePage.this.getTable().applyRowFilters();
 
-						// ClientSession.get().getDesktop().refreshPages(EventTablePage.class);
-
 						AbstractEventsTablePage.this.onNewEvent(eventForm);
 
 						final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
@@ -289,11 +287,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 								AbstractEventsTablePage.this.getEventMessageHelper()
 										.buildValuesForLocaleMessages(eventForm, Table.this.getCurrentUserId()));
 
-						// final Desktop desktop = (Desktop)
-						// ClientSession.get().getDesktop();
-						// desktop.addNotification(IStatus.OK, 0l, Boolean.TRUE,
-						// AbstractEventsTablePage.this.getDesktopNotificationModifiedEventKey(eventForm),
-						// AbstractEventsTablePage.this.buildValuesForLocaleMessages(eventForm));
 					} catch (final RuntimeException e) {
 						LOG.error("Could not add new event. (" + Table.this.getTitle() + ")", e);
 					}
@@ -733,13 +726,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			for (final IMenu menu : menus) {
 				// menu.initAction();
 				menu.handleOwnerValueChanged(row);
-				// if (menu instanceof
-				// AbstractEventsTablePage.Table.AbstractRowAwareMenu) {
-				// @SuppressWarnings("unchecked")
-				// final AbstractRowAwareMenu menuStateAware =
-				// (AbstractRowAwareMenu) menu;
-				// menuStateAware.handleRowChanged(row);
-				// }
 			}
 		}
 

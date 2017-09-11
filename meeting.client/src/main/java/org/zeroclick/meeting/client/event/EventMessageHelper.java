@@ -156,16 +156,16 @@ public class EventMessageHelper {
 			if (formData.getOrganizer().getValue().equals(lastModifierUserId)) {
 				actorId = formData.getOrganizer().getValue();
 				receiverId = formData.getGuestId().getValue();
-				LOG.debug("Last modifier for event : " + formData.getEventId() + " is user : " + lastModifierUserId
-						+ ", and the actor is the organizer. " + actorId);
+				this.logExtractedData(formData.getEventId(), lastModifierUserId, actorId, "organizer");
 			} else if (formData.getGuestId().getValue().equals(lastModifierUserId)) {
 				actorId = formData.getGuestId().getValue();
 				receiverId = formData.getOrganizer().getValue();
+				this.logExtractedData(formData.getEventId(), lastModifierUserId, receiverId, "attendee");
 				LOG.debug("Last modifier for event : " + formData.getEventId() + " is user : " + lastModifierUserId
 						+ ", and the actor is the attendee : " + receiverId);
 			} else {
-				LOG.debug("Last modifier for event : " + formData.getEventId() + " is user : " + lastModifierUserId
-						+ ", and actor is neither orgnizer nor attendee user mail return is null");
+				this.logExtractedData(formData.getEventId(), lastModifierUserId, (String) null,
+						"neither orgnizer nor attendee user returning is null");
 			}
 		}
 		if (actor) {
@@ -215,16 +215,14 @@ public class EventMessageHelper {
 			if (formData.getOrganizer().getValue().equals(lastModifierUserId)) {
 				actorEmail = formData.getOrganizerEmail().getValue();
 				receiverEmail = formData.getEmail().getValue();
-				LOG.debug("Last modifier for event : " + formData.getEventId() + " is user : " + lastModifierUserId
-						+ ", and the actor is the organizer. " + actorEmail);
+				this.logExtractedData(formData.getEventId(), lastModifierUserId, actorEmail, "organizer");
 			} else if (formData.getGuestId().getValue().equals(lastModifierUserId)) {
 				actorEmail = formData.getEmail().getValue();
 				receiverEmail = formData.getOrganizerEmail().getValue();
-				LOG.debug("Last modifier for event : " + formData.getEventId() + " is user : " + lastModifierUserId
-						+ ", and the actor is the attendee : " + receiverEmail);
+				this.logExtractedData(formData.getEventId(), lastModifierUserId, receiverEmail, "attendee");
 			} else {
-				LOG.debug("Last modifier for event : " + formData.getEventId() + " is user : " + lastModifierUserId
-						+ ", and actor is neither orgnizer nor attendee user mail return is null");
+				this.logExtractedData(formData.getEventId(), lastModifierUserId, (String) null,
+						"neither orgnizer nor attendee user mail return is null");
 			}
 		}
 		if (actor) {
@@ -233,6 +231,23 @@ public class EventMessageHelper {
 			userEmail = receiverEmail;
 		}
 		return userEmail;
+	}
+
+	private void logExtractedData(final Long eventId, final Long lastModifierUserId, final Long extractedId,
+			final String actorRole) {
+		this.logExtractedData(eventId, lastModifierUserId, String.valueOf(extractedId), actorRole);
+
+	}
+
+	private void logExtractedData(final Long eventId, final Long lastModifierUserId, final String extractedValue,
+			final String actorRole) {
+		if (LOG.isDebugEnabled()) {
+			final StringBuilder message = new StringBuilder();
+			message.append("Last modifier for event : ").append(eventId).append(" is user : ")
+					.append(lastModifierUserId).append(", and the actor is ").append(actorRole).append(" : ")
+					.append(extractedValue);
+			LOG.debug(message.toString());
+		}
 	}
 
 	/**

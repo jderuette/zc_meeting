@@ -447,28 +447,6 @@ public class RejectEventForm extends AbstractForm {
 				}
 			}
 
-			// if (null != RejectEventForm.this.getExternalIdRecipient() && null
-			// != this.attendeeGCalSrv) {
-			// try {
-			// LOG.info(this.buildRejectLog("Deleting",
-			// RejectEventForm.this.getEventId(),
-			// RejectEventForm.this.getExternalIdRecipient(),
-			// RejectEventForm.this.getGuestId()));
-			// this.attendeeGCalSrv.events().delete("primary",
-			// RejectEventForm.this.getExternalIdRecipient())
-			// .execute();
-			// } catch (final IOException e) {
-			// LOG.error(
-			// this.buildRejectLog("Error while deleting",
-			// RejectEventForm.this.getEventId(),
-			// RejectEventForm.this.getExternalIdRecipient(),
-			// RejectEventForm.this.getGuestId()),
-			// e);
-			// throw new
-			// VetoException(TEXTS.get("zc.meeting.error.deletingEvent"));
-			// }
-			// }
-
 			final IEventService service = BEANS.get(IEventService.class);
 
 			formData.setState("REFUSED");
@@ -496,18 +474,14 @@ public class RejectEventForm extends AbstractForm {
 		String destEmail;
 		Long destId;
 		String senderEmail;
-		Long senderId;
-
 		if (this.isAskByHost()) {
 			senderEmail = organizerEmail;
 			destEmail = guestEmail;
 			destId = this.guestId;
-			senderId = this.organizerId;
 		} else {
 			senderEmail = guestEmail;
 			destEmail = organizerEmail;
 			destId = this.organizerId;
-			senderId = this.guestId;
 		}
 
 		String subject = null;

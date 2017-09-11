@@ -782,11 +782,6 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					if (null == eventGuest) {
 						eventGuest = userService.getUserIdByEmail(eventGuestEmail);
 					}
-					// external event for guest
-					// final Event externalGuestEvent =
-					// Table.this.createEvent(start, end, eventGuest,
-					// eventHeldEmail,
-					// subject);
 
 					final Event externalGuestEvent = Table.this.acceptCreatedEvent(externalOrganizerEvent,
 							Table.this.getUserCreateEventCalendar(eventHeldBy), eventGuest, eventGuestEmail);

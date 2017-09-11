@@ -53,7 +53,7 @@ public class EventAskedTablePage extends EventTablePage {
 
 	public class Table extends EventTablePage.Table {
 
-		// add/delete row handle by parent (for inc and dec nbEvent title)
+		// add/delete row handled by parent (for inc and dec nbEvent title)
 
 		@Override
 		protected void initConfig() {

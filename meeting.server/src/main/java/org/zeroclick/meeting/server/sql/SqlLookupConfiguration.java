@@ -21,6 +21,8 @@ import org.eclipse.scout.rt.platform.annotations.ConfigProperty;
 /**
  * @author djer
  *
+ *         Allow to provide data configuration each SQL request (in
+ *         #AbstractCombinedMultiSqlLookupService)
  */
 public class SqlLookupConfiguration {
 

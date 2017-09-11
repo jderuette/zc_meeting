@@ -565,9 +565,7 @@ public class UserForm extends AbstractForm {
 	private UserForm createUser(final String email, final Boolean isAutoFileld) {
 		final Long defaultRole = 2l;
 
-		// final String userId = email.substring(0, email.indexOf('@'));
 		this.getEmailField().setValue(email);
-		// this.getUserIdField().setValue(userId);
 
 		this.generateAndAddFormPassword();
 
