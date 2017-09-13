@@ -35,13 +35,13 @@ public class TextsHelper extends TEXTS {
 	/**
 	 * see TEXTS.get(String)<br/>
 	 * Wrap TEXTS.get to allow locale based on the specified user ID instead
-	 * currentUser locale
+	 * currentUser locale. Always use the key as default fallback.
 	 *
 	 * @param key
 	 * @return
 	 */
 	public static String get(final Long userId, final String key) {
-		return ScoutTexts.getInstance().getText(getUserLocal(userId), key);
+		return ScoutTexts.getInstance().getTextWithFallback(getUserLocal(userId), key, key, (String[]) null);
 	}
 
 	/**
