@@ -413,6 +413,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 								+ Table.this.getTitle() + ") for slotCode : " + notification.getSlotCode() + " ("
 								+ dayDurationForm.getDayDurationId() + ")");
 						Table.this.resetInvalidatesEvent(notification.getSlotCode());
+
 					} catch (final RuntimeException e) {
 						LOG.error("Could not handle modified DayDuration. (" + Table.this.getTitle() + ")", e);
 					}

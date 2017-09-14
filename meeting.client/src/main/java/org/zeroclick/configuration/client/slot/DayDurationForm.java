@@ -19,6 +19,7 @@ import org.zeroclick.configuration.client.slot.DayDurationForm.MainBox.WeeklyPer
 import org.zeroclick.configuration.shared.slot.DayDurationFormData;
 import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.configuration.shared.slot.UpdateSlotPermission;
+import org.zeroclick.meeting.client.NotificationHelper;
 
 @FormData(value = DayDurationFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class DayDurationForm extends AbstractForm {
@@ -290,6 +291,10 @@ public class DayDurationForm extends AbstractForm {
 			final DayDurationFormData formData = new DayDurationFormData();
 			DayDurationForm.this.exportFormData(formData);
 			service.store(formData);
+
+			final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+			notificationHelper.addProccessedNotification("zc.meeting.notification.modifiedDayDuration",
+					TEXTS.get(formData.getName()));
 		}
 	}
 
