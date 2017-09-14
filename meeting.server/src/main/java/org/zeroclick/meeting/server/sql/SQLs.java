@@ -387,7 +387,7 @@ public interface SQLs {
 	String DAY_DURATION_JOIN_SLOT = " JOIN SLOT on DAY_DURATION.slot_id = SLOT.slot_id";
 
 	String DAY_DURATION_UPDATE = "UPDATE DAY_DURATION SET name=:name, slot_start=:slotStart, slot_end=:slotEnd"
-			+ ", monday=:monday, tuesday=:tuesday, thursday=:thursday, friday=:friday, saturday=:saturday, sunday=:sunday, weekly_perpetual=:weeklyPerpetual"
+			+ ", monday=:monday, tuesday=:tuesday, wednesday=:wednesday, thursday=:thursday, friday=:friday, saturday=:saturday, sunday=:sunday, weekly_perpetual=:weeklyPerpetual"
 			+ " WHERE day_duration_id=:dayDurationId";
 
 	String DAY_DURATION_INSERT_SAMPLE = "INSERT INTO DAY_DURATION (day_duration_id, name, slot_start, slot_end, "

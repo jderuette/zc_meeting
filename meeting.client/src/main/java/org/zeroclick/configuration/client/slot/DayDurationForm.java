@@ -203,18 +203,18 @@ public class DayDurationForm extends AbstractForm {
 			}
 
 			@Order(3000)
-			public class ThursdayField extends AbstractBooleanField {
-				@Override
-				protected String getConfiguredLabel() {
-					return TEXTS.get("zc.meeting.dayDuration.thursday");
-				}
-			}
-
-			@Order(4000)
 			public class WednesdayField extends AbstractBooleanField {
 				@Override
 				protected String getConfiguredLabel() {
 					return TEXTS.get("zc.meeting.dayDuration.wednesday");
+				}
+			}
+
+			@Order(4000)
+			public class ThursdayField extends AbstractBooleanField {
+				@Override
+				protected String getConfiguredLabel() {
+					return TEXTS.get("zc.meeting.dayDuration.thursday");
 				}
 			}
 
@@ -248,6 +248,11 @@ public class DayDurationForm extends AbstractForm {
 			@Override
 			protected String getConfiguredLabel() {
 				return TEXTS.get("zc.meeting.dayDuration.weeklyPerpetual");
+			}
+
+			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.FALSE;
 			}
 
 			@Override
