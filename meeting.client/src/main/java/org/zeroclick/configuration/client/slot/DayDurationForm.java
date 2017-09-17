@@ -28,6 +28,7 @@ public class DayDurationForm extends AbstractForm {
 	private String name;
 	private Long slotId;
 	private Long userId;
+	private String slotCode; // the "parent" slot name
 
 	@FormData
 	public Long getDayDurationId() {
@@ -67,6 +68,16 @@ public class DayDurationForm extends AbstractForm {
 	@FormData
 	public void setUserId(final Long userId) {
 		this.userId = userId;
+	}
+
+	@FormData
+	public String getSlotCode() {
+		return this.slotCode;
+	}
+
+	@FormData
+	public void setSlotCode(final String slotName) {
+		this.slotCode = slotName;
 	}
 
 	@Override

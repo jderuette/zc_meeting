@@ -342,7 +342,7 @@ public interface SQLs {
 	/**
 	 * Slot (and dayDuration) table
 	 */
-	String SLOT_CREATE_TABLE = "CREATE TABLE SLOT (slot_id INTEGER NOT NULL, name VARCHAR(50), user_id INTEGER, CONSTRAINT SLOT_PK PRIMARY KEY (slot_id)"
+	String SLOT_CREATE_TABLE = "CREATE TABLE SLOT (slot_id INTEGER NOT NULL, slot_code INTEGER NOT NULL, name VARCHAR(50), user_id INTEGER, CONSTRAINT SLOT_PK PRIMARY KEY (slot_id)"
 			+ ", CONSTRAINT SLOT_USER_FK FOREIGN KEY (user_id) REFERENCES APP_USER(user_id))";
 	String DAY_DURATION_CREATE_TABLE = "CREATE TABLE DAY_DURATION (day_duration_id INTEGER NOT NULL, name VARCHAR(50), slot_start TIME, slot_end TIME"
 			+ ", monday BOOLEAN, tuesday BOOLEAN, wednesday BOOLEAN, thursday BOOLEAN, friday BOOLEAN, saturday BOOLEAN, sunday BOOLEAN"
@@ -361,8 +361,8 @@ public interface SQLs {
 	String SLOT_SELECT_OWNER = "SELECT user_id FROM SLOT WHERE slot_id=:slotId";
 	String SLOT_SELECT_ID_BY_NAME = "SELECT SLOT.slot_id FROM SLOT WHERE SLOT.name=:slotName AND SLOT.user_id=:userId";
 
-	String SLOT_INSERT_SAMPLE = "INSERT INTO SLOT (slot_id, name, user_id)";
-	String SLOT_VALUES_GENERIC = " VALUES (__slotId__, '__slotName__', __userId__)";
+	String SLOT_INSERT_SAMPLE = "INSERT INTO SLOT (slot_id, slot_code, name, user_id)";
+	String SLOT_VALUES_GENERIC = " VALUES (__slotId__, __slotCode__, '__slotName__', __userId__)";
 	// String SLOT_VALUES_DAY = " VALUES (nextval('" +
 	// PatchSlotTable.SLOT_ID_SEQ + "'), 'zc.meeting.slot.1', 1)";
 	// String SLOT_VALUES_LUNCH = " VALUES (nextval('" +
@@ -372,15 +372,19 @@ public interface SQLs {
 	// String SLOT_VALUES_WEEK_END = " VALUES (nextval('" +
 	// PatchSlotTable.SLOT_ID_SEQ + "'), 'zc.meeting.slot.4', 1)";
 
+	String DAY_DURATION_PAGE_SELECT = "SELECT DAY_DURATION.day_duration_id, DAY_DURATION.name, slot_start, slot_end, SLOT.slot_code, SLOT.slot_id, SLOT.user_id, "
+			+ "monday, tuesday, wednesday, thursday, friday, saturday, sunday FROM DAY_DURATION INNER JOIN SLOT ON DAY_DURATION.slot_id = SLOT.slot_id";
+	String DAY_DURATION_PAGE_SELECT_INTO = " INTO :{page.dayDurationId}, :{page.name}, :{page.start}, :{page.end}, :{page.slot}, :{page.slotId}, :{page.userId}, :{page.monday}, :{page.tuesday}, :{page.wednesday}, :{page.thursday}, :{page.friday}, :{page.saturday}, :{page.sunday}";
+
 	String DAY_DURATION_SELECT = "SELECT DAY_DURATION.day_duration_id, DAY_DURATION.name, slot_start, slot_end, "
-			+ "monday, tuesday, wednesday, thursday, friday, saturday, sunday, weekly_perpetual, DAY_DURATION.slot_id";
+			+ "monday, tuesday, wednesday, thursday, friday, saturday, sunday, weekly_perpetual, DAY_DURATION.slot_id, SLOT.slot_code";
 	String DAY_DURATION_SELECT_LIGHT = "SELECT day_duration_id, name, slot_id FROM DAY_DURATION WHERE 1=1";
 	String DAY_DURATION_SELECT_FILTER_SLOT_ID = " AND slot_id=:slotId";
 	String DAY_DURATION_SELECT_FILTER_SLOT_NAME = " AND SLOT.name=:slotName";
 	String DAY_DURATION_SELECT_FILTER_SLOT_USER_ID = " AND SLOT.user_id=:userId";
 	String DAY_DURATION_SELECT_FILTER_DAY_DURATION_ID = " AND day_duration_id=:dayDurationId";
 	String DAY_DURATION_SELECT_ORDER = " ORDER BY order_in_slot";
-	String DAY_DURATION_SELECT_INTO = " INTO :dayDurationId, :name, :slotStart, :slotEnd, :monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday, :weeklyPerpetual, :slotId";
+	String DAY_DURATION_SELECT_INTO = " INTO :dayDurationId, :name, :slotStart, :slotEnd, :monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday, :weeklyPerpetual, :slotId, :slotCode";
 	String DAY_DURATION_SELECT_FROM = " FROM DAY_DURATION";
 	String DAY_DURATION_SELECT_FROM_PLUS_GENERIC_WHERE = " FROM DAY_DURATION" + GENERIC_WHERE_FOR_SECURE_AND;
 
