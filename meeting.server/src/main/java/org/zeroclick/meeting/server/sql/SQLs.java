@@ -10,6 +10,7 @@
  ******************************************************************************/
 package org.zeroclick.meeting.server.sql;
 
+import org.zeroclick.meeting.server.sql.migrate.data.PatchAddSlotCode;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateVenue;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchEventRejectReason;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchSlotTable;
@@ -342,7 +343,7 @@ public interface SQLs {
 	/**
 	 * Slot (and dayDuration) table
 	 */
-	String SLOT_CREATE_TABLE = "CREATE TABLE SLOT (slot_id INTEGER NOT NULL, slot_code INTEGER NOT NULL, name VARCHAR(50), user_id INTEGER, CONSTRAINT SLOT_PK PRIMARY KEY (slot_id)"
+	String SLOT_CREATE_TABLE = "CREATE TABLE SLOT (slot_id INTEGER NOT NULL, name VARCHAR(50), user_id INTEGER, CONSTRAINT SLOT_PK PRIMARY KEY (slot_id)"
 			+ ", CONSTRAINT SLOT_USER_FK FOREIGN KEY (user_id) REFERENCES APP_USER(user_id))";
 	String DAY_DURATION_CREATE_TABLE = "CREATE TABLE DAY_DURATION (day_duration_id INTEGER NOT NULL, name VARCHAR(50), slot_start TIME, slot_end TIME"
 			+ ", monday BOOLEAN, tuesday BOOLEAN, wednesday BOOLEAN, thursday BOOLEAN, friday BOOLEAN, saturday BOOLEAN, sunday BOOLEAN"
@@ -361,8 +362,8 @@ public interface SQLs {
 	String SLOT_SELECT_OWNER = "SELECT user_id FROM SLOT WHERE slot_id=:slotId";
 	String SLOT_SELECT_ID_BY_NAME = "SELECT SLOT.slot_id FROM SLOT WHERE SLOT.name=:slotName AND SLOT.user_id=:userId";
 
-	String SLOT_INSERT_SAMPLE = "INSERT INTO SLOT (slot_id, slot_code, name, user_id)";
-	String SLOT_VALUES_GENERIC = " VALUES (__slotId__, __slotCode__, '__slotName__', __userId__)";
+	String SLOT_INSERT_SAMPLE = "INSERT INTO SLOT (slot_id, name, user_id)";
+	String SLOT_VALUES_GENERIC = " VALUES (__slotId__, '__slotName__', __userId__)";
 	// String SLOT_VALUES_DAY = " VALUES (nextval('" +
 	// PatchSlotTable.SLOT_ID_SEQ + "'), 'zc.meeting.slot.1', 1)";
 	// String SLOT_VALUES_LUNCH = " VALUES (nextval('" +
@@ -409,4 +410,8 @@ public interface SQLs {
 
 	String SLOT_DROP_TABLE = "DROP TABLE SLOT";
 	String DAY_SURATION_DROP_TABLE = "DROP TABLE DAY_SURATION";
+
+	String SLOT_ALTER_TABLE_ADD_CODE = "ALTER TABLE SLOT ADD COLUMN " + PatchAddSlotCode.SLOT_PATCHED_COLUMN
+			+ " INTEGER NOT NULL DEFAULT 0";
+	String SLOT_UPDATE_CODE = "UPDATE SLOT SET slot_code = :slotCode WHERE slot_id=:slotId";
 }

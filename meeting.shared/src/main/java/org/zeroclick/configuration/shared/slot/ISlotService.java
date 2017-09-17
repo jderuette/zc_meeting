@@ -46,4 +46,9 @@ public interface ISlotService extends IService {
 	boolean isInvolved(Long slotId);
 
 	void createDefaultSlot(Long userId);
+
+	/**
+	 * For data migration when slot Code column is added to model
+	 */
+	void addDefaultCodeToExistingSlot();
 }

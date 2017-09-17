@@ -382,4 +382,23 @@ public class SlotService extends CommonService implements ISlotService {
 		return sql.replace("__slotId__", String.valueOf(slotId));
 	}
 
+	@Override
+	public void addDefaultCodeToExistingSlot() {
+		final String sql = SQLs.SLOT_PAGE_SELECT;
+
+		final Object[][] slots = SQL.select(sql);
+
+		if (null != slots && slots.length > 0) {
+			for (int row = 0; row < slots.length; row++) {
+				LOG.info("Adding default Slot code for slot");
+				final Object[] slot = slots[row];
+				final String slotName = (String) slot[1];
+				final Long slotId = (Long) slot[0];
+				final String slotCodeExtracted = slotName.substring(slotName.lastIndexOf('.') + 1, slotName.length());
+				final Integer slotCode = Integer.valueOf(slotCodeExtracted);
+				SQL.update(SQLs.SLOT_UPDATE_CODE, new NVPair("slotCode", slotCode), new NVPair("slotId", slotId));
+			}
+		}
+	}
+
 }

@@ -54,7 +54,7 @@ public class PatchSlotTable extends AbstractDataPatcher {
 	 */
 	@Override
 	public Version getVersion() {
-		return Version.valueOf("1.2.0");
+		return Version.valueOf("1.1.2");
 	}
 
 	/*
