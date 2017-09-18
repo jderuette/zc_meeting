@@ -11,6 +11,7 @@
 package org.zeroclick.meeting.server.sql;
 
 import org.zeroclick.meeting.server.sql.migrate.data.PatchAddSlotCode;
+import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateSubscription;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateVenue;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchEventRejectReason;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchSlotTable;
@@ -414,4 +415,24 @@ public interface SQLs {
 	String SLOT_ALTER_TABLE_ADD_CODE = "ALTER TABLE SLOT ADD COLUMN " + PatchAddSlotCode.SLOT_PATCHED_COLUMN
 			+ " INTEGER NOT NULL DEFAULT 0";
 	String SLOT_UPDATE_CODE = "UPDATE SLOT SET slot_code = :slotCode WHERE slot_id=:slotId";
+
+	/**
+	 * Subscription table
+	 */
+	String SUBSCRIPTION_CREATE_TABLE = "CREATE TABLE " + PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME
+			+ "(subdcription_id INTEGER NOT NULL, subdcription_code INTEGER NOT NULL, subdcription_name VARCHAR(50) NOT NULL"
+			+ "CONSTRAINT SUBSCRIPTION_PK PRIMARY KEY (subdcription_id))";
+
+	String SUBSCRIBE_CREATE_TABLE = "CREATE TABLE " + PatchCreateSubscription.SUBSCRIBE_TABLE_NAME
+			+ "(subdcription_id INTEGER NOT NULL, user_id INTEGER NOT NULL, "
+			+ "CONSTRAINT SUBSCRIBE_PK PRIMARY KEY (subdcription_id, user_id), "
+			+ "CONSTRAINT SUBSCRUIBE_SUBSCRIPTION_FK FOREIGN KEY (subdcription_id) REFERENCES "
+			+ PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME + "(subdcription_id), "
+			+ "CONSTRAINT SUBSCRIBE_USER_FK FOREIGN KEY (user_id) REFERENCES APP_USER(user_id))";
+
+	String SUBSCRIPTION_INSERT_SAMPLE = "INSERT INTO " + PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME
+			+ " (subdcription_id, subdcription_code)";
+	String SUBSCRIPTION_INSERT_VALUES_PERSO = " VALUES(nextval('SUBSCRIPTION_ID_SEQ'), 1, 'zc.meeting.subscription.perso')";
+	String SUBSCRIPTION_INSERT_VALUES_PRO = " VALUES(nextval('SUBSCRIPTION_ID_SEQ'), 2, 'zc.meeting.subscription.pro')";
+	String SUBSCRIPTION_INSERT_VALUES_BUSINESS = " VALUES(nextval('SUBSCRIPTION_ID_SEQ'), 3, 'zc.meeting.subscription.business')";
 }
