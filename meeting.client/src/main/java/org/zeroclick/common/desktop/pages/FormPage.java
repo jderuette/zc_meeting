@@ -29,10 +29,18 @@ public class FormPage extends AbstractPageWithNodes implements IFormPage {
 		this.callInitializer();
 	}
 
-	public FormPage(final Class<? extends IPageForm> c, final boolean enabled) {
-		super(false, c.getName());
-		this.m_formType = c;
+	public FormPage(final Class<? extends IPageForm> formType, final boolean enabled) {
+		super(false, formType.getName());
+		this.m_formType = formType;
 		this.m_enabled = enabled;
+		this.callInitializer();
+	}
+
+	public FormPage(final Class<? extends IPageForm> formType, final boolean enabled, final String menuTitle) {
+		super(false, formType.getName());
+		this.m_formType = formType;
+		this.m_enabled = enabled;
+		this.getCellForUpdate().setText(menuTitle);
 		this.callInitializer();
 	}
 

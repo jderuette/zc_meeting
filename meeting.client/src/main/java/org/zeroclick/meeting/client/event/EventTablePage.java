@@ -112,13 +112,15 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 	@Override
 	protected Boolean canHandleNew(final AbstractEventNotification notification) {
 		final EventFormData formData = notification.getEventForm();
-		return !super.isHeldByCurrentUser(formData) && "ASKED".equals(formData.getState().getValue());
+		return !this.getEventMessageHelper().isHeldByCurrentUser(formData)
+				&& "ASKED".equals(formData.getState().getValue());
 	}
 
 	@Override
 	protected Boolean canHandleModified(final AbstractEventNotification notification) {
 		final EventFormData formData = notification.getEventForm();
-		return !super.isHeldByCurrentUser(formData) && "ASKED".equals(formData.getState().getValue());
+		return !this.getEventMessageHelper().isHeldByCurrentUser(formData)
+				&& "ASKED".equals(formData.getState().getValue());
 	}
 
 	public class Table extends AbstractEventsTablePage<Table>.Table {
@@ -571,7 +573,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		}
 
 		private Event createEvent(final ZonedDateTime startDate, final ZonedDateTime endDate, final Long forUserId,
-				final String withEmail, final String subject) throws IOException {
+				final String withEmail, final String subject, final String location) throws IOException {
 			LOG.debug("Creating (Google) Event from : " + startDate + " to " + endDate + ", for :" + forUserId
 					+ " (attendee :" + withEmail + ")");
 
@@ -592,6 +594,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			newEvent.setStart(googleHelper.toEventDateTime(startDate));
 			newEvent.setEnd(googleHelper.toEventDateTime(endDate));
 			newEvent.setSummary(EnvDisplay + " " + subject + TEXTS.get("zc.common.email.subject.suffix"));
+			newEvent.setLocation(location);
 			newEvent.setDescription(subject);
 
 			final EventAttendee[] attendees = new EventAttendee[] { new EventAttendee().setEmail(withEmail) };
@@ -757,6 +760,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				Long eventGuest = Table.this.getGuestIdColumn().getSelectedValue();
 				final String eventGuestEmail = Table.this.getEmailColumn().getSelectedValue();
 				final String subject = Table.this.getSubjectColumn().getSelectedValue();
+				final String venue = Table.this.getVenueColumn().getSelectedValue();
 
 				try {
 					if (null == start || null == end) {
@@ -771,18 +775,13 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					}
 					// External event for holder
 					final Event externalOrganizerEvent = Table.this.createEvent(start, end, eventHeldBy,
-							eventGuestEmail, subject);
+							eventGuestEmail, subject, venue);
 					Table.this.getExternalIdOrganizerColumn().setValue(Table.this.getSelectedRow(),
 							externalOrganizerEvent.getId());
 
 					if (null == eventGuest) {
 						eventGuest = userService.getUserIdByEmail(eventGuestEmail);
 					}
-					// external event for guest
-					// final Event externalGuestEvent =
-					// Table.this.createEvent(start, end, eventGuest,
-					// eventHeldEmail,
-					// subject);
 
 					final Event externalGuestEvent = Table.this.acceptCreatedEvent(externalOrganizerEvent,
 							Table.this.getUserCreateEventCalendar(eventHeldBy), eventGuest, eventGuestEmail);
@@ -792,8 +791,10 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					// Save at the end to save external IDs !
 					final EventFormData formData = Table.this.saveEventCurrentRow();
 
-					this.sendConfirmationEmail(formData, externalOrganizerEvent, eventHeldEmail, eventHeldBy);
-					this.sendConfirmationEmail(formData, externalOrganizerEvent, eventGuestEmail, eventGuest);
+					this.sendConfirmationEmail(formData, externalOrganizerEvent, eventHeldEmail, eventHeldBy,
+							eventGuestEmail);
+					this.sendConfirmationEmail(formData, externalOrganizerEvent, eventGuestEmail, eventGuest,
+							eventHeldEmail);
 
 					Table.this.resetInvalidatesEvent(start, end);
 					Table.this.autoFillDates();
@@ -804,12 +805,15 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			}
 
 			private void sendConfirmationEmail(final EventFormData formData, final Event event, final String recipient,
-					final Long userId) {
+					final Long recipientUserId, final String otherParticpantEmail) {
 				final IMailSender mailSender = BEANS.get(IMailSender.class);
 
-				final String[] values = EventTablePage.this.buildValuesForLocaleMessages(formData, event, recipient);
-				final String subject = TextsHelper.get(userId, "zc.meeting.email.event.confirm.subject", values);
-				final String content = TextsHelper.get(userId, "zc.meeting.email.event.confirm.html", values);
+				final String[] values = EventTablePage.this.getEventMessageHelper()
+						.buildValuesForLocaleMessages(formData, recipientUserId, event, otherParticpantEmail);
+
+				final String subject = TextsHelper.get(recipientUserId, "zc.meeting.email.event.confirm.subject",
+						values);
+				final String content = TextsHelper.get(recipientUserId, "zc.meeting.email.event.confirm.html", values);
 
 				try {
 					mailSender.sendEmail(recipient, subject, content);

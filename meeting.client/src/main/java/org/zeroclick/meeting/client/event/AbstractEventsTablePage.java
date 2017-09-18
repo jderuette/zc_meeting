@@ -51,6 +51,7 @@ import org.zeroclick.configuration.shared.slot.DayDurationModifiedNotification;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.configuration.shared.user.UserModifiedNotification;
+import org.zeroclick.configuration.shared.venue.VenueLookupCall;
 import org.zeroclick.meeting.client.NotificationHelper;
 import org.zeroclick.meeting.client.common.CallTrackerService;
 import org.zeroclick.meeting.client.common.DurationLookupCall;
@@ -68,8 +69,7 @@ import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.ReadEventExtendedPropsPermission;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
 import org.zeroclick.meeting.shared.eventb.AbstractEventsTablePageData;
-
-import com.google.api.services.calendar.model.Event;
+import org.zeroclick.meeting.shared.security.AccessControlService;
 
 @Data(AbstractEventsTablePageData.class)
 public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<T>.Table>
@@ -83,6 +83,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 	private DateHelper dateHelper;
 	private AppUserHelper appUserHelper;
+	private EventMessageHelper eventMessageHelper;
 
 	// TODO Djer13 is caching here smart ?
 	private final Map<Long, String> cachedUserTimeZone = new HashMap<>();
@@ -148,22 +149,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	}
 
 	/**
-	 * Is row event (formData) held by CurrentUser ?
-	 *
-	 * @param row
-	 * @return
-	 */
-	protected Boolean isHeldByCurrentUser(final EventFormData formData) {
-		return this.isOrganizer(formData.getOrganizer().getValue());
-	}
-
-	protected Boolean isOrganizer(final Long userId) {
-		final Long currentUser = this.getAppUserHelper().getCurrentUserId();
-
-		return currentUser.equals(userId);
-	}
-
-	/**
 	 * Search for Locale Key
 	 *
 	 * @param formData
@@ -181,7 +166,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	 *         zc.meeting.notification.modifiedEvent.send.refused<br />
 	 */
 	protected String getDesktopNotificationModifiedEventKey(final EventFormData formData) {
-		final Boolean isSender = this.isCurerntUserActor(formData);
+		final Boolean isSender = this.getEventMessageHelper().isCurerntUserActor(formData);
 		return this.getDesktopNotificationModifiedEventKey(formData, isSender);
 	}
 
@@ -211,141 +196,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		}
 
 		return builder.toString();
-	}
-
-	protected String[] buildValuesForLocaleMessages(final EventFormData formData) {
-		final List<String> values = new ArrayList<>();
-		final ZoneId userZoneId = this.getAppUserHelper().getCurrentUserTimeZone();
-
-		final String actor = this.getActorEmail(formData);
-		final String receiver = this.getReceiverEmail(formData);
-
-		values.add(actor); // 0
-		final String stateText = TEXTS.get("zc.meeting.state." + formData.getState().getValue().toLowerCase());
-		values.add(stateText.toLowerCase()); // 1
-
-		values.add(formData.getSubject().getValue());// 2
-
-		final String slotText = TEXTS.get("zc.meeting.slot." + formData.getSlot().getValue());
-		values.add(slotText.toLowerCase());// 3
-
-		final String durationText = TEXTS.get("zc.meeting.duration." + formData.getDuration().getValue());
-		values.add(durationText.toLowerCase());// 4
-
-		String startDate = null;
-		if (null != formData.getStartDate().getValue()) {
-			startDate = this.getDateHelper().format(formData.getStartDate().getValue(), userZoneId);
-		}
-		values.add(startDate);// 5
-
-		String endDate = null;
-		if (null != formData.getEndDate().getValue()) {
-			endDate = this.getDateHelper().format(formData.getEndDate().getValue(), userZoneId);
-		}
-		values.add(endDate);// 6
-		values.add(formData.getReason().getValue());// 7
-		values.add(receiver);// 8
-
-		if (null != formData.getStartDate().getValue()) {
-			values.add(DateHelper.get().getRelativeDay(formData.getStartDate().getValue(), userZoneId));// 9
-			values.add(DateHelper.get().formatHours(formData.getStartDate().getValue(), userZoneId));// 10
-		}
-
-		if (null != formData.getEndDate().getValue()) {
-			values.add(DateHelper.get().formatHours(formData.getEndDate().getValue(), userZoneId));// 11
-		}
-
-		return CollectionUtility.toArray(values, String.class);
-	}
-
-	protected String[] buildValuesForLocaleMessages(final EventFormData formData, final Event externalEvent) {
-		final List<String> values = CollectionUtility.arrayList(this.buildValuesForLocaleMessages(formData));
-
-		values.add(externalEvent.getHtmlLink()); // 12
-
-		return CollectionUtility.toArray(values, String.class);
-	}
-
-	protected String[] buildValuesForLocaleMessages(final EventFormData formData, final Event externalEvent,
-			final String... otherParams) {
-		final List<String> values = CollectionUtility.arrayList(this.buildValuesForLocaleMessages(formData));
-
-		values.add(externalEvent.getHtmlLink()); // 12
-
-		for (final String param : otherParams) {
-			values.add(param);
-		}
-
-		return CollectionUtility.toArray(values, String.class);
-	}
-
-	protected Boolean isCurerntUserActor(final EventFormData formData) {
-		final Long lastModifierUserId = formData.getLastModifier();
-		if (null == lastModifierUserId) {
-			return Boolean.FALSE;
-		}
-
-		final Long currentUserId = this.getAppUserHelper().getCurrentUserId();
-		return lastModifierUserId.equals(currentUserId);
-	}
-
-	protected String getActorEmail(final EventFormData formData) {
-		String actor = this.extractEmail(formData, Boolean.TRUE);
-
-		if (null == actor) {
-			LOG.warn("No LastModifier in event : " + formData.getEventId()
-					+ " Falling back to using holder to determine actor");
-			if (this.isHeldByCurrentUser(formData)) {
-				actor = formData.getOrganizerEmail().getValue();
-			} else {
-				actor = formData.getEmail().getValue();
-			}
-		}
-		return actor;
-	}
-
-	protected String getReceiverEmail(final EventFormData formData) {
-		String receiver = this.extractEmail(formData, Boolean.FALSE);
-
-		if (null == receiver) {
-			LOG.warn("No LastModifier in event : " + formData.getEventId()
-					+ " Falling back to using holder to determine receiver");
-			if (this.isHeldByCurrentUser(formData)) {
-				receiver = formData.getEmail().getValue();
-			} else {
-				receiver = formData.getOrganizerEmail().getValue();
-			}
-		}
-		return receiver;
-	}
-
-	protected String extractEmail(final EventFormData formData, final Boolean actor) {
-		String actorEmail = null;
-		String receiverEmail = null;
-		String userEmail;
-		final Long lastModifierUserId = formData.getLastModifier();
-		if (null != lastModifierUserId) {
-			if (formData.getOrganizer().getValue().equals(lastModifierUserId)) {
-				actorEmail = formData.getOrganizerEmail().getValue();
-				receiverEmail = formData.getEmail().getValue();
-				LOG.debug("Last modifier for event : " + formData.getEventId() + " is user : " + lastModifierUserId
-						+ ", and the actor is the organizer. " + actorEmail);
-			} else if (formData.getGuestId().getValue().equals(lastModifierUserId)) {
-				actorEmail = formData.getEmail().getValue();
-				receiverEmail = formData.getOrganizerEmail().getValue();
-				LOG.debug("Last modifier for event : " + formData.getEventId() + " is user : " + lastModifierUserId
-						+ ", and the actor is the attendee : " + receiverEmail);
-			} else {
-				LOG.debug("Last modifier for event : " + formData.getEventId() + " is user : " + lastModifierUserId
-						+ ", and actor is neither orgnizer nor attendee user mail return is null");
-			}
-		}
-		if (actor) {
-			userEmail = actorEmail;
-		} else {
-			userEmail = receiverEmail;
-		}
-		return userEmail;
 	}
 
 	public class Table extends AbstractTable {
@@ -429,20 +279,14 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 								.addRow(AbstractEventsTablePage.this.getTable().createTableRowFromForm(eventForm));
 						AbstractEventsTablePage.this.getTable().applyRowFilters();
 
-						// ClientSession.get().getDesktop().refreshPages(EventTablePage.class);
-
 						AbstractEventsTablePage.this.onNewEvent(eventForm);
 
 						final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 						notificationHelper.addProccessedNotification(
 								AbstractEventsTablePage.this.getDesktopNotificationModifiedEventKey(eventForm),
-								AbstractEventsTablePage.this.buildValuesForLocaleMessages(eventForm));
+								AbstractEventsTablePage.this.getEventMessageHelper()
+										.buildValuesForLocaleMessages(eventForm, Table.this.getCurrentUserId()));
 
-						// final Desktop desktop = (Desktop)
-						// ClientSession.get().getDesktop();
-						// desktop.addNotification(IStatus.OK, 0l, Boolean.TRUE,
-						// AbstractEventsTablePage.this.getDesktopNotificationModifiedEventKey(eventForm),
-						// AbstractEventsTablePage.this.buildValuesForLocaleMessages(eventForm));
 					} catch (final RuntimeException e) {
 						LOG.error("Could not add new event. (" + Table.this.getTitle() + ")", e);
 					}
@@ -496,14 +340,8 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 							final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 							notificationHelper.addProccessedNotification(
 									AbstractEventsTablePage.this.getDesktopNotificationModifiedEventKey(eventForm),
-									AbstractEventsTablePage.this.buildValuesForLocaleMessages(eventForm));
-							//
-							// final Desktop desktop = (Desktop)
-							// ClientSession.get().getDesktop();
-							// desktop.addNotification(IStatus.OK, 0l,
-							// Boolean.TRUE,
-							// AbstractEventsTablePage.this.getDesktopNotificationModifiedEventKey(eventForm),
-							// AbstractEventsTablePage.this.buildValuesForLocaleMessages(eventForm));
+									AbstractEventsTablePage.this.getEventMessageHelper()
+											.buildValuesForLocaleMessages(eventForm, Table.this.getCurrentUserId()));
 
 						} else {
 							LOG.debug("Modified event ignored because it's not a current table row (in "
@@ -575,6 +413,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 								+ Table.this.getTitle() + ") for slotCode : " + notification.getSlotCode() + " ("
 								+ dayDurationForm.getDayDurationId() + ")");
 						Table.this.resetInvalidatesEvent(notification.getSlotCode());
+
 					} catch (final RuntimeException e) {
 						LOG.error("Could not handle modified DayDuration. (" + Table.this.getTitle() + ")", e);
 					}
@@ -729,7 +568,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			final ZonedDateTime currentEndDate = this.getEndDateColumn().getZonedValue(row.getRowIndex());
 			this.getEndDateColumn().updateDisplayText(row,
 					AbstractEventsTablePage.this.getDateHelper().toUserDate(currentEndDate));
-
 		}
 
 		private List<Object> getListFromForm(final EventFormData formData) {
@@ -756,6 +594,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			datas.add(formData.getSubject().getValue());
 			datas.add(formData.getSlot().getValue());
 			datas.add(formData.getDuration().getValue());
+			datas.add(formData.getVenue().getValue());
 			datas.add(formData.getState().getValue());
 			datas.add(formData.getStartDate().getValue());
 			datas.add(formData.getEndDate().getValue());
@@ -802,7 +641,8 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		 * @return
 		 */
 		protected Boolean isHeldByCurrentUser(final ITableRow row) {
-			return AbstractEventsTablePage.this.isOrganizer(this.getOrganizerColumn().getValue(row.getRowIndex()));
+			return AbstractEventsTablePage.this.getEventMessageHelper()
+					.isOrganizer(this.getOrganizerColumn().getValue(row.getRowIndex()));
 		}
 
 		/**
@@ -866,6 +706,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			return emails;
 		}
 
+		protected Long getCurrentUserId() {
+			final AccessControlService acs = BEANS.get(AccessControlService.class);
+			return acs.getZeroClickUserIdOfCurrentSubject();
+		}
+
 		@Override
 		protected void execRowClick(final ITableRow row, final MouseButton mouseButton) {
 			this.reloadMenus(row);
@@ -882,13 +727,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			for (final IMenu menu : menus) {
 				// menu.initAction();
 				menu.handleOwnerValueChanged(row);
-				// if (menu instanceof
-				// AbstractEventsTablePage.Table.AbstractRowAwareMenu) {
-				// @SuppressWarnings("unchecked")
-				// final AbstractRowAwareMenu menuStateAware =
-				// (AbstractRowAwareMenu) menu;
-				// menuStateAware.handleRowChanged(row);
-				// }
 			}
 		}
 
@@ -1163,6 +1001,10 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			return this.getColumnSet().getColumnByClass(ReasonColumn.class);
 		}
 
+		public AbstractEventsTablePage<?>.Table.VenueColumn getVenueColumn() {
+			return this.getColumnSet().getColumnByClass(VenueColumn.class);
+		}
+
 		public AbstractEventsTablePage<?>.Table.OrganizerColumn getOrganizerColumn() {
 			return this.getColumnSet().getColumnByClass(OrganizerColumn.class);
 		}
@@ -1316,6 +1158,24 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			@Override
 			protected Class<? extends ILookupCall<Integer>> getConfiguredLookupCall() {
 				return DurationLookupCall.class;
+			}
+		}
+
+		@Order(300)
+		public class VenueColumn extends AbstractSmartColumn<String> {
+			@Override
+			protected String getConfiguredHeaderText() {
+				return TEXTS.get("zc.meeting.venue");
+			}
+
+			@Override
+			protected int getConfiguredWidth() {
+				return 100;
+			}
+
+			@Override
+			protected Class<? extends ILookupCall<String>> getConfiguredLookupCall() {
+				return VenueLookupCall.class;
 			}
 		}
 
@@ -1596,16 +1456,23 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 	protected DateHelper getDateHelper() {
 		if (null == this.dateHelper) {
-			this.dateHelper = DateHelper.get();
+			this.dateHelper = BEANS.get(DateHelper.class);
 		}
 		return this.dateHelper;
 	}
 
 	protected AppUserHelper getAppUserHelper() {
 		if (null == this.appUserHelper) {
-			this.appUserHelper = AppUserHelper.get();
+			this.appUserHelper = BEANS.get(AppUserHelper.class);
 		}
 		return this.appUserHelper;
+	}
+
+	protected EventMessageHelper getEventMessageHelper() {
+		if (null == this.eventMessageHelper) {
+			this.eventMessageHelper = BEANS.get(EventMessageHelper.class);
+		}
+		return this.eventMessageHelper;
 	}
 
 }

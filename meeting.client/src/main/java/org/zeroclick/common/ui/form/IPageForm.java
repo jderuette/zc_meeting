@@ -24,5 +24,4 @@ public interface IPageForm extends IForm {
 	void startPageForm();
 
 	AbstractCloseButton getCloseButton();
-
 }

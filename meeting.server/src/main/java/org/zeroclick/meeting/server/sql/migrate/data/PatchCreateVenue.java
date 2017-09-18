@@ -27,14 +27,16 @@ import com.github.zafarkhaja.semver.Version;
  * @author djer
  *
  */
-public class PatchCreateParamsTable extends AbstractDataPatcher {
+public class PatchCreateVenue extends AbstractDataPatcher {
 
-	public static final String APP_PARAMS_TABLE_NAME = "APP_PARAMS";
-	private static final String APP_PARAMS_ID_SEQ = "APP_PARAMS_ID_SEQ";
-	private static final Logger LOG = LoggerFactory.getLogger(PatchCreateParamsTable.class);
+	private static final String APP_PARAMS_TABLE_NAME = PatchCreateParamsTable.APP_PARAMS_TABLE_NAME;
+	public static final String APP_PARAMS_PATCHED_COLUMN = "category";
+	private static final String EVENT_TABLE_NAME = "EVENT";
+	public static final String EVENT_PATCHED_COLUMN = "venue";
+	private static final Logger LOG = LoggerFactory.getLogger(PatchCreateVenue.class);
 
-	public PatchCreateParamsTable() {
-		this.setDescription("Create APP_PARAMS table and default required params key/value");
+	public PatchCreateVenue() {
+		this.setDescription("Create Venue for event (and default values)");
 	}
 
 	/*
@@ -44,7 +46,7 @@ public class PatchCreateParamsTable extends AbstractDataPatcher {
 	 */
 	@Override
 	public Version getVersion() {
-		return Version.valueOf("1.1.0");
+		return Version.valueOf("1.1.4");
 	}
 
 	/*
@@ -56,7 +58,7 @@ public class PatchCreateParamsTable extends AbstractDataPatcher {
 	@Override
 	protected void execute() {
 		if (super.canMigrate()) {
-			LOG.info("Create param table will be apply to the data");
+			LOG.info("Create Venue column and default values will be apply to the data");
 			final Boolean strtcureAltered = this.migrateStrucutre();
 			if (strtcureAltered) {
 				this.migrateData();
@@ -65,34 +67,33 @@ public class PatchCreateParamsTable extends AbstractDataPatcher {
 	}
 
 	private Boolean migrateStrucutre() {
-		LOG.info("Create param table upgrading data strcuture");
+		LOG.info("Create Venue column and default values upgrading data strcuture");
 		Boolean structureAltered = Boolean.FALSE;
-		if (!this.getDatabaseHelper().isSequenceExists(APP_PARAMS_ID_SEQ)) {
-			this.getDatabaseHelper().createSequence(APP_PARAMS_ID_SEQ);
+
+		if (this.getDatabaseHelper().existTable(APP_PARAMS_TABLE_NAME)) {
+			SQL.insert(SQLs.PARAMS_ALTER_TABLE_ADD_CATEGORY);
 			structureAltered = Boolean.TRUE;
 		}
 
-		if (!this.getDatabaseHelper().existTable(APP_PARAMS_TABLE_NAME)) {
-			SQL.insert(SQLs.PARAMS_CREATE_TABLE);
+		if (this.getDatabaseHelper().existTable(EVENT_TABLE_NAME)) {
+			SQL.insert(SQLs.EVENT_ALTER_TABLE_ADD_VENUE);
 			structureAltered = Boolean.TRUE;
 		}
-
-		// as it create a Table force a refresh of Table Cache
-		this.getDatabaseHelper().resetExistingTablesCache();
 
 		return structureAltered;
 	}
 
 	private void migrateData() {
-		LOG.info("Create param table upgraing default data");
-		SQL.insert(SQLs.PARAMS_INSERT_SAMPLE + SQLs.PARAMS_INSERT_VALUES_DATAVERSION);
+		LOG.info("Create Venue column and default values upgraing default data");
+		SQL.insert(SQLs.PARAMS_INSERT_SAMPLE_WITH_CATEGORY + SQLs.PARAMS_INSERT_VALUES_SKYPE);
+		SQL.insert(SQLs.PARAMS_INSERT_SAMPLE_WITH_CATEGORY + SQLs.PARAMS_INSERT_VALUES_PHONE);
 	}
 
 	@Override
 	public void undo() {
-		LOG.info("Create param table downgrading data strcuture");
-		this.getDatabaseHelper().dropSequence(APP_PARAMS_ID_SEQ);
-		this.getDatabaseHelper().dropTable(APP_PARAMS_TABLE_NAME);
+		LOG.info("Create Venue column and default values downgrading data strcuture");
+		this.getDatabaseHelper().removeColumn(APP_PARAMS_TABLE_NAME, APP_PARAMS_PATCHED_COLUMN);
+		this.getDatabaseHelper().removeColumn(EVENT_TABLE_NAME, EVENT_PATCHED_COLUMN);
 	}
 
 }

@@ -1,115 +1,122 @@
 package org.zeroclick.configuration.client.slot;
 
+import java.util.List;
+import java.util.Set;
+
 import org.eclipse.scout.rt.client.dto.Data;
-import org.eclipse.scout.rt.client.ui.basic.cell.Cell;
-import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
+import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
+import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
+import org.eclipse.scout.rt.client.ui.action.menu.TreeMenuType;
 import org.eclipse.scout.rt.client.ui.basic.table.ITableRow;
-import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractLongColumn;
-import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractStringColumn;
-import org.eclipse.scout.rt.client.ui.desktop.outline.pages.AbstractPageWithTable;
+import org.eclipse.scout.rt.client.ui.desktop.IDesktop;
+import org.eclipse.scout.rt.client.ui.form.IForm;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
+import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.client.slot.SlotTablePage.Table;
 import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.configuration.shared.slot.SlotTablePageData;
+import org.zeroclick.meeting.shared.Icons;
+import org.zeroclick.meeting.shared.security.AccessControlService;
 
 @Data(SlotTablePageData.class)
-public class SlotTablePage extends AbstractPageWithTable<Table> {
+public class SlotTablePage extends AbstractSlotTablePage<Table> {
+
+	private static final Logger LOG = LoggerFactory.getLogger(SlotTablePage.class);
 
 	@Override
 	protected String getConfiguredTitle() {
-		return TEXTS.get("zc.meeting.slot");
+		return TEXTS.get("zc.meeting.slot.config");
 	}
 
 	@Override
 	protected void execLoadData(final SearchFilter filter) {
-		this.importPageData(BEANS.get(ISlotService.class).getSlotTableData(filter));
+		this.importPageData(BEANS.get(ISlotService.class).getDayDurationTableData(filter));
+		this.getTable().sort();
 	}
 
 	@Override
 	protected void execInitPage() {
 		super.execInitPage();
-		this.setDetailForm(new SlotForm());
-		this.setDetailFormVisible(Boolean.TRUE);
+		// this.setDetailForm(new DayDurationForm());
+		// this.setDetailFormVisible(Boolean.TRUE);
+		this.getTable().sort();
 	}
 
-	public class Table extends AbstractTable {
-
-		public SlotIdColumn getSlotIdColumn() {
-			return this.getColumnSet().getColumnByClass(SlotIdColumn.class);
+	@Order(1000)
+	public class EditMenu extends AbstractMenu {
+		@Override
+		protected String getConfiguredText() {
+			return TEXTS.get("zc.meeting.dayDuration.edit");
 		}
 
-		public NameColumn getNameColumn() {
-			return this.getColumnSet().getColumnByClass(NameColumn.class);
+		@Override
+		protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+			return CollectionUtility.hashSet(TreeMenuType.SingleSelection, TreeMenuType.MultiSelection);
 		}
 
-		public UserIdColumn getUserIdColumn() {
-			return this.getColumnSet().getColumnByClass(UserIdColumn.class);
+		@Override
+		protected String getConfiguredIconId() {
+			return Icons.Pencil;
 		}
 
-		public DefaultColumn getDefaultColumn() {
-			return this.getColumnSet().getColumnByClass(DefaultColumn.class);
+		@Override
+		protected void execAction() {
+
+			final List<ITableRow> selectedRows = SlotTablePage.this.getTable().getSelectedRows();
+			if (null != selectedRows && !selectedRows.isEmpty()) {
+				for (final ITableRow row : selectedRows) {
+					if (null != row) {
+						SlotTablePage.this.loadDayDurationForm(row);
+					}
+				}
+			}
+
 		}
+	}
 
-		@Order(1000)
-		public class SlotIdColumn extends AbstractLongColumn {
-			@Override
-			protected String getConfiguredHeaderText() {
-				return TEXTS.get("zc.meeting.slot.id");
-			}
+	protected void loadDayDurationForm(final ITableRow row) {
+		final Integer slotCode = this.getTable().getSlotColumn().getValue(row.getRowIndex());
+		final String dayDurationName = this.getTable().getNameColumn().buildDisplayValue(row);
 
-			@Override
-			protected int getConfiguredWidth() {
-				return 50;
-			}
-		}
+		final List<IForm> forms = IDesktop.CURRENT.get().getForms(IDesktop.CURRENT.get().getOutline());
 
-		@Order(2000)
-		public class UserIdColumn extends AbstractLongColumn {
-			@Override
-			protected String getConfiguredHeaderText() {
-				return TEXTS.get("zc.meeting.slot.id");
-			}
+		final StringBuilder slotNameBuilder = new StringBuilder();
+		slotNameBuilder.append(TEXTS.get("zc.meeting.slot." + slotCode)).append(" - ").append(dayDurationName);
 
-			@Override
-			protected int getConfiguredWidth() {
-				return 50;
-			}
-		}
+		final String slotName = slotNameBuilder.toString();
 
-		@Order(3000)
-		public class NameColumn extends AbstractStringColumn {
-			@Override
-			protected String getConfiguredHeaderText() {
-				return TEXTS.get("zc.meeting.slot.name");
-			}
-
-			@Override
-			protected void execDecorateCell(final Cell cell, final ITableRow row) {
-				super.execDecorateCell(cell, row);
-				cell.setText(TEXTS.get(cell.getText()));
-			}
-
-			@Override
-			protected int getConfiguredWidth() {
-				return 200;
+		for (final IForm form : forms) {
+			if (null != slotName && slotName.equals(form.getSubTitle())) {
+				form.activate();
+				// early break;
+				return;
 			}
 		}
 
-		@Order(4000)
-		public class DefaultColumn extends AbstractStringColumn {
-			@Override
-			protected String getConfiguredHeaderText() {
-				return TEXTS.get("zc.meeting.slot.isDefault");
-			}
+		final Long dayDurationId = this.getTable().getDayDurationIdColumn().getValue(row.getRowIndex());
+		final Long slotId = this.getTable().getSlotIdColumn().getValue(row.getRowIndex());
 
-			@Override
-			protected int getConfiguredWidth() {
-				return 50;
-			}
-		}
+		final AccessControlService acs = BEANS.get(AccessControlService.class);
+		final DayDurationForm dayDurationForm = new DayDurationForm();
+
+		dayDurationForm.setUserId(acs.getZeroClickUserIdOfCurrentSubject());
+		dayDurationForm.setSubTitle(slotName);
+		dayDurationForm.getMainBox().setGridColumnCountHint(1);
+		dayDurationForm.setDayDurationId(dayDurationId);
+		dayDurationForm.setSlotId(slotId);
+		dayDurationForm.setDisplayParent(IDesktop.CURRENT.get().getOutline());
+		dayDurationForm.setDisplayHint(IForm.DISPLAY_HINT_VIEW);
+		dayDurationForm.setDisplayViewId(IForm.VIEW_ID_E);
+
+		dayDurationForm.startModify();
+	}
+
+	public class Table extends AbstractSlotTablePage<Table>.Table {
 
 	}
 }

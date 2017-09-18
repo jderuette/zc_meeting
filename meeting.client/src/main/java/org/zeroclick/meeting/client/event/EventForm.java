@@ -1,5 +1,7 @@
 package org.zeroclick.meeting.client.event;
 
+import java.util.Iterator;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.eclipse.scout.rt.client.dto.FormData;
@@ -17,7 +19,9 @@ import org.eclipse.scout.rt.client.ui.form.fields.stringfield.AbstractStringFiel
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.exception.VetoException;
+import org.eclipse.scout.rt.platform.nls.NlsLocale;
 import org.eclipse.scout.rt.platform.util.StringUtility;
+import org.eclipse.scout.rt.shared.ScoutTexts;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.zeroclick.common.email.IMailSender;
@@ -26,7 +30,7 @@ import org.zeroclick.common.text.TextsHelper;
 import org.zeroclick.configuration.client.user.UserForm;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UserFormData;
-import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
+import org.zeroclick.configuration.shared.venue.VenueLookupCall;
 import org.zeroclick.meeting.client.NotificationHelper;
 import org.zeroclick.meeting.client.common.DurationLookupCall;
 import org.zeroclick.meeting.client.common.EventStateLookupCall;
@@ -44,11 +48,13 @@ import org.zeroclick.meeting.client.event.EventForm.MainBox.SlotField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.StartDateField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.StateField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.SubjectField;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.VenueField;
 import org.zeroclick.meeting.shared.event.CreateEventPermission;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.KnowEmailLookupCall;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
+import org.zeroclick.meeting.shared.security.AccessControlService;
 
 @FormData(value = EventFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class EventForm extends AbstractForm {
@@ -64,6 +70,8 @@ public class EventForm extends AbstractForm {
 	/** to know who performed the last action (for notification) **/
 	private Long lastModifier;
 	private String previousState;
+
+	private EventMessageHelper eventMessageHelper;
 
 	@FormData
 	public Long getEventId() {
@@ -199,6 +207,10 @@ public class EventForm extends AbstractForm {
 
 	public ReasonField getReasonField() {
 		return this.getFieldByClass(ReasonField.class);
+	}
+
+	public VenueField getVenueField() {
+		return this.getFieldByClass(VenueField.class);
 	}
 
 	public OkButton getOkButton() {
@@ -341,6 +353,19 @@ public class EventForm extends AbstractForm {
 			}
 		}
 
+		@Order(3500)
+		public class VenueField extends AbstractProposalField<String> {
+			@Override
+			protected String getConfiguredLabel() {
+				return TEXTS.get("zc.meeting.venue");
+			}
+
+			@Override
+			protected Class<? extends ILookupCall<String>> getConfiguredLookupCall() {
+				return VenueLookupCall.class;
+			}
+		}
+
 		@Order(4000)
 		public class StateField extends AbstractSmartField<String> {
 			@Override
@@ -477,6 +502,7 @@ public class EventForm extends AbstractForm {
 
 		@Override
 		protected void execStore() {
+			final AccessControlService acs = BEANS.get(AccessControlService.class);
 			EventForm.this.checkAttendeeEmail();
 
 			final IEventService eventService = BEANS.get(IEventService.class);
@@ -488,7 +514,25 @@ public class EventForm extends AbstractForm {
 			final String eventHeldEmail = formData.getOrganizerEmail().getValue();
 			final Long eventGuest = userService.getUserIdByEmail(eventGuestEmail);
 			final String meetingSubject = formData.getSubject().getValue();
+			final String venue = formData.getVenue().getValue();
+
 			formData.getGuestId().setValue(eventGuest);
+
+			// required *before* save (for sending email)
+			formData.setLastModifier(acs.getZeroClickUserIdOfCurrentSubject());
+
+			final Map<String, String> allTranslations = ScoutTexts.getInstance().getTextMap(NlsLocale.get());
+			if (allTranslations.containsValue(venue)) {
+				final Iterator<String> itKeys = allTranslations.keySet().iterator();
+				while (itKeys.hasNext()) {
+					final String key = itKeys.next();
+					final String value = allTranslations.get(key);
+					if (value.equals(venue)) {
+						formData.getVenue().setValue(key);
+						break;
+					}
+				}
+			}
 
 			if (null == eventGuest) {
 				final UserForm userForm = new UserForm();
@@ -505,13 +549,16 @@ public class EventForm extends AbstractForm {
 		private void sendNewEventEmail(final EventFormData formData) {
 			final IMailSender mailSender = BEANS.get(IMailSender.class);
 			final String recipient = formData.getEmail().getValue();
-			final String organizerEmail = formData.getOrganizerEmail().getValue();
-			final String meetingSubject = formData.getSubject().getValue();
+
+			final String[] values = EventForm.this.getEventMessageHelper().buildValuesForLocaleMessages(formData,
+					formData.getGuestId().getValue());
 
 			final String subject = TextsHelper.get(formData.getGuestId().getValue(),
-					"zc.meeting.email.event.new.subject", organizerEmail);
+					"zc.meeting.email.event.new.subject", values);
+
 			final String content = TextsHelper.get(formData.getGuestId().getValue(), "zc.meeting.email.event.new.html",
-					organizerEmail, new ApplicationUrlProperty().getValue(), meetingSubject);
+					values);
+
 			try {
 				mailSender.sendEmail(recipient, subject, content);
 			} catch (final MailException e) {
@@ -580,6 +627,13 @@ public class EventForm extends AbstractForm {
 						String.valueOf(maxCaracters)));
 			}
 		}
+	}
+
+	protected EventMessageHelper getEventMessageHelper() {
+		if (null == this.eventMessageHelper) {
+			this.eventMessageHelper = BEANS.get(EventMessageHelper.class);
+		}
+		return this.eventMessageHelper;
 	}
 
 }

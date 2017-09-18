@@ -168,13 +168,9 @@ public class EventService extends CommonService implements IEventService {
 
 		final Set<String> notifiedUsers = new HashSet<>();
 		if (null != formData.getGuestId().getValue()) {
-			// final Long guestId =
-			// this.retrieveUserId(formData.getEmail().getValue());
 			notifiedUsers.addAll(acs.getUserNotificationIds(formData.getGuestId().getValue()));
 		}
 		if (null != formData.getOrganizer().getValue()) {
-			// final Long organizerId =
-			// this.retrieveUserId(formData.getOrganizerEmail().getValue());
 			notifiedUsers.addAll(acs.getUserNotificationIds(formData.getOrganizer().getValue()));
 		}
 		return notifiedUsers;

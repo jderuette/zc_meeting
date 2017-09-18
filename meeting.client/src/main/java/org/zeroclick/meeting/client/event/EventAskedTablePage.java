@@ -40,18 +40,20 @@ public class EventAskedTablePage extends EventTablePage {
 	@Override
 	protected Boolean canHandleNew(final AbstractEventNotification notification) {
 		final EventFormData formData = notification.getEventForm();
-		return super.isHeldByCurrentUser(formData) && "ASKED".equals(formData.getState().getValue());
+		return super.getEventMessageHelper().isHeldByCurrentUser(formData)
+				&& "ASKED".equals(formData.getState().getValue());
 	}
 
 	@Override
 	protected Boolean canHandleModified(final AbstractEventNotification notification) {
 		final EventFormData formData = notification.getEventForm();
-		return super.isHeldByCurrentUser(formData) && "ASKED".equals(formData.getState().getValue());
+		return super.getEventMessageHelper().isHeldByCurrentUser(formData)
+				&& "ASKED".equals(formData.getState().getValue());
 	}
 
 	public class Table extends EventTablePage.Table {
 
-		// add/delete row handle by parent (for inc and dec nbEvent title)
+		// add/delete row handled by parent (for inc and dec nbEvent title)
 
 		@Override
 		protected void initConfig() {

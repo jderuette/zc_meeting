@@ -152,6 +152,10 @@ public class EventFormData extends AbstractFormData {
 		return getFieldByClass(Subject.class);
 	}
 
+	public Venue getVenue() {
+		return getFieldByClass(Venue.class);
+	}
+
 	public static class Duration extends AbstractValueFieldData<Integer> {
 
 		private static final long serialVersionUID = 1L;
@@ -228,6 +232,11 @@ public class EventFormData extends AbstractFormData {
 	}
 
 	public static class Subject extends AbstractValueFieldData<String> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class Venue extends AbstractValueFieldData<String> {
 
 		private static final long serialVersionUID = 1L;
 	}

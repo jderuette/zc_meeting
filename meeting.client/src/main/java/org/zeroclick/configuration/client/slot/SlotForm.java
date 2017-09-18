@@ -41,7 +41,7 @@ public class SlotForm extends AbstractForm implements IPageForm {
 
 	@Override
 	protected String getConfiguredTitle() {
-		return TEXTS.get("zc.meeting.slot");
+		return TEXTS.get("zc.meeting.slot.config");
 	}
 
 	@Override
@@ -70,14 +70,75 @@ public class SlotForm extends AbstractForm implements IPageForm {
 		return this.getFieldByClass(OkButton.class);
 	}
 
+	protected void loadDayDurationForm(final Long nodeId) {
+		final List<IForm> forms = SlotForm.this.getDesktop().getForms(SlotForm.this.getDesktop().getOutline());
+
+		String slotName;
+		final ITreeNode curentNode = this.getSlotSelectorField().getTree().getSelectedNode();
+		final Boolean isRootNode = null == curentNode.getParentNode();
+
+		if (isRootNode) {
+			slotName = curentNode.getCell().getText();
+		} else {
+			slotName = curentNode.getParentNode().getCell().getText() + " - " + curentNode.getCell().getText();
+		}
+
+		for (final IForm form : forms) {
+			if (null != slotName && slotName.equals(form.getSubTitle())) {
+				form.activate();
+				// early break;
+				return;
+			}
+		}
+
+		final AccessControlService acs = BEANS.get(AccessControlService.class);
+		final DayDurationForm dayDurationForm = new DayDurationForm();
+
+		dayDurationForm.setUserId(acs.getZeroClickUserIdOfCurrentSubject());
+		dayDurationForm.setSubTitle(slotName);
+		dayDurationForm.getMainBox().setGridColumnCountHint(1);
+		dayDurationForm.setDayDurationId(nodeId);
+		dayDurationForm.setSlotId((Long) curentNode.getParentNode().getPrimaryKey());
+		dayDurationForm.setDisplayParent(SlotForm.this.getDesktop().getOutline());
+		dayDurationForm.setDisplayHint(DISPLAY_HINT_VIEW);
+		dayDurationForm.setDisplayViewId(VIEW_ID_E);
+
+		dayDurationForm.startModify();
+	}
+
 	@Order(1000)
 	public class MainBox extends AbstractGroupBox {
+
+		@Order(1000)
+		public class EditMenu extends AbstractMenu {
+			@Override
+			protected String getConfiguredText() {
+				return TEXTS.get("zc.meeting.dayDuration.edit");
+			}
+
+			@Override
+			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+				return CollectionUtility.hashSet(TreeMenuType.SingleSelection, TreeMenuType.MultiSelection);
+			}
+
+			@Override
+			protected void execAction() {
+				final Set<ITreeNode> selectedNodes = SlotForm.this.getSlotSelectorField().getTree().getSelectedNodes();
+				if (null != selectedNodes && !selectedNodes.isEmpty()) {
+					for (final ITreeNode node : selectedNodes) {
+						if (null != node && node.isLeaf()) {
+							SlotForm.this.loadDayDurationForm((Long) node.getPrimaryKey());
+						}
+					}
+				}
+			}
+		}
 
 		@Order(0)
 		public class SlotsBox extends AbstractGroupBox {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("zc.meeting.slot");
+				return TEXTS.get("zc.meeting.slot.config");
 			}
 
 			@Order(1000)
@@ -85,7 +146,7 @@ public class SlotForm extends AbstractForm implements IPageForm {
 
 				@Override
 				protected String getConfiguredLabel() {
-					return TEXTS.get("zc.meeting.slot");
+					return TEXTS.get("zc.meeting.slot.config");
 				}
 
 				@Override
@@ -117,7 +178,7 @@ public class SlotForm extends AbstractForm implements IPageForm {
 								if (null != selectedNodes && !selectedNodes.isEmpty()) {
 									for (final ITreeNode node : selectedNodes) {
 										if (null != node && node.isLeaf()) {
-											SlotSelectorField.this.loadDayDurationForm((Long) node.getPrimaryKey());
+											SlotForm.this.loadDayDurationForm((Long) node.getPrimaryKey());
 										}
 									}
 								}
@@ -134,7 +195,7 @@ public class SlotForm extends AbstractForm implements IPageForm {
 
 						@Override
 						protected String getConfiguredText() {
-							return "edit";
+							return TEXTS.get("zc.meeting.dayDuration.edit");
 						}
 
 						@Override
@@ -144,7 +205,7 @@ public class SlotForm extends AbstractForm implements IPageForm {
 							if (null != selectedNodes && !selectedNodes.isEmpty()) {
 								for (final ITreeNode node : selectedNodes) {
 									if (null != node && node.isLeaf()) {
-										SlotSelectorField.this.loadDayDurationForm((Long) node.getPrimaryKey());
+										SlotForm.this.loadDayDurationForm((Long) node.getPrimaryKey());
 									}
 								}
 							}
@@ -173,7 +234,7 @@ public class SlotForm extends AbstractForm implements IPageForm {
 
 					@Override
 					protected String getConfiguredTooltipText() {
-						return "toolTips test";
+						return TEXTS.get("zc.meeting.slot.tree.tooltip");
 					}
 
 					@Override
@@ -260,49 +321,11 @@ public class SlotForm extends AbstractForm implements IPageForm {
 								final ITreeNode clickedNode = e.getNode();
 								// only leaf node can be edited
 								if (clickedNode.isLeaf()) {
-									SlotSelectorField.this.loadDayDurationForm((Long) clickedNode.getPrimaryKey());
+									SlotForm.this.loadDayDurationForm((Long) clickedNode.getPrimaryKey());
 								}
 							}
 						}
 					};
-
-					protected void loadDayDurationForm(final Long nodeId) {
-						final List<IForm> forms = SlotForm.this.getDesktop()
-								.getForms(SlotForm.this.getDesktop().getOutline());
-
-						String slotName;
-						final ITreeNode curentNode = this.getTree().getSelectedNode();
-						final Boolean isRootNode = null == curentNode.getParentNode();
-
-						if (isRootNode) {
-							slotName = curentNode.getCell().getText();
-						} else {
-							slotName = curentNode.getParentNode().getCell().getText() + " - "
-									+ curentNode.getCell().getText();
-						}
-
-						for (final IForm form : forms) {
-							if (null != slotName && slotName.equals(form.getSubTitle())) {
-								form.activate();
-								// early break;
-								return;
-							}
-						}
-
-						final AccessControlService acs = BEANS.get(AccessControlService.class);
-						final DayDurationForm dayDurationForm = new DayDurationForm();
-
-						dayDurationForm.setUserId(acs.getZeroClickUserIdOfCurrentSubject());
-						dayDurationForm.setSubTitle(slotName);
-						dayDurationForm.getMainBox().setGridColumnCountHint(1);
-						dayDurationForm.setDayDurationId(nodeId);
-						dayDurationForm.setSlotId((Long) curentNode.getParentNode().getPrimaryKey());
-						dayDurationForm.setDisplayParent(SlotForm.this.getDesktop().getOutline());
-						dayDurationForm.setDisplayHint(DISPLAY_HINT_VIEW);
-						dayDurationForm.setDisplayViewId(VIEW_ID_E);
-
-						dayDurationForm.startModify();
-					}
 				}
 			}
 		}

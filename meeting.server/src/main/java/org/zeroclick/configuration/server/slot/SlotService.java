@@ -88,10 +88,21 @@ public class SlotService extends CommonService implements ISlotService {
 			super.throwAuthorizationFailed();
 		}
 
-		SQL.selectInto(
-				SQLs.DAY_DURATION_SELECT + SQLs.DAY_DURATION_SELECT_FROM_PLUS_GENERIC_WHERE
-						+ SQLs.DAY_DURATION_SELECT_FILTER_DAY_DURATION_ID + SQLs.DAY_DURATION_SELECT_INTO,
-				formData, new NVPair("dayDurationId", formData.getDayDurationId()));
+		final StringBuilder sqlBuilder = new StringBuilder();
+
+		sqlBuilder.append(SQLs.DAY_DURATION_SELECT).append(", ").append(SQLs.SLOT_SELECT_FILEDS)
+				.append(SQLs.DAY_DURATION_SELECT_FROM).append(SQLs.DAY_DURATION_JOIN_SLOT)
+				.append(SQLs.GENERIC_WHERE_FOR_SECURE_AND).append(SQLs.DAY_DURATION_SELECT_FILTER_DAY_DURATION_ID)
+				.append(SQLs.DAY_DURATION_SELECT_INTO);
+
+		// SQL.selectInto(
+		// SQLs.DAY_DURATION_SELECT +
+		// SQLs.DAY_DURATION_SELECT_FROM_PLUS_GENERIC_WHERE
+		// + SQLs.DAY_DURATION_SELECT_FILTER_DAY_DURATION_ID +
+		// SQLs.DAY_DURATION_SELECT_INTO,
+		// formData, new NVPair("dayDurationId", formData.getDayDurationId()));
+
+		SQL.selectInto(sqlBuilder.toString(), formData, new NVPair("dayDurationId", formData.getDayDurationId()));
 		return formData;
 	}
 
@@ -143,17 +154,27 @@ public class SlotService extends CommonService implements ISlotService {
 				new DayDurationModifiedNotification(formData, sltoCode));
 	}
 
-	@Override
-	public SlotTablePageData getSlotTableData(final SearchFilter filter) {
+	private SlotTablePageData getSlotData(final SearchFilter filter, final Boolean displayAllForAdmin) {
 		final SlotTablePageData pageData = new SlotTablePageData();
 
-		final Long currentConnectedUserId = super.userHelper.getCurrentUserId();
+		String ownerFilter = "";
+		Long currentConnectedUserId = 0L;
+		if (!displayAllForAdmin
+				|| ACCESS.getLevel(new ReadSlotPermission((Long) null)) != ReadSlotPermission.LEVEL_ALL) {
+			ownerFilter = SQLs.SLOT_SELECT_FILTER_USER_ID;
+			currentConnectedUserId = super.userHelper.getCurrentUserId();
+		}
 
-		final String sql = SQLs.SLOT_PAGE_SELECT + SQLs.SLOT_SELECT_FILTER_USER_ID + SQLs.SLOT_PAGE_SELECT_INTO;
+		final String sql = SQLs.SLOT_PAGE_SELECT + ownerFilter + SQLs.SLOT_PAGE_SELECT_INTO;
 
 		SQL.selectInto(sql, new NVPair("page", pageData), new NVPair("currentUser", currentConnectedUserId));
 
 		return pageData;
+	}
+
+	@Override
+	public SlotTablePageData getSlotTableData(final SearchFilter filter) {
+		return this.getSlotData(filter, Boolean.FALSE);
 	}
 
 	@Override
@@ -168,6 +189,34 @@ public class SlotService extends CommonService implements ISlotService {
 		final Object[][] results = SQL.select(sql, new NVPair("currentUser", super.userHelper.getCurrentUserId()));
 
 		return results;
+	}
+
+	private SlotTablePageData getDayDurationData(final SearchFilter filter, final Boolean displayAllForAdmin) {
+		final SlotTablePageData pageData = new SlotTablePageData();
+
+		String ownerFilter = "";
+		Long currentConnectedUserId = 0L;
+		if (!displayAllForAdmin
+				|| ACCESS.getLevel(new ReadSlotPermission((Long) null)) != ReadSlotPermission.LEVEL_ALL) {
+			ownerFilter = SQLs.SLOT_SELECT_FILTER_USER_ID;
+			currentConnectedUserId = super.userHelper.getCurrentUserId();
+		}
+
+		final String sql = SQLs.DAY_DURATION_PAGE_SELECT + ownerFilter + SQLs.DAY_DURATION_PAGE_SELECT_INTO;
+
+		SQL.selectInto(sql, new NVPair("page", pageData), new NVPair("currentUser", currentConnectedUserId));
+
+		return pageData;
+	}
+
+	@Override
+	public SlotTablePageData getDayDurationTableData(final SearchFilter filter) {
+		return this.getDayDurationData(filter, Boolean.FALSE);
+	}
+
+	@Override
+	public SlotTablePageData getDayDurationAdminTableData(final SearchFilter filter) {
+		return this.getDayDurationData(filter, Boolean.TRUE);
 	}
 
 	@Override
@@ -296,17 +345,17 @@ public class SlotService extends CommonService implements ISlotService {
 
 	@Override
 	public void createDefaultSlot(final Long userId) {
-		Long slotId = this.createSlot("zc.meeting.slot.1", userId);
+		Long slotId = this.createSlot("zc.meeting.slot.1", userId, 1);
 		SQL.insert(SQLs.DAY_DURATION_INSERT_SAMPLE + this.forSlot(SQLs.DAY_DURATION_VALUES_MORNING, slotId));
 		SQL.insert(SQLs.DAY_DURATION_INSERT_SAMPLE + this.forSlot(SQLs.DAY_DURATION_VALUES_AFTERNOON, slotId));
 
-		slotId = this.createSlot("zc.meeting.slot.2", userId);
+		slotId = this.createSlot("zc.meeting.slot.2", userId, 2);
 		SQL.insert(SQLs.DAY_DURATION_INSERT_SAMPLE + this.forSlot(SQLs.DAY_DURATION_VALUES_LUNCH, slotId));
 
-		slotId = this.createSlot("zc.meeting.slot.3", userId);
+		slotId = this.createSlot("zc.meeting.slot.3", userId, 3);
 		SQL.insert(SQLs.DAY_DURATION_INSERT_SAMPLE + this.forSlot(SQLs.DAY_DURATION_VALUES_EVENING, slotId));
 
-		slotId = this.createSlot("zc.meeting.slot.4", userId);
+		slotId = this.createSlot("zc.meeting.slot.4", userId, 4);
 		SQL.insert(SQLs.DAY_DURATION_INSERT_SAMPLE + this.forSlot(SQLs.DAY_DURATION_VALUES_WWEEKEND, slotId));
 
 	}
@@ -318,18 +367,38 @@ public class SlotService extends CommonService implements ISlotService {
 	 * @param userId
 	 * @return
 	 */
-	private Long createSlot(final String slotName, final Long userId) {
+	private Long createSlot(final String slotName, final Long userId, final Integer slotCode) {
 		// TODO Djer permission check ? (should be against autorisation on
 		// (new)
 		// userId
 		final Long slotId = DatabaseHelper.get().getNextVal(PatchSlotTable.SLOT_ID_SEQ);
-		SQL.insert(SQLs.SLOT_INSERT_SAMPLE + this.forSlot(SQLs.SLOT_VALUES_GENERIC, slotId)
-				.replace("__slotName__", slotName).replace("__userId__", String.valueOf(userId)));
+		SQL.insert(SQLs.SLOT_INSERT_SAMPLE
+				+ this.forSlot(SQLs.SLOT_VALUES_GENERIC, slotId).replace("__slotCode__", String.valueOf(slotCode))
+						.replace("__slotName__", slotName).replace("__userId__", String.valueOf(userId)));
 		return slotId;
 	}
 
 	private String forSlot(final String sql, final Long slotId) {
 		return sql.replace("__slotId__", String.valueOf(slotId));
+	}
+
+	@Override
+	public void addDefaultCodeToExistingSlot() {
+		final String sql = SQLs.SLOT_PAGE_SELECT;
+
+		final Object[][] slots = SQL.select(sql);
+
+		if (null != slots && slots.length > 0) {
+			for (int row = 0; row < slots.length; row++) {
+				LOG.info("Adding default Slot code for slot");
+				final Object[] slot = slots[row];
+				final String slotName = (String) slot[1];
+				final Long slotId = (Long) slot[0];
+				final String slotCodeExtracted = slotName.substring(slotName.lastIndexOf('.') + 1, slotName.length());
+				final Integer slotCode = Integer.valueOf(slotCodeExtracted);
+				SQL.update(SQLs.SLOT_UPDATE_CODE, new NVPair("slotCode", slotCode), new NVPair("slotId", slotId));
+			}
+		}
 	}
 
 }

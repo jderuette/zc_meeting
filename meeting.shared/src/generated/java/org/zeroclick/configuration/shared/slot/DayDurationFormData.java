@@ -66,6 +66,24 @@ public class DayDurationFormData extends AbstractFormData {
 		return getFieldByClass(Saturday.class);
 	}
 
+	/**
+	 * access method for property SlotCode.
+	 */
+	public String getSlotCode() {
+		return getSlotCodeProperty().getValue();
+	}
+
+	/**
+	 * access method for property SlotCode.
+	 */
+	public void setSlotCode(String slotCode) {
+		getSlotCodeProperty().setValue(slotCode);
+	}
+
+	public SlotCodeProperty getSlotCodeProperty() {
+		return getPropertyByClass(SlotCodeProperty.class);
+	}
+
 	public SlotEnd getSlotEnd() {
 		return getFieldByClass(SlotEnd.class);
 	}
@@ -151,6 +169,11 @@ public class DayDurationFormData extends AbstractFormData {
 	}
 
 	public static class Saturday extends AbstractValueFieldData<Boolean> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class SlotCodeProperty extends AbstractPropertyData<String> {
 
 		private static final long serialVersionUID = 1L;
 	}

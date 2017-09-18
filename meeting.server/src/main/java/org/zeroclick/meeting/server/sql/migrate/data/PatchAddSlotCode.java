@@ -15,9 +15,11 @@ limitations under the License.
  */
 package org.zeroclick.meeting.server.sql.migrate.data;
 
+import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher;
 
@@ -27,14 +29,15 @@ import com.github.zafarkhaja.semver.Version;
  * @author djer
  *
  */
-public class PatchCreateParamsTable extends AbstractDataPatcher {
+public class PatchAddSlotCode extends AbstractDataPatcher {
 
-	public static final String APP_PARAMS_TABLE_NAME = "APP_PARAMS";
-	private static final String APP_PARAMS_ID_SEQ = "APP_PARAMS_ID_SEQ";
-	private static final Logger LOG = LoggerFactory.getLogger(PatchCreateParamsTable.class);
+	private static final String SLOT_TABLE_NAME = "SLOT";
+	public static final String SLOT_PATCHED_COLUMN = "slot_code";
 
-	public PatchCreateParamsTable() {
-		this.setDescription("Create APP_PARAMS table and default required params key/value");
+	private static final Logger LOG = LoggerFactory.getLogger(PatchAddSlotCode.class);
+
+	public PatchAddSlotCode() {
+		this.setDescription("Add Slot Code to SLOT table and default required params key/value");
 	}
 
 	/*
@@ -44,7 +47,7 @@ public class PatchCreateParamsTable extends AbstractDataPatcher {
 	 */
 	@Override
 	public Version getVersion() {
-		return Version.valueOf("1.1.0");
+		return Version.valueOf("1.1.4");
 	}
 
 	/*
@@ -56,7 +59,7 @@ public class PatchCreateParamsTable extends AbstractDataPatcher {
 	@Override
 	protected void execute() {
 		if (super.canMigrate()) {
-			LOG.info("Create param table will be apply to the data");
+			LOG.info("Add Slot Code to SLOT table  will be apply to the data");
 			final Boolean strtcureAltered = this.migrateStrucutre();
 			if (strtcureAltered) {
 				this.migrateData();
@@ -65,15 +68,11 @@ public class PatchCreateParamsTable extends AbstractDataPatcher {
 	}
 
 	private Boolean migrateStrucutre() {
-		LOG.info("Create param table upgrading data strcuture");
+		LOG.info("Add Slot Code to SLOT table upgrading data strcuture");
 		Boolean structureAltered = Boolean.FALSE;
-		if (!this.getDatabaseHelper().isSequenceExists(APP_PARAMS_ID_SEQ)) {
-			this.getDatabaseHelper().createSequence(APP_PARAMS_ID_SEQ);
-			structureAltered = Boolean.TRUE;
-		}
 
-		if (!this.getDatabaseHelper().existTable(APP_PARAMS_TABLE_NAME)) {
-			SQL.insert(SQLs.PARAMS_CREATE_TABLE);
+		if (!this.getDatabaseHelper().isColumnExists(SLOT_TABLE_NAME, SLOT_PATCHED_COLUMN)) {
+			SQL.insert(SQLs.SLOT_ALTER_TABLE_ADD_CODE);
 			structureAltered = Boolean.TRUE;
 		}
 
@@ -84,15 +83,14 @@ public class PatchCreateParamsTable extends AbstractDataPatcher {
 	}
 
 	private void migrateData() {
-		LOG.info("Create param table upgraing default data");
-		SQL.insert(SQLs.PARAMS_INSERT_SAMPLE + SQLs.PARAMS_INSERT_VALUES_DATAVERSION);
+		LOG.info("Add Slot Code to SLOT table upgraing default data");
+		final ISlotService slotService = BEANS.get(ISlotService.class);
+		slotService.addDefaultCodeToExistingSlot();
 	}
 
 	@Override
 	public void undo() {
-		LOG.info("Create param table downgrading data strcuture");
-		this.getDatabaseHelper().dropSequence(APP_PARAMS_ID_SEQ);
-		this.getDatabaseHelper().dropTable(APP_PARAMS_TABLE_NAME);
+		LOG.info("Add Slot Code to SLOT table downgrading data strcuture");
+		this.getDatabaseHelper().removeColumn(SLOT_TABLE_NAME, SLOT_PATCHED_COLUMN);
 	}
-
 }

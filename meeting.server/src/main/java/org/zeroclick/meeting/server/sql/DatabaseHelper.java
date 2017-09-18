@@ -125,7 +125,7 @@ public class DatabaseHelper {
 	}
 
 	public Boolean existTable(final String tableName) {
-		return this.getExistingTables().contains(tableName);
+		return this.getExistingTables().contains(tableName.toUpperCase());
 	}
 
 	/**

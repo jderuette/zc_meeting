@@ -19,6 +19,7 @@ import org.zeroclick.configuration.client.slot.DayDurationForm.MainBox.WeeklyPer
 import org.zeroclick.configuration.shared.slot.DayDurationFormData;
 import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.configuration.shared.slot.UpdateSlotPermission;
+import org.zeroclick.meeting.client.NotificationHelper;
 
 @FormData(value = DayDurationFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class DayDurationForm extends AbstractForm {
@@ -27,6 +28,7 @@ public class DayDurationForm extends AbstractForm {
 	private String name;
 	private Long slotId;
 	private Long userId;
+	private String slotCode; // the "parent" slot name
 
 	@FormData
 	public Long getDayDurationId() {
@@ -66,6 +68,16 @@ public class DayDurationForm extends AbstractForm {
 	@FormData
 	public void setUserId(final Long userId) {
 		this.userId = userId;
+	}
+
+	@FormData
+	public String getSlotCode() {
+		return this.slotCode;
+	}
+
+	@FormData
+	public void setSlotCode(final String slotName) {
+		this.slotCode = slotName;
 	}
 
 	@Override
@@ -203,18 +215,18 @@ public class DayDurationForm extends AbstractForm {
 			}
 
 			@Order(3000)
-			public class ThursdayField extends AbstractBooleanField {
-				@Override
-				protected String getConfiguredLabel() {
-					return TEXTS.get("zc.meeting.dayDuration.thursday");
-				}
-			}
-
-			@Order(4000)
 			public class WednesdayField extends AbstractBooleanField {
 				@Override
 				protected String getConfiguredLabel() {
 					return TEXTS.get("zc.meeting.dayDuration.wednesday");
+				}
+			}
+
+			@Order(4000)
+			public class ThursdayField extends AbstractBooleanField {
+				@Override
+				protected String getConfiguredLabel() {
+					return TEXTS.get("zc.meeting.dayDuration.thursday");
 				}
 			}
 
@@ -248,6 +260,11 @@ public class DayDurationForm extends AbstractForm {
 			@Override
 			protected String getConfiguredLabel() {
 				return TEXTS.get("zc.meeting.dayDuration.weeklyPerpetual");
+			}
+
+			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.FALSE;
 			}
 
 			@Override
@@ -285,6 +302,10 @@ public class DayDurationForm extends AbstractForm {
 			final DayDurationFormData formData = new DayDurationFormData();
 			DayDurationForm.this.exportFormData(formData);
 			service.store(formData);
+
+			final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+			notificationHelper.addProccessedNotification("zc.meeting.notification.modifiedDayDuration",
+					TEXTS.get(formData.getName()));
 		}
 	}
 

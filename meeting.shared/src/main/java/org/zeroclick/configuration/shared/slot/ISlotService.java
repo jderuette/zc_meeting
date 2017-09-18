@@ -17,6 +17,10 @@ public interface ISlotService extends IService {
 
 	SlotTablePageData getSlotTableData(SearchFilter filter);
 
+	SlotTablePageData getDayDurationTableData(SearchFilter filter);
+
+	SlotTablePageData getDayDurationAdminTableData(SearchFilter filter);
+
 	DayDurationFormData store(DayDurationFormData formData);
 
 	DayDurationFormData load(DayDurationFormData formData);
@@ -42,4 +46,9 @@ public interface ISlotService extends IService {
 	boolean isInvolved(Long slotId);
 
 	void createDefaultSlot(Long userId);
+
+	/**
+	 * For data migration when slot Code column is added to model
+	 */
+	void addDefaultCodeToExistingSlot();
 }

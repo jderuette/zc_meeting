@@ -19,6 +19,7 @@ import java.time.Clock;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
+import org.eclipse.scout.rt.platform.ApplicationScoped;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,22 +30,10 @@ import org.zeroclick.meeting.shared.security.AccessControlService;
  * @author djer
  *
  */
+@ApplicationScoped
 public class AppUserHelper {
 
 	private static final Logger LOG = LoggerFactory.getLogger(AppUserHelper.class);
-
-	static AppUserHelper instance;
-
-	private AppUserHelper() {
-
-	}
-
-	public static AppUserHelper get() {
-		if (null == instance) {
-			instance = new AppUserHelper();
-		}
-		return instance;
-	}
 
 	protected String getUserTimeZone(final Long userId) {
 		final IUserService userService = BEANS.get(IUserService.class);
