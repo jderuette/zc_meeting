@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.scout.rt.client.dto.Data;
+import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
 import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
 import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.action.menu.TableMenuType;
@@ -199,13 +200,18 @@ public class AppParamsTablePage extends AbstractPageWithTable<Table> {
 			}
 
 			@Override
+			protected String getConfiguredKeyStroke() {
+				return combineKeyStrokes(IKeyStroke.SHIFT, "e");
+			}
+
+			@Override
 			protected void execAction() {
 				Table.this.loadParamsForm(Table.this.getSelectedRow());
 			}
 		}
 
 		@Order(2000)
-		public class NexMenu extends AbstractMenu {
+		public class NewMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {
 				return TEXTS.get("zc.params.new");
@@ -219,6 +225,11 @@ public class AppParamsTablePage extends AbstractPageWithTable<Table> {
 			@Override
 			protected void execAction() {
 				Table.this.loadParamsForm();
+			}
+
+			@Override
+			protected String getConfiguredKeyStroke() {
+				return combineKeyStrokes(IKeyStroke.SHIFT, "n");
 			}
 		}
 
