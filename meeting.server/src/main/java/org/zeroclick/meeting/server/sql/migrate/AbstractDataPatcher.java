@@ -22,6 +22,7 @@ import org.eclipse.scout.rt.platform.util.concurrent.IRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.VersionHelper;
+import org.zeroclick.configuration.shared.params.IAppParamsService;
 import org.zeroclick.meeting.server.sql.DatabaseHelper;
 import org.zeroclick.meeting.server.sql.SuperUserRunContextProducer;
 
@@ -56,12 +57,12 @@ public abstract class AbstractDataPatcher implements IDataPatcher {
 	}
 
 	protected Version getDataVersion() {
-		final AppParamsService appParamsService = BEANS.get(AppParamsService.class);
+		final IAppParamsService appParamsService = BEANS.get(IAppParamsService.class);
 
 		// Table APP_PARAMS may not be patched yet
 		String versionTxt;
 		if (this.getDatabaseHelper().existTable("APP_PARAMS")) {
-			versionTxt = appParamsService.getValue(AppParamsService.KEY_DATA_VERSION);
+			versionTxt = appParamsService.getValue(IAppParamsService.KEY_DATA_VERSION);
 		} else {
 			LOG.warn("Table APP_PARAMS does NOT exist (yet). Returning default dataVersion");
 			versionTxt = "0.0.0";
@@ -147,9 +148,9 @@ public abstract class AbstractDataPatcher implements IDataPatcher {
 	}
 
 	private void updateDataVersion(final Version version) {
-		final AppParamsService appParamsService = BEANS.get(AppParamsService.class);
+		final IAppParamsService appParamsService = BEANS.get(IAppParamsService.class);
 
-		appParamsService.store(AppParamsService.KEY_DATA_VERSION, version.toString());
+		appParamsService.store(IAppParamsService.KEY_DATA_VERSION, version.toString());
 	}
 
 	protected DatabaseHelper getDatabaseHelper() {

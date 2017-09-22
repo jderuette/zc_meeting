@@ -47,4 +47,6 @@ public interface IEventService extends IService {
 
 	Set<String> getKnowEmailByKey(ILookupCall<String> call);
 
+	Map<Long, Integer> getNbEventsByUser(String state);
+
 }

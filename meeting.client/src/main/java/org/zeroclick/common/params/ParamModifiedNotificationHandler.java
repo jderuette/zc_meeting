@@ -13,16 +13,16 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.zeroclick.meeting.client.event;
+package org.zeroclick.common.params;
 
+import org.zeroclick.configuration.shared.params.ParamModifiedNotification;
 import org.zeroclick.meeting.client.clientnotification.AbstractObservableModelNotificationHandler;
-import org.zeroclick.meeting.shared.event.EventCreatedNotification;
 
 /**
  * @author djer
  *
  */
-public class EventCreatedNotificationHandler
-		extends AbstractObservableModelNotificationHandler<EventCreatedNotification> {
+public class ParamModifiedNotificationHandler
+		extends AbstractObservableModelNotificationHandler<ParamModifiedNotification> {
 
 }

@@ -30,7 +30,7 @@ import com.github.zafarkhaja.semver.Version;
 public class PatchCreateParamsTable extends AbstractDataPatcher {
 
 	public static final String APP_PARAMS_TABLE_NAME = "APP_PARAMS";
-	private static final String APP_PARAMS_ID_SEQ = "APP_PARAMS_ID_SEQ";
+	public static final String APP_PARAMS_ID_SEQ = "APP_PARAMS_ID_SEQ";
 	private static final Logger LOG = LoggerFactory.getLogger(PatchCreateParamsTable.class);
 
 	public PatchCreateParamsTable() {

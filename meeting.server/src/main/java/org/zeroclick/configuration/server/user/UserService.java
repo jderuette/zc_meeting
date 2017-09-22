@@ -4,6 +4,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import org.eclipse.scout.rt.platform.BEANS;
@@ -415,6 +416,26 @@ public class UserService extends CommonService implements IUserService {
 			}
 		}
 		return allUserIds;
+	}
+
+	@Override
+	public void addSubFreeToAllUsers() {
+		LOG.info("Adding role 'subscription free' to All existing users");
+		final Long roleId = 3l;
+		final Set<Long> users = this.getAllUserId();
+
+		if (null != users && users.size() > 0) {
+			final Iterator<Long> itUsers = users.iterator();
+			while (itUsers.hasNext()) {
+				final Long userId = itUsers.next();
+				try {
+					SQL.insert(SQLs.USER_ROLE_INSERT_SAMPLE + " VALUES (" + userId + ", 3)");
+				} catch (final Exception ex) {
+					LOG.warn("Error while trying to insert Role " + roleId + " to User :" + userId
+							+ " continuing to next User", ex);
+				}
+			}
+		}
 	}
 
 }

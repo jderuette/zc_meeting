@@ -191,6 +191,18 @@ public class DatabaseHelper {
 		this.addPermissionToRole(2, permissionName, level);
 	}
 
+	public void addSubFreePermission(final String permissionName, final Integer level) {
+		this.addPermissionToRole(3, permissionName, level);
+	}
+
+	public void addSubProPermission(final String permissionName, final Integer level) {
+		this.addPermissionToRole(4, permissionName, level);
+	}
+
+	public void addSubBusinessPermission(final String permissionName, final Integer level) {
+		this.addPermissionToRole(5, permissionName, level);
+	}
+
 	public void addPermissionToRole(final Integer roleId, final String permissionName, final Integer level) {
 		SQL.insert(SQLs.ROLE_PERMISSION_INSERT_SAMPLE + SQLs.ROLE_GENERIC_VALUES_ADD
 				.replaceAll("__roleId__", String.valueOf(roleId)).replaceAll("__permissionName__", permissionName)

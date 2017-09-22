@@ -50,4 +50,6 @@ public interface IUserService extends IService {
 
 	Set<Long> getAllUserId();
 
+	void addSubFreeToAllUsers();
+
 }

@@ -13,16 +13,26 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.zeroclick.meeting.client.event;
+package org.zeroclick.configuration.shared.params;
 
-import org.zeroclick.meeting.client.clientnotification.AbstractObservableModelNotificationHandler;
-import org.zeroclick.meeting.shared.event.EventCreatedNotification;
+import org.zeroclick.common.params.AppParamsFormData;
 
 /**
  * @author djer
  *
  */
-public class EventCreatedNotificationHandler
-		extends AbstractObservableModelNotificationHandler<EventCreatedNotification> {
+public class ParamCreatedNotification extends AbstractParamNotification {
 
+	public ParamCreatedNotification(final AppParamsFormData newParam) {
+		super(newParam);
+	}
+
+	private static final long serialVersionUID = 2548055966915176806L;
+
+	@Override
+	public String toString() {
+		final StringBuilder builder = new StringBuilder(50);
+		builder.append("ParamCreatedNotification [eventForm=").append(super.getParamForm()).append(']');
+		return builder.toString();
+	}
 }

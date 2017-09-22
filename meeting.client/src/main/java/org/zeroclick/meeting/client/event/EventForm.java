@@ -28,6 +28,8 @@ import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
 import org.zeroclick.common.text.TextsHelper;
 import org.zeroclick.configuration.client.user.UserForm;
+import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
+import org.zeroclick.configuration.shared.subscription.SubscriptionHelper.SubscriptionHelperData;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.configuration.shared.venue.VenueLookupCall;
@@ -49,7 +51,6 @@ import org.zeroclick.meeting.client.event.EventForm.MainBox.StartDateField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.StateField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.SubjectField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.VenueField;
-import org.zeroclick.meeting.shared.event.CreateEventPermission;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.KnowEmailLookupCall;
@@ -490,7 +491,11 @@ public class EventForm extends AbstractForm {
 
 			this.getForm().setDisplayHint(IForm.DISPLAY_HINT_DIALOG);
 
-			EventForm.this.setEnabledPermission(new CreateEventPermission());
+			final SubscriptionHelper subHelper = BEANS.get(SubscriptionHelper.class);
+
+			final SubscriptionHelperData subscriptionData = subHelper.canCreateEvent();
+			EventForm.this.setVisibleGranted(subscriptionData.isAccessAllowed());
+			EventForm.this.setEnabledGranted(subscriptionData.isAccessAllowed());
 		}
 
 		@Override

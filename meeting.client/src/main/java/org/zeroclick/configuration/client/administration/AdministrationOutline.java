@@ -22,6 +22,7 @@ import org.eclipse.scout.rt.client.ui.desktop.outline.pages.IPage;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
+import org.zeroclick.common.params.AppParamsTablePage;
 import org.zeroclick.configuration.client.role.PermissionTablePage;
 import org.zeroclick.configuration.client.role.RoleTablePage;
 import org.zeroclick.configuration.client.user.UserTablePage;
@@ -60,6 +61,14 @@ public class AdministrationOutline extends AbstractOutline {
 		userTablePage.setVisibleGranted(
 				ACCESS.getLevel(new ReadUserPermission((Long) null)) >= ReadUserPermission.LEVEL_OWN);
 		pageList.add(userTablePage);
+
+		final AppParamsTablePage appParamsTablePage = new AppParamsTablePage();
+		// FIXME Djer13 Allow only "admin" to view/edit global app params
+		// appParamsTablePage.setVisibleGranted(ACCESS.getLevel(new
+		// ReadAppParamsPermission((Long) null)) >=
+		// ReadAppParamsPermission.LEVEL_OWN);
+		pageList.add(appParamsTablePage);
+
 	}
 
 	@Override

@@ -1,12 +1,15 @@
 package org.zeroclick.meeting.server.event;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.holders.NVPair;
+import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.server.clientnotification.ClientNotificationRegistry;
 import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.eclipse.scout.rt.shared.data.page.AbstractTablePageData;
@@ -16,10 +19,11 @@ import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.CommonService;
+import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
+import org.zeroclick.configuration.shared.subscription.SubscriptionHelper.SubscriptionHelperData;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.meeting.server.sql.SQLs;
-import org.zeroclick.meeting.shared.event.CreateEventPermission;
 import org.zeroclick.meeting.shared.event.EventCreatedNotification;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.EventModifiedNotification;
@@ -76,20 +80,15 @@ public class EventService extends CommonService implements IEventService {
 	}
 
 	@Override
-	public Map<Long, Integer> getUsersWithPendingMeeting() {
+	public Map<Long, Integer> getNbEventsByUser(final String state) {
 		final Map<Long, Integer> users = new HashMap<>();
 
 		final Long currentUser = super.userHelper.getCurrentUserId();
-
 		LOG.debug("Loading pending meeting users with : " + currentUser);
 
-		Object[][] pendingOrganizer;
-		pendingOrganizer = SQL.select(SQLs.EVENT_SELECT_USERS_PENDING_EVENT_GUEST,
-				new NVPair("currentUser", currentUser));
-
-		Object[][] pendingAttendee;
-		pendingAttendee = SQL.select(SQLs.EVENT_SELECT_USERS_PENDING_EVENT_HOST,
-				new NVPair("currentUser", currentUser));
+		final Object[][] pendingOrganizer = this.getEventsByUser(SQLs.EVENT_SELECT_USERS_EVENT_GUEST, state,
+				currentUser);
+		final Object[][] pendingAttendee = this.getEventsByUser(SQLs.EVENT_SELECT_USERS_EVENT_HOST, state, currentUser);
 
 		if (null != pendingOrganizer && pendingOrganizer.length > 0) {
 			for (int i = 0; i < pendingOrganizer.length; i++) {
@@ -115,12 +114,42 @@ public class EventService extends CommonService implements IEventService {
 
 		LOG.debug("List of pending meeting users with : " + currentUser + " : " + users);
 		return users;
+	}
 
+	private Object[][] getEventsByUser(final String sqlBase, final String state, final Long forUser) {
+		if (!forUser.equals(super.userHelper.getCurrentUserId())
+				&& ACCESS.getLevel(new ReadEventPermission((Long) null)) != ReadEventPermission.LEVEL_ALL) {
+			this.throwAuthorizationFailed();
+		}
+
+		Object[][] eventByUsers;
+
+		final StringBuilder eventByUsersSql = new StringBuilder();
+		final List<Object> eventByUsersBindBases = new ArrayList<>();
+
+		eventByUsersSql.append(sqlBase);
+		eventByUsersBindBases.add(new NVPair("currentUser", forUser));
+
+		if (null != state) {
+			eventByUsersSql.append(SQLs.EVENT_SELECT_FILTER_SATE);
+			eventByUsersBindBases.add(new NVPair("state", state));
+		}
+		eventByUsers = SQL.select(eventByUsersSql.toString(),
+				CollectionUtility.toArray(eventByUsersBindBases, Object.class));
+
+		return eventByUsers;
+	}
+
+	@Override
+	public Map<Long, Integer> getUsersWithPendingMeeting() {
+		return this.getNbEventsByUser(null);
 	}
 
 	@Override
 	public EventFormData prepareCreate(final EventFormData formData) {
-		if (!ACCESS.check(new CreateEventPermission())) {
+		final SubscriptionHelper subHelper = BEANS.get(SubscriptionHelper.class);
+		final SubscriptionHelperData subscriptionData = subHelper.canCreateEvent();
+		if (!subscriptionData.isAccessAllowed()) {
 			super.throwAuthorizationFailed();
 		}
 		LOG.debug("PrepareCreate for Event");
@@ -139,7 +168,9 @@ public class EventService extends CommonService implements IEventService {
 
 	@Override
 	public EventFormData create(final EventFormData formData) {
-		if (!ACCESS.check(new CreateEventPermission())) {
+		final SubscriptionHelper subHelper = BEANS.get(SubscriptionHelper.class);
+		final SubscriptionHelperData subscriptionData = subHelper.canCreateEvent();
+		if (!subscriptionData.isAccessAllowed()) {
 			super.throwAuthorizationFailed();
 		}
 		// add a unique event id if necessary

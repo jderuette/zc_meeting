@@ -8,9 +8,18 @@ public class CreateEventPermission extends BasicHierarchyPermission {
 
 	private static final long serialVersionUID = 1L;
 
-	private static final int LEVEL_SUB_PERSO = SubscriptionHelper.LEVEL_SUB_PERSO;
-	private static final int LEVEL_SUB_PRO = SubscriptionHelper.LEVEL_SUB_PRO;
-	private static final int LEVEL_SUB_BUSINESS = SubscriptionHelper.LEVEL_SUB_BUSINESS;
+	public static final int LEVEL_SUB_FREE = SubscriptionHelper.LEVEL_SUB_FREE;
+	public static final int LEVEL_SUB_PRO = SubscriptionHelper.LEVEL_SUB_PRO;
+	public static final int LEVEL_SUB_BUSINESS = SubscriptionHelper.LEVEL_SUB_BUSINESS;
+
+	/**
+	 * Use for to save/load user (role) permissions.
+	 *
+	 * @param level
+	 */
+	public CreateEventPermission(final Integer level) {
+		super(CreateEventPermission.class.getSimpleName() + ".*", level);
+	}
 
 	public CreateEventPermission() {
 		super(CreateEventPermission.class.getSimpleName());

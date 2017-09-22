@@ -19,17 +19,24 @@ import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.action.menu.TableMenuType;
 import org.eclipse.scout.rt.client.ui.basic.cell.Cell;
 import org.eclipse.scout.rt.client.ui.basic.table.ITableRow;
+import org.eclipse.scout.rt.client.ui.messagebox.IMessageBox;
+import org.eclipse.scout.rt.client.ui.messagebox.MessageBoxes;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.exception.VetoException;
+import org.eclipse.scout.rt.platform.html.internal.HtmlPlainBuilder;
+import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
+import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
 import org.zeroclick.common.text.TextsHelper;
+import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
+import org.zeroclick.configuration.shared.subscription.SubscriptionHelper.SubscriptionHelperData;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationEnvProperty;
 import org.zeroclick.meeting.client.NotificationHelper;
@@ -653,7 +660,14 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			@Override
 			protected void execInitAction() {
-				this.setVisiblePermission(new CreateEventPermission());
+				// final SubscriptionHelper subHelper =
+				// BEANS.get(SubscriptionHelper.class);
+				// final SubscriptionHelperData subscriptionData =
+				// subHelper.canCreateEvent();
+				// this.setEnabledGranted(subscriptionData.isAccessAllowed());
+				this.setVisibleGranted(
+						ACCESS.getLevel(new CreateEventPermission()) >= CreateEventPermission.LEVEL_SUB_FREE);
+
 			}
 
 			@Override
@@ -668,10 +682,30 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			@Override
 			protected void execAction() {
-				final EventForm form = new EventForm();
-				// form.addFormListener(new EventFormListener());
-				form.setEnabledPermission(new CreateEventPermission());
-				form.startNew();
+				final SubscriptionHelper subHelper = BEANS.get(SubscriptionHelper.class);
+				final SubscriptionHelperData subscriptionData = subHelper.canCreateEvent();
+
+				if (subscriptionData.isAccessAllowed()) {
+					final EventForm form = new EventForm();
+					// form.setEnabledGranted(subscriptionData.isAccessAllowed());
+					form.setVisibleGranted(
+							ACCESS.getLevel(new CreateEventPermission()) >= CreateEventPermission.LEVEL_SUB_FREE);
+					form.startNew();
+				} else {
+					final int userDecision = MessageBoxes.createYesNo()
+							.withHeader(TEXTS.get("zc.subscription.notAllowed.title"))
+							.withBody(subscriptionData.getUserMessage()).withIconId(Icons.ExclamationMark)
+							.withSeverity(IStatus.WARNING).show();
+
+					if (userDecision == IMessageBox.YES_OPTION) {
+						MessageBoxes.createOk().withHeader("choose").withIconId(Icons.APP_LOGO_64_64)
+								.withHtml(new HtmlPlainBuilder(
+										"<ul><li><a href='https://zoho.com' target='blank'>Pro<a></li><li>business</li></ul>"))
+								.withSeverity(IStatus.INFO).show();
+					} else {
+						// Do nothing
+					}
+				}
 			}
 
 			@Override

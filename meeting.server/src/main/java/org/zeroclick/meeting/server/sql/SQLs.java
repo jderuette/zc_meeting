@@ -65,8 +65,9 @@ public interface SQLs {
 
 	String EVENT_PAGE_DATA_SELECT_INTO = " INTO :{page.eventId}, :{page.organizer}, :{page.organizerEmail}, :{page.duration}, :{page.slot}, :{page.email}, :{page.guestId}, :{page.state}, :{page.reason}, :{page.subject}, :{page.venue}, :{page.startDate}, :{page.endDate}, :{page.externalIdRecipient}, :{page.externalIdOrganizer}";
 
-	String EVENT_SELECT_USERS_PENDING_EVENT_GUEST = "SELECT event_id, organizer FROM EVENT WHERE guest_id=:currentUser";
-	String EVENT_SELECT_USERS_PENDING_EVENT_HOST = "SELECT event_id, guest_id FROM EVENT WHERE organizer=:currentUser";
+	String EVENT_SELECT_USERS_EVENT_GUEST = "SELECT event_id, organizer FROM EVENT WHERE guest_id=:currentUser";
+	String EVENT_SELECT_USERS_EVENT_HOST = "SELECT event_id, guest_id FROM EVENT WHERE organizer=:currentUser";
+	String EVENT_SELECT_FILTER_SATE = " AND state=:state";
 
 	String EVENT_INSERT = "INSERT INTO EVENT (event_id, organizer) " + "VALUES (:eventId, :organizer)";
 
@@ -95,7 +96,7 @@ public interface SQLs {
 
 	String EVENT_INSERT_SAMPLE = "INSERT INTO EVENT (event_id, organizer, organizer_email, duration, slot, email, guest_id, state, subject)";
 	String EVENT_VALUES_01 = " VALUES  (nextval('EVENT_ID_SEQ'), 1, 'djer13@gmail.com', 15, 1, 'jeremie.deruette@gmail.com', 2, 'ASKED', 'Prendre le thé')";
-	String EVENT_VALUES_02 = " VALUES  (nextval('EVENT_ID_SEQ'), 2,'jeremie.deruette@gmail.com', 120, 3, 'bob2@entreporise.com', 1, 'ASKED', 'Do Something')";
+	String EVENT_VALUES_02 = " VALUES  (nextval('EVENT_ID_SEQ'), 2,'jeremie.deruette@gmail.com', 120, 3, 'djer13@gmail.com', 1, 'ASKED', 'Do Something')";
 	String EVENT_VALUES_03 = " VALUES  (nextval('EVENT_ID_SEQ'), 2,'jeremie.deruette@gmail.com', 120, 3, 'djer13@gmail.com', 1, 'REFUSED', 'Do Something else')";
 
 	String EVENT_DROP_TABLE = "DROP TABLE EVENT CASCADE";
@@ -169,6 +170,10 @@ public interface SQLs {
 	String ROLE_VALUES_01 = " VALUES(1, 'Administrator')";
 	String ROLE_VALUES_02 = " VALUES(2, 'Standard')";
 
+	String ROLE_VALUES_SUB_FREE = " VALUES(3, 'zc.user.role.free')";
+	String ROLE_VALUES_SUB_PRO = " VALUES(4, 'zc.user.role.pro')";
+	String ROLE_VALUES_SUB_BUSINESS = " VALUES(5, 'zc.user.role.business')";
+
 	String ROLE_DROP_TABLE = "DROP TABLE ROLE CASCADE";
 
 	/**
@@ -234,6 +239,8 @@ public interface SQLs {
 	String ROLE_PERMISSION_VALUES_108 = " VALUES(2, 'org.zeroclick.configuration.shared.user.UpdateUserPermission', 10)";
 
 	String ROLE_PERMISSION_DROP_TABLE = "DROP TABLE ROLE_PERMISSION CASCADE";
+
+	String ROLE_PERMISSION_CHANGE_CREATE_EVENT_TO_HIERARCHIC = "UPDATE ROLE_PERMISSION SET level=0 WHERE permission='org.zeroclick.meeting.shared.event.CreateEventPermission'";
 
 	/**
 	 * User Role mapping
@@ -318,17 +325,26 @@ public interface SQLs {
 
 	String PARAMS_CREATE_TABLE = "CREATE TABLE APP_PARAMS (param_id INTEGER NOT NULL, key VARCHAR(150), value VARCHAR(250), CONSTRAINT APP_PARAMS_PK PRIMARY KEY (param_id), CONSTRAINT APP_PARAMS_UNIQUE_KEY UNIQUE (key))";
 
+	String PARAMS_PAGE_SELECT = "select param_id, key, value, " + PatchCreateVenue.APP_PARAMS_PATCHED_COLUMN
+			+ " FROM APP_PARAMS WHERE 1=1";
+	String PARAMS_PAGE_DATA_SELECT_INTO = " INTO :{page.paramId}, :{page.key}, :{page.value}, :{page.category}";
+
 	String PARAMS_SELECT = "SELECT param_id, key, value FROM APP_PARAMS WHERE 1=1";
 	String PARAMS_SELECT_WITH_CATEGORY = "SELECT param_id, key, category, value FROM APP_PARAMS WHERE 1=1";
 	String PARAMS_SELECT_FOR_SMART_FIELD = "SELECT key, value FROM APP_PARAMS WHERE 1=1";
+	String PARAMS_SELECT_CATEGORY_FOR_SMART_FIELD = "SELECT DISTINCT category, category FROM APP_PARAMS WHERE 1=1";
 	String PARAMS_SELECT_FILTER_KEY = " AND key=:key";
+	String PARAMS_SELECT_FILTER_ID = " AND param_id=:paramId";
 	String PARAMS_SELECT_FILTER_CATEGORY = " AND category=:category";
 	String PARAMS_SELECT_FILTER_LOOKUP = " <key> AND key=:key</key><text> AND value LIKE :text</text> <all></all>";
+	String PARAMS_SELECT_FILTER_LOOKUP_CATEGORY = " <key> AND category=:category</key><text> AND category LIKE :text</text> <all></all>";
 
-	String PARAMS_INSERT = "INSERT INTO APP_PARAMS (param_id) VALUES (:key)";
+	String PARAMS_SELECT_INTO = " INTO :paramId, :key, :category, :value";
+
+	String PARAMS_INSERT = "INSERT INTO APP_PARAMS (param_id) VALUES (:paramId)";
 
 	String PARAMS_UPDATE = "UPDATE APP_PARAMS SET key=:key value=:value WHERE key=:key";
-	String PARAMS_UPDATE_WITH_CATEGORY = "UPDATE APP_PARAMS SET key=:key, category=:category, value=:value WHERE key=:key";
+	String PARAMS_UPDATE_WITH_CATEGORY = "UPDATE APP_PARAMS SET key=:key, category=:category, value=:value WHERE param_id=:paramId";
 
 	String PARAMS_INSERT_SAMPLE = "INSERT INTO APP_PARAMS (param_id, key, value)";
 	String PARAMS_INSERT_SAMPLE_WITH_CATEGORY = "INSERT INTO APP_PARAMS (param_id, key, category, value)";
@@ -340,6 +356,8 @@ public interface SQLs {
 			+ PatchCreateVenue.APP_PARAMS_PATCHED_COLUMN + " VARCHAR(100)";
 	String PARAMS_INSERT_VALUES_SKYPE = " VALUES(nextval('APP_PARAMS_ID_SEQ'), 'zc.meeting.venue.skype', 'venue', 'zc.meeting.venue.skype')";
 	String PARAMS_INSERT_VALUES_PHONE = " VALUES(nextval('APP_PARAMS_ID_SEQ'), 'zc.meeting.venue.phone', 'venue', 'zc.meeting.venue.phone')";
+
+	String PARAMS_INSERT_VALUES_SUB_FREE_EVENT_LIMIT = " VALUES(nextval('APP_PARAMS_ID_SEQ'), 'subFreeEventLimit', 'subscription', 10)";
 
 	/**
 	 * Slot (and dayDuration) table
@@ -420,7 +438,7 @@ public interface SQLs {
 	 * Subscription table
 	 */
 	String SUBSCRIPTION_CREATE_TABLE = "CREATE TABLE " + PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME
-			+ "(subdcription_id INTEGER NOT NULL, subdcription_code INTEGER NOT NULL, subdcription_name VARCHAR(50) NOT NULL"
+			+ "(subdcription_id INTEGER NOT NULL, subdcription_code INTEGER NOT NULL, subdcription_name VARCHAR(50) NOT NULL, "
 			+ "CONSTRAINT SUBSCRIPTION_PK PRIMARY KEY (subdcription_id))";
 
 	String SUBSCRIBE_CREATE_TABLE = "CREATE TABLE " + PatchCreateSubscription.SUBSCRIBE_TABLE_NAME
@@ -431,8 +449,8 @@ public interface SQLs {
 			+ "CONSTRAINT SUBSCRIBE_USER_FK FOREIGN KEY (user_id) REFERENCES APP_USER(user_id))";
 
 	String SUBSCRIPTION_INSERT_SAMPLE = "INSERT INTO " + PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME
-			+ " (subdcription_id, subdcription_code)";
-	String SUBSCRIPTION_INSERT_VALUES_PERSO = " VALUES(nextval('SUBSCRIPTION_ID_SEQ'), 1, 'zc.meeting.subscription.perso')";
-	String SUBSCRIPTION_INSERT_VALUES_PRO = " VALUES(nextval('SUBSCRIPTION_ID_SEQ'), 2, 'zc.meeting.subscription.pro')";
+			+ " (subdcription_id, subdcription_code, subdcription_name)";
+	String SUBSCRIPTION_INSERT_VALUES_FREE = " VALUES(nextval('SUBSCRIPTION_ID_SEQ'), 1, 'zc.meeting.subscription.free')";
+	String SUBSCRIPTION_INSERT_VALUES_SOLO = " VALUES(nextval('SUBSCRIPTION_ID_SEQ'), 2, 'zc.meeting.subscription.solo')";
 	String SUBSCRIPTION_INSERT_VALUES_BUSINESS = " VALUES(nextval('SUBSCRIPTION_ID_SEQ'), 3, 'zc.meeting.subscription.business')";
 }

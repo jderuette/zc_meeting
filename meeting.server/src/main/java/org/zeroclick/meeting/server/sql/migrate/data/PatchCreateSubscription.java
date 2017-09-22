@@ -15,11 +15,14 @@ limitations under the License.
  */
 package org.zeroclick.meeting.server.sql.migrate.data;
 
+import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher;
+import org.zeroclick.meeting.shared.event.CreateEventPermission;
 
 import com.github.zafarkhaja.semver.Version;
 
@@ -46,7 +49,7 @@ public class PatchCreateSubscription extends AbstractDataPatcher {
 	 */
 	@Override
 	public Version getVersion() {
-		return Version.valueOf("1.1.4");
+		return Version.valueOf("1.1.5");
 	}
 
 	/*
@@ -93,18 +96,39 @@ public class PatchCreateSubscription extends AbstractDataPatcher {
 
 	private void migrateData() {
 		LOG.info("Create Subscription table table upgraing default data");
-		SQL.insert(SQLs.SUBSCRIPTION_INSERT_SAMPLE + SQLs.SUBSCRIPTION_INSERT_VALUES_PERSO);
-		SQL.insert(SQLs.SUBSCRIPTION_INSERT_SAMPLE + SQLs.SUBSCRIPTION_INSERT_VALUES_PRO);
+		SQL.insert(SQLs.SUBSCRIPTION_INSERT_SAMPLE + SQLs.SUBSCRIPTION_INSERT_VALUES_FREE);
+		SQL.insert(SQLs.SUBSCRIPTION_INSERT_SAMPLE + SQLs.SUBSCRIPTION_INSERT_VALUES_SOLO);
 		SQL.insert(SQLs.SUBSCRIPTION_INSERT_SAMPLE + SQLs.SUBSCRIPTION_INSERT_VALUES_BUSINESS);
 
 		// params to indicate limit for free event's users
+		SQL.insert(SQLs.PARAMS_INSERT_SAMPLE_WITH_CATEGORY + SQLs.PARAMS_INSERT_VALUES_SUB_FREE_EVENT_LIMIT);
+
+		// change permission "createEvent" to level 0 for existing roles
+		SQL.insert(SQLs.ROLE_PERMISSION_CHANGE_CREATE_EVENT_TO_HIERARCHIC);
 
 		// add subscriptions roles
 		// roles Event_free, event_pro, event_business
+		SQL.insert(SQLs.ROLE_INSERT_SAMPLE + SQLs.ROLE_VALUES_SUB_FREE);
+		this.getDatabaseHelper().addSubFreePermission("org.zeroclick.meeting.shared.event.CreateEventPermission",
+				CreateEventPermission.LEVEL_SUB_FREE);
+		SQL.insert(SQLs.ROLE_INSERT_SAMPLE + SQLs.ROLE_VALUES_SUB_PRO);
+		this.getDatabaseHelper().addSubProPermission("org.zeroclick.meeting.shared.event.CreateEventPermission",
+				CreateEventPermission.LEVEL_SUB_PRO);
+		SQL.insert(SQLs.ROLE_INSERT_SAMPLE + SQLs.ROLE_VALUES_SUB_BUSINESS);
+		this.getDatabaseHelper().addSubBusinessPermission("org.zeroclick.meeting.shared.event.CreateEventPermission",
+				CreateEventPermission.LEVEL_SUB_BUSINESS);
 
-		// add event_free to all users
+		// add event_free Role to all users
+		final IUserService userService = BEANS.get(IUserService.class);
+		userService.addSubFreeToAllUsers();
 
-		// change permission "createEvent" to level 0 for existings roles
+		// add default roles to manage appParams using GUI (and forms)
+		this.getDatabaseHelper()
+				.addAdminPermission("org.zeroclick.configuration.shared.params.CreateAppParamsPermission", 100);
+		this.getDatabaseHelper().addAdminPermission("org.zeroclick.configuration.shared.params.ReadAppParamsPermission",
+				100);
+		this.getDatabaseHelper()
+				.addAdminPermission("org.zeroclick.configuration.shared.params.UpdateAppParamsPermission", 100);
 	}
 
 	@Override
