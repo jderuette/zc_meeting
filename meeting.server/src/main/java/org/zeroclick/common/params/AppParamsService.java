@@ -67,14 +67,16 @@ public class AppParamsService extends CommonService implements IAppParamsService
 
 	protected Object getData(final String key, final Integer columnNumber) {
 		LOG.debug("Searching app_params for key : " + key);
-		Object paramValue;
+		Object paramValue = null;
 		final Object[][] datas = SQL.select(SQLs.PARAMS_SELECT + SQLs.PARAMS_SELECT_FILTER_KEY, new NVPair("key", key));
 
 		if (null != datas && datas.length == 1) {
 			paramValue = datas[0][columnNumber];
-		} else {
+		} else if (null != datas && datas.length > 1) {
 			LOG.warn("Multiple values for key : " + key + ". Returning the first one");
 			paramValue = datas[0][columnNumber];
+		} else {
+			LOG.warn("No value for key : " + key + ".");
 		}
 
 		return paramValue;

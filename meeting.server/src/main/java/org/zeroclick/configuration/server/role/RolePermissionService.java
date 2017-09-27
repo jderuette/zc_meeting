@@ -16,6 +16,7 @@ limitations under the License.
 package org.zeroclick.configuration.server.role;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.eclipse.scout.rt.platform.BEANS;
@@ -85,7 +86,33 @@ public class RolePermissionService extends CommonService implements IRolePermiss
 
 		final StringBuilder sql = new StringBuilder();
 
-		sql.append(SQLs.USER_ROLE_SELECT).append(SQLs.USER_ROLE_SELECT_FILTER_ROLE);
+		sql.append(SQLs.USER_ROLE_SELECT).append(SQLs.USER_ROLE_SELECT_FILTER_ROLE_ID);
 		return SQL.select(sql.toString(), new NVPair("roleId", roleId));
 	}
+
+	private Object[][] getAllUsersRole() {
+
+		final StringBuilder sql = new StringBuilder();
+
+		sql.append(SQLs.USER_ROLE_SELECT);
+		return SQL.select(sql.toString());
+	}
+
+	@Override
+	public void setDefaultStartDateToExistingUserRole() {
+		LOG.info("Adding default start date to All existing User_Role");
+
+		// Important : start_date MUST be unique, so avoid update in one
+		// statement
+		final Object[][] existingUserRole = this.getAllUsersRole();
+
+		if (null != existingUserRole && existingUserRole.length > 0) {
+			for (int row = 0; row < existingUserRole.length; row++) {
+				final Object[] userRole = existingUserRole[row];
+				SQL.update(SQLs.USER_ROLE_UPDATE_START_DATE_BEFORE_NEW_PK, new NVPair("startDate", new Date()),
+						new NVPair("userId", userRole[0]), new NVPair("roleId", userRole[1]));
+			}
+		}
+	}
+
 }

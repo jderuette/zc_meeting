@@ -10,6 +10,7 @@
  ******************************************************************************/
 package org.zeroclick.meeting.server.sql;
 
+import org.zeroclick.configuration.shared.role.IRoleTypeLookupService;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchAddSlotCode;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateSubscription;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateVenue;
@@ -152,29 +153,52 @@ public interface SQLs {
 
 	String ROLE_CREATE_TABLE = "CREATE TABLE ROLE (role_id INTEGER NOT NULL CONSTRAINT ROLE_PK PRIMARY KEY, name VARCHAR(100))";
 
-	String ROLE_PAGE_SELECT = "SELECT role_id, name FROM ROLE";
+	String ROLE_PAGE_SELECT = "SELECT role_id, name, type FROM ROLE";
 
-	String ROLE_PAGE_DATA_SELECT_INTO = " INTO :{role.roleId}, :{role.roleName}";
+	String ROLE_PAGE_DATA_SELECT_INTO = " INTO :{role.roleId}, :{role.roleName}, :{role.type}";
 
 	String ROLE_INSERT = "INSERT INTO ROLE (role_id) VALUES (:roleId)";
 
-	String ROLE_UPDATE = "UPDATE ROLE SET name=:roleName WHERE role_id=:roleId";
+	String ROLE_UPDATE = "UPDATE ROLE SET name=:roleName, type=:type WHERE role_id=:roleId";
 
-	String ROLE_SELECT = "SELECT role_id, name FROM ROLE WHERE 1=1 AND role_id = :roleId";
-	String ROLE_SELECT_INTO = " INTO :roleId, :roleName";
+	String ROLE_SELECT = "SELECT role_id, name, type FROM ROLE WHERE 1=1 AND role_id = :roleId";
+	String ROLE_SELECT_INTO = " INTO :roleId, :roleName, :type";
 
-	String ROLE_LOOKUP = "SELECT role_id,  name FROM ROLE WHERE 1=1 <key>   AND role_id = :key </key>"
-			+ " <text>  AND UPPER(name) LIKE UPPER('%'||:text||'%') </text> <all> </all>";
+	String ROLE_LOOKUP = "SELECT role_id, name FROM ROLE WHERE 1=1 <key>   AND role_id = :key </key>"
+			+ " <text> AND UPPER(name) LIKE UPPER('%'||:text||'%') </text> <all> </all>";
+
+	String ROLE_LOOKUP_WITHOUT_SUBSCRIPTION = "SELECT role_id, name FROM ROLE WHERE type <> '"
+			+ IRoleTypeLookupService.TYPE_SUBSCRIPTION + "'<key>   AND role_id = :key </key>"
+			+ " <text> AND UPPER(name) LIKE UPPER('%'||:text||'%') </text> <all> </all>";
+
+	String ROLE_LOOKUP_SUBSCRIPTION = "SELECT role_id, name FROM ROLE WHERE type = '"
+			+ IRoleTypeLookupService.TYPE_SUBSCRIPTION + "'<key>   AND role_id = :key </key>"
+			+ " <text> AND UPPER(name) LIKE UPPER('%'||:text||'%') </text> <all> </all>";
+
+	String ROLE_SELECT_TYPE_FOR_SMART_FIELD = "SELECT DISTINCT type, type FROM ROLE WHERE 1=1";
+	String ROLE_SELECT_FILTER_LOOKUP_TYPE = " <key> AND type=:key</key><text> AND type LIKE :text</text> <all></all>";
 
 	String ROLE_INSERT_SAMPLE = "INSERT INTO ROLE (role_id, name)";
+	String ROLE_INSERT_SAMPLE_WITH_TYPE = "INSERT INTO ROLE (role_id, name, type)";
 	String ROLE_VALUES_01 = " VALUES(1, 'Administrator')";
 	String ROLE_VALUES_02 = " VALUES(2, 'Standard')";
 
-	String ROLE_VALUES_SUB_FREE = " VALUES(3, 'zc.user.role.free')";
-	String ROLE_VALUES_SUB_PRO = " VALUES(4, 'zc.user.role.pro')";
-	String ROLE_VALUES_SUB_BUSINESS = " VALUES(5, 'zc.user.role.business')";
+	String ROLE_VALUES_SUB_FREE = " VALUES(3, 'zc.user.role.free', '" + IRoleTypeLookupService.TYPE_SUBSCRIPTION + "')";
+	String ROLE_VALUES_SUB_PRO = " VALUES(4, 'zc.user.role.pro', '" + IRoleTypeLookupService.TYPE_SUBSCRIPTION + "')";
+	String ROLE_VALUES_SUB_BUSINESS = " VALUES(5, 'zc.user.role.business', '" + IRoleTypeLookupService.TYPE_SUBSCRIPTION
+			+ "')";
+
+	String ROLE_DELETE = "DELETE FROM ROLE WHERE role_id=:roleId";
 
 	String ROLE_DROP_TABLE = "DROP TABLE ROLE CASCADE";
+
+	String ROLE_ADD_TYPE = "ALTER TABLE " + PatchCreateSubscription.PATCHED_TABLE_ROLE + " ADD COLUMN "
+			+ PatchCreateSubscription.ADDED_ROLE_COLUMN + " VARCHAR(100)";
+	String ROLE_ADD_DEFAULT_TYPE_TO_EXISTING = "UPDATE " + PatchCreateSubscription.PATCHED_TABLE_ROLE + " SET "
+			+ PatchCreateSubscription.ADDED_ROLE_COLUMN + "='" + IRoleTypeLookupService.TYPE_BUSINESS + "' WHERE "
+			+ PatchCreateSubscription.ADDED_ROLE_COLUMN + " IS NULL";
+	String ROLE_ALTER_TYPE_NOT_NULL = "ALTER TABLE " + PatchCreateSubscription.PATCHED_TABLE_ROLE + " ALTER COLUMN "
+			+ PatchCreateSubscription.ADDED_ROLE_COLUMN + " SET NOT NULL";
 
 	/**
 	 * --- Permission
@@ -240,7 +264,7 @@ public interface SQLs {
 
 	String ROLE_PERMISSION_DROP_TABLE = "DROP TABLE ROLE_PERMISSION CASCADE";
 
-	String ROLE_PERMISSION_CHANGE_CREATE_EVENT_TO_HIERARCHIC = "UPDATE ROLE_PERMISSION SET level=0 WHERE permission='org.zeroclick.meeting.shared.event.CreateEventPermission'";
+	String ROLE_PERMISSION_CHANGE_EVENT_TO_HIERARCHIC = "UPDATE ROLE_PERMISSION SET level=0 WHERE permission='org.zeroclick.meeting.shared.event.CreateEventPermission'";
 
 	/**
 	 * User Role mapping
@@ -248,19 +272,67 @@ public interface SQLs {
 	String USER_ROLE_CREATE_TABLE = "CREATE TABLE USER_ROLE (user_id INTEGER NOT NULL, role_id INTEGER NOT NULL, CONSTRAINT USER_ROLE_PK PRIMARY KEY (user_id, role_id))";
 
 	String USER_ROLE_SELECT = "SELECT user_id, role_id FROM USER_ROLE WHERE 1=1";
-	String USER_ROLE_SELECT_ROLES = "SELECT role_id FROM USER_ROLE WHERE 1=1";
-	String USER_ROLE_SELECT_FILTER_ROLE = " AND role_id=:roleId";
-	String USER_ROLE_SELECT_FILTER_USER = " AND user_id=:currentUser";
+	String USER_ROLE_SELECT_ROLE_ID = "SELECT role_id FROM USER_ROLE WHERE 1=1";
+	String USER_ROLE_SELECT_FILTER_ROLE_ID = " AND role_id=:roleId";
+	String USER_ROLE_SELECT_FILTER_USER = " AND USER_ROLE.user_id=:currentUser";
+
+	String USER_ROLE_SELECT_ACTIVE_SUBSCRIPTION = "SELECT USER_ROLE.role_id FROM USER_ROLE INNER JOIN ROLE ON USER_ROLE.role_id = ROLE.role_id"
+			+ " WHERE " + " user_id=:currentUser AND " + PatchCreateSubscription.ADDED_ROLE_COLUMN + "='"
+			+ IRoleTypeLookupService.TYPE_SUBSCRIPTION + "'" + " AND " + PatchCreateSubscription.ADDED_USER_ROLE_COLUMN
+			+ "=" + "(SELECT MAX(start_date) FROM USER_ROLE INNER JOIN ROLE ON USER_ROLE.role_id = ROLE.role_id WHERE "
+			+ PatchCreateSubscription.ADDED_ROLE_COLUMN + "='" + IRoleTypeLookupService.TYPE_SUBSCRIPTION + "'"
+			+ " AND " + PatchCreateSubscription.ADDED_USER_ROLE_COLUMN + " <= NOW() AND user_id=:currentUser"
+			+ " GROUP BY  " + PatchCreateSubscription.ADDED_ROLE_COLUMN + ")";
+
+	String USER_ROLE_SELECT_SUBSCRIPTIONS_DETAILS = "SELECT USER_ROLE.role_id, USER_ROLE.user_id, USER_ROLE.start_date, ROLE.name, "
+			+ PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME + ".accepted_CPS_date, "
+			+ PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME
+			+ ".accepted_withdrawal_date FROM USER_ROLE INNER JOIN ROLE ON USER_ROLE.role_id = ROLE.role_id LEFT OUTER JOIN "
+			+ PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME + " ON USER_ROLE.role_id="
+			+ PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME + ".role_id AND USER_ROLE.user_id="
+			+ PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME + ".user_id AND USER_ROLE.start_date="
+			+ PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME + ".start_date WHERE ROLE."
+			+ PatchCreateSubscription.ADDED_ROLE_COLUMN + "='" + IRoleTypeLookupService.TYPE_SUBSCRIPTION + "'";
+	String USER_ROLE_SELECT_SUBSCRIPTIONS_DETAILS_INTO = " INTO :{subscriptionDetails.subscribtionId}, :{subscriptionDetails.userId}, :{subscriptionDetails.startDate}, :{subscriptionDetails.name}, :{subscriptionDetails.acceptedCpsDate}, :{subscriptionDetails.acceptedWithdrawalDate}";
 
 	String USER_ROLE_INSERT = "INSERT INTO USER_ROLE (user_id, role_id) VALUES (:userId, :{rolesBox})";
 
-	String USER_ROLE_REMOVE_ALL = "DELETE FROM USER_ROLE WHERE user_id=:userId";
+	String USER_ROLE_REMOVE = "DELETE FROM USER_ROLE WHERE type!=" + IRoleTypeLookupService.TYPE_SUBSCRIPTION
+			+ " user_id=:userId AND role_id=:{rolesBox}";
 
 	String USER_ROLE_INSERT_SAMPLE = "INSERT INTO USER_ROLE (user_id, role_id)";
 	String USER_ROLE_VALUES_01 = " VALUES(1, 1)";
 	String USER_ROLE_VALUES_02 = " VALUES(2, 2)";
 
 	String USER_ROLE_DROP_TABLE = "DROP TABLE USER_ROLE";
+
+	String USER_ROLE_ADD_START_DATE = "ALTER TABLE " + PatchCreateSubscription.PATCHED_TABLE_USER_ROLE + " ADD COLUMN "
+			+ PatchCreateSubscription.ADDED_USER_ROLE_COLUMN + " TIMESTAMP";
+	String USER_ROLE_START_DATE_NOW_TO_EXISTING = "UPDATE " + PatchCreateSubscription.PATCHED_TABLE_USER_ROLE + " set "
+			+ PatchCreateSubscription.ADDED_USER_ROLE_COLUMN + "=now() WHERE "
+			+ PatchCreateSubscription.ADDED_USER_ROLE_COLUMN + " IS NULL";
+	String USER_ROLE_START_DATE_ADD_DEFAULT = "ALTER TABLE " + PatchCreateSubscription.PATCHED_TABLE_USER_ROLE
+			+ "  ALTER COLUMN start_date SET DEFAULT now()";
+	String USER_ROLE_UPDATE_START_DATE_BEFORE_NEW_PK = "UPDATE USER_ROLE set start_date=:startDate where user_id=:userId AND role_id=:roleId";
+
+	String USER_ROLE_PK_DROP = "ALTER TABLE " + PatchCreateSubscription.PATCHED_TABLE_USER_ROLE
+			+ " DROP CONSTRAINT USER_ROLE_PK";
+	String USER_ROLE_PK_ADD_START_DATE = "ALTER TABLE " + PatchCreateSubscription.PATCHED_TABLE_USER_ROLE
+			+ " ADD CONSTRAINT USER_ROLE_PK PRIMARY KEY (user_id, role_id, "
+			+ PatchCreateSubscription.ADDED_USER_ROLE_COLUMN + ")";
+
+	// String USER_ROLE_START_DATE_ADD_UNIQUE = "ALTER TABLE " +
+	// PatchCreateSubscription.PATCHED_TABLE_USER_ROLE
+	// + " ADD CONSTRAINT USER_ROLE_START_DATE UNIQUE (" +
+	// PatchCreateSubscription.ADDED_USER_ROLE_COLUMN + ")";
+	// String USER_ROLE_ROLE_ID_ADD_FK = "ALTER TABLE " +
+	// PatchCreateSubscription.PATCHED_TABLE_USER_ROLE
+	// + " ADD CONSTRAINT USER_ROLE_ROLE_ID_FK FOREIGN KEY (role_id) REFERENCES
+	// ROLE(role_id)";
+	// String USER_ROLE_USER_ID_ADD_FK = "ALTER TABLE " +
+	// PatchCreateSubscription.PATCHED_TABLE_USER_ROLE
+	// + " ADD CONSTRAINT USER_ROLE_USER_ID FOREIGN KEY (user_id) REFERENCES
+	// APP_USER(user_id)";
 
 	/**
 	 * Users permissions
@@ -284,6 +356,7 @@ public interface SQLs {
 	String USER_SELECT_FILTER_EMAIL = " AND email=:email";
 	String USER_SELECT_FILTER_LOGIN = " AND login=:login";
 	String USER_SELECT_INTO = " INTO :userId, :login, :email, :hashedPassword, :timeZone, :invitedBy, :language";
+	String USER_SELECT_INTO_ID_ONLY = " INTO :userId";
 
 	String USER_SELECT_TIME_ZONE = "SELECT time_zone FROM APP_USER WHERE 1=1";
 	String USER_SELECT_INTO_TIME_ZONE = " INTO :timeZone";
@@ -293,7 +366,8 @@ public interface SQLs {
 
 	String USER_SELECT_NOTIFICATION_IDS = "SELECT login, email FROM APP_USER WHERE 1=1";
 
-	String USER_SELECT_INTO_ROLE = " INTO :{rolesBox}";
+	String USER_SELECT_INTO_ROLES = " INTO :{rolesBox}";
+	String USER_SELECT_INTO_SUBSCRIPTION = " INTO :subscriptionBox";
 
 	String USER_SELECT_PASSWORD_FILTER_LOGIN = "select user_id, password FROM APP_USER where login=:login INTO :userId,  :password";
 	String USER_SELECT_PASSWORD_FILTER_EMAIL = "select user_id, password FROM APP_USER where email=:email INTO :userId, :password";
@@ -337,7 +411,7 @@ public interface SQLs {
 	String PARAMS_SELECT_FILTER_ID = " AND param_id=:paramId";
 	String PARAMS_SELECT_FILTER_CATEGORY = " AND category=:category";
 	String PARAMS_SELECT_FILTER_LOOKUP = " <key> AND key=:key</key><text> AND value LIKE :text</text> <all></all>";
-	String PARAMS_SELECT_FILTER_LOOKUP_CATEGORY = " <key> AND category=:category</key><text> AND category LIKE :text</text> <all></all>";
+	String PARAMS_SELECT_FILTER_LOOKUP_CATEGORY = " <key> AND category=:key</key><text> AND category LIKE :text</text> <all></all>";
 
 	String PARAMS_SELECT_INTO = " INTO :paramId, :key, :category, :value";
 
@@ -438,19 +512,24 @@ public interface SQLs {
 	 * Subscription table
 	 */
 	String SUBSCRIPTION_CREATE_TABLE = "CREATE TABLE " + PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME
-			+ "(subdcription_id INTEGER NOT NULL, subdcription_code INTEGER NOT NULL, subdcription_name VARCHAR(50) NOT NULL, "
-			+ "CONSTRAINT SUBSCRIPTION_PK PRIMARY KEY (subdcription_id))";
+			+ "(user_id INTEGER NOT NULL, role_id INTEGER NOT NULL, start_date TIMESTAMP NOT NULL, accepted_CPS_date TIMESTAMP, accepted_withdrawal_date TIMESTAMP,"
+			+ " CONSTRAINT " + PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME
+			+ "_PK PRIMARY KEY (user_id, role_id, start_date)," + " CONSTRAINT "
+			+ PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME
+			+ "_USER_ROLE_FK FOREIGN KEY (user_id, role_id, start_date)" + " REFERENCES USER_ROLE(user_id, role_id,"
+			+ PatchCreateSubscription.ADDED_USER_ROLE_COLUMN + "))";
 
-	String SUBSCRIBE_CREATE_TABLE = "CREATE TABLE " + PatchCreateSubscription.SUBSCRIBE_TABLE_NAME
-			+ "(subdcription_id INTEGER NOT NULL, user_id INTEGER NOT NULL, "
-			+ "CONSTRAINT SUBSCRIBE_PK PRIMARY KEY (subdcription_id, user_id), "
-			+ "CONSTRAINT SUBSCRUIBE_SUBSCRIPTION_FK FOREIGN KEY (subdcription_id) REFERENCES "
-			+ PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME + "(subdcription_id), "
-			+ "CONSTRAINT SUBSCRIBE_USER_FK FOREIGN KEY (user_id) REFERENCES APP_USER(user_id))";
-
-	String SUBSCRIPTION_INSERT_SAMPLE = "INSERT INTO " + PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME
-			+ " (subdcription_id, subdcription_code, subdcription_name)";
-	String SUBSCRIPTION_INSERT_VALUES_FREE = " VALUES(nextval('SUBSCRIPTION_ID_SEQ'), 1, 'zc.meeting.subscription.free')";
-	String SUBSCRIPTION_INSERT_VALUES_SOLO = " VALUES(nextval('SUBSCRIPTION_ID_SEQ'), 2, 'zc.meeting.subscription.solo')";
-	String SUBSCRIPTION_INSERT_VALUES_BUSINESS = " VALUES(nextval('SUBSCRIPTION_ID_SEQ'), 3, 'zc.meeting.subscription.business')";
+	// String SUBSCRIBE_CREATE_TABLE = "CREATE TABLE " +
+	// PatchCreateSubscription.SUBSCRIBE_TABLE_NAME
+	// + "(subdcription_metadata_id INTEGER NOT NULL, user_id INTEGER NOT NULL,
+	// role_id INTEGER NOT NULL "
+	// + "CONSTRAINT SUBSCRIBE_PK PRIMARY KEY (subdcription_metadata_id,
+	// user_id, role_id), "
+	// + "CONSTRAINT SUBSCRUIBE_SUBSCRIPTION_METADATA_FK FOREIGN KEY
+	// (subdcription_metadata_id) REFERENCES "
+	// + PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME + "(subdcription_id), "
+	// + "CONSTRAINT SUBSCRIBE_USER_FK FOREIGN KEY (user_id) REFERENCES
+	// APP_USER(user_id), "
+	// + "CONSTRAINT SUBSCRIBE_ROLE_FK FOREIGN KEY (role_id) REFERENCES
+	// ROLE(role_id))";
 }

@@ -148,6 +148,8 @@ public class UserService extends CommonService implements IUserService {
 				new NVPair("currentUser", currentSelectedUserId));
 
 		this.loadRoles(formData, currentSelectedUserId);
+		this.loadSubscription(formData, currentSelectedUserId);
+		this.loadSubscriptionsDetails(formData, currentSelectedUserId);
 
 		return formData;
 	}
@@ -166,28 +168,87 @@ public class UserService extends CommonService implements IUserService {
 	}
 
 	private void loadRoles(final UserFormData formData, final Long currentSelectedUserId) {
-		final UserFormData formDataRoles = new UserFormData();
-		SQL.selectInto(SQLs.USER_ROLE_SELECT_ROLES + SQLs.USER_ROLE_SELECT_FILTER_USER + SQLs.USER_SELECT_INTO_ROLE,
-				formDataRoles, new NVPair("currentUser", currentSelectedUserId));
-
+		final UserFormData formDataRoles = this.getRoles(currentSelectedUserId);
 		formData.getRolesBox().setValue(formDataRoles.getRolesBox().getValue());
 	}
 
-	private UserFormData loadByEmail(final UserFormData formData) {
+	private UserFormData getRoles(final Long userId) {
+		return this.getRoles(userId, Boolean.FALSE);
+	}
+
+	/**
+	 * On initial load of user (during authentication) permission cannot be
+	 * checked, because we need to gather those permissions....
+	 *
+	 * @param userId
+	 * @param checkcheckAccess
+	 * @return
+	 */
+	private UserFormData getRoles(final Long userId, final Boolean checkcheckAccess) {
+		if (checkcheckAccess && !ACCESS.check(new ReadUserPermission(userId))) {
+			this.throwAuthorizationFailed();
+		}
+		final UserFormData formDataRoles = new UserFormData();
+		SQL.selectInto(SQLs.USER_ROLE_SELECT_ROLE_ID + SQLs.USER_ROLE_SELECT_FILTER_USER + SQLs.USER_SELECT_INTO_ROLES,
+				formDataRoles, new NVPair("currentUser", userId));
+		return formDataRoles;
+	}
+
+	private void loadSubscription(final UserFormData formData, final Long currentSelectedUserId) {
+		final UserFormData formDataRoles = this.getSubscription(currentSelectedUserId);
+		formData.getSubscriptionBox().setValue(formDataRoles.getSubscriptionBox().getValue());
+	}
+
+	private UserFormData getSubscription(final Long userId) {
+		return this.getSubscription(userId, Boolean.FALSE);
+	}
+
+	private UserFormData getSubscription(final Long userId, final Boolean checkAccess) {
+		if (checkAccess && !ACCESS.check(new ReadUserPermission(userId))) {
+			this.throwAuthorizationFailed();
+		}
+		final UserFormData formDataRoles = new UserFormData();
+		SQL.selectInto(SQLs.USER_ROLE_SELECT_ACTIVE_SUBSCRIPTION + SQLs.USER_SELECT_INTO_SUBSCRIPTION, formDataRoles,
+				new NVPair("currentUser", userId));
+		return formDataRoles;
+	}
+
+	private void loadSubscriptionsDetails(final UserFormData formData, final Long currentSelectedUserId) {
+		// TODO Auto-generated method stub
+		final UserFormData formDataSubscriptionsDetails = this.getSubscriptionsDetails(currentSelectedUserId,
+				Boolean.FALSE);
+		formData.getSubscriptionsListTable()
+				.setRows(formDataSubscriptionsDetails.getSubscriptionsListTable().getRows());
+	}
+
+	private UserFormData getSubscriptionsDetails(final Long userId, final Boolean checkAccess) {
+		if (checkAccess && !ACCESS.check(new ReadUserPermission(userId))) {
+			this.throwAuthorizationFailed();
+		}
+		final UserFormData formDataRoles = new UserFormData();
+		SQL.selectInto(
+				SQLs.USER_ROLE_SELECT_SUBSCRIPTIONS_DETAILS + SQLs.USER_ROLE_SELECT_FILTER_USER
+						+ SQLs.USER_ROLE_SELECT_SUBSCRIPTIONS_DETAILS_INTO,
+				new NVPair("subscriptionDetails", formDataRoles.getSubscriptionsListTable()),
+				new NVPair("currentUser", userId));
+		return formDataRoles;
+	}
+
+	private UserFormData loadUserIdByEmail(final UserFormData formData) {
 		// No permission check right now, will be done by standard "load" method
 		// when the userId of this email will be retrieved
 		LOG.debug("Searching userId with email : " + formData.getEmail().getValue());
-		SQL.selectInto(SQLs.USER_SELECT + SQLs.USER_SELECT_FILTER_EMAIL + SQLs.USER_SELECT_INTO, formData);
-		this.loadRoles(formData, formData.getUserId().getValue());
+		SQL.selectInto(SQLs.USER_SELECT_ID_ONLY + SQLs.USER_SELECT_FILTER_EMAIL + SQLs.USER_SELECT_INTO_ID_ONLY,
+				formData);
 		return formData;
 	}
 
-	private UserFormData loadByLogin(final UserFormData formData) {
+	private UserFormData loadUserIdByLogin(final UserFormData formData) {
 		// No permission check right now, will be done by standard "load" method
 		// when the userId of this email will be retrieved
 		LOG.debug("Searching userId with login : " + formData.getLogin().getValue());
-		SQL.selectInto(SQLs.USER_SELECT + SQLs.USER_SELECT_FILTER_LOGIN + SQLs.USER_SELECT_INTO, formData);
-		this.loadRoles(formData, formData.getUserId().getValue());
+		SQL.selectInto(SQLs.USER_SELECT_ID_ONLY + SQLs.USER_SELECT_FILTER_LOGIN + SQLs.USER_SELECT_INTO_ID_ONLY,
+				formData);
 		return formData;
 	}
 
@@ -204,14 +265,86 @@ public class UserService extends CommonService implements IUserService {
 			SQL.update(SQLs.USER_UPDATE_PASSWORD, formData);
 		}
 
-		// Add and Remove UserRoles
-
-		SQL.update(SQLs.USER_ROLE_REMOVE_ALL, formData);
-		SQL.update(SQLs.USER_ROLE_INSERT, formData);
+		this.updatesRoles(formData);
+		this.updateSubscriptions(formData);
 
 		this.sendModifiedNotifications(formData);
 
 		return formData;
+	}
+
+	/**
+	 * Add and remove roles
+	 *
+	 * @param formData
+	 */
+	private void updatesRoles(final UserFormData formData) {
+		final UserFormData existingUserRoles = this.getRoles(formData.getUserId().getValue(), Boolean.TRUE);
+
+		final Set<Long> addedRoles = this.getItemsAdded(existingUserRoles.getRolesBox().getValue(),
+				formData.getRolesBox().getValue());
+		final Set<Long> removedRoles = this.getItemsRemoved(existingUserRoles.getRolesBox().getValue(),
+				formData.getRolesBox().getValue());
+
+		// TODO Djer13 : for "standard" roles history is lost. Use something
+		// similar to Subscriptions ? (How to add a "role" which discard the old
+		// one ?)
+		if (!addedRoles.isEmpty()) {
+			LOG.info("Adding new roles : " + addedRoles + " for User " + formData.getUserId().getValue());
+			SQL.update(SQLs.USER_ROLE_INSERT, new NVPair("userId", formData.getUserId().getValue()),
+					new NVPair("rolesBox", addedRoles));
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("No new roles to add for user " + formData.getUserId().getValue());
+			}
+		}
+		if (!removedRoles.isEmpty()) {
+			LOG.info("Removing roles : " + removedRoles + " for User " + formData.getUserId().getValue());
+			SQL.update(SQLs.USER_ROLE_REMOVE, new NVPair("userId", formData.getUserId().getValue()),
+					new NVPair("rolesBox", removedRoles));
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("No roles to remove for user " + formData.getUserId().getValue());
+			}
+		}
+	}
+
+	private void updateSubscriptions(final UserFormData formData) {
+		final UserFormData existingUserSubscription = this.getSubscription(formData.getUserId().getValue(),
+				Boolean.TRUE);
+		final Long existingSubscription = existingUserSubscription.getSubscriptionBox().getValue();
+		final Long newSubscription = formData.getSubscriptionBox().getValue();
+
+		if (existingSubscription != newSubscription) {
+			// Only add the new one, the oldest will be discarded as a more
+			// recent exists
+			LOG.info("Siwtching user subscription from  : " + existingSubscription + " to " + newSubscription
+					+ " for User " + formData.getUserId().getValue());
+			SQL.update(SQLs.USER_ROLE_INSERT, new NVPair("userId", formData.getUserId().getValue()),
+					new NVPair("rolesBox", newSubscription));
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("No subscription modification detected for user " + formData.getUserId().getValue());
+			}
+		}
+	}
+
+	private Set<Long> getItemsAdded(final Set<Long> existingItems, final Set<Long> newItems) {
+		final Set<Long> itemsAdded = new HashSet<>();
+		if (null != newItems) {
+			itemsAdded.addAll(newItems);
+			itemsAdded.removeAll(existingItems);
+		}
+		return itemsAdded;
+	}
+
+	private Set<Long> getItemsRemoved(final Set<Long> existingItems, final Set<Long> newItems) {
+		final Set<Long> itemsRemoved = new HashSet<>();
+		if (null != existingItems) {
+			itemsRemoved.addAll(existingItems);
+			itemsRemoved.removeAll(newItems);
+		}
+		return itemsRemoved;
 	}
 
 	@Override
@@ -368,10 +501,10 @@ public class UserService extends CommonService implements IUserService {
 	public Long getUserId(final String loginOrEmail) {
 		final UserFormData formData = new UserFormData();
 		formData.getEmail().setValue(loginOrEmail.toLowerCase());
-		this.loadByEmail(formData);
+		this.loadUserIdByEmail(formData);
 		if (null == formData.getUserId().getValue()) {
 			formData.getLogin().setValue(loginOrEmail.toLowerCase());
-			this.loadByLogin(formData);
+			this.loadUserIdByLogin(formData);
 		}
 
 		return formData.getUserId().getValue();
@@ -383,7 +516,7 @@ public class UserService extends CommonService implements IUserService {
 		// event Organizer to get the guest UserId (by Email)
 		final UserFormData formData = new UserFormData();
 		formData.getEmail().setValue(email.toLowerCase());
-		this.loadByEmail(formData);
+		this.loadUserIdByEmail(formData);
 		return formData.getUserId().getValue();
 	}
 
@@ -437,5 +570,4 @@ public class UserService extends CommonService implements IUserService {
 			}
 		}
 	}
-
 }

@@ -38,12 +38,21 @@ public class RoleFormData extends AbstractFormData {
 		return getFieldByClass(RoleName.class);
 	}
 
+	public Type getType() {
+		return getFieldByClass(Type.class);
+	}
+
 	public static class RoleIdProperty extends AbstractPropertyData<Integer> {
 
 		private static final long serialVersionUID = 1L;
 	}
 
 	public static class RoleName extends AbstractValueFieldData<String> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class Type extends AbstractValueFieldData<String> {
 
 		private static final long serialVersionUID = 1L;
 	}

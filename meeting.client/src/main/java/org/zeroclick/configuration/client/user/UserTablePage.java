@@ -237,6 +237,5 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 				return 100;
 			}
 		}
-
 	}
 }

@@ -7,16 +7,20 @@ import org.eclipse.scout.rt.client.ui.form.IForm;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractCancelButton;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractOkButton;
 import org.eclipse.scout.rt.client.ui.form.fields.groupbox.AbstractGroupBox;
+import org.eclipse.scout.rt.client.ui.form.fields.smartfield.AbstractProposalField;
 import org.eclipse.scout.rt.client.ui.form.fields.stringfield.AbstractStringField;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
+import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.zeroclick.configuration.client.role.RoleForm.MainBox.CancelButton;
 import org.zeroclick.configuration.client.role.RoleForm.MainBox.OkButton;
 import org.zeroclick.configuration.client.role.RoleForm.MainBox.RoleNameField;
+import org.zeroclick.configuration.client.role.RoleForm.MainBox.TypeField;
 import org.zeroclick.configuration.shared.role.CreateRolePermission;
 import org.zeroclick.configuration.shared.role.IRoleService;
 import org.zeroclick.configuration.shared.role.RoleFormData;
+import org.zeroclick.configuration.shared.role.RoleTypeLookupCall;
 import org.zeroclick.configuration.shared.role.UpdateRolePermission;
 
 @FormData(value = RoleFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
@@ -69,6 +73,10 @@ public class RoleForm extends AbstractForm {
 		return this.getFieldByClass(RoleNameField.class);
 	}
 
+	public TypeField getTypeField() {
+		return this.getFieldByClass(TypeField.class);
+	}
+
 	public OkButton getOkButton() {
 		return this.getFieldByClass(OkButton.class);
 	}
@@ -84,8 +92,31 @@ public class RoleForm extends AbstractForm {
 			}
 
 			@Override
+			protected boolean getConfiguredMandatory() {
+				return Boolean.TRUE;
+			}
+
+			@Override
 			protected int getConfiguredMaxLength() {
 				return 128;
+			}
+		}
+
+		@Order(3000)
+		public class TypeField extends AbstractProposalField<String> {
+			@Override
+			protected String getConfiguredLabel() {
+				return TEXTS.get("zc.user.role.type");
+			}
+
+			@Override
+			protected boolean getConfiguredMandatory() {
+				return Boolean.TRUE;
+			}
+
+			@Override
+			protected Class<? extends ILookupCall<String>> getConfiguredLookupCall() {
+				return RoleTypeLookupCall.class;
 			}
 		}
 

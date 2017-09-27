@@ -15,14 +15,18 @@ limitations under the License.
  */
 package org.zeroclick.meeting.server.sql;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
+import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.holders.NVPair;
 import org.eclipse.scout.rt.platform.holders.StringArrayHolder;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.configuration.server.role.RolePermissionService;
 
 /**
  * @author djer
@@ -203,9 +207,36 @@ public class DatabaseHelper {
 		this.addPermissionToRole(5, permissionName, level);
 	}
 
+	public void removeAdminPermission(final String permissionName) {
+		this.removePermissionToRole(1, permissionName);
+	}
+
+	public void removeStandardUserPermission(final String permissionName) {
+		this.removePermissionToRole(2, permissionName);
+	}
+
+	public void removeSubFreePermission(final String permissionName) {
+		this.removePermissionToRole(3, permissionName);
+	}
+
+	public void removeSubProPermission(final String permissionName) {
+		this.removePermissionToRole(4, permissionName);
+	}
+
+	public void removeSubBusinessPermission(final String permissionName) {
+		this.removePermissionToRole(5, permissionName);
+	}
+
 	public void addPermissionToRole(final Integer roleId, final String permissionName, final Integer level) {
 		SQL.insert(SQLs.ROLE_PERMISSION_INSERT_SAMPLE + SQLs.ROLE_GENERIC_VALUES_ADD
 				.replaceAll("__roleId__", String.valueOf(roleId)).replaceAll("__permissionName__", permissionName)
 				.replaceAll("__level__", String.valueOf(level)));
+	}
+
+	public void removePermissionToRole(final Integer roleId, final String permissionName) {
+		final RolePermissionService rolePermissionService = BEANS.get(RolePermissionService.class);
+		final List<String> permissions = new ArrayList<>();
+		permissions.add(permissionName);
+		rolePermissionService.remove(roleId, permissions);
 	}
 }

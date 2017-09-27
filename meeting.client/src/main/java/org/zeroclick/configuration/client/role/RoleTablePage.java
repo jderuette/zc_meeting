@@ -6,9 +6,11 @@ import org.eclipse.scout.rt.client.dto.Data;
 import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
 import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.action.menu.TableMenuType;
+import org.eclipse.scout.rt.client.ui.basic.cell.Cell;
 import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
 import org.eclipse.scout.rt.client.ui.basic.table.ITableRow;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractIntegerColumn;
+import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractProposalColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractStringColumn;
 import org.eclipse.scout.rt.client.ui.desktop.outline.pages.AbstractPageWithTable;
 import org.eclipse.scout.rt.client.ui.desktop.outline.pages.IPage;
@@ -19,9 +21,11 @@ import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
+import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.zeroclick.configuration.client.role.RoleTablePage.Table;
 import org.zeroclick.configuration.shared.role.IRoleService;
 import org.zeroclick.configuration.shared.role.RoleTablePageData;
+import org.zeroclick.configuration.shared.role.RoleTypeLookupCall;
 import org.zeroclick.meeting.shared.Icons;
 
 @Data(RoleTablePageData.class)
@@ -36,6 +40,7 @@ public class RoleTablePage extends AbstractPageWithTable<Table> {
 	protected IPage<?> execCreateChildPage(final ITableRow row) {
 		final PermissionTablePage page = new PermissionTablePage();
 		page.setRoleId(this.getTable().getRoleIdColumn().getValue(row.getRowIndex()));
+		page.setLeaf(Boolean.TRUE);
 		return page;
 	}
 
@@ -50,7 +55,7 @@ public class RoleTablePage extends AbstractPageWithTable<Table> {
 		public class NewMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {
-				return TEXTS.get("New");
+				return TEXTS.get("zc.user.role.new");
 			}
 
 			@Override
@@ -105,6 +110,10 @@ public class RoleTablePage extends AbstractPageWithTable<Table> {
 			}
 		}
 
+		public TypeColumn getTypeColumn() {
+			return this.getColumnSet().getColumnByClass(TypeColumn.class);
+		}
+
 		public RoleIdColumn getRoleIdColumn() {
 			return this.getColumnSet().getColumnByClass(RoleIdColumn.class);
 		}
@@ -140,7 +149,13 @@ public class RoleTablePage extends AbstractPageWithTable<Table> {
 		public class RoleNameColumn extends AbstractStringColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("Name");
+				return TEXTS.get("zc.user.role.name");
+			}
+
+			@Override
+			protected void execDecorateCell(final Cell cell, final ITableRow row) {
+				final String translated = TEXTS.getWithFallback(cell.getText(), cell.getText());
+				cell.setText(translated);
 			}
 
 			@Override
@@ -148,5 +163,24 @@ public class RoleTablePage extends AbstractPageWithTable<Table> {
 				return 100;
 			}
 		}
+
+		@Order(3000)
+		public class TypeColumn extends AbstractProposalColumn<String> {
+			@Override
+			protected String getConfiguredHeaderText() {
+				return TEXTS.get("zc.user.role.type");
+			}
+
+			@Override
+			protected Class<? extends ILookupCall<String>> getConfiguredLookupCall() {
+				return RoleTypeLookupCall.class;
+			}
+
+			@Override
+			protected int getConfiguredWidth() {
+				return 100;
+			}
+		}
+
 	}
 }

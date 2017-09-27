@@ -700,7 +700,9 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					if (userDecision == IMessageBox.YES_OPTION) {
 						MessageBoxes.createOk().withHeader("choose").withIconId(Icons.APP_LOGO_64_64)
 								.withHtml(new HtmlPlainBuilder(
-										"<ul><li><a href='https://zoho.com' target='blank'>Pro<a></li><li>business</li></ul>"))
+										"<ul><li><a href='https://subscriptions.zoho.com/subscribe/e0c71c8b88c7cb1944d3227cb7edba566a2bba0f6b053217afe8ded60e8a6aa6/TEST_PRO' target='blank'>Pro<a></li>"
+												+ "<li><a href='https://subscriptions.zoho.com/subscribe/e0c71c8b88c7cb1944d3227cb7edba566a2bba0f6b053217afe8ded60e8a6aa6/TEST_BUSINESS' target='_blank'>business</a></li>"
+												+ "</ul>"))
 								.withSeverity(IStatus.INFO).show();
 					} else {
 						// Do nothing

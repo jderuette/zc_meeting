@@ -31,4 +31,9 @@ public interface IRolePermissionService extends IService {
 
 	void remove(Integer roleId, List<String> permissions);
 
+	/**
+	 * To help in data migration (when adding startDate as contributing PK)
+	 */
+	void setDefaultStartDateToExistingUserRole();
+
 }
