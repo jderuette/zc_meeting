@@ -402,8 +402,10 @@ public class ValidateCpsForm extends AbstractForm {
 					final Long subscriptionId = ValidateCpsForm.this.getSubscriptionIdField().getValue();
 					final String url = subscriptionHelper.getSubscriptionPaymentURL(subscriptionId);
 					this.setValue(url);
-					final Boolean requirePayment = subscriptionHelper.isNewSubscriptionForCurrentuser(subscriptionId);
-					if (null != url && requirePayment) {
+					// final Boolean isNewSubscription =
+					// subscriptionHelper.isNewSubscriptionForCurrentuser(subscriptionId);
+					if (null != url) { // payment required if payment URL
+										// configured
 						this.setVisible(Boolean.TRUE);
 						ValidateCpsForm.this.getOkButton().setPayementRequired();
 					}

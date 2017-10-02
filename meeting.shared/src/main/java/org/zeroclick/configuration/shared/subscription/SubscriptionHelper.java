@@ -142,9 +142,13 @@ public class SubscriptionHelper {
 		final String urlFromParams = TextsHelper.get(paramUrlKey);
 		final String urlNameFromParams = TextsHelper.get(paramUrlNameKey);
 
+		String url = null;
 		final StringBuilder sbLink = new StringBuilder(64);
-		sbLink.append("<a href='").append(urlFromParams).append("' target='_blank'>").append(urlNameFromParams)
-				.append("</a>");
+		if (null != urlFromParams && null != urlNameFromParams) {
+			sbLink.append("<a href='").append(urlFromParams).append("' target='_blank'>").append(urlNameFromParams)
+					.append("</a>");
+			url = sbLink.toString();
+		}
 
 		// if (subscriptionId == 3l) {// free
 		// url = null;
@@ -161,7 +165,7 @@ public class SubscriptionHelper {
 		// } else {
 		// url = "Unknow subscription id";
 		// }
-		return sbLink.toString();
+		return url;
 	}
 
 	public Boolean isNewSubscriptionForCurrentuser(final Long subscriptionId) {
