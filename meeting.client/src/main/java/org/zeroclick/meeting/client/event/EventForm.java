@@ -26,7 +26,7 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
-import org.zeroclick.common.text.TextsHelper;
+import org.zeroclick.comon.text.TextsHelper;
 import org.zeroclick.configuration.client.user.UserForm;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper.SubscriptionHelperData;

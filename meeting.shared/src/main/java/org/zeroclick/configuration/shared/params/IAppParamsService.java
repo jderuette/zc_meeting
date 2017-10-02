@@ -15,9 +15,13 @@ public interface IAppParamsService extends IService {
 
 	void create(String key, String value);
 
+	void create(String key, String value, String category);
+
 	String getValue(String key);
 
 	void store(String key, String value);
+
+	void delete(String key);
 
 	AppParamsFormData prepareCreate(AppParamsFormData formData);
 

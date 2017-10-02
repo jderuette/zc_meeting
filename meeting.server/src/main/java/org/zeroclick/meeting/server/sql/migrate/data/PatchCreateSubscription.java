@@ -20,7 +20,9 @@ import org.eclipse.scout.rt.platform.holders.NVPair;
 import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.configuration.shared.params.IAppParamsService;
 import org.zeroclick.configuration.shared.role.CreateAssignSubscriptionToUserPermission;
+import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher;
@@ -41,6 +43,8 @@ public class PatchCreateSubscription extends AbstractDataPatcher {
 	public static final String ADDED_USER_ROLE_COLUMN = "start_date";
 	public static final String PATCHED_TABLE_ROLE = "ROLE";
 	public static final String ADDED_ROLE_COLUMN = "type";
+
+	private static final String PARAMS_CATEGORY = "subscription";
 
 	private static final String PERMISSION_CREATE_EVENT_NAME = "org.zeroclick.meeting.shared.event.CreateEventPermission";
 
@@ -119,6 +123,7 @@ public class PatchCreateSubscription extends AbstractDataPatcher {
 
 	private void migrateData() {
 		LOG.info("Create Subscription table table upgraing default data");
+		final IAppParamsService appParamsService = BEANS.get(IAppParamsService.class);
 		// params to indicate limit for free event's users
 		SQL.insert(SQLs.PARAMS_INSERT_SAMPLE_WITH_CATEGORY + SQLs.PARAMS_INSERT_VALUES_SUB_FREE_EVENT_LIMIT);
 		SQL.insert(SQLs.PARAMS_INSERT_SAMPLE_WITH_CATEGORY + SQLs.PARAMS_INSERT_VALUES_SUB_INFO_EMAIL);
@@ -171,11 +176,27 @@ public class PatchCreateSubscription extends AbstractDataPatcher {
 				"org.zeroclick.configuration.shared.role.ReadAssignSubscriptionToUserPermission",
 				CreateAssignSubscriptionToUserPermission.LEVEL_OWN);
 
+		// default params for URL for subscriptions
+		appParamsService.create(SubscriptionHelper.PARAM_KEY_URL_BASE + "3", null, PARAMS_CATEGORY);
+		appParamsService.create(SubscriptionHelper.PARAM_KEY_URL_NAME_BASE + "3", null, PARAMS_CATEGORY);
+
+		appParamsService.create(SubscriptionHelper.PARAM_KEY_URL_BASE + "4",
+				"https://subscriptions.zoho.com/subscribe/e0c71c8b88c7cb1944d3227cb7edba566a2bba0f6b053217afe8ded60e8a6aa6/TEST_PRO",
+				PARAMS_CATEGORY);
+		appParamsService.create(SubscriptionHelper.PARAM_KEY_URL_NAME_BASE + "4", "zc.user.role.pro", PARAMS_CATEGORY);
+
+		appParamsService.create(SubscriptionHelper.PARAM_KEY_URL_BASE + "5",
+				"https://subscriptions.zoho.com/subscribe/e0c71c8b88c7cb1944d3227cb7edba566a2bba0f6b053217afe8ded60e8a6aa6/TEST_BUSINESS",
+				PARAMS_CATEGORY);
+		appParamsService.create(SubscriptionHelper.PARAM_KEY_URL_NAME_BASE + "5", "zc.user.role.business",
+				PARAMS_CATEGORY);
+
 	}
 
 	@Override
 	public void undo() {
 		LOG.info("Create Subscription table table downgrading data strcuture");
+		final IAppParamsService appParamsService = BEANS.get(IAppParamsService.class);
 		if (this.getDatabaseHelper().existTable(SUBSCRIPTION_TABLE_NAME)) {
 			this.getDatabaseHelper().dropTable(SUBSCRIPTION_TABLE_NAME, Boolean.TRUE);
 		}
@@ -208,6 +229,15 @@ public class PatchCreateSubscription extends AbstractDataPatcher {
 				.removeAdminPermission("org.zeroclick.configuration.shared.params.ReadAppParamsPermission");
 		this.getDatabaseHelper()
 				.removeAdminPermission("org.zeroclick.configuration.shared.params.UpdateAppParamsPermission");
+
+		if (this.getDatabaseHelper().existTable("APP_PARAMs")) {
+			appParamsService.delete(SubscriptionHelper.PARAM_KEY_URL_BASE + "3");
+			appParamsService.delete(SubscriptionHelper.PARAM_KEY_URL_NAME_BASE + "3");
+			appParamsService.delete(SubscriptionHelper.PARAM_KEY_URL_BASE + "4");
+			appParamsService.delete(SubscriptionHelper.PARAM_KEY_URL_NAME_BASE + "4");
+			appParamsService.delete(SubscriptionHelper.PARAM_KEY_URL_BASE + "5");
+			appParamsService.delete(SubscriptionHelper.PARAM_KEY_URL_NAME_BASE + "5");
+		}
 
 	}
 }

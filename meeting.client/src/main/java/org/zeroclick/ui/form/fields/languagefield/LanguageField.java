@@ -25,7 +25,7 @@ import org.eclipse.scout.rt.platform.nls.NlsLocale;
 import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
-import org.zeroclick.common.text.TextsHelper;
+import org.zeroclick.comon.text.TextsHelper;
 import org.zeroclick.comon.text.UserHelper;
 import org.zeroclick.configuration.shared.user.LanguageLookupCall;
 import org.zeroclick.meeting.client.ClientSession;

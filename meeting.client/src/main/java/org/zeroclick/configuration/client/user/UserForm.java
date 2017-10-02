@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
 import org.zeroclick.common.security.ScoutServiceCredentialVerifier;
-import org.zeroclick.common.text.TextsHelper;
+import org.zeroclick.comon.text.TextsHelper;
 import org.zeroclick.configuration.client.user.UserForm.MainBox.CancelButton;
 import org.zeroclick.configuration.client.user.UserForm.MainBox.ConfirmPasswordField;
 import org.zeroclick.configuration.client.user.UserForm.MainBox.EmailField;

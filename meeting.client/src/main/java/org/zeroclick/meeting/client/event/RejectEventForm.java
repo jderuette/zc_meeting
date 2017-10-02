@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
-import org.zeroclick.common.text.TextsHelper;
+import org.zeroclick.comon.text.TextsHelper;
 import org.zeroclick.meeting.client.ClientSession;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
 import org.zeroclick.meeting.client.NotificationHelper;

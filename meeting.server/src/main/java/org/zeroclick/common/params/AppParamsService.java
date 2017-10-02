@@ -37,8 +37,23 @@ public class AppParamsService extends CommonService implements IAppParamsService
 	public void create(final String key, final String value) {
 		LOG.debug("Creating app_params with key : " + key + " and value : " + value);
 
-		SQL.update(SQLs.PARAMS_INSERT, new NVPair("id", this.getNextId()), new NVPair("key", key),
+		final Long paramId = this.getNextId();
+		SQL.update(SQLs.PARAMS_INSERT, new NVPair("paramId", paramId), new NVPair("key", key),
 				new NVPair("value", value));
+
+		SQL.update(SQLs.PARAMS_UPDATE, new NVPair("paramId", paramId), new NVPair("key", key),
+				new NVPair("value", value));
+	}
+
+	@Override
+	public void create(final String key, final String value, final String category) {
+		LOG.debug("Creating app_params with key : " + key + " and value : " + value + "(category : " + category + ")");
+		final Long paramId = this.getNextId();
+
+		SQL.update(SQLs.PARAMS_INSERT, new NVPair("paramId", paramId));
+
+		SQL.update(SQLs.PARAMS_UPDATE_WITH_CATEGORY, new NVPair("paramId", paramId), new NVPair("key", key),
+				new NVPair("value", value), new NVPair("category", category));
 	}
 
 	@Override
@@ -80,6 +95,12 @@ public class AppParamsService extends CommonService implements IAppParamsService
 		}
 
 		return paramValue;
+	}
+
+	@Override
+	public void delete(final String key) {
+		LOG.debug("Deleting app_params key : " + key);
+		SQL.update(SQLs.PARAMS_DELETE, new NVPair("key", key));
 	}
 
 	protected Long getNextId() {
@@ -163,4 +184,5 @@ public class AppParamsService extends CommonService implements IAppParamsService
 		final Set<String> notifiedUsers = this.buildNotifiedUsers(formData);
 		BEANS.get(ClientNotificationRegistry.class).putForUsers(notifiedUsers, new ParamModifiedNotification(formData));
 	}
+
 }

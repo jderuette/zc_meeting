@@ -24,6 +24,7 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.comon.text.TextsHelper;
 import org.zeroclick.configuration.shared.params.IAppParamsService;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UserFormData;
@@ -43,6 +44,9 @@ public class SubscriptionHelper {
 	public static final int LEVEL_SUB_FREE = 10;
 	public static final int LEVEL_SUB_PRO = 20;
 	public static final int LEVEL_SUB_BUSINESS = 30;
+
+	public static final String PARAM_KEY_URL_BASE = "subscription.payment.url.";
+	public static final String PARAM_KEY_URL_NAME_BASE = "subscription.payment.url.name.";
 
 	public int getLevelForCurrentUser() {
 		return this.collectUserRequirement().getUserRequiredLevel();
@@ -131,19 +135,33 @@ public class SubscriptionHelper {
 	 * @return
 	 */
 	public String getSubscriptionPaymentURL(final Long subscriptionId) {
-		String url = null;
-		if (subscriptionId == 3l) {// free
-			url = null;
-		} else if (subscriptionId == 4l) {// pro
-			url = "<a href='https://subscriptions.zoho.com/subscribe/e0c71c8b88c7cb1944d3227cb7edba566a2bba0f6b053217afe8ded60e8a6aa6/TEST_PRO' target='blank'>"
-					+ TEXTS.get("zc.user.role.pro") + "<a>";
-		} else if (subscriptionId == 5l) {// business
-			url = "<a href='https://subscriptions.zoho.com/subscribe/e0c71c8b88c7cb1944d3227cb7edba566a2bba0f6b053217afe8ded60e8a6aa6/TEST_BUSINESS' target='_blank'>"
-					+ TEXTS.get("zc.user.role.business") + "<a>";
-		} else {
-			url = "Unknow subscription id";
-		}
-		return url;
+		final IAppParamsService appParamService = BEANS.get(IAppParamsService.class);
+		final String paramUrlKey = appParamService.getValue(PARAM_KEY_URL_BASE + subscriptionId);
+		final String paramUrlNameKey = appParamService.getValue(PARAM_KEY_URL_NAME_BASE + subscriptionId);
+
+		final String urlFromParams = TextsHelper.get(paramUrlKey);
+		final String urlNameFromParams = TextsHelper.get(paramUrlNameKey);
+
+		final StringBuilder sbLink = new StringBuilder(64);
+		sbLink.append("<a href='").append(urlFromParams).append("' target='_blank'>").append(urlNameFromParams)
+				.append("</a>");
+
+		// if (subscriptionId == 3l) {// free
+		// url = null;
+		// } else if (subscriptionId == 4l) {// pro
+		// url = "<a
+		// href='https://subscriptions.zoho.com/subscribe/e0c71c8b88c7cb1944d3227cb7edba566a2bba0f6b053217afe8ded60e8a6aa6/TEST_PRO'
+		// target='blank'>"
+		// + TEXTS.get("zc.user.role.pro") + "<a>";
+		// } else if (subscriptionId == 5l) {// business
+		// url = "<a
+		// href='https://subscriptions.zoho.com/subscribe/e0c71c8b88c7cb1944d3227cb7edba566a2bba0f6b053217afe8ded60e8a6aa6/TEST_BUSINESS'
+		// target='_blank'>"
+		// + TEXTS.get("zc.user.role.business") + "<a>";
+		// } else {
+		// url = "Unknow subscription id";
+		// }
+		return sbLink.toString();
 	}
 
 	public Boolean isNewSubscriptionForCurrentuser(final Long subscriptionId) {

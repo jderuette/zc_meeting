@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.zeroclick.common.text;
+package org.zeroclick.comon.text;
 
 import java.util.Locale;
 
@@ -24,6 +24,7 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.shared.user.IUserService;
+import org.zeroclick.meeting.shared.security.AccessControlService;
 
 /**
  * @author djer
@@ -34,8 +35,20 @@ public class TextsHelper extends TEXTS {
 
 	/**
 	 * see TEXTS.get(String)<br/>
-	 * Wrap TEXTS.get to allow locale based on the specified user ID instead
-	 * currentUser locale. Always use the key as default fallback.
+	 * Simillar to TEXTS.get(String) but Always use the key as default fallback.
+	 *
+	 * @param key
+	 * @return
+	 */
+	public static String get(final String key) {
+		final AccessControlService acs = BEANS.get(AccessControlService.class);
+		return get(acs.getZeroClickUserIdOfCurrentSubject(), key);
+	}
+
+	/**
+	 * see TEXTS.get(String)<br/>
+	 * SImillar to TEXTS.get(String) to allow locale based on the specified user
+	 * ID instead currentUser locale. Always use the key as default fallback.
 	 *
 	 * @param key
 	 * @return
