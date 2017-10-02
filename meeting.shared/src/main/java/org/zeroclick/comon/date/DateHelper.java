@@ -18,6 +18,7 @@ package org.zeroclick.comon.date;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DateFormat;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
@@ -40,6 +41,33 @@ import org.slf4j.LoggerFactory;
 @ApplicationScoped
 public class DateHelper {
 	private static final Logger LOG = LoggerFactory.getLogger(DateHelper.class);
+
+	/**
+	 * @deprecated use toZonedDateTime(...) instead
+	 * @param date
+	 * @return
+	 */
+	@Deprecated
+	public LocalDateTime toLocalDateTime(final Date date) {
+		LocalDateTime localDateTime = null;
+		if (null != date) {
+			localDateTime = LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
+		}
+
+		return localDateTime;
+	}
+
+	/**
+	 * deprecated use toDate(ZonedDateTime) instead
+	 *
+	 * @deprecated
+	 * @param localDateTime
+	 * @return
+	 */
+	@Deprecated
+	public Date toDate(final LocalDateTime localDateTime) {
+		return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+	}
 
 	public ZonedDateTime getZonedValue(final ZoneId userZoneId, final Date value) {
 		ZonedDateTime zdt = null;

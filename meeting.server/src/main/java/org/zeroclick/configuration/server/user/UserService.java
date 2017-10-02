@@ -3,6 +3,7 @@ package org.zeroclick.configuration.server.user;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -19,6 +20,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.CommonService;
 import org.zeroclick.configuration.shared.onboarding.OnBoardingUserFormData;
+import org.zeroclick.configuration.shared.role.CpsAcceptedNotification;
+import org.zeroclick.configuration.shared.role.CreateAssignSubscriptionToUserPermission;
+import org.zeroclick.configuration.shared.role.ReadAssignSubscriptionToUserPermission;
+import org.zeroclick.configuration.shared.role.UpdateAssignSubscriptionToUserPermission;
 import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.configuration.shared.user.CreateUserPermission;
 import org.zeroclick.configuration.shared.user.IUserService;
@@ -27,7 +32,9 @@ import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.configuration.shared.user.UserModifiedNotification;
 import org.zeroclick.configuration.shared.user.UserTablePageData;
+import org.zeroclick.configuration.shared.user.ValidateCpsFormData;
 import org.zeroclick.meeting.server.sql.SQLs;
+import org.zeroclick.meeting.shared.security.AccessControlService;
 
 public class UserService extends CommonService implements IUserService {
 
@@ -37,6 +44,7 @@ public class UserService extends CommonService implements IUserService {
 
 	public static final Long[] DEFAULT_ROLES_VALUES = new Long[] { 2l };
 	public static final Set<Long> DEFAULT_ROLES = new HashSet<>(Arrays.asList(DEFAULT_ROLES_VALUES));
+	public static final Long DEFAULT_SUBSCRIPTION = 3l;;
 
 	@Override
 	public UserTablePageData getUserTableData(final SearchFilter filter) {
@@ -69,8 +77,10 @@ public class UserService extends CommonService implements IUserService {
 		if (formData.getAutofilled()) {
 			// TODO Djer13 create specific create level (5) for autofilled
 			// created user ?
-			LOG.info("Create user autoFilled enabled reseting advanced value (role forced to 'Standard')");
+			LOG.info(
+					"Create user autoFilled enabled reseting advanced value (role forced to 'Standard', subscription to 'free')");
 			formData.getRolesBox().setValue(DEFAULT_ROLES);
+			formData.getSubscriptionBox().setValue(DEFAULT_SUBSCRIPTION);
 
 			formData.setInvitedBy(super.userHelper.getCurrentUserId());
 		} else {
@@ -148,8 +158,24 @@ public class UserService extends CommonService implements IUserService {
 				new NVPair("currentUser", currentSelectedUserId));
 
 		this.loadRoles(formData, currentSelectedUserId);
-		this.loadSubscription(formData, currentSelectedUserId);
+		this.loadCurrentSubscription(formData, currentSelectedUserId);
 		this.loadSubscriptionsDetails(formData, currentSelectedUserId);
+
+		formData.setActiveSubscriptionValid(this.isActiveSubscriptionValid(currentSelectedUserId, Boolean.FALSE));
+
+		return formData;
+	}
+
+	@Override
+	public ValidateCpsFormData load(final ValidateCpsFormData formData) {
+		if (!ACCESS.check(new ReadAssignSubscriptionToUserPermission(formData.getUserId().getValue()))) {
+			super.throwAuthorizationFailed();
+		}
+
+		// get THIS subscription details
+		SQL.selectInto(SQLs.USER_ROLE_SELECT_SUBSCRIPTIONS_DETAILS + SQLs.USER_ROLE_FILTER_USER_ID
+				+ SQLs.USER_ROLE_FILTER_SUBSCRIPTION_ID + SQLs.USER_ROLE_FILTER_START_DATE
+				+ SQLs.USER_ROLE_SELECT_SUBSCRIPTIONS_DETAILS_INTO_CPS, formData);
 
 		return formData;
 	}
@@ -189,17 +215,18 @@ public class UserService extends CommonService implements IUserService {
 			this.throwAuthorizationFailed();
 		}
 		final UserFormData formDataRoles = new UserFormData();
+		formDataRoles.getUserId().setValue(userId);
 		SQL.selectInto(SQLs.USER_ROLE_SELECT_ROLE_ID + SQLs.USER_ROLE_SELECT_FILTER_USER + SQLs.USER_SELECT_INTO_ROLES,
-				formDataRoles, new NVPair("currentUser", userId));
+				formDataRoles);
 		return formDataRoles;
 	}
 
-	private void loadSubscription(final UserFormData formData, final Long currentSelectedUserId) {
-		final UserFormData formDataRoles = this.getSubscription(currentSelectedUserId);
+	private void loadCurrentSubscription(final UserFormData formData, final Long currentSelectedUserId) {
+		final UserFormData formDataRoles = this.getCurrentSubscription(currentSelectedUserId);
 		formData.getSubscriptionBox().setValue(formDataRoles.getSubscriptionBox().getValue());
 	}
 
-	private UserFormData getSubscription(final Long userId) {
+	private UserFormData getCurrentSubscription(final Long userId) {
 		return this.getSubscription(userId, Boolean.FALSE);
 	}
 
@@ -207,10 +234,40 @@ public class UserService extends CommonService implements IUserService {
 		if (checkAccess && !ACCESS.check(new ReadUserPermission(userId))) {
 			this.throwAuthorizationFailed();
 		}
-		final UserFormData formDataRoles = new UserFormData();
-		SQL.selectInto(SQLs.USER_ROLE_SELECT_ACTIVE_SUBSCRIPTION + SQLs.USER_SELECT_INTO_SUBSCRIPTION, formDataRoles,
-				new NVPair("currentUser", userId));
-		return formDataRoles;
+		final UserFormData formDataSubscription = new UserFormData();
+		formDataSubscription.getUserId().setValue(userId);
+		SQL.selectInto(SQLs.USER_ROLE_SELECT_ACTIVE_SUBSCRIPTION + SQLs.USER_SELECT_INTO_SUBSCRIPTION,
+				formDataSubscription);
+		return formDataSubscription;
+	}
+
+	private Object[][] getActiveSubscriptionDetails(final Long userId, final Boolean checkAccess) {
+		if (checkAccess && !ACCESS.check(new ReadUserPermission(userId))) {
+			this.throwAuthorizationFailed();
+		}
+		final UserFormData formDataSubscription = new UserFormData();
+		formDataSubscription.getUserId().setValue(userId);
+		final Object[][] datas = SQL.select(SQLs.USER_ROLE_SELECT_ACTIVE_SUBSCRIPTION_DETAILS, formDataSubscription);
+		return datas;
+	}
+
+	private Boolean isActiveSubscriptionValid(final Long userId, final Boolean checkAccess) {
+		final Object[][] datas = this.getActiveSubscriptionDetails(userId, checkAccess);
+		Boolean subscriptionValid = Boolean.FALSE;
+		if (null != datas && datas.length > 0) {
+			final Long subscriptionId = (Long) datas[0][0];
+
+			if (subscriptionId == 3l) { // free
+				subscriptionValid = Boolean.TRUE;
+			} else {
+				final Object acceptedCpsDateData = datas[0][3];
+				final Object accepteWithdrawDateData = datas[0][4];
+				if (null != acceptedCpsDateData && null != accepteWithdrawDateData) {
+					subscriptionValid = Boolean.TRUE;
+				}
+			}
+		}
+		return subscriptionValid;
 	}
 
 	private void loadSubscriptionsDetails(final UserFormData formData, final Long currentSelectedUserId) {
@@ -225,13 +282,14 @@ public class UserService extends CommonService implements IUserService {
 		if (checkAccess && !ACCESS.check(new ReadUserPermission(userId))) {
 			this.throwAuthorizationFailed();
 		}
-		final UserFormData formDataRoles = new UserFormData();
+		final UserFormData formDataSubscriptions = new UserFormData();
+		formDataSubscriptions.getUserId().setValue(userId);
 		SQL.selectInto(
 				SQLs.USER_ROLE_SELECT_SUBSCRIPTIONS_DETAILS + SQLs.USER_ROLE_SELECT_FILTER_USER
 						+ SQLs.USER_ROLE_SELECT_SUBSCRIPTIONS_DETAILS_INTO,
-				new NVPair("subscriptionDetails", formDataRoles.getSubscriptionsListTable()),
-				new NVPair("currentUser", userId));
-		return formDataRoles;
+				new NVPair("subscriptionDetails", formDataSubscriptions.getSubscriptionsListTable()),
+				new NVPair("userId", userId));
+		return formDataSubscriptions;
 	}
 
 	private UserFormData loadUserIdByEmail(final UserFormData formData) {
@@ -266,7 +324,11 @@ public class UserService extends CommonService implements IUserService {
 		}
 
 		this.updatesRoles(formData);
+		// Usefull only for admin, dor other user store(ValidateCpsForm) already
+		// do the update
 		this.updateSubscriptions(formData);
+
+		// reset permission cache
 
 		this.sendModifiedNotifications(formData);
 
@@ -279,6 +341,7 @@ public class UserService extends CommonService implements IUserService {
 	 * @param formData
 	 */
 	private void updatesRoles(final UserFormData formData) {
+		final AccessControlService acs = BEANS.get(AccessControlService.class);
 		final UserFormData existingUserRoles = this.getRoles(formData.getUserId().getValue(), Boolean.TRUE);
 
 		final Set<Long> addedRoles = this.getItemsAdded(existingUserRoles.getRolesBox().getValue(),
@@ -293,6 +356,7 @@ public class UserService extends CommonService implements IUserService {
 			LOG.info("Adding new roles : " + addedRoles + " for User " + formData.getUserId().getValue());
 			SQL.update(SQLs.USER_ROLE_INSERT, new NVPair("userId", formData.getUserId().getValue()),
 					new NVPair("rolesBox", addedRoles));
+			acs.clearUserCache(this.buildNotifiedUsers(formData));
 		} else {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("No new roles to add for user " + formData.getUserId().getValue());
@@ -302,6 +366,7 @@ public class UserService extends CommonService implements IUserService {
 			LOG.info("Removing roles : " + removedRoles + " for User " + formData.getUserId().getValue());
 			SQL.update(SQLs.USER_ROLE_REMOVE, new NVPair("userId", formData.getUserId().getValue()),
 					new NVPair("rolesBox", removedRoles));
+			acs.clearUserCache(this.buildNotifiedUsers(formData));
 		} else {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("No roles to remove for user " + formData.getUserId().getValue());
@@ -310,23 +375,41 @@ public class UserService extends CommonService implements IUserService {
 	}
 
 	private void updateSubscriptions(final UserFormData formData) {
-		final UserFormData existingUserSubscription = this.getSubscription(formData.getUserId().getValue(),
+		final AccessControlService acs = BEANS.get(AccessControlService.class);
+		final UserFormData currentSubscriptionData = this.getSubscription(formData.getUserId().getValue(),
 				Boolean.TRUE);
-		final Long existingSubscription = existingUserSubscription.getSubscriptionBox().getValue();
+		final Long currentSubscription = currentSubscriptionData.getSubscriptionBox().getValue();
 		final Long newSubscription = formData.getSubscriptionBox().getValue();
 
-		if (existingSubscription != newSubscription) {
+		if (!currentSubscription.equals(newSubscription)) {
 			// Only add the new one, the oldest will be discarded as a more
 			// recent exists
-			LOG.info("Siwtching user subscription from  : " + existingSubscription + " to " + newSubscription
+			LOG.info("Siwtching user subscription from  : " + currentSubscription + " to " + newSubscription
 					+ " for User " + formData.getUserId().getValue());
-			SQL.update(SQLs.USER_ROLE_INSERT, new NVPair("userId", formData.getUserId().getValue()),
-					new NVPair("rolesBox", newSubscription));
+			this.addSubscriptionAsynch(formData.getUserId().getValue(), newSubscription);
+
+			acs.clearUserCache(this.buildNotifiedUsers(formData));
 		} else {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("No subscription modification detected for user " + formData.getUserId().getValue());
 			}
 		}
+	}
+
+	private void addSubscriptionAsynch(final Long userId, final Long subscriptionId) {
+		final Date startDate = new Date();
+		SQL.update(SQLs.USER_ROLE_INSERT_WITH_START_DATE, new NVPair("userId", userId),
+				new NVPair("rolesBox", subscriptionId), new NVPair("startDate", startDate));
+
+		// empty subscription metadata
+		final ValidateCpsFormData validateCpsFakeFormData = new ValidateCpsFormData();
+		validateCpsFakeFormData.getUserId().setValue(userId);
+		validateCpsFakeFormData.getSubscriptionId().setValue(subscriptionId);
+		validateCpsFakeFormData.getStartDate().setValue(startDate);
+		validateCpsFakeFormData.getAcceptedCpsDate().setValue(null);
+		validateCpsFakeFormData.getAcceptedWithdrawalDate().setValue(null);
+
+		SQL.update(SQLs.USER_ROLE_UPDATE_CPS, validateCpsFakeFormData);
 	}
 
 	private Set<Long> getItemsAdded(final Set<Long> existingItems, final Set<Long> newItems) {
@@ -376,8 +459,54 @@ public class UserService extends CommonService implements IUserService {
 		return formData;
 	}
 
+	@Override
+	public ValidateCpsFormData create(final ValidateCpsFormData formData) {
+		if (!ACCESS.check(new CreateAssignSubscriptionToUserPermission(formData.getUserId().getValue()))) {
+			super.throwAuthorizationFailed();
+		}
+
+		SQL.update(SQLs.USER_ROLE_INSERT_WITH_START_DATE, new NVPair("userId", formData.getUserId().getValue()),
+				new NVPair("rolesBox", formData.getSubscriptionId().getValue()),
+				new NVPair("startDate", formData.getStartDate().getValue()));
+
+		SQL.insert(SQLs.SUBSCRIPTION_INSERT, formData);
+
+		this.store(formData);
+
+		return formData;
+	}
+
+	@Override
+	public ValidateCpsFormData store(final ValidateCpsFormData formData) {
+		if (!ACCESS.check(new UpdateAssignSubscriptionToUserPermission(formData.getUserId().getValue()))) {
+			super.throwAuthorizationFailed();
+		}
+		final AccessControlService acs = BEANS.get(AccessControlService.class);
+
+		LOG.debug("Store CPS User datas for user Id :" + formData.getUserId().getValue()
+				+ " for subscription (role) id : " + formData.getSubscriptionId().getValue());
+
+		SQL.update(SQLs.USER_ROLE_UPDATE_CPS, formData);
+
+		acs.clearUserCache(this.buildNotifiedUsers(formData));
+
+		this.sendModifiedNotifications(formData);
+
+		return formData;
+	}
+
 	private Set<String> buildNotifiedUsers(final UserFormData formData) {
 		// Notify Users for UserUpdate update
+
+		final Set<String> notifiedUsers = new HashSet<>();
+		if (null != formData.getUserId().getValue()) {
+			notifiedUsers.addAll(this.getUserNotificationIds(formData.getUserId().getValue()));
+		}
+		return notifiedUsers;
+	}
+
+	private Set<String> buildNotifiedUsers(final ValidateCpsFormData formData) {
+		// Notify CPS for UserUpdate update
 
 		final Set<String> notifiedUsers = new HashSet<>();
 		if (null != formData.getUserId().getValue()) {
@@ -389,6 +518,11 @@ public class UserService extends CommonService implements IUserService {
 	private void sendModifiedNotifications(final UserFormData formData) {
 		final Set<String> notifiedUsers = this.buildNotifiedUsers(formData);
 		BEANS.get(ClientNotificationRegistry.class).putForUsers(notifiedUsers, new UserModifiedNotification(formData));
+	}
+
+	private void sendModifiedNotifications(final ValidateCpsFormData formData) {
+		final Set<String> notifiedUsers = this.buildNotifiedUsers(formData);
+		BEANS.get(ClientNotificationRegistry.class).putForUsers(notifiedUsers, new CpsAcceptedNotification(formData));
 	}
 
 	@Override
@@ -562,7 +696,7 @@ public class UserService extends CommonService implements IUserService {
 			while (itUsers.hasNext()) {
 				final Long userId = itUsers.next();
 				try {
-					SQL.insert(SQLs.USER_ROLE_INSERT_SAMPLE + " VALUES (" + userId + ", 3)");
+					this.addSubscriptionAsynch(userId, 3l);
 				} catch (final Exception ex) {
 					LOG.warn("Error while trying to insert Role " + roleId + " to User :" + userId
 							+ " continuing to next User", ex);

@@ -17,7 +17,6 @@ import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractOkButton;
 import org.eclipse.scout.rt.client.ui.form.fields.groupbox.AbstractGroupBox;
 import org.eclipse.scout.rt.client.ui.form.fields.listbox.AbstractListBox;
 import org.eclipse.scout.rt.client.ui.form.fields.longfield.AbstractLongField;
-import org.eclipse.scout.rt.client.ui.form.fields.smartfield.AbstractSmartField;
 import org.eclipse.scout.rt.client.ui.form.fields.tabbox.AbstractTabBox;
 import org.eclipse.scout.rt.client.ui.form.fields.tablefield.AbstractTableField;
 import org.eclipse.scout.rt.client.ui.messagebox.MessageBoxes;
@@ -55,7 +54,6 @@ import org.zeroclick.configuration.client.user.UserForm.MainBox.UserDetailBox.Su
 import org.zeroclick.configuration.client.user.UserForm.MainBox.UserIdField;
 import org.zeroclick.configuration.shared.role.CreateAssignToRolePermission;
 import org.zeroclick.configuration.shared.role.RoleLookupCall;
-import org.zeroclick.configuration.shared.role.SubscriptionLookupCall;
 import org.zeroclick.configuration.shared.user.CreateUserPermission;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.ReadUserPermission;
@@ -75,6 +73,7 @@ public class UserForm extends AbstractForm {
 	private Boolean forCreation;
 
 	private String hashedPassword;
+	private Boolean activeSubscriptionValid;
 
 	/**
 	 * Some more advanced field are ignored/replaced
@@ -116,6 +115,16 @@ public class UserForm extends AbstractForm {
 	@FormData
 	public void setInvitedBy(final Long invitedBy) {
 		this.invitedBy = invitedBy;
+	}
+
+	@FormData
+	public Boolean getActiveSubscriptionValid() {
+		return this.activeSubscriptionValid;
+	}
+
+	@FormData
+	public void setActiveSubscriptionValid(final Boolean activeSubscriptionValid) {
+		this.activeSubscriptionValid = activeSubscriptionValid;
 	}
 
 	public UserForm() {
@@ -214,8 +223,8 @@ public class UserForm extends AbstractForm {
 	public void initForm() {
 		super.initForm();
 		this.getSendUserInviteEmailField().setVisible(!this.isMyself());
-		this.getUserIdField().setVisibleGranted(
-				ACCESS.getLevel(new ReadUserPermission((Long) null)) == ReadUserPermission.LEVEL_ALL);
+		final Boolean isSubscirptionAdmin = this.isUserReadAmin();
+		this.getUserIdField().setVisibleGranted(isSubscirptionAdmin);
 	}
 
 	private void initFormAfterLoad() {
@@ -246,6 +255,10 @@ public class UserForm extends AbstractForm {
 		final UserFormData userData = userServcie.getCurrentUserDetails();
 
 		return userData.getEmail().getValue().equalsIgnoreCase(curentUserId);
+	}
+
+	private Boolean isUserReadAmin() {
+		return ACCESS.getLevel(new ReadUserPermission((Long) null)) == ReadUserPermission.LEVEL_ALL;
 	}
 
 	@Order(1000)
@@ -377,20 +390,29 @@ public class UserForm extends AbstractForm {
 		}
 
 		@Order(4250)
-		public class SubscriptionBox extends AbstractSmartField<Long> {
-			@Override
-			protected String getConfiguredLabel() {
-				return TEXTS.get("zc.user.role.subscription");
+		public class SubscriptionBox extends org.zeroclick.configuration.client.user.fields.SubscriptionBox {
+			private Boolean valueChanged = Boolean.FALSE;
+
+			protected Boolean getValueChanged() {
+				return this.valueChanged;
+			}
+
+			protected void setValueChanged(final Boolean valueChanged) {
+				this.valueChanged = valueChanged;
 			}
 
 			@Override
-			protected boolean getConfiguredMandatory() {
-				return Boolean.TRUE;
-			}
-
-			@Override
-			protected Class<? extends ILookupCall<Long>> getConfiguredLookupCall() {
-				return SubscriptionLookupCall.class;
+			protected void execChangedValue() {
+				super.execChangedValue();
+				Boolean changed;
+				if (null == this.getValue() && null == this.getInitValue()) {
+					changed = Boolean.FALSE;
+				} else if (null != this.getValue() && !this.getValue().equals(this.getInitValue())) {
+					changed = Boolean.TRUE;
+				} else {
+					changed = Boolean.TRUE;
+				}
+				this.setValueChanged(changed);
 			}
 		}
 
@@ -431,19 +453,29 @@ public class UserForm extends AbstractForm {
 
 					@Override
 					protected int getConfiguredGridH() {
-						return 3;
+						return UserForm.this.isUserReadAmin() ? 6 : 3;
 					}
 
 					@Override
 					protected void execInitField() {
 						super.execInitField();
-						final Boolean isUserAdmin = ACCESS
-								.getLevel(new ReadUserPermission((Long) null)) == ReadUserPermission.LEVEL_ALL;
-						this.getTable().getSubscribtionIdColumn().setVisibleGranted(isUserAdmin);
-						this.getTable().getUserIdColumn().setVisibleGranted(isUserAdmin);
+						final Boolean isUserAdmin = UserForm.this.isUserReadAmin();
+						this.getTable().getSubscriptionIdColumn().setVisibleGranted(isUserAdmin);
+						this.getTable().getAcceptedCpsDateColumn().setVisibleGranted(isUserAdmin);
+						this.getTable().getAcceptedWithdrawalDateColumn().setVisibleGranted(isUserAdmin);
 					}
 
 					public class Table extends AbstractTable {
+
+						@Override
+						protected boolean getConfiguredTableStatusVisible() {
+							return UserForm.this.isUserReadAmin();
+						}
+
+						@Override
+						protected boolean getConfiguredHeaderEnabled() {
+							return UserForm.this.isUserReadAmin();
+						}
 
 						public AcceptedCpsDateColumn getAcceptedCpsDateColumn() {
 							return this.getColumnSet().getColumnByClass(AcceptedCpsDateColumn.class);
@@ -451,10 +483,6 @@ public class UserForm extends AbstractForm {
 
 						public AcceptedWithdrawalDateColumn getAcceptedWithdrawalDateColumn() {
 							return this.getColumnSet().getColumnByClass(AcceptedWithdrawalDateColumn.class);
-						}
-
-						public UserIdColumn getUserIdColumn() {
-							return this.getColumnSet().getColumnByClass(UserIdColumn.class);
 						}
 
 						public NameColumn getNameColumn() {
@@ -465,12 +493,12 @@ public class UserForm extends AbstractForm {
 							return this.getColumnSet().getColumnByClass(StartDateColumn.class);
 						}
 
-						public SubscribtionIdColumn getSubscribtionIdColumn() {
-							return this.getColumnSet().getColumnByClass(SubscribtionIdColumn.class);
+						public SubscriptionIdColumn getSubscriptionIdColumn() {
+							return this.getColumnSet().getColumnByClass(SubscriptionIdColumn.class);
 						}
 
 						@Order(1000)
-						public class SubscribtionIdColumn extends AbstractLongColumn {
+						public class SubscriptionIdColumn extends AbstractLongColumn {
 							@Override
 							protected String getConfiguredHeaderText() {
 								return TEXTS.get("zc.user.role.subscription.id");
@@ -482,24 +510,26 @@ public class UserForm extends AbstractForm {
 							}
 						}
 
-						@Order(2000)
-						public class UserIdColumn extends AbstractLongColumn {
-							@Override
-							protected String getConfiguredHeaderText() {
-								return TEXTS.get("zc.user.role.subscription.userId");
-							}
-
-							@Override
-							protected int getConfiguredWidth() {
-								return 50;
-							}
-						}
-
 						@Order(3000)
 						public class StartDateColumn extends AbstractDateColumn {
 							@Override
 							protected String getConfiguredHeaderText() {
 								return TEXTS.get("zc.user.role.subscription.startDate");
+							}
+
+							@Override
+							protected int getConfiguredSortIndex() {
+								return 1;
+							}
+
+							@Override
+							protected boolean getConfiguredSortAscending() {
+								return Boolean.TRUE;
+							}
+
+							@Override
+							protected boolean getConfiguredAlwaysIncludeSortAtBegin() {
+								return UserForm.this.isUserReadAmin();
 							}
 
 							@Override
@@ -617,7 +647,7 @@ public class UserForm extends AbstractForm {
 		protected boolean execValidate() {
 			final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 			notificationHelper.addProcessingNotification("zc.user.notification.modifyingUser");
-			return Boolean.TRUE;
+			return UserForm.this.handleSubscriptionModification();
 		}
 
 		@Override
@@ -641,7 +671,6 @@ public class UserForm extends AbstractForm {
 			final Boolean userEmailNotCurrent = !currentUserId.equals(formData.getEmail().getValue());
 			final Boolean loggedWithEmail = UserForm.this.isUserLoggedWithEmail();
 
-			UserForm.this.prepareSaveSubscription();
 			service.store(formData);
 
 			// hard to know if user use login or email to login. If ONE changed,
@@ -669,14 +698,26 @@ public class UserForm extends AbstractForm {
 	 * Add the subscription key to the role box. Subscriptions ARE roles, with
 	 * different UI
 	 */
-	protected void prepareSaveSubscription() {
-		final Long subscriptionValue = UserForm.this.getSubscriptionBox().getValue();
+	protected Boolean handleSubscriptionModification() {
+		Boolean subscriptionAndCpsValid = Boolean.TRUE;
+		if (UserForm.this.getSubscriptionBox().getValueChanged()) {
+			if (this.isMyself()) {
+				final ValidateCpsForm validateCpsForm = new ValidateCpsForm();
+				validateCpsForm.getUserIdField().setValue(this.getUserIdField().getValue());
+				validateCpsForm.getSubscriptionIdField().setValue(this.getSubscriptionBox().getValue());
+				validateCpsForm.setModal(Boolean.TRUE);
+				validateCpsForm.startNew(this.getSubscriptionBox().getValue());
 
-		if (null != subscriptionValue) {
-			UserForm.this.getRolesBox().checkKey(subscriptionValue);
-			UserForm.this.getRolesBox().touch();
+				validateCpsForm.waitFor();
+
+				if (!validateCpsForm.isFormStored()) {
+					this.getSubscriptionBox().resetValue();
+					;
+					subscriptionAndCpsValid = Boolean.FALSE;
+				}
+			}
 		}
-
+		return subscriptionAndCpsValid;
 	}
 
 	public class NewHandler extends AbstractFormHandler {
@@ -728,7 +769,7 @@ public class UserForm extends AbstractForm {
 			formData.setAutofilled(Boolean.FALSE);
 		}
 
-		this.prepareSaveSubscription();
+		this.handleSubscriptionModification();
 
 		final UserFormData savedData = service.create(formData);
 

@@ -50,6 +50,15 @@ public interface IUserService extends IService {
 
 	Set<Long> getAllUserId();
 
+	/**
+	 * For data migration
+	 */
 	void addSubFreeToAllUsers();
+
+	ValidateCpsFormData load(ValidateCpsFormData formData);
+
+	ValidateCpsFormData store(ValidateCpsFormData formData);
+
+	ValidateCpsFormData create(ValidateCpsFormData formData);
 
 }

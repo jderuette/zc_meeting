@@ -24,7 +24,6 @@ import org.eclipse.scout.rt.client.ui.messagebox.MessageBoxes;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.exception.VetoException;
-import org.eclipse.scout.rt.platform.html.internal.HtmlPlainBuilder;
 import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
@@ -35,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
 import org.zeroclick.common.text.TextsHelper;
+import org.zeroclick.configuration.client.user.ValidateCpsForm;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper.SubscriptionHelperData;
 import org.zeroclick.configuration.shared.user.IUserService;
@@ -698,12 +698,10 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 							.withSeverity(IStatus.WARNING).show();
 
 					if (userDecision == IMessageBox.YES_OPTION) {
-						MessageBoxes.createOk().withHeader("choose").withIconId(Icons.APP_LOGO_64_64)
-								.withHtml(new HtmlPlainBuilder(
-										"<ul><li><a href='https://subscriptions.zoho.com/subscribe/e0c71c8b88c7cb1944d3227cb7edba566a2bba0f6b053217afe8ded60e8a6aa6/TEST_PRO' target='blank'>Pro<a></li>"
-												+ "<li><a href='https://subscriptions.zoho.com/subscribe/e0c71c8b88c7cb1944d3227cb7edba566a2bba0f6b053217afe8ded60e8a6aa6/TEST_BUSINESS' target='_blank'>business</a></li>"
-												+ "</ul>"))
-								.withSeverity(IStatus.INFO).show();
+						final ValidateCpsForm validateCpsForm = new ValidateCpsForm();
+						validateCpsForm.getUserIdField().setValue(Table.this.getCurrentUserId());
+						validateCpsForm.setModal(Boolean.TRUE);
+						validateCpsForm.startNew();
 					} else {
 						// Do nothing
 					}

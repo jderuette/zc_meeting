@@ -22,6 +22,24 @@ public class UserFormData extends AbstractFormData {
 	private static final long serialVersionUID = 1L;
 
 	/**
+	 * access method for property ActiveSubscriptionValid.
+	 */
+	public Boolean getActiveSubscriptionValid() {
+		return getActiveSubscriptionValidProperty().getValue();
+	}
+
+	/**
+	 * access method for property ActiveSubscriptionValid.
+	 */
+	public void setActiveSubscriptionValid(Boolean activeSubscriptionValid) {
+		getActiveSubscriptionValidProperty().setValue(activeSubscriptionValid);
+	}
+
+	public ActiveSubscriptionValidProperty getActiveSubscriptionValidProperty() {
+		return getPropertyByClass(ActiveSubscriptionValidProperty.class);
+	}
+
+	/**
 	 * access method for property Autofilled.
 	 */
 	public Boolean getAutofilled() {
@@ -117,6 +135,11 @@ public class UserFormData extends AbstractFormData {
 
 	public UserId getUserId() {
 		return getFieldByClass(UserId.class);
+	}
+
+	public static class ActiveSubscriptionValidProperty extends AbstractPropertyData<Boolean> {
+
+		private static final long serialVersionUID = 1L;
 	}
 
 	public static class AutofilledProperty extends AbstractPropertyData<Boolean> {
@@ -215,33 +238,23 @@ public class UserFormData extends AbstractFormData {
 		public static class SubscriptionsListTableRowData extends AbstractTableRowData {
 
 			private static final long serialVersionUID = 1L;
-			public static final String subscribtionId = "subscribtionId";
-			public static final String userId = "userId";
+			public static final String subscriptionId = "subscriptionId";
 			public static final String startDate = "startDate";
 			public static final String name = "name";
 			public static final String acceptedCpsDate = "acceptedCpsDate";
 			public static final String acceptedWithdrawalDate = "acceptedWithdrawalDate";
-			private Long m_subscribtionId;
-			private Long m_userId;
+			private Long m_subscriptionId;
 			private Date m_startDate;
 			private String m_name;
 			private Date m_acceptedCpsDate;
 			private Date m_acceptedWithdrawalDate;
 
-			public Long getSubscribtionId() {
-				return m_subscribtionId;
+			public Long getSubscriptionId() {
+				return m_subscriptionId;
 			}
 
-			public void setSubscribtionId(Long newSubscribtionId) {
-				m_subscribtionId = newSubscribtionId;
-			}
-
-			public Long getUserId() {
-				return m_userId;
-			}
-
-			public void setUserId(Long newUserId) {
-				m_userId = newUserId;
+			public void setSubscriptionId(Long newSubscriptionId) {
+				m_subscriptionId = newSubscriptionId;
 			}
 
 			public Date getStartDate() {

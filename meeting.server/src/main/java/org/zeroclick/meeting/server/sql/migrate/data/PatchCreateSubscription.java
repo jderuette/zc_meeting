@@ -20,6 +20,7 @@ import org.eclipse.scout.rt.platform.holders.NVPair;
 import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.configuration.shared.role.CreateAssignSubscriptionToUserPermission;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher;
@@ -41,7 +42,7 @@ public class PatchCreateSubscription extends AbstractDataPatcher {
 	public static final String PATCHED_TABLE_ROLE = "ROLE";
 	public static final String ADDED_ROLE_COLUMN = "type";
 
-	private static final String PERMISSION_CREATE_NAME = "org.zeroclick.meeting.shared.event.CreateEventPermission";
+	private static final String PERMISSION_CREATE_EVENT_NAME = "org.zeroclick.meeting.shared.event.CreateEventPermission";
 
 	private static final Logger LOG = LoggerFactory.getLogger(PatchCreateSubscription.class);
 
@@ -120,6 +121,7 @@ public class PatchCreateSubscription extends AbstractDataPatcher {
 		LOG.info("Create Subscription table table upgraing default data");
 		// params to indicate limit for free event's users
 		SQL.insert(SQLs.PARAMS_INSERT_SAMPLE_WITH_CATEGORY + SQLs.PARAMS_INSERT_VALUES_SUB_FREE_EVENT_LIMIT);
+		SQL.insert(SQLs.PARAMS_INSERT_SAMPLE_WITH_CATEGORY + SQLs.PARAMS_INSERT_VALUES_SUB_INFO_EMAIL);
 
 		// change permission "createEvent" to level 0 for existing roles
 		SQL.insert(SQLs.ROLE_PERMISSION_CHANGE_EVENT_TO_HIERARCHIC);
@@ -127,11 +129,12 @@ public class PatchCreateSubscription extends AbstractDataPatcher {
 		// add subscriptions roles
 		// roles Event_free, event_pro, event_business
 		SQL.insert(SQLs.ROLE_INSERT_SAMPLE_WITH_TYPE + SQLs.ROLE_VALUES_SUB_FREE);
-		this.getDatabaseHelper().addSubFreePermission(PERMISSION_CREATE_NAME, CreateEventPermission.LEVEL_SUB_FREE);
+		this.getDatabaseHelper().addSubFreePermission(PERMISSION_CREATE_EVENT_NAME,
+				CreateEventPermission.LEVEL_SUB_FREE);
 		SQL.insert(SQLs.ROLE_INSERT_SAMPLE_WITH_TYPE + SQLs.ROLE_VALUES_SUB_PRO);
-		this.getDatabaseHelper().addSubProPermission(PERMISSION_CREATE_NAME, CreateEventPermission.LEVEL_SUB_PRO);
+		this.getDatabaseHelper().addSubProPermission(PERMISSION_CREATE_EVENT_NAME, CreateEventPermission.LEVEL_SUB_PRO);
 		SQL.insert(SQLs.ROLE_INSERT_SAMPLE_WITH_TYPE + SQLs.ROLE_VALUES_SUB_BUSINESS);
-		this.getDatabaseHelper().addSubBusinessPermission(PERMISSION_CREATE_NAME,
+		this.getDatabaseHelper().addSubBusinessPermission(PERMISSION_CREATE_EVENT_NAME,
 				CreateEventPermission.LEVEL_SUB_BUSINESS);
 
 		// add event_free Role to all users
@@ -145,6 +148,29 @@ public class PatchCreateSubscription extends AbstractDataPatcher {
 				100);
 		this.getDatabaseHelper()
 				.addAdminPermission("org.zeroclick.configuration.shared.params.UpdateAppParamsPermission", 100);
+
+		// add permission to asign/modify subscription meta Data
+		// -- for admins
+		this.getDatabaseHelper().addAdminPermission(
+				"org.zeroclick.configuration.shared.role.CreateAssignSubscriptionToUserPermission",
+				CreateAssignSubscriptionToUserPermission.LEVEL_ALL);
+		this.getDatabaseHelper().addAdminPermission(
+				"org.zeroclick.configuration.shared.role.UpdateAssignSubscriptionToUserPermission",
+				CreateAssignSubscriptionToUserPermission.LEVEL_ALL);
+		this.getDatabaseHelper().addAdminPermission(
+				"org.zeroclick.configuration.shared.role.ReadAssignSubscriptionToUserPermission",
+				CreateAssignSubscriptionToUserPermission.LEVEL_ALL);
+		// -- for standard users
+		this.getDatabaseHelper().addStandardUserPermission(
+				"org.zeroclick.configuration.shared.role.CreateAssignSubscriptionToUserPermission",
+				CreateAssignSubscriptionToUserPermission.LEVEL_OWN);
+		this.getDatabaseHelper().addStandardUserPermission(
+				"org.zeroclick.configuration.shared.role.UpdateAssignSubscriptionToUserPermission",
+				CreateAssignSubscriptionToUserPermission.LEVEL_OWN);
+		this.getDatabaseHelper().addStandardUserPermission(
+				"org.zeroclick.configuration.shared.role.ReadAssignSubscriptionToUserPermission",
+				CreateAssignSubscriptionToUserPermission.LEVEL_OWN);
+
 	}
 
 	@Override
@@ -168,11 +194,11 @@ public class PatchCreateSubscription extends AbstractDataPatcher {
 
 		LOG.info("Create Subscription table table downgrading (default) data");
 
-		this.getDatabaseHelper().removeSubFreePermission(PERMISSION_CREATE_NAME);
+		this.getDatabaseHelper().removeSubFreePermission(PERMISSION_CREATE_EVENT_NAME);
 		SQL.insert(SQLs.ROLE_DELETE, new NVPair("roleId", 3));
-		this.getDatabaseHelper().removeSubProPermission(PERMISSION_CREATE_NAME);
+		this.getDatabaseHelper().removeSubProPermission(PERMISSION_CREATE_EVENT_NAME);
 		SQL.insert(SQLs.ROLE_DELETE, new NVPair("roleId", 4));
-		this.getDatabaseHelper().removeSubBusinessPermission(PERMISSION_CREATE_NAME);
+		this.getDatabaseHelper().removeSubBusinessPermission(PERMISSION_CREATE_EVENT_NAME);
 		SQL.insert(SQLs.ROLE_DELETE, new NVPair("roleId", 5));
 
 		// Remove default roles to manage appParams using GUI (and forms)

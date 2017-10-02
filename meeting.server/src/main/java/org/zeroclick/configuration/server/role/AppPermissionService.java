@@ -84,9 +84,16 @@ public class AppPermissionService extends CommonService implements IAppPermissio
 
 		final StringBuilder sql = new StringBuilder();
 
-		sql.append(SQLs.USER_PERMISSIONS_SELECT).append(SQLs.USER_PERMISSIONS_SELECT_FILTER_USER_ID)
+		sql.append(SQLs.USER_PERMISSIONS_SELECT_STANDARD_ROLE).append(SQLs.USER_PERMISSIONS_SELECT_FILTER_USER_ID)
 				.append(SQLs.USER_PERMISSIONS_SELECT_GROUP_BY);
-		return SQL.select(sql.toString(), new NVPair("userId", userId));
+		final Object[][] standardAndActiveSubscription = SQL.select(sql.toString(), new NVPair("userId", userId));
+
+		// Object[][] activeSubscriptionpermisisons =
+		// SQL.select(SQLs.USER_ROLE_SELECT_ACTIVE_SUBSCRIPTION_PERMISSIONS ,
+		// new NVPair("userId", userId));
+
+		return standardAndActiveSubscription;
+
 	}
 
 	@Override

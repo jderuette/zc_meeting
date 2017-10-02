@@ -1,8 +1,6 @@
 package org.zeroclick.meeting.client.event;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
@@ -23,7 +21,6 @@ import org.eclipse.scout.rt.client.ui.basic.cell.ICell;
 import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
 import org.eclipse.scout.rt.client.ui.basic.table.ITableRow;
 import org.eclipse.scout.rt.client.ui.basic.table.TableRow;
-import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractDateColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractLongColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractSmartColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractStringColumn;
@@ -70,6 +67,7 @@ import org.zeroclick.meeting.shared.event.ReadEventExtendedPropsPermission;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
 import org.zeroclick.meeting.shared.eventb.AbstractEventsTablePageData;
 import org.zeroclick.meeting.shared.security.AccessControlService;
+import org.zeroclick.ui.form.columns.zoneddatecolumn.AbstractZonedDateColumn;
 
 @Data(AbstractEventsTablePageData.class)
 public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<T>.Table>
@@ -930,33 +928,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			}
 		}
 
-		/**
-		 * @deprecated use toZonedDateTime(...) instead
-		 * @param date
-		 * @return
-		 */
-		@Deprecated
-		protected LocalDateTime toLocalDateTime(final Date date) {
-			LocalDateTime localDateTime = null;
-			if (null != date) {
-				localDateTime = LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
-			}
-
-			return localDateTime;
-		}
-
-		/**
-		 * deprecated use toDate(ZonedDateTime) instead
-		 *
-		 * @deprecated
-		 * @param localDateTime
-		 * @return
-		 */
-		@Deprecated
-		protected Date toDate(final LocalDateTime localDateTime) {
-			return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
-		}
-
 		public AbstractEventsTablePage<?>.Table.DurationColumn getDurationColumn() {
 			return this.getColumnSet().getColumnByClass(DurationColumn.class);
 		}
@@ -1220,180 +1191,18 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		}
 
 		@Order(2000)
-		public class StartDateColumn extends AbstractDateColumn {
+		public class StartDateColumn extends AbstractZonedDateColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.start");
 			}
-
-			public ZonedDateTime getZonedValue(final int rowIndex) {
-				return AbstractEventsTablePage.this.getDateHelper().getZonedValue(
-						AbstractEventsTablePage.this.getAppUserHelper().getCurrentUserTimeZone(),
-						this.getValue(rowIndex));
-			}
-
-			public ZonedDateTime getSelectedZonedValue() {
-				return this.getSelectedZonedValue(
-						AbstractEventsTablePage.this.getAppUserHelper().getCurrentUserTimeZone());
-			}
-
-			public ZonedDateTime getSelectedZonedValue(final ZoneId userZoneId) {
-				final Date currentDate = super.getSelectedValue();
-				return AbstractEventsTablePage.this.getDateHelper().getZonedValue(userZoneId, currentDate);
-			}
-
-			/**
-			 * @deprecated use getSelectedZonedValue instead
-			 * @return
-			 */
-			@Deprecated
-			public LocalDateTime getSelectedLocalValue() {
-				final Date currentValue = super.getSelectedValue();
-				LocalDateTime retvalue = null;
-				if (null != currentValue) {
-					retvalue = Table.this.toLocalDateTime(currentValue);
-				}
-				return retvalue;
-			}
-
-			public void setValue(final int rowIndex, final ZonedDateTime rawValue) {
-				if (null != rawValue) {
-					this.setValue(this.getTable().getRow(rowIndex),
-							AbstractEventsTablePage.this.getDateHelper().toDate(rawValue));
-				}
-			}
-
-			public void setValue(final ITableRow row, final ZonedDateTime rawValue) {
-				if (null != rawValue && null != row) {
-					this.setValue(this.getTable().getRow(row.getRowIndex()),
-							AbstractEventsTablePage.this.getDateHelper().toDate(rawValue));
-				}
-			}
-
-			/**
-			 * @deprecated use setValue(int, ZonedDateTime) instead
-			 * @return
-			 */
-			@Deprecated
-			public void setValue(final int rowIndex, final LocalDateTime rawValue) {
-				if (null != rawValue) {
-					this.setValue(this.getTable().getRow(rowIndex), Table.this.toDate(rawValue));
-				}
-			}
-
-			/**
-			 * @deprecated use setValue(ITableRow, ZonedDateTime) instead
-			 * @return
-			 */
-			@Deprecated
-			public void setValue(final ITableRow row, final LocalDateTime rawValue) {
-				if (null != rawValue && null != row) {
-					this.setValue(this.getTable().getRow(row.getRowIndex()), Table.this.toDate(rawValue));
-				}
-			}
-
-			@Override
-			protected boolean getConfiguredHasTime() {
-				return true;
-			}
-
-			// @Override
-			// protected boolean getConfiguredEditable() {
-			// return false;
-			// }
-
-			@Override
-			protected int getConfiguredWidth() {
-				return 140;
-			}
 		}
 
 		@Order(3000)
-		public class EndDateColumn extends AbstractDateColumn {
+		public class EndDateColumn extends AbstractZonedDateColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.end");
-			}
-
-			public ZonedDateTime getZonedValue(final int rowIndex) {
-				return AbstractEventsTablePage.this.getDateHelper().getZonedValue(
-						AbstractEventsTablePage.this.getAppUserHelper().getCurrentUserTimeZone(),
-						this.getValue(rowIndex));
-			}
-
-			public ZonedDateTime getSelectedZonedValue() {
-				return this.getSelectedZonedValue(
-						AbstractEventsTablePage.this.getAppUserHelper().getCurrentUserTimeZone());
-			}
-
-			public ZonedDateTime getSelectedZonedValue(final ZoneId userZoneId) {
-				final Date currentDate = super.getSelectedValue();
-				return AbstractEventsTablePage.this.getDateHelper().getZonedValue(userZoneId, currentDate);
-			}
-
-			/**
-			 * @deprecated use getSelectedZonedValue instead
-			 * @return
-			 */
-			@Deprecated
-			public LocalDateTime getSelectedLocalValue() {
-				final Date currentValue = super.getSelectedValue();
-				LocalDateTime retvalue = null;
-				if (null != currentValue) {
-					retvalue = Table.this.toLocalDateTime(currentValue);
-				}
-				return retvalue;
-			}
-
-			public void setValue(final int rowIndex, final ZonedDateTime rawValue) {
-				if (null != rawValue) {
-					this.setValue(this.getTable().getRow(rowIndex),
-							AbstractEventsTablePage.this.getDateHelper().toDate(rawValue));
-				}
-			}
-
-			public void setValue(final ITableRow row, final ZonedDateTime rawValue) {
-				if (null != rawValue && null != row) {
-					this.setValue(this.getTable().getRow(row.getRowIndex()),
-							AbstractEventsTablePage.this.getDateHelper().toDate(rawValue));
-				}
-			}
-
-			/**
-			 * @deprecated use setValue(int, ZonedDateTime) instead
-			 * @return
-			 */
-			@Deprecated
-			public void setValue(final int rowIndex, final LocalDateTime rawValue) {
-				if (null != rawValue) {
-					this.setValue(this.getTable().getRow(rowIndex), Table.this.toDate(rawValue));
-				}
-			}
-
-			/**
-			 * @deprecated use setValue(ITableRow, ZonedDateTime) instead
-			 * @return
-			 */
-			@Deprecated
-			public void setValue(final ITableRow row, final LocalDateTime rawValue) {
-				if (null != rawValue && null != row) {
-					this.setValue(this.getTable().getRow(row.getRowIndex()), Table.this.toDate(rawValue));
-				}
-			}
-
-			@Override
-			protected boolean getConfiguredHasTime() {
-				return true;
-			}
-
-			// @Override
-			// protected boolean getConfiguredEditable() {
-			// return false;
-			// }
-
-			@Override
-			protected int getConfiguredWidth() {
-				return 140;
 			}
 		}
 
