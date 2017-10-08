@@ -33,12 +33,12 @@ import org.eclipse.scout.rt.server.jdbc.ISqlService;
 import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.eclipse.scout.rt.server.jdbc.lookup.AbstractSqlLookupService;
 import org.eclipse.scout.rt.shared.ScoutTexts;
-import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupRow;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.comon.text.TextsHelper;
 
 /**
  * Extension of {@link AbstractSqlLookupService}.
@@ -226,8 +226,7 @@ public abstract class AbstractCombinedMultiSqlLookupService<T> extends AbstractS
 		if (null != data && data.length > 0) {
 			for (final Object[] row : data) {
 				if (null != row && null != row[sqlConfig.getTranslatedColumn()]) {
-					final String translated = TEXTS.get((String) row[sqlConfig.getTranslatedColumn()],
-							(String) row[sqlConfig.getTranslatedColumn()]);
+					final String translated = TextsHelper.get((String) row[sqlConfig.getTranslatedColumn()]);
 					if (null != translated) {
 						row[sqlConfig.getTranslatedColumn()] = translated;
 					}

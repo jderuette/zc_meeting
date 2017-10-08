@@ -13,29 +13,14 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.zeroclick.comon.text;
+package org.zeroclick.ui.basic.table;
 
-import java.security.AccessController;
-
-import javax.security.auth.Subject;
-
-import org.eclipse.scout.rt.platform.ApplicationScoped;
-import org.eclipse.scout.rt.platform.BEANS;
-import org.zeroclick.meeting.shared.security.AccessControlService;
+import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
 
 /**
  * @author djer
  *
  */
-@ApplicationScoped
-public class UserHelper {
+public class DynamicTable<T extends AbstractTable> {
 
-	public Long getCurrentUserId() {
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-		return acs.getZeroClickUserIdOfCurrentSubject();
-	}
-
-	public Subject getCurrentUserSubject() {
-		return Subject.getSubject(AccessController.getContext());
-	}
 }

@@ -178,6 +178,14 @@ public interface SQLs {
 	String ROLE_SELECT_TYPE_FOR_SMART_FIELD = "SELECT DISTINCT type, type FROM ROLE WHERE 1=1";
 	String ROLE_SELECT_FILTER_LOOKUP_TYPE = " <key> AND type=:key</key><text> AND type LIKE :text</text> <all></all>";
 
+	String ROLE_INSERT_NEW_LINKED_DOC = "INSERT INTO " + PatchCreateSubscription.ROLE_DOCUMENT_TABLE_NAME
+			+ " (role_id, document_id, start_date) VALUES (:roleId, :documentId, :startDate)";
+	String ROLE_UPDATE_LINKED_DOC = "UPDATE " + PatchCreateSubscription.ROLE_DOCUMENT_TABLE_NAME
+			+ " SET start_date=:startDate where role_id=:roleId AND document_id=:documentId";
+
+	String ROLE_DELETE_LINKED_DOC = "DELETE FROM " + PatchCreateSubscription.ROLE_DOCUMENT_TABLE_NAME
+			+ " WHERE role_id=:roleId AND document_id=:documentId";
+
 	String ROLE_INSERT_SAMPLE = "INSERT INTO ROLE (role_id, name)";
 	String ROLE_INSERT_SAMPLE_WITH_TYPE = "INSERT INTO ROLE (role_id, name, type)";
 	String ROLE_VALUES_01 = " VALUES(1, 'Administrator')";
@@ -306,9 +314,8 @@ public interface SQLs {
 	String USER_ROLE_INSERT = "INSERT INTO USER_ROLE (user_id, role_id) VALUES (:userId, :{rolesBox})";
 	String USER_ROLE_INSERT_WITH_START_DATE = "INSERT INTO USER_ROLE (user_id, role_id, start_date) VALUES (:userId, :{rolesBox}, :{startDate})";
 
-	/**
-	 * Avoid deleting role of kind "subscription" !!
-	 */
+	// Avoid deleting role of kind "subscription" !!
+
 	String USER_ROLE_REMOVE = "DELETE FROM USER_ROLE WHERE user_id=:userId AND role_id=:{rolesBox}";
 
 	String USER_ROLE_INSERT_SAMPLE = "INSERT INTO USER_ROLE (user_id, role_id)";
@@ -560,17 +567,43 @@ public interface SQLs {
 	String SUBSCRIPTION_INSERT = "INSERT INTO " + PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME
 			+ " (user_id, role_id, start_date) VALUES (:userId, :subscriptionId, :startDate)";
 
-	// String SUBSCRIBE_CREATE_TABLE = "CREATE TABLE " +
-	// PatchCreateSubscription.SUBSCRIBE_TABLE_NAME
-	// + "(subdcription_metadata_id INTEGER NOT NULL, user_id INTEGER NOT NULL,
-	// role_id INTEGER NOT NULL "
-	// + "CONSTRAINT SUBSCRIBE_PK PRIMARY KEY (subdcription_metadata_id,
-	// user_id, role_id), "
-	// + "CONSTRAINT SUBSCRUIBE_SUBSCRIPTION_METADATA_FK FOREIGN KEY
-	// (subdcription_metadata_id) REFERENCES "
-	// + PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME + "(subdcription_id), "
-	// + "CONSTRAINT SUBSCRIBE_USER_FK FOREIGN KEY (user_id) REFERENCES
-	// APP_USER(user_id), "
-	// + "CONSTRAINT SUBSCRIBE_ROLE_FK FOREIGN KEY (role_id) REFERENCES
-	// ROLE(role_id))";
+	/**
+	 * Documents table
+	 */
+
+	String DOCUMENT_CREATE = "CREATE TABLE " + PatchCreateSubscription.DOCUMENT_TABLE_NAME
+			+ " (document_id INTEGER NOT NULL, name VARCHAR(250) NOT NULL, content __blobType__, last_modification_date TIMESTAMP NOT NULL,"
+			+ " CONSTRAINT " + PatchCreateSubscription.DOCUMENT_TABLE_NAME + "_PK PRIMARY KEY (document_id))";
+
+	String DOCUMENT_PAGE_SELECT = "select document_id, name, last_modification_date FROM "
+			+ PatchCreateSubscription.DOCUMENT_TABLE_NAME + " WHERE 1=1";
+	String DOCUMENT_PAGE_DATA_SELECT_INTO = " INTO :{page.documentId}, :{page.name}, :{page.lastModificationDate}";
+
+	String DOCUMENT_SELECT = "SELECT document_id, name, content, last_modification_date FROM "
+			+ PatchCreateSubscription.DOCUMENT_TABLE_NAME + " WHERE document_id=:documentId";
+	String DOCUMENT_SELECT_INTO = " INTO :documentId, :name, :contentData, :lastModificationDate";
+
+	String DOCUMENT_SELECT_LINKED_ROLE = "SELECT document_id, role_id, start_date FROM "
+			+ PatchCreateSubscription.ROLE_DOCUMENT_TABLE_NAME
+			+ " WHERE document_id=:selectedDocumentId INTO :{table.documentId}, :{table.roleId}, :{table.startDate}";
+
+	String DOCUMENT_INSERT = "INSERT INTO " + PatchCreateSubscription.DOCUMENT_TABLE_NAME
+			+ " (document_id, name, last_modification_date) " + "VALUES (:documentId, :name, :lastModificationDate)";
+
+	String DOCUMENT_UPDATE = "UPDATE " + PatchCreateSubscription.DOCUMENT_TABLE_NAME
+			+ " SET name=:name, content=:contentData, last_modification_date=:lastModificationDate WHERE document_id=:documentId";
+
+	/**
+	 * -- Link between documents and Roles (for CPS's subscription)
+	 */
+
+	String ROLE_DOCUMENT_CREATE = "CREATE TABLE " + PatchCreateSubscription.ROLE_DOCUMENT_TABLE_NAME
+			+ " (role_id INTEGER NOT NULL, document_id INTEGER NOT NULL, start_date TIMESTAMP NOT NULL DEFAULT now())";
+	String ROLE_DOCUMENT_ADD_PK = "ALTER TABLE " + PatchCreateSubscription.ROLE_DOCUMENT_TABLE_NAME + " ADD CONSTRAINT "
+			+ PatchCreateSubscription.ROLE_DOCUMENT_TABLE_NAME + "_PK PRIMARY KEY (role_id, document_id, start_date)";
+
+	String ROLE_DOCUMENT_SELECT_ACTIVE_DOCUMENT = "SELECT document_id FROM "
+			+ PatchCreateSubscription.ROLE_DOCUMENT_TABLE_NAME
+			+ " WHERE role_id=:roleId AND start_date=(SELECT MAX(start_date) FROM "
+			+ PatchCreateSubscription.ROLE_DOCUMENT_TABLE_NAME + "  WHERE role_id=:roleId AND start_date <= NOW())";
 }

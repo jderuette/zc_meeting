@@ -271,7 +271,6 @@ public class UserService extends CommonService implements IUserService {
 	}
 
 	private void loadSubscriptionsDetails(final UserFormData formData, final Long currentSelectedUserId) {
-		// TODO Auto-generated method stub
 		final UserFormData formDataSubscriptionsDetails = this.getSubscriptionsDetails(currentSelectedUserId,
 				Boolean.FALSE);
 		formData.getSubscriptionsListTable()

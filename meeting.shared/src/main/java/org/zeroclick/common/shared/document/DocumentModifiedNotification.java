@@ -13,29 +13,20 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.zeroclick.comon.text;
+package org.zeroclick.common.shared.document;
 
-import java.security.AccessController;
-
-import javax.security.auth.Subject;
-
-import org.eclipse.scout.rt.platform.ApplicationScoped;
-import org.eclipse.scout.rt.platform.BEANS;
-import org.zeroclick.meeting.shared.security.AccessControlService;
+import org.zeroclick.common.document.DocumentFormData;
+import org.zeroclick.common.shared.notification.AbstractNotication;
 
 /**
  * @author djer
  *
  */
-@ApplicationScoped
-public class UserHelper {
+public class DocumentModifiedNotification extends AbstractNotication<DocumentFormData> {
 
-	public Long getCurrentUserId() {
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-		return acs.getZeroClickUserIdOfCurrentSubject();
-	}
+	private static final long serialVersionUID = -4806027654946293514L;
 
-	public Subject getCurrentUserSubject() {
-		return Subject.getSubject(AccessController.getContext());
+	public DocumentModifiedNotification(final DocumentFormData modifiedEvent) {
+		super(modifiedEvent);
 	}
 }

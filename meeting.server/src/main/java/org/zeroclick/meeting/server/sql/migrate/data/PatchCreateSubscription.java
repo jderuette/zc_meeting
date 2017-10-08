@@ -22,6 +22,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.shared.params.IAppParamsService;
 import org.zeroclick.configuration.shared.role.CreateAssignSubscriptionToUserPermission;
+import org.zeroclick.configuration.shared.role.ReadAssignSubscriptionToUserPermission;
+import org.zeroclick.configuration.shared.role.UpdateAssignSubscriptionToUserPermission;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.meeting.server.sql.SQLs;
@@ -38,11 +40,13 @@ public class PatchCreateSubscription extends AbstractDataPatcher {
 
 	public static final String SUBSCRIPTION_TABLE_NAME = "SUBSCRIPTION_METADATA";
 	public static final String SUBSCRIPTION_ID_SEQ = "SUBSCRIPTION_ID_SEQ";
-	public static final String SUBSCRIBE_TABLE_NAME = "SUBSCRIBE";
 	public static final String PATCHED_TABLE_USER_ROLE = "USER_ROLE";
 	public static final String ADDED_USER_ROLE_COLUMN = "start_date";
 	public static final String PATCHED_TABLE_ROLE = "ROLE";
 	public static final String ADDED_ROLE_COLUMN = "type";
+	public static final String DOCUMENT_TABLE_NAME = "DOCUMENT";
+	public static final String DOCUMENT_ID_SEQ = "DOCUMENT_ID_SEQ";
+	public static final String ROLE_DOCUMENT_TABLE_NAME = "ROLE_DOCUMENT";
 
 	private static final String PARAMS_CATEGORY = "subscription";
 
@@ -115,6 +119,20 @@ public class PatchCreateSubscription extends AbstractDataPatcher {
 			structureAltered = Boolean.TRUE;
 		}
 
+		// Document table and Data
+		if (!this.getDatabaseHelper().existTable(DOCUMENT_TABLE_NAME)) {
+			final String blobType = this.getDatabaseHelper().getBlobType();
+			SQL.insert(SQLs.DOCUMENT_CREATE.replace("__blobType__", blobType));
+			structureAltered = Boolean.TRUE;
+		}
+		this.getDatabaseHelper().createSequence(DOCUMENT_ID_SEQ);
+
+		if (!this.getDatabaseHelper().existTable(ROLE_DOCUMENT_TABLE_NAME)) {
+			SQL.insert(SQLs.ROLE_DOCUMENT_CREATE);
+			SQL.insert(SQLs.ROLE_DOCUMENT_ADD_PK);
+			structureAltered = Boolean.TRUE;
+		}
+
 		// as it create a Table force a refresh of Table Cache
 		this.getDatabaseHelper().resetExistingTablesCache();
 
@@ -161,20 +179,20 @@ public class PatchCreateSubscription extends AbstractDataPatcher {
 				CreateAssignSubscriptionToUserPermission.LEVEL_ALL);
 		this.getDatabaseHelper().addAdminPermission(
 				"org.zeroclick.configuration.shared.role.UpdateAssignSubscriptionToUserPermission",
-				CreateAssignSubscriptionToUserPermission.LEVEL_ALL);
+				UpdateAssignSubscriptionToUserPermission.LEVEL_ALL);
 		this.getDatabaseHelper().addAdminPermission(
 				"org.zeroclick.configuration.shared.role.ReadAssignSubscriptionToUserPermission",
-				CreateAssignSubscriptionToUserPermission.LEVEL_ALL);
+				ReadAssignSubscriptionToUserPermission.LEVEL_ALL);
 		// -- for standard users
 		this.getDatabaseHelper().addStandardUserPermission(
 				"org.zeroclick.configuration.shared.role.CreateAssignSubscriptionToUserPermission",
 				CreateAssignSubscriptionToUserPermission.LEVEL_OWN);
 		this.getDatabaseHelper().addStandardUserPermission(
 				"org.zeroclick.configuration.shared.role.UpdateAssignSubscriptionToUserPermission",
-				CreateAssignSubscriptionToUserPermission.LEVEL_OWN);
+				UpdateAssignSubscriptionToUserPermission.LEVEL_OWN);
 		this.getDatabaseHelper().addStandardUserPermission(
 				"org.zeroclick.configuration.shared.role.ReadAssignSubscriptionToUserPermission",
-				CreateAssignSubscriptionToUserPermission.LEVEL_OWN);
+				ReadAssignSubscriptionToUserPermission.LEVEL_OWN);
 
 		// default params for URL for subscriptions
 		appParamsService.create(SubscriptionHelper.PARAM_KEY_URL_BASE + "3", null, PARAMS_CATEGORY);
@@ -191,6 +209,14 @@ public class PatchCreateSubscription extends AbstractDataPatcher {
 		appParamsService.create(SubscriptionHelper.PARAM_KEY_URL_NAME_BASE + "5", "zc.user.role.business",
 				PARAMS_CATEGORY);
 
+		// acces or admin to documents
+		this.getDatabaseHelper().addAdminPermission("org.zeroclick.common.shared.document.CreateDocumentPermission");
+		this.getDatabaseHelper().addAdminPermission("org.zeroclick.common.shared.document.UpdateDocumentPermission");
+		this.getDatabaseHelper().addAdminPermission("org.zeroclick.common.shared.document.ReadDocumentPermission");
+		// -- for standard users
+		this.getDatabaseHelper()
+				.addStandardUserPermission("org.zeroclick.common.shared.document.ReadDocumentPermission");
+
 	}
 
 	@Override
@@ -201,13 +227,11 @@ public class PatchCreateSubscription extends AbstractDataPatcher {
 			this.getDatabaseHelper().dropTable(SUBSCRIPTION_TABLE_NAME, Boolean.TRUE);
 		}
 
-		if (this.getDatabaseHelper().isSequenceExists(SUBSCRIPTION_ID_SEQ)) {
-			this.getDatabaseHelper().dropSequence(SUBSCRIPTION_ID_SEQ);
-		}
+		this.getDatabaseHelper().dropSequence(SUBSCRIPTION_ID_SEQ);
 
-		if (this.getDatabaseHelper().existTable(SUBSCRIBE_TABLE_NAME)) {
-			this.getDatabaseHelper().dropTable(SUBSCRIPTION_TABLE_NAME, Boolean.TRUE);
-		}
+		this.getDatabaseHelper().dropSequence(DOCUMENT_ID_SEQ);
+		this.getDatabaseHelper().dropTable(DOCUMENT_TABLE_NAME);
+		this.getDatabaseHelper().dropTable(ROLE_DOCUMENT_TABLE_NAME);
 
 		this.getDatabaseHelper().removeColumn(PATCHED_TABLE_USER_ROLE, ADDED_USER_ROLE_COLUMN);
 
@@ -230,7 +254,7 @@ public class PatchCreateSubscription extends AbstractDataPatcher {
 		this.getDatabaseHelper()
 				.removeAdminPermission("org.zeroclick.configuration.shared.params.UpdateAppParamsPermission");
 
-		if (this.getDatabaseHelper().existTable("APP_PARAMs")) {
+		if (this.getDatabaseHelper().existTable("APP_PARAMS")) {
 			appParamsService.delete(SubscriptionHelper.PARAM_KEY_URL_BASE + "3");
 			appParamsService.delete(SubscriptionHelper.PARAM_KEY_URL_NAME_BASE + "3");
 			appParamsService.delete(SubscriptionHelper.PARAM_KEY_URL_BASE + "4");

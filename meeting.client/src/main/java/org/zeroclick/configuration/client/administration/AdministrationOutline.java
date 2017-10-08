@@ -22,10 +22,13 @@ import org.eclipse.scout.rt.client.ui.desktop.outline.pages.IPage;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
+import org.zeroclick.common.document.DocumentTablePage;
 import org.zeroclick.common.params.AppParamsTablePage;
+import org.zeroclick.common.shared.document.UpdateDocumentPermission;
 import org.zeroclick.configuration.client.role.PermissionTablePage;
 import org.zeroclick.configuration.client.role.RoleTablePage;
 import org.zeroclick.configuration.client.user.UserTablePage;
+import org.zeroclick.configuration.shared.params.ReadAppParamsPermission;
 import org.zeroclick.configuration.shared.role.ReadPermissionPermission;
 import org.zeroclick.configuration.shared.role.ReadRolePermission;
 import org.zeroclick.configuration.shared.user.ReadUserPermission;
@@ -63,11 +66,12 @@ public class AdministrationOutline extends AbstractOutline {
 		pageList.add(userTablePage);
 
 		final AppParamsTablePage appParamsTablePage = new AppParamsTablePage();
-		// FIXME Djer13 Allow only "admin" to view/edit global app params
-		// appParamsTablePage.setVisibleGranted(ACCESS.getLevel(new
-		// ReadAppParamsPermission((Long) null)) >=
-		// ReadAppParamsPermission.LEVEL_OWN);
+		appParamsTablePage.setVisiblePermission(new ReadAppParamsPermission());
 		pageList.add(appParamsTablePage);
+
+		final DocumentTablePage documentTablePage = new DocumentTablePage();
+		appParamsTablePage.setVisiblePermission(new UpdateDocumentPermission());
+		pageList.add(documentTablePage);
 
 	}
 

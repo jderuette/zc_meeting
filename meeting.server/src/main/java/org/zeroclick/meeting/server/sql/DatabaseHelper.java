@@ -187,8 +187,16 @@ public class DatabaseHelper {
 		this.existingTables = null;
 	}
 
+	public void addAdminPermission(final String permissionName) {
+		this.addPermissionToRole(1, permissionName, 100);
+	}
+
 	public void addAdminPermission(final String permissionName, final Integer level) {
 		this.addPermissionToRole(1, permissionName, level);
+	}
+
+	public void addStandardUserPermission(final String permissionName) {
+		this.addPermissionToRole(2, permissionName, 50);
 	}
 
 	public void addStandardUserPermission(final String permissionName, final Integer level) {
