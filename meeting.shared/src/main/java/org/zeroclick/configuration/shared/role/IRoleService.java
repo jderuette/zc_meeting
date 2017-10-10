@@ -4,6 +4,7 @@ import org.eclipse.scout.rt.platform.service.IService;
 import org.eclipse.scout.rt.shared.TunnelToServer;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.zeroclick.common.document.DocumentFormData;
+import org.zeroclick.common.document.DocumentFormData.LinkedRole.LinkedRoleRowData;
 import org.zeroclick.common.document.link.AssignDocumentToRoleFormData;
 
 @TunnelToServer
@@ -26,5 +27,7 @@ public interface IRoleService extends IService {
 	void delete(AssignDocumentToRoleFormData formData);
 
 	DocumentFormData getActiveDocument(Long roleId);
+
+	LinkedRoleRowData getDocumentMetaData(Long roleId, Long documentId);
 
 }

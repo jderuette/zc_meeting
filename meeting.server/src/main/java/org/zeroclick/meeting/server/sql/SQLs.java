@@ -34,6 +34,8 @@ public interface SQLs {
 
 	String GENERIC_WHERE_FOR_SECURE_AND = " WHERE 1=1";
 
+	String GENERIC_DROP_CONSTRAINT = "ALTER TABLE __table__ DROP CONSTRAINT __constraintName__";
+
 	/**
 	 * EVENT
 	 */
@@ -602,8 +604,15 @@ public interface SQLs {
 	String ROLE_DOCUMENT_ADD_PK = "ALTER TABLE " + PatchCreateSubscription.ROLE_DOCUMENT_TABLE_NAME + " ADD CONSTRAINT "
 			+ PatchCreateSubscription.ROLE_DOCUMENT_TABLE_NAME + "_PK PRIMARY KEY (role_id, document_id, start_date)";
 
+	String ROLE_DOCUMENT_ADD_PK_WITHOUT_START_DATE = "ALTER TABLE " + PatchCreateSubscription.ROLE_DOCUMENT_TABLE_NAME
+			+ " ADD CONSTRAINT " + PatchCreateSubscription.ROLE_DOCUMENT_TABLE_NAME
+			+ "_PK PRIMARY KEY (role_id, document_id)";
+
 	String ROLE_DOCUMENT_SELECT_ACTIVE_DOCUMENT = "SELECT document_id FROM "
 			+ PatchCreateSubscription.ROLE_DOCUMENT_TABLE_NAME
 			+ " WHERE role_id=:roleId AND start_date=(SELECT MAX(start_date) FROM "
 			+ PatchCreateSubscription.ROLE_DOCUMENT_TABLE_NAME + "  WHERE role_id=:roleId AND start_date <= NOW())";
+
+	String ROLE_DOCUMENT_SELECT_DOCUMENT_ROLE = "SELECT document_id, role_id, start_date FROM "
+			+ PatchCreateSubscription.ROLE_DOCUMENT_TABLE_NAME + " WHERE role_id=:roleId AND document_id=:documentId";
 }

@@ -44,7 +44,7 @@ public interface IDataPatcher {
 	public void remove();
 
 	/**
-	 * The (data) version this patch will migrate te dataBase to.
+	 * The (data) version this patch will migrate the dataBase to.
 	 *
 	 * @return
 	 */

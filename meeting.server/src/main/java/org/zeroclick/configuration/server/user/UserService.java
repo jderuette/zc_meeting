@@ -19,9 +19,12 @@ import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.CommonService;
+import org.zeroclick.common.document.DocumentFormData;
+import org.zeroclick.common.document.DocumentFormData.LinkedRole.LinkedRoleRowData;
 import org.zeroclick.configuration.shared.onboarding.OnBoardingUserFormData;
 import org.zeroclick.configuration.shared.role.CpsAcceptedNotification;
 import org.zeroclick.configuration.shared.role.CreateAssignSubscriptionToUserPermission;
+import org.zeroclick.configuration.shared.role.IRoleService;
 import org.zeroclick.configuration.shared.role.ReadAssignSubscriptionToUserPermission;
 import org.zeroclick.configuration.shared.role.UpdateAssignSubscriptionToUserPermission;
 import org.zeroclick.configuration.shared.slot.ISlotService;
@@ -252,22 +255,52 @@ public class UserService extends CommonService implements IUserService {
 	}
 
 	private Boolean isActiveSubscriptionValid(final Long userId, final Boolean checkAccess) {
-		final Object[][] datas = this.getActiveSubscriptionDetails(userId, checkAccess);
+		final Object[][] activeSubscriptiondatas = this.getActiveSubscriptionDetails(userId, checkAccess);
 		Boolean subscriptionValid = Boolean.FALSE;
-		if (null != datas && datas.length > 0) {
-			final Long subscriptionId = (Long) datas[0][0];
+		if (null != activeSubscriptiondatas && activeSubscriptiondatas.length > 0) {
+			final Long subscriptionId = (Long) activeSubscriptiondatas[0][0];
 
-			if (subscriptionId == 3l) { // free
-				subscriptionValid = Boolean.TRUE;
-			} else {
-				final Object acceptedCpsDateData = datas[0][3];
-				final Object accepteWithdrawDateData = datas[0][4];
-				if (null != acceptedCpsDateData && null != accepteWithdrawDateData) {
-					subscriptionValid = Boolean.TRUE;
+			final IRoleService roleService = BEANS.get(IRoleService.class);
+			final DocumentFormData activeDocument = roleService.getActiveDocument(subscriptionId);
+
+			final Long documentId = activeDocument.getDocumentId().getValue();
+			LinkedRoleRowData documentRoleData = null;
+			if (null != documentId) {
+				documentRoleData = roleService.getDocumentMetaData(subscriptionId, documentId);
+			}
+
+			// A document exists for the current subscription and has a start
+			// (applicable) date
+			if (null != documentRoleData && null != documentRoleData.getStartDate()) {
+				final Object acceptedCpsDateData = activeSubscriptiondatas[0][3];
+				final Object acceptedWithdrawDateData = activeSubscriptiondatas[0][4];
+
+				Date acceptedCpsDate = null;
+				if (null != acceptedCpsDateData) {
+					acceptedCpsDate = (Date) acceptedCpsDateData;
+				}
+
+				Date accepteWithdrawDate = null;
+				if (null != acceptedWithdrawDateData) {
+					accepteWithdrawDate = (Date) acceptedWithdrawDateData;
+				}
+
+				final Boolean acceptedCPSDateValid = null != acceptedCpsDate
+						&& !acceptedCpsDate.after(documentRoleData.getStartDate());
+				final Boolean accepteWithdrawDateValid = null != accepteWithdrawDate
+						&& !accepteWithdrawDate.after(documentRoleData.getStartDate());
+
+				if (subscriptionId == 3l) { // free
+					// only CPS
+					subscriptionValid = acceptedCPSDateValid;
+				} else {
+					subscriptionValid = acceptedCPSDateValid && accepteWithdrawDateValid;
 				}
 			}
 		}
+
 		return subscriptionValid;
+
 	}
 
 	private void loadSubscriptionsDetails(final UserFormData formData, final Long currentSelectedUserId) {

@@ -512,10 +512,6 @@ public class ValidateCpsForm extends AbstractForm {
 			ValidateCpsForm.this.setEnabledPermission(
 					new UpdateAssignSubscriptionToUserPermission(formData.getUserId().getValue()));
 
-			final Boolean isSubscriptionAdmin = ValidateCpsForm.this.isSubscriptionAdmin();
-
-			ValidateCpsForm.this.getAcceptCpsField().setEnabledGranted(isSubscriptionAdmin);
-			ValidateCpsForm.this.getAcceptWithdrawalField().setEnabledGranted(isSubscriptionAdmin);
 			ValidateCpsForm.this.initFormAfterLoad();
 		}
 

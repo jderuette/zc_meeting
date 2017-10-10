@@ -524,7 +524,7 @@ public class UserForm extends AbstractForm {
 
 							@Override
 							protected boolean getConfiguredSortAscending() {
-								return Boolean.TRUE;
+								return Boolean.FALSE;
 							}
 
 							@Override

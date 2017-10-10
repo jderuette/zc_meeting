@@ -247,4 +247,15 @@ public class DatabaseHelper {
 		permissions.add(permissionName);
 		rolePermissionService.remove(roleId, permissions);
 	}
+
+	public void deletePrimaryKey(final String tableName) {
+		final String constraintName = tableName + "_PK";
+		SQL.insert(SQLs.GENERIC_DROP_CONSTRAINT.replaceAll("__table__", tableName).replaceAll("__constraintName__",
+				constraintName));
+	}
+
+	public void deleteConstraints(final String tableName, final String constraintName) {
+		SQL.insert(SQLs.GENERIC_DROP_CONSTRAINT.replaceAll("__table__", tableName).replaceAll("__constraintName__",
+				constraintName));
+	}
 }

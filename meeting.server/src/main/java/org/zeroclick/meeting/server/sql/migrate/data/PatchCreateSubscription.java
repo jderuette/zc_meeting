@@ -89,12 +89,6 @@ public class PatchCreateSubscription extends AbstractDataPatcher {
 		LOG.info("Create Subscription table upgrading data strcuture");
 		Boolean structureAltered = Boolean.FALSE;
 
-		// if (!this.getDatabaseHelper().isSequenceExists(SUBSCRIPTION_ID_SEQ))
-		// {
-		// this.getDatabaseHelper().createSequence(SUBSCRIPTION_ID_SEQ);
-		// structureAltered = Boolean.TRUE;
-		// }
-
 		if (this.getDatabaseHelper().existTable(PATCHED_TABLE_USER_ROLE)) {
 			SQL.insert(SQLs.USER_ROLE_ADD_START_DATE);
 			SQL.insert(SQLs.USER_ROLE_START_DATE_ADD_DEFAULT);
@@ -140,7 +134,7 @@ public class PatchCreateSubscription extends AbstractDataPatcher {
 	}
 
 	private void migrateData() {
-		LOG.info("Create Subscription table table upgraing default data");
+		LOG.info("Create Subscription table upgraing default data");
 		final IAppParamsService appParamsService = BEANS.get(IAppParamsService.class);
 		// params to indicate limit for free event's users
 		SQL.insert(SQLs.PARAMS_INSERT_SAMPLE_WITH_CATEGORY + SQLs.PARAMS_INSERT_VALUES_SUB_FREE_EVENT_LIMIT);
@@ -221,7 +215,7 @@ public class PatchCreateSubscription extends AbstractDataPatcher {
 
 	@Override
 	public void undo() {
-		LOG.info("Create Subscription table table downgrading data strcuture");
+		LOG.info("Create Subscription table downgrading data strcuture");
 		final IAppParamsService appParamsService = BEANS.get(IAppParamsService.class);
 		if (this.getDatabaseHelper().existTable(SUBSCRIPTION_TABLE_NAME)) {
 			this.getDatabaseHelper().dropTable(SUBSCRIPTION_TABLE_NAME, Boolean.TRUE);

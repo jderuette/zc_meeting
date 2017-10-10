@@ -12,8 +12,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.CommonService;
 import org.zeroclick.common.document.DocumentFormData;
+import org.zeroclick.common.document.DocumentFormData.LinkedRole.LinkedRoleRowData;
 import org.zeroclick.common.document.link.AssignDocumentToRoleFormData;
 import org.zeroclick.common.shared.document.IDocumentService;
+import org.zeroclick.common.shared.document.ReadDocumentPermission;
 import org.zeroclick.configuration.shared.role.CreateRolePermission;
 import org.zeroclick.configuration.shared.role.IRoleService;
 import org.zeroclick.configuration.shared.role.ReadRolePermission;
@@ -123,7 +125,7 @@ public class RoleService extends CommonService implements IRoleService {
 
 	@Override
 	public DocumentFormData getActiveDocument(final Long roleId) {
-		if (!ACCESS.check(new ReadRolePermission())) {
+		if (!ACCESS.check(new ReadDocumentPermission())) {
 			super.throwAuthorizationFailed();
 		}
 		final IDocumentService documentService = BEANS.get(IDocumentService.class);
@@ -137,6 +139,19 @@ public class RoleService extends CommonService implements IRoleService {
 			documentService.load(formData);
 		}
 		return formData;
+	}
+
+	@Override
+	public LinkedRoleRowData getDocumentMetaData(final Long roleId, final Long documentId) {
+		if (!ACCESS.check(new ReadDocumentPermission())) {
+			super.throwAuthorizationFailed();
+		}
+
+		final LinkedRoleRowData documentRoleData = new DocumentFormData.LinkedRole.LinkedRoleRowData();
+
+		SQL.selectInto(SQLs.ROLE_DOCUMENT_SELECT_DOCUMENT_ROLE, documentRoleData, new NVPair("roleId", roleId),
+				new NVPair("documentId", documentId));
+		return documentRoleData;
 	}
 
 }
