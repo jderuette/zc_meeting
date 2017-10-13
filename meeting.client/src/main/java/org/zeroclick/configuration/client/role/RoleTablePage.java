@@ -131,7 +131,7 @@ public class RoleTablePage extends AbstractPageWithTable<Table> {
 
 			@Override
 			protected boolean getConfiguredVisible() {
-				return Boolean.FALSE;
+				return Boolean.TRUE;
 			}
 
 			@Override
