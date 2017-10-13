@@ -42,6 +42,7 @@ import org.zeroclick.configuration.shared.role.CreateAssignSubscriptionToUserPer
 import org.zeroclick.configuration.shared.role.UpdateAssignSubscriptionToUserPermission;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
 import org.zeroclick.configuration.shared.user.IUserService;
+import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.configuration.shared.user.ValidateCpsFormData;
 
 @FormData(value = ValidateCpsFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
@@ -590,20 +591,25 @@ public class ValidateCpsForm extends AbstractForm {
 		private void informAdminNewCpsValidated(final ValidateCpsFormData savedData) {
 			final IMailSender mailSender = BEANS.get(IMailSender.class);
 			final IAppParamsService appParamsService = BEANS.get(IAppParamsService.class);
+			final IUserService userService = BEANS.get(IUserService.class);
 
 			final String recipient = appParamsService.getValue("subInfoEmail");
 
-			final Locale adminLocal = new Locale("FR");
+			final Locale adminLocale = new Locale("FR");
+
+			final UserFormData currentUserDetails = userService.getCurrentUserDetails();
+			final String userEmail = currentUserDetails.getEmail().getValue();
 
 			final List<String> values = new ArrayList<>();
-			values.add(String.valueOf(savedData.getUserId().getValue()));
-			values.add(String.valueOf(savedData.getSubscriptionId().getValue()));
+			values.add(savedData.getUserId().getValue() + " (" + userEmail + ")");
+			values.add(savedData.getSubscriptionId().getValue() + " ("
+					+ ValidateCpsForm.this.getSubscriptionIdField().getDisplayText() + ")");
 
 			final String[] valuesArray = CollectionUtility.toArray(values, String.class);
 
-			final String subject = TEXTS.get(adminLocal, "zc.user.role.subscription.email.cpsValidated.subject",
+			final String subject = TEXTS.get(adminLocale, "zc.user.role.subscription.email.cpsValidated.subject",
 					valuesArray);
-			final String content = TEXTS.get(adminLocal, "zc.user.role.subscription.email.cpsValidated.html",
+			final String content = TEXTS.get(adminLocale, "zc.user.role.subscription.email.cpsValidated.html",
 					valuesArray);
 
 			try {
