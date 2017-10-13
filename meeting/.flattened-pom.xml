@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.zeroclick</groupId>
   <artifactId>meeting</artifactId>
-  <version>1.1.4</version>
+  <version>1.1.5</version>
   <packaging>pom</packaging>
   <name>0Click Meeting Parent Module</name>
   <description>Maven Master hosted at Eclipse Scout</description>
@@ -75,7 +75,7 @@
     <master_plugin_nexus-staging_version>1.6.6</master_plugin_nexus-staging_version>
     <master_plugin_properties_version>2.0.1</master_plugin_properties_version>
     <master_plugin_exec_version>1.4.0</master_plugin_exec_version>
-    <master_release_checkinMessage>[release] version updated to 1.1.4</master_release_checkinMessage>
+    <master_release_checkinMessage>[release] version updated to 1.1.5</master_release_checkinMessage>
     <master_plugin_eclipse_version>2.10</master_plugin_eclipse_version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <master_deploy_SnapshotUrl>https://repo.eclipse.org/content/repositories/scout-snapshots/</master_deploy_SnapshotUrl>
@@ -93,7 +93,7 @@
     <master_release_tagName>${base.version}.I</master_release_tagName>
     <master_plugin_site_version>3.4</master_plugin_site_version>
     <master_plugin_versions_version>2.2</master_plugin_versions_version>
-    <org.zeroclick.meeting.version>1.1.4</org.zeroclick.meeting.version>
+    <org.zeroclick.meeting.version>1.1.5</org.zeroclick.meeting.version>
     <master_webTest_skip>false</master_webTest_skip>
     <master_plugin_tycho_version>0.22.0</master_plugin_tycho_version>
     <master_release_milestoneVersion>I</master_release_milestoneVersion>

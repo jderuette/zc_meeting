@@ -284,8 +284,8 @@ public class UserService extends CommonService implements IUserService {
 
 				final Boolean acceptedCPSDateValid = null != acceptedCpsDate
 						&& acceptedCpsDate.after(documentRoleData.getStartDate());
-				final Boolean accepteWithdrawDateValid = null != accepteWithdrawDate
-						&& accepteWithdrawDate.after(documentRoleData.getStartDate());
+				// Withdrawal is required only ONCE for a specific subscription
+				final Boolean accepteWithdrawDateValid = null != accepteWithdrawDate;
 
 				if (subscriptionId == 3l) { // free
 					// only CPS

@@ -74,10 +74,6 @@ public class ValidateCpsForm extends AbstractForm {
 		this.startInternalExclusive(new ModifyHandler(Boolean.TRUE));
 	}
 
-	// public void startModify() {
-	// this.startInternalExclusive(new ModifyHandler());
-	// }
-
 	public CancelButton getCancelButton() {
 		return this.getFieldByClass(CancelButton.class);
 	}
@@ -147,7 +143,7 @@ public class ValidateCpsForm extends AbstractForm {
 		// this.getUserIdField().setEnabledGranted(isSubscriptionAdmin);
 
 		// this.getStartDateField().setVisibleGranted(isSubscriptionAdmin);
-		// this.getStartDateField().setEnabledGranted(isSubscriptionAdmin);
+		this.getStartDateField().setEnabledGranted(isSubscriptionAdmin);
 
 		this.getAcceptedCpsDateField().setVisibleGranted(isSubscriptionAdmin);
 		this.getAcceptedWithdrawalDateField().setVisibleGranted(isSubscriptionAdmin);
@@ -169,9 +165,16 @@ public class ValidateCpsForm extends AbstractForm {
 
 			this.getAcceptWithdrawalField().setMandatory(Boolean.FALSE);
 			this.getAcceptWithdrawalField().setVisible(Boolean.FALSE);
+		} else {
+			// if only CPS (re) validation, no (Zoho) subscription links
+			this.getAcceptWithdrawalField().setMandatory(!this.isSubscriptionPaymentValid());
+			this.getAcceptWithdrawalField().setVisible(!this.isSubscriptionPaymentValid());
 		}
-
 		this.loadCpsText(this.getSubscriptionIdField().getValue());
+	}
+
+	private Boolean isSubscriptionPaymentValid() {
+		return null != this.getAcceptedWithdrawalDateField().getValue();
 	}
 
 	private Date getNowUserDate() {
@@ -276,10 +279,10 @@ public class ValidateCpsForm extends AbstractForm {
 									.setValue(ValidateCpsForm.this.getNowUserDate());
 							if (ValidateCpsForm.this.getAcceptWithdrawalField().isVisible()) {
 								if (ValidateCpsForm.this.getAcceptWithdrawalField().getValue()) {
-									ValidateCpsForm.this.getAddSubscriptionField().setActive();
+									ValidateCpsForm.this.getAddSubscriptionField().activateIfRequired();
 								}
 							} else {
-								ValidateCpsForm.this.getAddSubscriptionField().setActive();
+								ValidateCpsForm.this.getAddSubscriptionField().activateIfRequired();
 							}
 						} else {
 							ValidateCpsForm.this.getAcceptedCpsDateField().setValue(null);
@@ -335,10 +338,10 @@ public class ValidateCpsForm extends AbstractForm {
 									.setValue(ValidateCpsForm.this.getNowUserDate());
 							if (ValidateCpsForm.this.getAcceptCpsField().isVisible()) {
 								if (ValidateCpsForm.this.getAcceptCpsField().getValue()) {
-									ValidateCpsForm.this.getAddSubscriptionField().setActive();
+									ValidateCpsForm.this.getAddSubscriptionField().activateIfRequired();
 								}
 							} else {
-								ValidateCpsForm.this.getAddSubscriptionField().setActive();
+								ValidateCpsForm.this.getAddSubscriptionField().activateIfRequired();
 							}
 						} else {
 							ValidateCpsForm.this.getAcceptedWithdrawalDateField().setValue(null);
@@ -400,7 +403,7 @@ public class ValidateCpsForm extends AbstractForm {
 					return "AABB66";
 				}
 
-				public void setActive() {
+				public void activateIfRequired() {
 					// TODO Djer enable OK button *after* user click on link
 					ValidateCpsForm.this.getOkButton().setActive();
 					// ValidateCpsForm.this.getOkButton().setInactive(TEXTS.get("zc.user.role.subscription.mustChooseSubscription"));
@@ -409,12 +412,13 @@ public class ValidateCpsForm extends AbstractForm {
 					final Long subscriptionId = ValidateCpsForm.this.getSubscriptionIdField().getValue();
 					final String url = subscriptionHelper.getSubscriptionPaymentURL(subscriptionId);
 					this.setValue(url);
-					// final Boolean isNewSubscription =
-					// subscriptionHelper.isNewSubscriptionForCurrentuser(subscriptionId);
-					if (null != url) { // payment required if payment URL
-										// configured
-						this.setVisible(Boolean.TRUE);
-						ValidateCpsForm.this.getOkButton().setPayementRequired();
+					final Boolean isPaymentValid = ValidateCpsForm.this.isSubscriptionPaymentValid();
+					if (!isPaymentValid) {
+						if (null != url) {
+							// payment required if payment URL configured
+							this.setVisible(Boolean.TRUE);
+							ValidateCpsForm.this.getOkButton().setPayementRequired();
+						}
 					}
 				}
 
