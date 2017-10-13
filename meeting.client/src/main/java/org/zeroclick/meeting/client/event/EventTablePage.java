@@ -690,8 +690,9 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				} else {
 					final int userDecision = MessageBoxes.createYesNo()
 							.withHeader(TEXTS.get("zc.subscription.notAllowed.title"))
-							.withBody(subscriptionData.getUserMessage()).withIconId(Icons.ExclamationMark)
-							.withSeverity(IStatus.WARNING).show();
+							.withBody(subscriptionData.getUserMessage())
+							.withYesButtonText(TEXTS.get("zc.subscription.notAllowed.yesButton"))
+							.withIconId(Icons.ExclamationMark).withSeverity(IStatus.WARNING).show();
 
 					if (userDecision == IMessageBox.YES_OPTION) {
 						final ValidateCpsForm validateCpsForm = new ValidateCpsForm();
