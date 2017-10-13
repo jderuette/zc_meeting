@@ -61,4 +61,6 @@ public interface IUserService extends IService {
 
 	ValidateCpsFormData create(ValidateCpsFormData formData);
 
+	ValidateCpsFormData getActiveSubscriptionDetails(Long userId);
+
 }

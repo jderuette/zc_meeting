@@ -148,9 +148,11 @@ public class RoleService extends CommonService implements IRoleService {
 		}
 
 		final LinkedRoleRowData documentRoleData = new DocumentFormData.LinkedRole.LinkedRoleRowData();
+		documentRoleData.setRoleId(roleId);
+		documentRoleData.setDocumentId(documentId);
 
-		SQL.selectInto(SQLs.ROLE_DOCUMENT_SELECT_DOCUMENT_ROLE, documentRoleData, new NVPair("roleId", roleId),
-				new NVPair("documentId", documentId));
+		SQL.selectInto(SQLs.ROLE_DOCUMENT_SELECT_ROLE_DOCUMENT + SQLs.ROLE_DOCUMENT_SELECT_ROLE_DOCUMENT_INTO,
+				documentRoleData);
 		return documentRoleData;
 	}
 

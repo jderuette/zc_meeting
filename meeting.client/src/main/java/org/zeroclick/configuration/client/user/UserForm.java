@@ -1,14 +1,13 @@
 package org.zeroclick.configuration.client.user;
 
+import java.util.Date;
 import java.util.Locale;
 
 import org.eclipse.scout.rt.client.dto.FormData;
-import org.eclipse.scout.rt.client.ui.basic.cell.Cell;
 import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
-import org.eclipse.scout.rt.client.ui.basic.table.ITableRow;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractDateColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractLongColumn;
-import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractStringColumn;
+import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractSmartColumn;
 import org.eclipse.scout.rt.client.ui.form.AbstractForm;
 import org.eclipse.scout.rt.client.ui.form.AbstractFormHandler;
 import org.eclipse.scout.rt.client.ui.form.fields.booleanfield.AbstractBooleanField;
@@ -37,6 +36,7 @@ import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
 import org.zeroclick.common.security.ScoutServiceCredentialVerifier;
 import org.zeroclick.comon.text.TextsHelper;
+import org.zeroclick.comon.user.AppUserHelper;
 import org.zeroclick.configuration.client.user.UserForm.MainBox.CancelButton;
 import org.zeroclick.configuration.client.user.UserForm.MainBox.ConfirmPasswordField;
 import org.zeroclick.configuration.client.user.UserForm.MainBox.EmailField;
@@ -54,6 +54,7 @@ import org.zeroclick.configuration.client.user.UserForm.MainBox.UserDetailBox.Su
 import org.zeroclick.configuration.client.user.UserForm.MainBox.UserIdField;
 import org.zeroclick.configuration.shared.role.CreateAssignToRolePermission;
 import org.zeroclick.configuration.shared.role.RoleLookupCall;
+import org.zeroclick.configuration.shared.role.SubscriptionLookupCall;
 import org.zeroclick.configuration.shared.user.CreateUserPermission;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.ReadUserPermission;
@@ -460,7 +461,6 @@ public class UserForm extends AbstractForm {
 					protected void execInitField() {
 						super.execInitField();
 						final Boolean isUserAdmin = UserForm.this.isUserReadAmin();
-						this.getTable().getSubscriptionIdColumn().setVisibleGranted(isUserAdmin);
 						this.getTable().getAcceptedCpsDateColumn().setVisibleGranted(isUserAdmin);
 						this.getTable().getAcceptedWithdrawalDateColumn().setVisibleGranted(isUserAdmin);
 					}
@@ -485,28 +485,56 @@ public class UserForm extends AbstractForm {
 							return this.getColumnSet().getColumnByClass(AcceptedWithdrawalDateColumn.class);
 						}
 
-						public NameColumn getNameColumn() {
-							return this.getColumnSet().getColumnByClass(NameColumn.class);
+						public SubscriptionIdColumn getSubscriptionIdColumn() {
+							return this.getColumnSet().getColumnByClass(SubscriptionIdColumn.class);
+						}
+
+						public UserIdColumn getUserIdColumn() {
+							return this.getColumnSet().getColumnByClass(UserIdColumn.class);
 						}
 
 						public StartDateColumn getStartDateColumn() {
 							return this.getColumnSet().getColumnByClass(StartDateColumn.class);
 						}
 
-						public SubscriptionIdColumn getSubscriptionIdColumn() {
-							return this.getColumnSet().getColumnByClass(SubscriptionIdColumn.class);
-						}
-
 						@Order(1000)
-						public class SubscriptionIdColumn extends AbstractLongColumn {
+						public class SubscriptionIdColumn extends AbstractSmartColumn<Long> {
 							@Override
 							protected String getConfiguredHeaderText() {
-								return TEXTS.get("zc.user.role.subscription.id");
+								return TEXTS.get("zc.user.role.subscription.name");
+							}
+
+							@Override
+							protected Class<? extends ILookupCall<Long>> getConfiguredLookupCall() {
+								return SubscriptionLookupCall.class;
+							}
+
+							@Override
+							protected boolean getConfiguredUiSortPossible() {
+								return Boolean.TRUE;
 							}
 
 							@Override
 							protected int getConfiguredWidth() {
-								return 25;
+								return 100;
+							}
+						}
+
+						@Order(2000)
+						public class UserIdColumn extends AbstractLongColumn {
+							@Override
+							protected String getConfiguredHeaderText() {
+								return TEXTS.get("zc.user.role.subscription.userId");
+							}
+
+							@Override
+							protected boolean getConfiguredVisible() {
+								return Boolean.FALSE;
+							}
+
+							@Override
+							protected int getConfiguredWidth() {
+								return 100;
 							}
 						}
 
@@ -549,25 +577,6 @@ public class UserForm extends AbstractForm {
 						}
 
 						@Order(4000)
-						public class NameColumn extends AbstractStringColumn {
-							@Override
-							protected String getConfiguredHeaderText() {
-								return TEXTS.get("zc.user.role.subscription.name");
-							}
-
-							@Override
-							protected void execDecorateCell(final Cell cell, final ITableRow row) {
-								final String translated = TEXTS.getWithFallback(cell.getText(), cell.getText());
-								cell.setText(translated);
-							}
-
-							@Override
-							protected int getConfiguredWidth() {
-								return 100;
-							}
-						}
-
-						@Order(5000)
 						public class AcceptedCpsDateColumn extends AbstractDateColumn {
 							@Override
 							protected String getConfiguredHeaderText() {
@@ -590,7 +599,7 @@ public class UserForm extends AbstractForm {
 							}
 						}
 
-						@Order(6000)
+						@Order(5000)
 						public class AcceptedWithdrawalDateColumn extends AbstractDateColumn {
 							@Override
 							protected String getConfiguredHeaderText() {
@@ -701,20 +710,22 @@ public class UserForm extends AbstractForm {
 	protected Boolean handleSubscriptionModification() {
 		Boolean subscriptionAndCpsValid = Boolean.TRUE;
 		if (UserForm.this.getSubscriptionBox().getValueChanged()) {
+			final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
+			final Date startDate = appUserHelper.getUserNowInHisTimeZone(this.getUserIdField().getValue());
+			final ValidateCpsForm validateCpsForm = new ValidateCpsForm();
+			validateCpsForm.getUserIdField().setValue(this.getUserIdField().getValue());
+			validateCpsForm.getSubscriptionIdField().setValue(this.getSubscriptionBox().getValue());
+			validateCpsForm.getStartDateField().setValue(startDate);
 			if (this.isMyself()) {
-				final ValidateCpsForm validateCpsForm = new ValidateCpsForm();
-				validateCpsForm.getUserIdField().setValue(this.getUserIdField().getValue());
-				validateCpsForm.getSubscriptionIdField().setValue(this.getSubscriptionBox().getValue());
 				validateCpsForm.setModal(Boolean.TRUE);
 				validateCpsForm.startNew(this.getSubscriptionBox().getValue());
-
 				validateCpsForm.waitFor();
-
 				if (!validateCpsForm.isFormStored()) {
 					this.getSubscriptionBox().resetValue();
-					;
 					subscriptionAndCpsValid = Boolean.FALSE;
 				}
+			} else {
+				// validateCpsForm.startNewFromAdmin(this.getSubscriptionBox().getValue());
 			}
 		}
 		return subscriptionAndCpsValid;

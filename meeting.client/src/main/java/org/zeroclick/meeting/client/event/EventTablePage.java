@@ -686,11 +686,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				final SubscriptionHelperData subscriptionData = subHelper.canCreateEvent();
 
 				if (subscriptionData.isAccessAllowed()) {
-					final EventForm form = new EventForm();
-					// form.setEnabledGranted(subscriptionData.isAccessAllowed());
-					form.setVisibleGranted(
-							ACCESS.getLevel(new CreateEventPermission()) >= CreateEventPermission.LEVEL_SUB_FREE);
-					form.startNew();
+					this.loadEventForm();
 				} else {
 					final int userDecision = MessageBoxes.createYesNo()
 							.withHeader(TEXTS.get("zc.subscription.notAllowed.title"))
@@ -702,10 +698,24 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 						validateCpsForm.getUserIdField().setValue(Table.this.getCurrentUserId());
 						validateCpsForm.setModal(Boolean.TRUE);
 						validateCpsForm.startNew();
+						validateCpsForm.waitFor();
 					} else {
 						// Do nothing
 					}
+					// if user subscribe to subscription witch give him access
+					final SubscriptionHelperData subscriptionAfterData = subHelper.canCreateEvent();
+					if (subscriptionAfterData.isAccessAllowed()) {
+						this.loadEventForm();
+					}
 				}
+			}
+
+			private void loadEventForm() {
+				final EventForm form = new EventForm();
+				// form.setEnabledGranted(subscriptionData.isAccessAllowed());
+				form.setVisibleGranted(
+						ACCESS.getLevel(new CreateEventPermission()) >= CreateEventPermission.LEVEL_SUB_FREE);
+				form.startNew();
 			}
 
 			@Override

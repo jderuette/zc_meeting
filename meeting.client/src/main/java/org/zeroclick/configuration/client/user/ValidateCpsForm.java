@@ -23,7 +23,6 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
-import org.zeroclick.comon.date.DateHelper;
 import org.zeroclick.comon.user.AppUserHelper;
 import org.zeroclick.configuration.client.user.ValidateCpsForm.MainBox.BottomBox;
 import org.zeroclick.configuration.client.user.ValidateCpsForm.MainBox.BottomBox.AcceptConditionBox;
@@ -67,6 +66,12 @@ public class ValidateCpsForm extends AbstractForm {
 	public void startModify(final Long defaultSubscriptionIdValue) {
 		this.defaultSubscriptionIdValue = defaultSubscriptionIdValue;
 		this.startInternalExclusive(new ModifyHandler());
+	}
+
+	public void startReValidate(final Long userId) {
+		this.defaultSubscriptionIdValue = 4l;
+		this.getUserIdField().setValue(userId);
+		this.startInternalExclusive(new ModifyHandler(Boolean.TRUE));
 	}
 
 	// public void startModify() {
@@ -141,7 +146,7 @@ public class ValidateCpsForm extends AbstractForm {
 		this.getUserIdField().setVisibleGranted(isSubscriptionAdmin);
 		// this.getUserIdField().setEnabledGranted(isSubscriptionAdmin);
 
-		this.getStartDateField().setVisibleGranted(isSubscriptionAdmin);
+		// this.getStartDateField().setVisibleGranted(isSubscriptionAdmin);
 		// this.getStartDateField().setEnabledGranted(isSubscriptionAdmin);
 
 		this.getAcceptedCpsDateField().setVisibleGranted(isSubscriptionAdmin);
@@ -171,15 +176,17 @@ public class ValidateCpsForm extends AbstractForm {
 
 	private Date getNowUserDate() {
 		final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
-		final DateHelper dateHelper = BEANS.get(DateHelper.class);
-
-		return dateHelper.toUserDate(appUserHelper.getUserNow(this.getUserIdField().getValue()));
+		return appUserHelper.getUserNowInHisTimeZone(this.getUserIdField().getValue());
 	}
 
 	private void loadCpsText(final Long subscriptionId) {
 		final SubscriptionHelper subscriptionHelper = BEANS.get(SubscriptionHelper.class);
-		this.getCpsTextField().setValue(subscriptionHelper.getCpsText(subscriptionId));
-
+		final String cpsText = subscriptionHelper.getCpsText(subscriptionId);
+		if (null == cpsText || "".equals(cpsText)) {
+			this.getCpsTextField().setVisible(Boolean.FALSE);
+		} else {
+			this.getCpsTextField().setValue(cpsText);
+		}
 	}
 
 	@Order(1000)
@@ -501,12 +508,31 @@ public class ValidateCpsForm extends AbstractForm {
 
 	public class ModifyHandler extends AbstractFormHandler {
 
+		Boolean validationRequired;
+
+		public ModifyHandler() {
+			super();
+			this.validationRequired = Boolean.FALSE;
+		}
+
+		public ModifyHandler(final Boolean forceValidation) {
+			super();
+			this.validationRequired = forceValidation;
+		}
+
 		@Override
 		protected void execLoad() {
 			final IUserService service = BEANS.get(IUserService.class);
-			ValidateCpsFormData formData = new ValidateCpsFormData();
-			ValidateCpsForm.this.exportFormData(formData);
-			formData = service.load(formData);
+			ValidateCpsFormData formData = null;
+			if (this.validationRequired) {
+				// assume this a re-validation
+				formData = service.getActiveSubscriptionDetails(ValidateCpsForm.this.getUserIdField().getValue());
+				ValidateCpsForm.this.getCancelButton().setVisible(Boolean.FALSE);
+			} else {
+				formData = new ValidateCpsFormData();
+				ValidateCpsForm.this.exportFormData(formData);
+				formData = service.load(formData);
+			}
 			ValidateCpsForm.this.importFormData(formData);
 
 			ValidateCpsForm.this.setEnabledPermission(
@@ -579,4 +605,5 @@ public class ValidateCpsForm extends AbstractForm {
 			}
 		}
 	}
+
 }

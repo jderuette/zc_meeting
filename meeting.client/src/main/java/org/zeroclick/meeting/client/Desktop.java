@@ -137,9 +137,9 @@ public class Desktop extends AbstractDesktop {
 		final UserFormData userDetails = userService.getCurrentUserDetails();
 		if (!userDetails.getActiveSubscriptionValid()) {
 			final ValidateCpsForm validateCpsForm = new ValidateCpsForm();
-			validateCpsForm.getUserIdField().setValue(currentUserId);
-			validateCpsForm.getSubscriptionIdField().setValue(userDetails.getSubscriptionBox().getValue());
-			validateCpsForm.startModify(userDetails.getSubscriptionBox().getValue());
+			validateCpsForm.startReValidate(currentUserId);
+			// accepted CPS/withdraw and respective Date are let empty to force
+			// User re-check
 		}
 	}
 

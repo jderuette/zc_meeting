@@ -239,13 +239,13 @@ public class UserFormData extends AbstractFormData {
 
 			private static final long serialVersionUID = 1L;
 			public static final String subscriptionId = "subscriptionId";
+			public static final String userId = "userId";
 			public static final String startDate = "startDate";
-			public static final String name = "name";
 			public static final String acceptedCpsDate = "acceptedCpsDate";
 			public static final String acceptedWithdrawalDate = "acceptedWithdrawalDate";
 			private Long m_subscriptionId;
+			private Long m_userId;
 			private Date m_startDate;
-			private String m_name;
 			private Date m_acceptedCpsDate;
 			private Date m_acceptedWithdrawalDate;
 
@@ -257,20 +257,20 @@ public class UserFormData extends AbstractFormData {
 				m_subscriptionId = newSubscriptionId;
 			}
 
+			public Long getUserId() {
+				return m_userId;
+			}
+
+			public void setUserId(Long newUserId) {
+				m_userId = newUserId;
+			}
+
 			public Date getStartDate() {
 				return m_startDate;
 			}
 
 			public void setStartDate(Date newStartDate) {
 				m_startDate = newStartDate;
-			}
-
-			public String getName() {
-				return m_name;
-			}
-
-			public void setName(String newName) {
-				m_name = newName;
 			}
 
 			public Date getAcceptedCpsDate() {

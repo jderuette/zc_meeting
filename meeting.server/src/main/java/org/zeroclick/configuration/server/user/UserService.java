@@ -244,21 +244,27 @@ public class UserService extends CommonService implements IUserService {
 		return formDataSubscription;
 	}
 
-	private Object[][] getActiveSubscriptionDetails(final Long userId, final Boolean checkAccess) {
+	@Override
+	public ValidateCpsFormData getActiveSubscriptionDetails(final Long userId) {
+		return this.getActiveSubscriptionDetails(userId, Boolean.TRUE);
+	}
+
+	private ValidateCpsFormData getActiveSubscriptionDetails(final Long userId, final Boolean checkAccess) {
 		if (checkAccess && !ACCESS.check(new ReadUserPermission(userId))) {
 			this.throwAuthorizationFailed();
 		}
-		final UserFormData formDataSubscription = new UserFormData();
-		formDataSubscription.getUserId().setValue(userId);
-		final Object[][] datas = SQL.select(SQLs.USER_ROLE_SELECT_ACTIVE_SUBSCRIPTION_DETAILS, formDataSubscription);
-		return datas;
+		final ValidateCpsFormData formDataSubscription = new ValidateCpsFormData();
+		SQL.selectInto(
+				SQLs.USER_ROLE_SELECT_ACTIVE_SUBSCRIPTION_DETAILS + SQLs.USER_ROLE_SELECT_SUBSCRIPTIONS_DETAILS_INTO,
+				new NVPair("subscriptionDetails", formDataSubscription), new NVPair("userId", userId));
+		return formDataSubscription;
 	}
 
 	private Boolean isActiveSubscriptionValid(final Long userId, final Boolean checkAccess) {
-		final Object[][] activeSubscriptiondatas = this.getActiveSubscriptionDetails(userId, checkAccess);
-		Boolean subscriptionValid = Boolean.FALSE;
-		if (null != activeSubscriptiondatas && activeSubscriptiondatas.length > 0) {
-			final Long subscriptionId = (Long) activeSubscriptiondatas[0][0];
+		final ValidateCpsFormData activeSubscriptionDatas = this.getActiveSubscriptionDetails(userId, checkAccess);
+		Boolean subscriptionValid = Boolean.TRUE;
+		if (null != activeSubscriptionDatas && null != activeSubscriptionDatas.getSubscriptionId().getValue()) {
+			final Long subscriptionId = activeSubscriptionDatas.getSubscriptionId().getValue();
 
 			final IRoleService roleService = BEANS.get(IRoleService.class);
 			final DocumentFormData activeDocument = roleService.getActiveDocument(subscriptionId);
@@ -272,23 +278,14 @@ public class UserService extends CommonService implements IUserService {
 			// A document exists for the current subscription and has a start
 			// (applicable) date
 			if (null != documentRoleData && null != documentRoleData.getStartDate()) {
-				final Object acceptedCpsDateData = activeSubscriptiondatas[0][3];
-				final Object acceptedWithdrawDateData = activeSubscriptiondatas[0][4];
 
-				Date acceptedCpsDate = null;
-				if (null != acceptedCpsDateData) {
-					acceptedCpsDate = (Date) acceptedCpsDateData;
-				}
-
-				Date accepteWithdrawDate = null;
-				if (null != acceptedWithdrawDateData) {
-					accepteWithdrawDate = (Date) acceptedWithdrawDateData;
-				}
+				final Date acceptedCpsDate = activeSubscriptionDatas.getAcceptedCpsDate().getValue();
+				final Date accepteWithdrawDate = activeSubscriptionDatas.getAcceptedWithdrawalDate().getValue();
 
 				final Boolean acceptedCPSDateValid = null != acceptedCpsDate
-						&& !acceptedCpsDate.after(documentRoleData.getStartDate());
+						&& acceptedCpsDate.after(documentRoleData.getStartDate());
 				final Boolean accepteWithdrawDateValid = null != accepteWithdrawDate
-						&& !accepteWithdrawDate.after(documentRoleData.getStartDate());
+						&& accepteWithdrawDate.after(documentRoleData.getStartDate());
 
 				if (subscriptionId == 3l) { // free
 					// only CPS
@@ -441,7 +438,7 @@ public class UserService extends CommonService implements IUserService {
 		validateCpsFakeFormData.getAcceptedCpsDate().setValue(null);
 		validateCpsFakeFormData.getAcceptedWithdrawalDate().setValue(null);
 
-		SQL.update(SQLs.USER_ROLE_UPDATE_CPS, validateCpsFakeFormData);
+		SQL.update(SQLs.SUBSCRIPTION_INSERT, validateCpsFakeFormData);
 	}
 
 	private Set<Long> getItemsAdded(final Set<Long> existingItems, final Set<Long> newItems) {
@@ -516,7 +513,8 @@ public class UserService extends CommonService implements IUserService {
 		final AccessControlService acs = BEANS.get(AccessControlService.class);
 
 		LOG.debug("Store CPS User datas for user Id :" + formData.getUserId().getValue()
-				+ " for subscription (role) id : " + formData.getSubscriptionId().getValue());
+				+ " for subscription (role) id : " + formData.getSubscriptionId().getValue() + " start at : "
+				+ formData.getStartDate().getValue());
 
 		SQL.update(SQLs.USER_ROLE_UPDATE_CPS, formData);
 

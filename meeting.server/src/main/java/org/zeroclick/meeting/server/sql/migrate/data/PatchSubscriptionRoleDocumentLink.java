@@ -15,6 +15,9 @@ limitations under the License.
  */
 package org.zeroclick.meeting.server.sql.migrate.data;
 
+import java.util.Date;
+
+import org.eclipse.scout.rt.platform.holders.NVPair;
 import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,6 +84,37 @@ public class PatchSubscriptionRoleDocumentLink extends AbstractDataPatcher {
 
 	private void migrateData() {
 		LOG.info("Modify Subscription's link between role and document upgraing default data");
+
+		// add "missing" subscription metadata for default "free" subscription
+		// for existing users
+
+		final Object[][] existingUserWithRole = SQL.select(SQLs.USER_ROLE_SELECT_ALL);
+
+		if (null != existingUserWithRole && existingUserWithRole.length > 0) {
+			for (int row = 0; row < existingUserWithRole.length; row++) {
+				final Long userId = (Long) existingUserWithRole[row][0];
+				final Long roleId = (Long) existingUserWithRole[row][1];
+				final Date startDate = (Date) existingUserWithRole[row][2];
+
+				// check if subscription metaData exists
+				final Object[][] subscriptionMetadata = SQL.select(
+						SQLs.SUBSCRIPTION_SELECT_ALL + SQLs.USER_ROLE_FILTER_USER_ID
+								+ SQLs.USER_ROLE_FILTER_SUBSCRIPTION_ID + SQLs.USER_ROLE_FILTER_START_DATE,
+						new NVPair("userId", userId), new NVPair("subscriptionId", roleId),
+						new NVPair("startDate", startDate));
+
+				if (null == subscriptionMetadata || subscriptionMetadata.length == 0) {
+					LOG.info("Adding missing subscription metadata for userId : " + userId
+							+ ", subscriptionId (roleId) " + roleId + ", StartDate " + startDate);
+					SQL.insert(SQLs.SUBSCRIPTION_INSERT, new NVPair("userId", userId),
+							new NVPair("subscriptionId", roleId), new NVPair("startDate", startDate));
+				} else {
+					LOG.debug("Subscription metadata already created for userId : " + userId
+							+ ", subscriptionId (roleId) " + roleId + ", StartDate " + startDate);
+				}
+			}
+
+		}
 
 	}
 

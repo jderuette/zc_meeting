@@ -313,6 +313,8 @@ public interface SQLs {
 			+ USER_ROLE_SELECT_ACTIVE_SUBSCRIPTION_FROM + USER_ROLE_SELECT_ACTIVE_SUBSCRIPTION_FROM_ADD_METADATA
 			+ USER_ROLE_SELECT_ACTIVE_SUBSCRIPTION_FILTER;
 
+	String USER_ROLE_SELECT_ALL = "SELECT user_id, role_id, start_date FROM USER_ROLE WHERE 1=1";
+
 	String USER_ROLE_INSERT = "INSERT INTO USER_ROLE (user_id, role_id) VALUES (:userId, :{rolesBox})";
 	String USER_ROLE_INSERT_WITH_START_DATE = "INSERT INTO USER_ROLE (user_id, role_id, start_date) VALUES (:userId, :{rolesBox}, :{startDate})";
 
@@ -544,7 +546,10 @@ public interface SQLs {
 			+ "_USER_ROLE_FK FOREIGN KEY (user_id, role_id, start_date)" + " REFERENCES USER_ROLE(user_id, role_id,"
 			+ PatchCreateSubscription.ADDED_USER_ROLE_COLUMN + "))";
 
-	String USER_ROLE_SELECT_SUBSCRIPTIONS_DETAILS = "SELECT USER_ROLE.role_id, USER_ROLE.start_date, ROLE.name, "
+	String SUBSCRIPTION_SELECT_ALL = "SELECT user_id, role_id, start_date, accepted_CPS_date, accepted_withdrawal_date FROM "
+			+ PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME + " WHERE 1=1";
+
+	String USER_ROLE_SELECT_SUBSCRIPTIONS_DETAILS = "SELECT USER_ROLE.role_id, USER_ROLE.user_id, USER_ROLE.start_date, "
 			+ PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME + ".accepted_CPS_date, "
 			+ PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME
 			+ ".accepted_withdrawal_date FROM USER_ROLE INNER JOIN ROLE ON USER_ROLE.role_id = ROLE.role_id LEFT OUTER JOIN "
@@ -553,7 +558,7 @@ public interface SQLs {
 			+ PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME + ".user_id AND USER_ROLE.start_date="
 			+ PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME + ".start_date WHERE ROLE."
 			+ PatchCreateSubscription.ADDED_ROLE_COLUMN + "='" + IRoleTypeLookupService.TYPE_SUBSCRIPTION + "'";
-	String USER_ROLE_SELECT_SUBSCRIPTIONS_DETAILS_INTO = " INTO :{subscriptionDetails.subscriptionId}, :{subscriptionDetails.startDate}, :{subscriptionDetails.name}, :{subscriptionDetails.acceptedCpsDate}, :{subscriptionDetails.acceptedWithdrawalDate}";
+	String USER_ROLE_SELECT_SUBSCRIPTIONS_DETAILS_INTO = " INTO :{subscriptionDetails.subscriptionId}, :{subscriptionDetails.userId}, :{subscriptionDetails.startDate}, :{subscriptionDetails.acceptedCpsDate}, :{subscriptionDetails.acceptedWithdrawalDate}";
 	String USER_ROLE_SELECT_SUBSCRIPTIONS_DETAILS_INTO_CPS = " INTO :{subscriptionId}, :{acceptedCpsDate}, :{acceptedWithdrawalDate}";
 
 	String USER_ROLE_FILTER_USER_ID = " AND " + PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME + ".user_id=:userId";
@@ -613,6 +618,8 @@ public interface SQLs {
 			+ " WHERE role_id=:roleId AND start_date=(SELECT MAX(start_date) FROM "
 			+ PatchCreateSubscription.ROLE_DOCUMENT_TABLE_NAME + "  WHERE role_id=:roleId AND start_date <= NOW())";
 
-	String ROLE_DOCUMENT_SELECT_DOCUMENT_ROLE = "SELECT document_id, role_id, start_date FROM "
+	String ROLE_DOCUMENT_SELECT_ROLE_DOCUMENT = "SELECT document_id, role_id, start_date FROM "
 			+ PatchCreateSubscription.ROLE_DOCUMENT_TABLE_NAME + " WHERE role_id=:roleId AND document_id=:documentId";
+
+	String ROLE_DOCUMENT_SELECT_ROLE_DOCUMENT_INTO = " INTO :documentId, :roleId, :startDate";
 }
