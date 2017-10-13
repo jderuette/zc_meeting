@@ -48,6 +48,7 @@ import org.zeroclick.configuration.shared.user.ValidateCpsFormData;
 public class ValidateCpsForm extends AbstractForm {
 
 	private Long defaultSubscriptionIdValue;
+	private Boolean isSubscriptionPaymentValid;
 
 	@Override
 	protected String getConfiguredTitle() {
@@ -171,6 +172,9 @@ public class ValidateCpsForm extends AbstractForm {
 			this.getAcceptWithdrawalField().setVisible(!this.isSubscriptionPaymentValid());
 		}
 		this.loadCpsText(this.getSubscriptionIdField().getValue());
+
+		this.isSubscriptionPaymentValid = ValidateCpsForm.this.isSubscriptionPaymentValid();
+
 	}
 
 	private Boolean isSubscriptionPaymentValid() {
@@ -412,8 +416,8 @@ public class ValidateCpsForm extends AbstractForm {
 					final Long subscriptionId = ValidateCpsForm.this.getSubscriptionIdField().getValue();
 					final String url = subscriptionHelper.getSubscriptionPaymentURL(subscriptionId);
 					this.setValue(url);
-					final Boolean isPaymentValid = ValidateCpsForm.this.isSubscriptionPaymentValid();
-					if (!isPaymentValid) {
+
+					if (!ValidateCpsForm.this.isSubscriptionPaymentValid) {
 						if (null != url) {
 							// payment required if payment URL configured
 							this.setVisible(Boolean.TRUE);
