@@ -1,7 +1,5 @@
 package org.zeroclick.configuration.server.role;
 
-import java.util.UUID;
-
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.holders.NVPair;
@@ -21,8 +19,11 @@ import org.zeroclick.configuration.shared.role.IRoleService;
 import org.zeroclick.configuration.shared.role.ReadRolePermission;
 import org.zeroclick.configuration.shared.role.RoleFormData;
 import org.zeroclick.configuration.shared.role.RoleTablePageData;
+import org.zeroclick.configuration.shared.role.UpdateAssignToRolePermission;
 import org.zeroclick.configuration.shared.role.UpdateRolePermission;
+import org.zeroclick.meeting.server.sql.DatabaseHelper;
 import org.zeroclick.meeting.server.sql.SQLs;
+import org.zeroclick.meeting.server.sql.migrate.data.PatchOptimizeConfigSlot;
 
 public class RoleService extends CommonService implements IRoleService {
 
@@ -39,10 +40,6 @@ public class RoleService extends CommonService implements IRoleService {
 
 	@Override
 	public RoleFormData prepareCreate(final RoleFormData formData) {
-		// add a unique Role id if necessary
-		if (null == formData.getRoleId()) {
-			formData.setRoleId(UUID.randomUUID().hashCode());
-		}
 		return this.store(formData);
 	}
 
@@ -53,7 +50,7 @@ public class RoleService extends CommonService implements IRoleService {
 		}
 		// add a unique Role id if necessary
 		if (null == formData.getRoleId()) {
-			formData.setRoleId(UUID.randomUUID().hashCode());
+			formData.setRoleId(DatabaseHelper.get().getNextVal(PatchOptimizeConfigSlot.ROLE_ID_SEQ));
 		}
 		SQL.insert(SQLs.ROLE_INSERT, formData);
 		return this.store(formData);
@@ -74,7 +71,11 @@ public class RoleService extends CommonService implements IRoleService {
 		if (!ACCESS.check(new ReadRolePermission())) {
 			super.throwAuthorizationFailed();
 		}
-		SQL.selectInto(SQLs.ROLE_SELECT + SQLs.ROLE_SELECT_INTO, formData);
+		if (null == formData.getRoleId()) {
+			this.loadByRoleName(formData);
+		} else {
+			SQL.selectInto(SQLs.ROLE_SELECT + SQLs.ROLE_SELECT_INTO, formData);
+		}
 		return formData;
 	}
 
@@ -94,7 +95,67 @@ public class RoleService extends CommonService implements IRoleService {
 		SQL.insert(SQLs.ROLE_INSERT_NEW_LINKED_DOC, formData);
 		// No "store" because this table contains ONLY a PK
 		return formData;
+	}
 
+	@Override
+	public void delete(final RoleFormData formData) {
+		if (!ACCESS.check(new UpdateRolePermission())) {
+			super.throwAuthorizationFailed();
+		}
+		LOG.info("Deleting Role (and link to documents, and link to Users) for ROle ID : " + formData.getRoleId());
+
+		if (null == formData.getRoleId()) {
+			// try to find roleIde by name
+			this.loadByRoleName(formData);
+			if (null == formData.getRoleId()) {
+				throw new VetoException("Role Id (or valid roleName) required");
+			}
+		}
+
+		this.deleteUserRoleByRole(formData);
+
+		final AssignDocumentToRoleFormData assignDocFormData = new AssignDocumentToRoleFormData();
+		assignDocFormData.getRoleId().setValue(formData.getRoleId());
+		this.deleteAssignDocumentByRole(assignDocFormData);
+
+		SQL.insert(SQLs.ROLE_DELETE, formData);
+
+	}
+
+	private Long loadByRoleName(final RoleFormData formData) {
+		if (!ACCESS.check(new ReadRolePermission())) {
+			super.throwAuthorizationFailed();
+		}
+		LOG.info("Loading Role by Name : " + formData.getRoleName().getValue());
+		SQL.selectInto(SQLs.ROLE_SELECT_BY_NAME + SQLs.ROLE_SELECT_INTO, formData);
+
+		return formData.getRoleId();
+	}
+
+	private void deleteUserRoleByRole(final RoleFormData formData) {
+		if (!ACCESS.check(new UpdateAssignToRolePermission())) {
+			super.throwAuthorizationFailed();
+		}
+		LOG.info("Deleting all link between users and role for roleId : " + formData.getRoleId());
+		if (null == formData.getRoleId()) {
+			throw new VetoException("role ID required");
+		}
+
+		SQL.insert(SQLs.USER_ROLE_REMOVE_BY_ROLE, formData);
+
+	}
+
+	private void deleteAssignDocumentByRole(final AssignDocumentToRoleFormData formData) {
+		// To add linked Doc to role must be allowed to modify Role
+		if (!ACCESS.check(new UpdateRolePermission())) {
+			super.throwAuthorizationFailed();
+		}
+
+		if (null == formData.getRoleId().getValue()) {
+			throw new VetoException("Role ID required");
+		}
+
+		this.insertInsideNewTransaction(SQLs.ROLE_DELETE_LINKED_DOC_BY_ROLE, formData);
 	}
 
 	@Override
@@ -155,5 +216,4 @@ public class RoleService extends CommonService implements IRoleService {
 				documentRoleData);
 		return documentRoleData;
 	}
-
 }

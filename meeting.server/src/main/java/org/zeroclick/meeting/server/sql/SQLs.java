@@ -159,22 +159,24 @@ public interface SQLs {
 
 	String ROLE_PAGE_DATA_SELECT_INTO = " INTO :{role.roleId}, :{role.roleName}, :{role.type}";
 
-	String ROLE_INSERT = "INSERT INTO ROLE (role_id) VALUES (:roleId)";
+	String ROLE_INSERT = "INSERT INTO ROLE (role_id, type) VALUES (:roleId, '" + IRoleTypeLookupService.TYPE_BUSINESS
+			+ "')";
 
 	String ROLE_UPDATE = "UPDATE ROLE SET name=:roleName, type=:type WHERE role_id=:roleId";
 
 	String ROLE_SELECT = "SELECT role_id, name, type FROM ROLE WHERE 1=1 AND role_id = :roleId";
+	String ROLE_SELECT_BY_NAME = "SELECT role_id, name, type FROM ROLE WHERE 1=1 AND name = :roleName";
 	String ROLE_SELECT_INTO = " INTO :roleId, :roleName, :type";
 
 	String ROLE_LOOKUP = "SELECT role_id, name FROM ROLE WHERE 1=1 <key>   AND role_id = :key </key>"
 			+ " <text> AND UPPER(name) LIKE UPPER('%'||:text||'%') </text> <all> </all>";
 
 	String ROLE_LOOKUP_WITHOUT_SUBSCRIPTION = "SELECT role_id, name FROM ROLE WHERE type <> '"
-			+ IRoleTypeLookupService.TYPE_SUBSCRIPTION + "'<key>   AND role_id = :key </key>"
+			+ IRoleTypeLookupService.TYPE_SUBSCRIPTION + "' <key> AND role_id = :key </key>"
 			+ " <text> AND UPPER(name) LIKE UPPER('%'||:text||'%') </text> <all> </all>";
 
 	String ROLE_LOOKUP_SUBSCRIPTION = "SELECT role_id, name FROM ROLE WHERE type = '"
-			+ IRoleTypeLookupService.TYPE_SUBSCRIPTION + "'<key>   AND role_id = :key </key>"
+			+ IRoleTypeLookupService.TYPE_SUBSCRIPTION + "' <key> AND role_id = :key </key>"
 			+ " <text> AND UPPER(name) LIKE UPPER('%'||:text||'%') </text> <all> </all>";
 
 	String ROLE_SELECT_TYPE_FOR_SMART_FIELD = "SELECT DISTINCT type, type FROM ROLE WHERE 1=1";
@@ -187,6 +189,9 @@ public interface SQLs {
 
 	String ROLE_DELETE_LINKED_DOC = "DELETE FROM " + PatchCreateSubscription.ROLE_DOCUMENT_TABLE_NAME
 			+ " WHERE role_id=:roleId AND document_id=:documentId";
+
+	String ROLE_DELETE_LINKED_DOC_BY_ROLE = "DELETE FROM " + PatchCreateSubscription.ROLE_DOCUMENT_TABLE_NAME
+			+ " WHERE role_id=:roleId";
 
 	String ROLE_INSERT_SAMPLE = "INSERT INTO ROLE (role_id, name)";
 	String ROLE_INSERT_SAMPLE_WITH_TYPE = "INSERT INTO ROLE (role_id, name, type)";
@@ -235,7 +240,8 @@ public interface SQLs {
 
 	String ROLE_PERMISSION_INSERT = "INSERT INTO ROLE_PERMISSION (role_id, permission, level) VALUES (:roleId, :{permission}, :level)";
 
-	String ROLE_PERMISSION_DELETE = "DELETE FROM ROLE_PERMISSION WHERE role_id = :roleId AND permission = :{permissions} ";
+	String ROLE_PERMISSION_DELETE = "DELETE FROM ROLE_PERMISSION WHERE role_id = :roleId AND permission = :{permissions}";
+	String ROLE_PERMISSION_DELETE_BY_ROLE = "DELETE FROM ROLE_PERMISSION WHERE role_id = :roleId";
 
 	String ROLE_GENERIC_VALUES_ADD = " VALUES(__roleId__, '__permissionName__', __level__)";
 
@@ -283,7 +289,7 @@ public interface SQLs {
 
 	String USER_ROLE_SELECT = "SELECT user_id, role_id FROM USER_ROLE WHERE 1=1";
 	String USER_ROLE_SELECT_ROLE_ID = "SELECT USER_ROLE.role_id FROM USER_ROLE INNER JOIN ROLE on USER_ROLE.role_id = ROLE.role_id WHERE "
-			+ PatchCreateSubscription.ADDED_ROLE_COLUMN + "!='" + IRoleTypeLookupService.TYPE_SUBSCRIPTION + "'";
+			+ PatchCreateSubscription.ADDED_ROLE_COLUMN + " NOT IN('" + IRoleTypeLookupService.TYPE_SUBSCRIPTION + "')";
 	String USER_ROLE_SELECT_FILTER_ROLE_ID = " AND role_id=:roleId";
 	String USER_ROLE_SELECT_FILTER_USER = " AND USER_ROLE.user_id=:userId";
 
@@ -321,6 +327,8 @@ public interface SQLs {
 	// Avoid deleting role of kind "subscription" !!
 
 	String USER_ROLE_REMOVE = "DELETE FROM USER_ROLE WHERE user_id=:userId AND role_id=:{rolesBox}";
+	String USER_ROLE_REMOVE_BY_ROLE = "DELETE FROM USER_ROLE WHERE role_id=:{roleId}";
+	String USER_ROLE_REMOVE_BY_USER = "DELETE FROM USER_ROLE WHERE user_id=:{userId}";
 
 	String USER_ROLE_INSERT_SAMPLE = "INSERT INTO USER_ROLE (user_id, role_id)";
 	String USER_ROLE_VALUES_01 = " VALUES(1, 1)";
@@ -410,10 +418,13 @@ public interface SQLs {
 	String USER_UPDATE = "UPDATE APP_USER SET email=:email, login=:login, time_zone=:timeZone, invited_by=:invitedBy, language=:language WHERE user_id=:userId ";
 	String USER_UPDATE_ONBOARDING = "UPDATE APP_USER SET login=:login, time_zone=:timeZone, language=:language WHERE user_id=:userId ";
 	String USER_UPDATE_PASSWORD = "UPDATE APP_USER SET password=:hashedPassword WHERE user_id=:userId";
+	String USER_UPDATE_INVITED_BY_BY_USER = "UPDATE APP_USER SET invited_by=:invitedBy WHERE invited_by=:userId";
 
 	String USER_INSERT_SAMPLE = "INSERT INTO APP_USER (user_id, login, email, time_zone, password)";
 	String USER_VALUES_01 = " VALUES(nextval('USER_ID_SEQ'), 'djer13', 'djer13@gmail.com', 'Europe/Paris', 'kv6kmSYn4jnCyoQK/4cQjA==.7bXNiiq6QcbGKFge/UdQ7T5cFud69Wp+qRBGZLnMU8VZ3UMgFuWtb/BpVsFBlpUSfYBd8t06uOkmHAliGKisOA==')"; // Djer13
 	String USER_VALUES_02 = " VALUES(nextval('USER_ID_SEQ'), 'jeremie', 'jeremie.deruette@gmail.com', null, 'I/ocgG3Cp6QhLzIkrmYOQg==.GIxlDVNe8rl4r8WnnhT197qSBWaQIRvKnn4lNt6dqVWJ/aHDBCyxltXCNuWjYyyaynI34FM5x9Uz4hBBWMjYZw==')"; // Bob001
+
+	String USER_DELETE = "DELETE FROM APP_USER WHERE user_id=:userId";
 
 	String USER_CREATE_DROP = "CREATE TABLE APP_USE CASCADE";
 
@@ -505,7 +516,7 @@ public interface SQLs {
 	String DAY_DURATION_SELECT_FILTER_SLOT_USER_ID = " AND SLOT.user_id=:userId";
 	String DAY_DURATION_SELECT_FILTER_DAY_DURATION_ID = " AND day_duration_id=:dayDurationId";
 	String DAY_DURATION_SELECT_ORDER = " ORDER BY order_in_slot";
-	String DAY_DURATION_SELECT_INTO = " INTO :dayDurationId, :name, :slotStart, :slotEnd, :monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday, :weeklyPerpetual, :slotId, :slotCode";
+	String DAY_DURATION_SELECT_INTO = " INTO :{dayDurationId}, :{name}, :{slotStart}, :{slotEnd}, :{monday}, :{tuesday}, :{wednesday}, :{thursday}, :{friday}, :{saturday}, :{sunday}, :{weeklyPerpetual}, :{slotId}, :{slotCode}";
 	String DAY_DURATION_SELECT_FROM = " FROM DAY_DURATION";
 	String DAY_DURATION_SELECT_FROM_PLUS_GENERIC_WHERE = " FROM DAY_DURATION" + GENERIC_WHERE_FOR_SECURE_AND;
 
@@ -524,9 +535,9 @@ public interface SQLs {
 	String DAY_DURATION_VALUES_LUNCH = " VALUES (nextval('" + PatchSlotTable.DAY_DURATION_ID_SEQ
 			+ "'), 'zc.meeting.dayDuration.default', '12:00:00', '14:00:00', 'true', 'true', 'true', 'true', 'true', 'false', 'false', 'true', 0, __slotId__)";
 	String DAY_DURATION_VALUES_EVENING = " VALUES (nextval('" + PatchSlotTable.DAY_DURATION_ID_SEQ
-			+ "'),'zc.meeting.dayDuration.default', '20:00:00', '23:30:00', 'true', 'true', 'true', 'true', 'true', 'false', 'false', 'true', 0, __slotId__)";
+			+ "'),'zc.meeting.dayDuration.default', '19:00:00', '21:00:00', 'true', 'true', 'true', 'true', 'true', 'false', 'false', 'true', 0, __slotId__)";
 	String DAY_DURATION_VALUES_WWEEKEND = " VALUES (nextval('" + PatchSlotTable.DAY_DURATION_ID_SEQ
-			+ "'), 'zc.meeting.dayDuration.default', '10:00:00', '23:00:00', 'false', 'false', 'false', 'false', 'false', 'true', 'true', 'true', 0, __slotId__)";
+			+ "'), 'zc.meeting.dayDuration.default', '08:00:00', '18:00:00', 'false', 'false', 'false', 'false', 'false', 'true', 'true', 'true', 0, __slotId__)";
 
 	String SLOT_DROP_TABLE = "DROP TABLE SLOT";
 	String DAY_SURATION_DROP_TABLE = "DROP TABLE DAY_SURATION";

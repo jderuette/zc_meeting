@@ -26,15 +26,15 @@ import org.zeroclick.configuration.shared.role.UpdateRolePermission;
 @FormData(value = RoleFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class RoleForm extends AbstractForm {
 
-	private Integer roleId;
+	private Long roleId;
 
 	@FormData
-	public Integer getRoleId() {
+	public Long getRoleId() {
 		return this.roleId;
 	}
 
 	@FormData
-	public void setRoleId(final Integer roleId) {
+	public void setRoleId(final Long roleId) {
 		this.roleId = roleId;
 	}
 

@@ -20,6 +20,8 @@ public interface IRoleService extends IService {
 
 	RoleFormData create(RoleFormData formData);
 
+	void delete(RoleFormData roleFormData);
+
 	AssignDocumentToRoleFormData create(AssignDocumentToRoleFormData formData);
 
 	AssignDocumentToRoleFormData store(AssignDocumentToRoleFormData formData);

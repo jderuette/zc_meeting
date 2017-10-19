@@ -124,7 +124,9 @@ public class PatchSubscriptionRoleDocumentLink extends AbstractDataPatcher {
 
 		// Drop current PK and re-create the old one
 		this.getDatabaseHelper().deletePrimaryKey(PatchCreateSubscription.ROLE_DOCUMENT_TABLE_NAME);
-		SQL.insert(SQLs.ROLE_DOCUMENT_ADD_PK);
+		if (this.getDatabaseHelper().existTable(PatchCreateSubscription.ROLE_DOCUMENT_TABLE_NAME)) {
+			SQL.insert(SQLs.ROLE_DOCUMENT_ADD_PK);
+		}
 
 	}
 }

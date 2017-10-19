@@ -8,5 +8,6 @@ public interface IRoleTypeLookupService extends ILookupService<String> {
 
 	public static final String TYPE_BUSINESS = "business";
 	public static final String TYPE_SUBSCRIPTION = "subscription";
+	public static final String TYPE_TECH = "technical";
 
 }

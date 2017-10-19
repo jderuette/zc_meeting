@@ -1,5 +1,10 @@
 package org.zeroclick.configuration.server.role;
 
+import java.security.Permission;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Set;
+
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.holders.NVPair;
@@ -8,6 +13,7 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.eclipse.scout.rt.shared.services.common.security.IAccessControlService;
+import org.eclipse.scout.rt.shared.services.common.security.IPermissionService;
 import org.zeroclick.common.CommonService;
 import org.zeroclick.configuration.shared.role.CreatePermissionPermission;
 import org.zeroclick.configuration.shared.role.IAppPermissionService;
@@ -67,7 +73,7 @@ public class AppPermissionService extends CommonService implements IAppPermissio
 	}
 
 	@Override
-	public PermissionTablePageData getpermissionsByRole(final Integer roleId) {
+	public PermissionTablePageData getpermissionsByRole(final Long roleId) {
 		final PermissionTablePageData pageData = new PermissionTablePageData();
 
 		final RoleFormData roleFormData = new RoleFormData();
@@ -109,5 +115,29 @@ public class AppPermissionService extends CommonService implements IAppPermissio
 			permissions = new Object[0][0];
 		}
 		return permissions;
+	}
+
+	@Override
+	public Object[][] getpermissions() {
+		return this.getPermission(".zeroclick.");
+	}
+
+	private Object[][] getPermission(final String filter) {
+		final ArrayList<String> rows = new ArrayList<>(30);
+		final Set<Class<? extends Permission>> permissions = BEANS.get(IPermissionService.class)
+				.getAllPermissionClasses();
+
+		for (final Class<? extends Permission> permisison : permissions) {
+			if (permisison.getCanonicalName().contains(filter)) {
+				rows.add(permisison.getCanonicalName());
+			}
+		}
+
+		Collections.sort(rows);
+		final Object[][] data = new Object[rows.size()][1];
+		for (int i = 0; i < rows.size(); i++) {
+			data[i][0] = rows.get(i);
+		}
+		return data;
 	}
 }

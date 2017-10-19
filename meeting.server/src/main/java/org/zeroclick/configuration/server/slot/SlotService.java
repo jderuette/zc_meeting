@@ -1,6 +1,13 @@
 package org.zeroclick.configuration.server.slot;
 
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -15,6 +22,7 @@ import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.CommonService;
+import org.zeroclick.comon.date.DateHelper;
 import org.zeroclick.configuration.shared.slot.CreateSlotPermission;
 import org.zeroclick.configuration.shared.slot.DayDurationFormData;
 import org.zeroclick.configuration.shared.slot.DayDurationModifiedNotification;
@@ -36,7 +44,7 @@ public class SlotService extends CommonService implements ISlotService {
 	@Override
 	public SlotFormData prepareCreate(final SlotFormData formData) {
 		if (!ACCESS.check(new CreateSlotPermission())) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 		// TODO [djer] add business logic here.
 		return formData;
@@ -45,7 +53,7 @@ public class SlotService extends CommonService implements ISlotService {
 	@Override
 	public SlotFormData create(final SlotFormData formData) {
 		if (!ACCESS.check(new CreateSlotPermission())) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 		// TODO [djer] add business logic here.
 		return formData;
@@ -109,7 +117,7 @@ public class SlotService extends CommonService implements ISlotService {
 	@Override
 	public SlotFormData store(final SlotFormData formData) {
 		if (!ACCESS.check(new UpdateSlotPermission())) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+			super.throwAuthorizationFailed();
 		}
 		// TODO [djer] add business logic here.
 		return formData;
@@ -280,14 +288,39 @@ public class SlotService extends CommonService implements ISlotService {
 			super.throwAuthorizationFailed();
 		}
 
-		final StringBuilder sql = new StringBuilder();
+		final String sql = this.buildDayDurationsSelect(userId, Boolean.FALSE);
+
+		final Object[][] results = SQL.select(sql, new NVPair("slotName", slotName), new NVPair("userId", userId));
+
+		return results;
+	}
+
+	private String buildDayDurationsSelect(final Long userId, final Boolean addInto) {
+		final StringBuilder sql = new StringBuilder(128);
 		sql.append(SQLs.DAY_DURATION_SELECT).append(", ").append(SQLs.SLOT_SELECT_FILEDS)
 				.append(SQLs.DAY_DURATION_SELECT_FROM).append(SQLs.DAY_DURATION_JOIN_SLOT)
-				.append(SQLs.GENERIC_WHERE_FOR_SECURE_AND).append(SQLs.DAY_DURATION_SELECT_FILTER_SLOT_NAME)
-				.append(SQLs.DAY_DURATION_SELECT_FILTER_SLOT_USER_ID + SQLs.DAY_DURATION_SELECT_ORDER);
+				.append(SQLs.GENERIC_WHERE_FOR_SECURE_AND).append(SQLs.DAY_DURATION_SELECT_FILTER_SLOT_NAME);
+		if (null != userId) {
+			sql.append(SQLs.DAY_DURATION_SELECT_FILTER_SLOT_USER_ID);
+		}
+		sql.append(SQLs.DAY_DURATION_SELECT_ORDER);
 
-		final Object[][] results = SQL.select(sql.toString(), new NVPair("slotName", slotName),
-				new NVPair("userId", userId));
+		if (addInto) {
+			sql.append(SQLs.DAY_DURATION_SELECT_INTO);
+		}
+
+		return sql.toString();
+	}
+
+	private List<DayDurationFormData> getDayDurationsForAllUsers(final String slotName) {
+		if (ACCESS.getLevel(new ReadSlotPermission((Long) null)) != ReadSlotPermission.LEVEL_ALL) {
+			super.throwAuthorizationFailed();
+		}
+		final List<DayDurationFormData> results = new ArrayList<>();
+
+		final String sql = this.buildDayDurationsSelect(null, Boolean.TRUE);
+
+		SQL.selectInto(sql, new NVPair("slotName", slotName), new NVPair("", results));
 
 		return results;
 
@@ -357,6 +390,32 @@ public class SlotService extends CommonService implements ISlotService {
 
 		slotId = this.createSlot("zc.meeting.slot.4", userId, 4);
 		SQL.insert(SQLs.DAY_DURATION_INSERT_SAMPLE + this.forSlot(SQLs.DAY_DURATION_VALUES_WWEEKEND, slotId));
+	}
+
+	@Override
+	public void updateDayDurationsByTemplate(final String slotName, final String requiredStart,
+			final String requiredEnd, final String newStart, final String newEnd) {
+		final DateHelper dateHelper = BEANS.get(DateHelper.class);
+		final List<DayDurationFormData> evenningDayDuration = this.getDayDurationsForAllUsers(slotName);
+
+		if (null != evenningDayDuration && evenningDayDuration.size() > 0) {
+			final Iterator<DayDurationFormData> itWorkDays = evenningDayDuration.iterator();
+
+			final Date newValidStartEvenning = dateHelper
+					.toDate(ZonedDateTime.parse(newStart, DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)));
+			final Date newValidEndEvenning = dateHelper
+					.toDate(ZonedDateTime.parse(newEnd, DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)));
+
+			while (itWorkDays.hasNext()) {
+				final DayDurationFormData anEveningDayDuration = itWorkDays.next();
+				if (anEveningDayDuration.getSlotStart().getValue().equals(requiredStart)
+						&& anEveningDayDuration.getSlotEnd().getValue().equals(requiredEnd)) {
+					anEveningDayDuration.getSlotStart().setValue(newValidStartEvenning);
+					anEveningDayDuration.getSlotEnd().setValue(newValidEndEvenning);
+					this.store(anEveningDayDuration);
+				}
+			}
+		}
 
 	}
 
@@ -368,8 +427,7 @@ public class SlotService extends CommonService implements ISlotService {
 	 * @return
 	 */
 	private Long createSlot(final String slotName, final Long userId, final Integer slotCode) {
-		// TODO Djer permission check ? (should be against autorisation on
-		// (new)
+		// TODO Djer permission check ? (should be against permissions on (new)
 		// userId
 		final Long slotId = DatabaseHelper.get().getNextVal(PatchSlotTable.SLOT_ID_SEQ);
 		SQL.insert(SQLs.SLOT_INSERT_SAMPLE

@@ -51,4 +51,17 @@ public interface ISlotService extends IService {
 	 * For data migration when slot Code column is added to model
 	 */
 	void addDefaultCodeToExistingSlot();
+
+	/**
+	 * Update all Day Duration in the slot "slotName" having the requiredStart
+	 * AND the requiredEnd to the new newStart AND newEnd
+	 *
+	 * @param slotName
+	 * @param requiredStart
+	 * @param requiredEnd
+	 * @param newStart
+	 * @param newEnd
+	 */
+	void updateDayDurationsByTemplate(String slotName, String requiredStart, String requiredEnd, String newStart,
+			String newEnd);
 }

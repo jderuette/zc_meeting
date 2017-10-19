@@ -3,13 +3,14 @@ package org.zeroclick.configuration.client.role;
 import java.util.Set;
 
 import org.eclipse.scout.rt.client.dto.Data;
+import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
 import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
 import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.action.menu.TableMenuType;
 import org.eclipse.scout.rt.client.ui.basic.cell.Cell;
 import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
 import org.eclipse.scout.rt.client.ui.basic.table.ITableRow;
-import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractIntegerColumn;
+import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractLongColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractProposalColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractStringColumn;
 import org.eclipse.scout.rt.client.ui.desktop.outline.pages.AbstractPageWithTable;
@@ -70,13 +71,18 @@ public class RoleTablePage extends AbstractPageWithTable<Table> {
 				form.addFormListener(new RoleFormListener());
 				form.startNew();
 			}
+
+			@Override
+			protected String getConfiguredKeyStroke() {
+				return combineKeyStrokes(IKeyStroke.SHIFT, "n");
+			}
 		}
 
 		@Order(2000)
 		public class EditMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {
-				return TEXTS.get("zc.user.editRole");
+				return TEXTS.get("zc.user.role.edit");
 			}
 
 			@Override
@@ -95,6 +101,11 @@ public class RoleTablePage extends AbstractPageWithTable<Table> {
 				form.setRoleId(Table.this.getRoleIdColumn().getSelectedValue());
 				form.addFormListener(new RoleFormListener());
 				form.startModify();
+			}
+
+			@Override
+			protected String getConfiguredKeyStroke() {
+				return combineKeyStrokes(IKeyStroke.SHIFT, "e");
 			}
 		}
 
@@ -123,7 +134,7 @@ public class RoleTablePage extends AbstractPageWithTable<Table> {
 		}
 
 		@Order(5)
-		public class RoleIdColumn extends AbstractIntegerColumn {
+		public class RoleIdColumn extends AbstractLongColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.common.id");
@@ -135,8 +146,8 @@ public class RoleTablePage extends AbstractPageWithTable<Table> {
 			}
 
 			@Override
-			protected Integer getConfiguredMinValue() {
-				return 0;
+			protected Long getConfiguredMinValue() {
+				return 0l;
 			}
 
 			@Override

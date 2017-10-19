@@ -20,6 +20,8 @@ public interface IUserService extends IService {
 
 	UserFormData store(UserFormData formData);
 
+	void delete(UserFormData userFormData);
+
 	boolean isOwn(Long userId);
 
 	UserTablePageData getUserTableData(SearchFilter filter);

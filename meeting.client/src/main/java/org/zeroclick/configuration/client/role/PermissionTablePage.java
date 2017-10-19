@@ -1,8 +1,5 @@
 package org.zeroclick.configuration.client.role;
 
-import java.security.Permission;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Set;
 
 import org.eclipse.scout.rt.client.dto.Data;
@@ -20,7 +17,6 @@ import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
-import org.eclipse.scout.rt.shared.services.common.security.IPermissionService;
 import org.zeroclick.configuration.client.role.RoleTablePage.Table;
 import org.zeroclick.configuration.shared.role.IAppPermissionService;
 import org.zeroclick.configuration.shared.role.IRolePermissionService;
@@ -29,13 +25,13 @@ import org.zeroclick.configuration.shared.role.PermissionTablePageData;
 @Data(PermissionTablePageData.class)
 public class PermissionTablePage extends AbstractPageWithTable<Table> {
 
-	private Integer roleId;
+	private Long roleId;
 
-	public Integer getRoleId() {
+	public Long getRoleId() {
 		return this.roleId;
 	}
 
-	public void setRoleId(final Integer roleId) {
+	public void setRoleId(final Long roleId) {
 		this.roleId = roleId;
 	}
 
@@ -52,26 +48,9 @@ public class PermissionTablePage extends AbstractPageWithTable<Table> {
 	@Override
 	protected void execLoadData(final SearchFilter filter) {
 		if (this.getRoleId() == null) {
-			final ArrayList<String> rows = new ArrayList<>(30);
-			final Set<Class<? extends Permission>> permissions = BEANS.get(IPermissionService.class)
-					.getAllPermissionClasses();
-
-			for (final Class<? extends Permission> permisison : permissions) {
-				if (permisison.getCanonicalName().contains(".zeroclick.")) {
-					rows.add(permisison.getCanonicalName());
-				}
-			}
-
-			Collections.sort(rows);
-			final Object[][] data = new Object[rows.size()][1];
-			for (int i = 0; i < rows.size(); i++) {
-				data[i][0] = rows.get(i);
-			}
-			this.importTableData(data);
-			// this.getTable().getColumnSet().getColumnByClass(LevelColumn.class).setVisible(Boolean.FALSE);
+			this.importTableData(BEANS.get(IAppPermissionService.class).getpermissions());
 		} else {
 			this.importPageData(BEANS.get(IAppPermissionService.class).getpermissionsByRole(this.getRoleId()));
-			// this.getTable().getColumnSet().getColumnByClass(LevelColumn.class).setVisible(Boolean.TRUE);
 		}
 	}
 

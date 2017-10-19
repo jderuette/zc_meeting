@@ -27,6 +27,7 @@ import org.zeroclick.configuration.shared.role.CreateAssignSubscriptionToUserPer
 import org.zeroclick.configuration.shared.role.IRoleService;
 import org.zeroclick.configuration.shared.role.ReadAssignSubscriptionToUserPermission;
 import org.zeroclick.configuration.shared.role.UpdateAssignSubscriptionToUserPermission;
+import org.zeroclick.configuration.shared.role.UpdateAssignToRolePermission;
 import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.configuration.shared.user.CreateUserPermission;
 import org.zeroclick.configuration.shared.user.IUserService;
@@ -462,6 +463,50 @@ public class UserService extends CommonService implements IUserService {
 	@Override
 	public UserFormData store(final UserFormData formData) {
 		return this.store(formData, Boolean.FALSE);
+	}
+
+	@Override
+	public void delete(final UserFormData formData) {
+		Long userId = null;
+		if (null == formData.getUserId().getValue() && null != formData.getLogin().getValue()) {
+			userId = this.getUserId(formData.getLogin().getValue());
+		}
+		if (null == userId && null != formData.getEmail().getValue()) {
+			userId = this.getUserId(formData.getEmail().getValue());
+		}
+		if (null == formData.getUserId().getValue()) {
+			formData.getUserId().setValue(userId);
+		}
+
+		if (!ACCESS.check(new UpdateUserPermission(formData.getUserId().getValue()))) {
+			super.throwAuthorizationFailed();
+		}
+
+		LOG.info("Deleting User by Id : " + userId + " (asked email : " + formData.getEmail().getValue() + ", login : "
+				+ formData.getLogin().getValue() + ")");
+
+		this.deleteUserRoleByUser(formData);
+		this.changeInvitedByByUserId(formData);
+		SQL.insert(SQLs.USER_DELETE, formData);
+
+	}
+
+	private void deleteUserRoleByUser(final UserFormData formData) {
+		if (!ACCESS.check(new UpdateAssignToRolePermission())) {
+			super.throwAuthorizationFailed();
+		}
+		LOG.info("Deleting Link between Role and User by user Id : " + formData.getUserId().getValue());
+		SQL.insert(SQLs.USER_ROLE_REMOVE_BY_USER, formData);
+	}
+
+	private void changeInvitedByByUserId(final UserFormData formData) {
+		if (!ACCESS.check(new UpdateUserPermission(formData.getUserId().getValue()))) {
+			super.throwAuthorizationFailed();
+		}
+		final long defaultInvitedBy = 1l;
+		LOG.info("Changing 'invited_by' for user : " + formData.getUserId().getValue() + " to the new User : "
+				+ defaultInvitedBy);
+		SQL.insert(SQLs.USER_UPDATE_INVITED_BY_BY_USER, formData, new NVPair("invitedBy", defaultInvitedBy));
 	}
 
 	@Override

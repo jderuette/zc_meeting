@@ -17,9 +17,35 @@ public interface IAppPermissionService extends IService {
 
 	PermissionTablePageData getPermissionTableData(SearchFilter filter);
 
-	PermissionTablePageData getpermissionsByRole(Integer roleId);
+	/**
+	 * Retrieve permission granted by this role.
+	 * 
+	 * @param roleId
+	 * @return
+	 */
+	PermissionTablePageData getpermissionsByRole(Long roleId);
 
+	/**
+	 * Gather all exiting permission from source code. By default filter
+	 * permission containing ".zeroclick." in there (package) name.
+	 *
+	 * @return
+	 */
+	Object[][] getpermissions();
+
+	/**
+	 * Retrieve permissions granted for this user.
+	 *
+	 * @param userId
+	 * @return
+	 */
 	Object[][] getPermissionsByUser(Long userId);
 
+	/**
+	 * Retrieve permissions granted to this user (by login or email).
+	 *
+	 * @param userLoginOrEmail
+	 * @return
+	 */
 	Object[][] getPermissionsByUser(String userLoginOrEmail);
 }

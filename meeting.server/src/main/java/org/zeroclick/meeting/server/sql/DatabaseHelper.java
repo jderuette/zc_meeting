@@ -132,6 +132,10 @@ public class DatabaseHelper {
 		return this.getExistingTables().contains(tableName.toUpperCase());
 	}
 
+	public Boolean existTable(final String tableName, final Boolean refreshCache) {
+		return this.getExistingTables(refreshCache).contains(tableName.toUpperCase());
+	}
+
 	/**
 	 * Check if column "column" exists in the table/relation "table"
 	 *
@@ -188,60 +192,60 @@ public class DatabaseHelper {
 	}
 
 	public void addAdminPermission(final String permissionName) {
-		this.addPermissionToRole(1, permissionName, 100);
+		this.addPermissionToRole(1L, permissionName, 100);
 	}
 
 	public void addAdminPermission(final String permissionName, final Integer level) {
-		this.addPermissionToRole(1, permissionName, level);
+		this.addPermissionToRole(1L, permissionName, level);
 	}
 
 	public void addStandardUserPermission(final String permissionName) {
-		this.addPermissionToRole(2, permissionName, 50);
+		this.addPermissionToRole(2L, permissionName, 50);
 	}
 
 	public void addStandardUserPermission(final String permissionName, final Integer level) {
-		this.addPermissionToRole(2, permissionName, level);
+		this.addPermissionToRole(2L, permissionName, level);
 	}
 
 	public void addSubFreePermission(final String permissionName, final Integer level) {
-		this.addPermissionToRole(3, permissionName, level);
+		this.addPermissionToRole(3L, permissionName, level);
 	}
 
 	public void addSubProPermission(final String permissionName, final Integer level) {
-		this.addPermissionToRole(4, permissionName, level);
+		this.addPermissionToRole(4L, permissionName, level);
 	}
 
 	public void addSubBusinessPermission(final String permissionName, final Integer level) {
-		this.addPermissionToRole(5, permissionName, level);
+		this.addPermissionToRole(5L, permissionName, level);
 	}
 
 	public void removeAdminPermission(final String permissionName) {
-		this.removePermissionToRole(1, permissionName);
+		this.removePermissionToRole(1L, permissionName);
 	}
 
 	public void removeStandardUserPermission(final String permissionName) {
-		this.removePermissionToRole(2, permissionName);
+		this.removePermissionToRole(2L, permissionName);
 	}
 
 	public void removeSubFreePermission(final String permissionName) {
-		this.removePermissionToRole(3, permissionName);
+		this.removePermissionToRole(3L, permissionName);
 	}
 
 	public void removeSubProPermission(final String permissionName) {
-		this.removePermissionToRole(4, permissionName);
+		this.removePermissionToRole(4L, permissionName);
 	}
 
 	public void removeSubBusinessPermission(final String permissionName) {
-		this.removePermissionToRole(5, permissionName);
+		this.removePermissionToRole(5L, permissionName);
 	}
 
-	public void addPermissionToRole(final Integer roleId, final String permissionName, final Integer level) {
+	public void addPermissionToRole(final Long roleId, final String permissionName, final Integer level) {
 		SQL.insert(SQLs.ROLE_PERMISSION_INSERT_SAMPLE + SQLs.ROLE_GENERIC_VALUES_ADD
 				.replaceAll("__roleId__", String.valueOf(roleId)).replaceAll("__permissionName__", permissionName)
 				.replaceAll("__level__", String.valueOf(level)));
 	}
 
-	public void removePermissionToRole(final Integer roleId, final String permissionName) {
+	public void removePermissionToRole(final Long roleId, final String permissionName) {
 		final RolePermissionService rolePermissionService = BEANS.get(RolePermissionService.class);
 		final List<String> permissions = new ArrayList<>();
 		permissions.add(permissionName);
@@ -250,12 +254,15 @@ public class DatabaseHelper {
 
 	public void deletePrimaryKey(final String tableName) {
 		final String constraintName = tableName + "_PK";
-		SQL.insert(SQLs.GENERIC_DROP_CONSTRAINT.replaceAll("__table__", tableName).replaceAll("__constraintName__",
-				constraintName));
+		this.deleteConstraints(tableName, constraintName);
 	}
 
 	public void deleteConstraints(final String tableName, final String constraintName) {
-		SQL.insert(SQLs.GENERIC_DROP_CONSTRAINT.replaceAll("__table__", tableName).replaceAll("__constraintName__",
-				constraintName));
+		if (this.existTable(tableName, Boolean.TRUE)) {
+			SQL.insert(SQLs.GENERIC_DROP_CONSTRAINT.replaceAll("__table__", tableName).replaceAll("__constraintName__",
+					constraintName));
+		} else {
+			LOG.warn("Can't drop constraints : " + constraintName + " beacause table " + tableName + " does not exist");
+		}
 	}
 }

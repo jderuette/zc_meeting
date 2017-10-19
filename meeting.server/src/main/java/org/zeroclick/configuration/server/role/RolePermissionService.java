@@ -29,6 +29,7 @@ import org.zeroclick.common.CommonService;
 import org.zeroclick.configuration.shared.role.AssignToRoleFormData;
 import org.zeroclick.configuration.shared.role.CreateAssignToRolePermission;
 import org.zeroclick.configuration.shared.role.IRolePermissionService;
+import org.zeroclick.configuration.shared.role.UpdateAssignToRolePermission;
 import org.zeroclick.meeting.server.security.ServerAccessControlService;
 import org.zeroclick.meeting.server.sql.SQLs;
 
@@ -61,10 +62,23 @@ public class RolePermissionService extends CommonService implements IRolePermiss
 	}
 
 	@Override
-	public void remove(final Integer roleId, final List<String> permissions) {
+	public void remove(final Long roleId, final List<String> permissions) {
+		if (!ACCESS.check(new UpdateAssignToRolePermission())) {
+			super.throwAuthorizationFailed();
+		}
 		LOG.info("Removing permission(s) to role :" + roleId + " : " + permissions);
 		SQL.insert(SQLs.ROLE_PERMISSION_DELETE, new NVPair("roleId", roleId), new NVPair("permissions", permissions));
-		this.clearCacheOfUsersWithRole(Long.valueOf(roleId));
+		this.clearCacheOfUsersWithRole(roleId);
+	}
+
+	@Override
+	public void remove(final Long roleId) {
+		if (!ACCESS.check(new UpdateAssignToRolePermission())) {
+			super.throwAuthorizationFailed();
+		}
+		LOG.info("Removing ALL permission(s) to role :" + roleId);
+		SQL.insert(SQLs.ROLE_PERMISSION_DELETE_BY_ROLE, new NVPair("roleId", roleId));
+		this.clearCacheOfUsersWithRole(roleId);
 	}
 
 	/**
