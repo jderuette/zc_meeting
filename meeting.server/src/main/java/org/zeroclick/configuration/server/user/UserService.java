@@ -411,7 +411,7 @@ public class UserService extends CommonService implements IUserService {
 		final Long currentSubscription = currentSubscriptionData.getSubscriptionBox().getValue();
 		final Long newSubscription = formData.getSubscriptionBox().getValue();
 
-		if (!currentSubscription.equals(newSubscription)) {
+		if (null == currentSubscription || !currentSubscription.equals(newSubscription)) {
 			// Only add the new one, the oldest will be discarded as a more
 			// recent exists
 			LOG.info("Siwtching user subscription from  : " + currentSubscription + " to " + newSubscription
