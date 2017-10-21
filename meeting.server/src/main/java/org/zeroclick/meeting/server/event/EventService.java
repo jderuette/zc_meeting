@@ -81,25 +81,33 @@ public class EventService extends CommonService implements IEventService {
 
 	@Override
 	public Map<Long, Integer> getNbEventsByUser(final String state) {
+		return this.getNbEventsByUser(state, Boolean.FALSE);
+	}
+
+	@Override
+	public Map<Long, Integer> getNbEventsByUser(final String state, final Boolean onlyAsOrganizer) {
 		final Map<Long, Integer> users = new HashMap<>();
 
 		final Long currentUser = super.userHelper.getCurrentUserId();
-		LOG.debug("Loading pending meeting users with : " + currentUser);
+		LOG.debug("Loading pending meeting users with : " + currentUser + " (Only as organizer : " + onlyAsOrganizer
+				+ ")");
 
-		final Object[][] pendingOrganizer = this.getEventsByUser(SQLs.EVENT_SELECT_USERS_EVENT_GUEST, state,
-				currentUser);
-		final Object[][] pendingAttendee = this.getEventsByUser(SQLs.EVENT_SELECT_USERS_EVENT_HOST, state, currentUser);
-
-		if (null != pendingOrganizer && pendingOrganizer.length > 0) {
-			for (int i = 0; i < pendingOrganizer.length; i++) {
-				final Long pendingUserOrganizer = (Long) pendingOrganizer[i][1];
-				if (!users.containsKey(pendingUserOrganizer)) {
-					users.put(pendingUserOrganizer, 0);
+		if (!onlyAsOrganizer) {
+			final Object[][] pendingOrganizer = this.getEventsByUser(SQLs.EVENT_SELECT_USERS_EVENT_GUEST, state,
+					currentUser);
+			if (null != pendingOrganizer && pendingOrganizer.length > 0) {
+				for (int i = 0; i < pendingOrganizer.length; i++) {
+					final Long pendingUserOrganizer = (Long) pendingOrganizer[i][1];
+					if (!users.containsKey(pendingUserOrganizer)) {
+						users.put(pendingUserOrganizer, 0);
+					}
+					Integer currentNbEvent = users.get(pendingUserOrganizer);
+					users.put(pendingUserOrganizer, ++currentNbEvent);
 				}
-				Integer currentNbEvent = users.get(pendingUserOrganizer);
-				users.put(pendingUserOrganizer, ++currentNbEvent);
 			}
 		}
+
+		final Object[][] pendingAttendee = this.getEventsByUser(SQLs.EVENT_SELECT_USERS_EVENT_HOST, state, currentUser);
 
 		if (null != pendingAttendee && pendingAttendee.length > 0) {
 			for (int i = 0; i < pendingAttendee.length; i++) {
@@ -112,7 +120,8 @@ public class EventService extends CommonService implements IEventService {
 			}
 		}
 
-		LOG.debug("List of pending meeting users with : " + currentUser + " : " + users);
+		LOG.debug("List of pending meeting (Only as organizer : " + onlyAsOrganizer + ") users with : " + currentUser
+				+ " : " + users);
 		return users;
 	}
 

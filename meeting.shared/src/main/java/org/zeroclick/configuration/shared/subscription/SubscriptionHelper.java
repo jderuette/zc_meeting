@@ -68,7 +68,7 @@ public class SubscriptionHelper {
 		final AccessControlService acs = BEANS.get(AccessControlService.class);
 		Integer requiredLevel = LEVEL_SUB_FREE;
 		int nbEventWaiting = 0;
-		final Map<Long, Integer> nbEventPendingByUsers = eventService.getNbEventsByUser("ASKED");
+		final Map<Long, Integer> nbEventPendingByUsers = eventService.getNbEventsByUser("ASKED", Boolean.TRUE);
 		if (null != nbEventPendingByUsers && nbEventPendingByUsers.size() > 0) {
 			final Iterator<Integer> itNbEvents = nbEventPendingByUsers.values().iterator();
 			while (itNbEvents.hasNext()) {
