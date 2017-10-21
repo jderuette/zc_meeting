@@ -3,6 +3,7 @@ package org.zeroclick.configuration.client.api;
 import java.util.Set;
 
 import org.eclipse.scout.rt.client.dto.Data;
+import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
 import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
 import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.action.menu.TableMenuType;
@@ -102,6 +103,11 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 				form.addFormListener(new ApiFormListener());
 				// start the form using its modify handler
 				form.startDelete();
+			}
+
+			@Override
+			protected String getConfiguredKeyStroke() {
+				return combineKeyStrokes(IKeyStroke.SHIFT, IKeyStroke.DELETE);
 			}
 
 			@Override

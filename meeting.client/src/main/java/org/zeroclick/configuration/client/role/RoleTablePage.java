@@ -22,11 +22,13 @@ import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
+import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.zeroclick.configuration.client.role.RoleTablePage.Table;
 import org.zeroclick.configuration.shared.role.IRoleService;
 import org.zeroclick.configuration.shared.role.RoleTablePageData;
 import org.zeroclick.configuration.shared.role.RoleTypeLookupCall;
+import org.zeroclick.configuration.shared.role.UpdateRolePermission;
 import org.zeroclick.meeting.shared.Icons;
 
 @Data(RoleTablePageData.class)
@@ -106,6 +108,42 @@ public class RoleTablePage extends AbstractPageWithTable<Table> {
 			@Override
 			protected String getConfiguredKeyStroke() {
 				return combineKeyStrokes(IKeyStroke.SHIFT, "e");
+			}
+		}
+
+		@Order(3000)
+		public class DeleteMenu extends AbstractMenu {
+			@Override
+			protected String getConfiguredText() {
+				return TEXTS.get("zc.user.role.delete");
+			}
+
+			@Override
+			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+				return CollectionUtility.hashSet(TableMenuType.SingleSelection);
+			}
+
+			@Override
+			protected boolean getConfiguredEnabled() {
+				return ACCESS.check(new UpdateRolePermission());
+			}
+
+			@Override
+			public String getConfiguredIconId() {
+				return Icons.ExclamationMark;
+			}
+
+			@Override
+			protected String getConfiguredKeyStroke() {
+				return combineKeyStrokes(IKeyStroke.SHIFT, IKeyStroke.DELETE);
+			}
+
+			@Override
+			protected void execAction() {
+				final RoleForm form = new RoleForm();
+				form.setRoleId(Table.this.getRoleIdColumn().getSelectedValue());
+				form.addFormListener(new RoleFormListener());
+				form.startDelete();
 			}
 		}
 

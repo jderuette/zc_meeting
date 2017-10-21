@@ -27,6 +27,7 @@ import org.zeroclick.configuration.shared.role.UpdateRolePermission;
 public class RoleForm extends AbstractForm {
 
 	private Long roleId;
+	private Boolean deleteAction;
 
 	@FormData
 	public Long getRoleId() {
@@ -54,11 +55,18 @@ public class RoleForm extends AbstractForm {
 	}
 
 	public void startModify() {
+		this.deleteAction = Boolean.FALSE;
 		this.startInternalExclusive(new ModifyHandler());
 	}
 
 	public void startNew() {
+		this.deleteAction = Boolean.FALSE;
 		this.startInternal(new NewHandler());
+	}
+
+	public void startDelete() {
+		this.deleteAction = Boolean.TRUE;
+		this.startInternalExclusive(new DeleteHandler());
 	}
 
 	public CancelButton getCancelButton() {
@@ -122,6 +130,15 @@ public class RoleForm extends AbstractForm {
 
 		@Order(100000)
 		public class OkButton extends AbstractOkButton {
+			@Override
+			protected boolean execIsSaveNeeded() {
+				// to force form save even if no modification done in Fields
+				if (RoleForm.this.deleteAction) {
+					return Boolean.TRUE;
+				} else {
+					return Boolean.FALSE;
+				}
+			}
 		}
 
 		@Order(101000)
@@ -173,6 +190,31 @@ public class RoleForm extends AbstractForm {
 			final RoleFormData formData = new RoleFormData();
 			RoleForm.this.exportFormData(formData);
 			service.create(formData);
+		}
+	}
+
+	public class DeleteHandler extends AbstractFormHandler {
+		@Override
+		protected void execLoad() {
+			final IRoleService service = BEANS.get(IRoleService.class);
+			RoleFormData formData = new RoleFormData();
+			RoleForm.this.exportFormData(formData);
+			formData.setRoleId(RoleForm.this.getRoleId());
+			formData = service.load(formData);
+			RoleForm.this.importFormData(formData);
+
+			RoleForm.this.setVisiblePermission(new UpdateRolePermission());
+			RoleForm.this.setEnabledPermission(new UpdateRolePermission());
+		}
+
+		@Override
+		protected void execStore() {
+			final IRoleService service = BEANS.get(IRoleService.class);
+			final RoleFormData formData = new RoleFormData();
+			RoleForm.this.exportFormData(formData);
+			formData.setRoleId(RoleForm.this.getRoleId());
+
+			service.delete(formData);
 		}
 	}
 }

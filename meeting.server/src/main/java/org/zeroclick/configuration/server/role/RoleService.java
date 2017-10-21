@@ -102,7 +102,7 @@ public class RoleService extends CommonService implements IRoleService {
 		if (!ACCESS.check(new UpdateRolePermission())) {
 			super.throwAuthorizationFailed();
 		}
-		LOG.info("Deleting Role (and link to documents, and link to Users) for ROle ID : " + formData.getRoleId());
+		LOG.info("Deleting Role (and link to documents, and link to Users) for Role ID : " + formData.getRoleId());
 
 		if (null == formData.getRoleId()) {
 			// try to find roleIde by name
