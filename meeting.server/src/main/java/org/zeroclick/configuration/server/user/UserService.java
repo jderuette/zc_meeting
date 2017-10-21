@@ -353,10 +353,10 @@ public class UserService extends CommonService implements IUserService {
 			SQL.update(SQLs.USER_UPDATE_PASSWORD, formData);
 		}
 
-		this.updatesRoles(formData);
+		this.updatesRoles(formData, !formData.getAutofilled());
 		// Usefull only for admin, dor other user store(ValidateCpsForm) already
 		// do the update
-		this.updateSubscriptions(formData);
+		this.updateSubscriptions(formData, !formData.getAutofilled());
 
 		// reset permission cache
 
@@ -370,9 +370,9 @@ public class UserService extends CommonService implements IUserService {
 	 *
 	 * @param formData
 	 */
-	private void updatesRoles(final UserFormData formData) {
+	private void updatesRoles(final UserFormData formData, final Boolean checkAccess) {
 		final AccessControlService acs = BEANS.get(AccessControlService.class);
-		final UserFormData existingUserRoles = this.getRoles(formData.getUserId().getValue(), Boolean.TRUE);
+		final UserFormData existingUserRoles = this.getRoles(formData.getUserId().getValue(), checkAccess);
 
 		final Set<Long> addedRoles = this.getItemsAdded(existingUserRoles.getRolesBox().getValue(),
 				formData.getRolesBox().getValue());
@@ -404,10 +404,9 @@ public class UserService extends CommonService implements IUserService {
 		}
 	}
 
-	private void updateSubscriptions(final UserFormData formData) {
+	private void updateSubscriptions(final UserFormData formData, final Boolean checkAccess) {
 		final AccessControlService acs = BEANS.get(AccessControlService.class);
-		final UserFormData currentSubscriptionData = this.getSubscription(formData.getUserId().getValue(),
-				Boolean.TRUE);
+		final UserFormData currentSubscriptionData = this.getSubscription(formData.getUserId().getValue(), checkAccess);
 		final Long currentSubscription = currentSubscriptionData.getSubscriptionBox().getValue();
 		final Long newSubscription = formData.getSubscriptionBox().getValue();
 
