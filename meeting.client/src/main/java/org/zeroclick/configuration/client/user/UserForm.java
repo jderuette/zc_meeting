@@ -224,6 +224,9 @@ public class UserForm extends AbstractForm {
 	public void initForm() {
 		super.initForm();
 		this.getSendUserInviteEmailField().setVisible(!this.isMyself());
+		this.getLanguageField().setMandatory(this.isMyself());
+		this.getTimeZoneField().setMandatory(this.isMyself());
+
 		final Boolean isSubscirptionAdmin = this.isUserReadAmin();
 		this.getUserIdField().setVisibleGranted(isSubscirptionAdmin);
 	}
@@ -359,11 +362,19 @@ public class UserForm extends AbstractForm {
 		@Order(3500)
 		public class TimeZoneField extends org.zeroclick.ui.form.fields.timezonefield.TimeZoneField {
 
+			@Override
+			protected boolean getConfiguredMandatory() {
+				return Boolean.TRUE;
+			}
+
 		}
 
 		@Order(3700)
 		public class LanguageField extends org.zeroclick.ui.form.fields.languagefield.LanguageField {
-
+			@Override
+			protected boolean getConfiguredMandatory() {
+				return Boolean.TRUE;
+			}
 		}
 
 		@Order(4000)
@@ -681,6 +692,10 @@ public class UserForm extends AbstractForm {
 			final Boolean loggedWithEmail = UserForm.this.isUserLoggedWithEmail();
 
 			service.store(formData);
+
+			if (UserForm.this.getSendUserInviteEmailField().getValue()) {
+				UserForm.this.sendUserInviteEmail();
+			}
 
 			// hard to know if user use login or email to login. If ONE changed,
 			// we reset session.
