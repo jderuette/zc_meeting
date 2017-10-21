@@ -105,7 +105,6 @@ public class RoleService extends CommonService implements IRoleService {
 		LOG.info("Deleting Role (and link to documents, and link to Users) for Role ID : " + formData.getRoleId());
 
 		if (null == formData.getRoleId()) {
-			// try to find roleIde by name
 			this.loadByRoleName(formData);
 			if (null == formData.getRoleId()) {
 				throw new VetoException("Role Id (or valid roleName) required");
