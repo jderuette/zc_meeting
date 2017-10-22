@@ -49,7 +49,7 @@ import org.zeroclick.configuration.shared.user.ValidateCpsFormData;
 public class ValidateCpsForm extends AbstractForm {
 
 	private Long defaultSubscriptionIdValue;
-	private Boolean isSubscriptionPaymentValid;
+	private Boolean subscriptionPaymentValid;
 
 	@Override
 	protected String getConfiguredTitle() {
@@ -174,7 +174,7 @@ public class ValidateCpsForm extends AbstractForm {
 		}
 		this.loadCpsText(this.getSubscriptionIdField().getValue());
 
-		this.isSubscriptionPaymentValid = ValidateCpsForm.this.isSubscriptionPaymentValid();
+		this.subscriptionPaymentValid = ValidateCpsForm.this.isSubscriptionPaymentValid();
 
 	}
 
@@ -403,11 +403,6 @@ public class ValidateCpsForm extends AbstractForm {
 					this.setInactive();
 				}
 
-				@Override
-				protected String getConfiguredLabelBackgroundColor() {
-					return "AABB66";
-				}
-
 				public void activateIfRequired() {
 					// TODO Djer enable OK button *after* user click on link
 					ValidateCpsForm.this.getOkButton().setActive();
@@ -418,7 +413,7 @@ public class ValidateCpsForm extends AbstractForm {
 					final String url = subscriptionHelper.getSubscriptionPaymentURL(subscriptionId);
 					this.setValue(url);
 
-					if (!ValidateCpsForm.this.isSubscriptionPaymentValid) {
+					if (!ValidateCpsForm.this.subscriptionPaymentValid) {
 						if (null != url) {
 							// payment required if payment URL configured
 							this.setVisible(Boolean.TRUE);
@@ -472,6 +467,11 @@ public class ValidateCpsForm extends AbstractForm {
 			@Override
 			protected boolean getConfiguredHasTime() {
 				return Boolean.TRUE;
+			}
+
+			@Override
+			protected boolean getConfiguredEnabled() {
+				return ValidateCpsForm.this.isSubscriptionAdmin();
 			}
 		}
 
