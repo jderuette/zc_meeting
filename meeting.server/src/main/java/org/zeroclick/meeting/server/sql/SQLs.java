@@ -504,26 +504,26 @@ public interface SQLs {
 	// String SLOT_VALUES_WEEK_END = " VALUES (nextval('" +
 	// PatchSlotTable.SLOT_ID_SEQ + "'), 'zc.meeting.slot.4', 1)";
 
-	String DAY_DURATION_PAGE_SELECT = "SELECT DAY_DURATION.day_duration_id, DAY_DURATION.name, slot_start, slot_end, SLOT.slot_code, SLOT.slot_id, SLOT.user_id, "
+	String DAY_DURATION_PAGE_SELECT = "SELECT DAY_DURATION.day_duration_id, DAY_DURATION.name, slot_start, slot_end, SLOT.slot_code, SLOT.slot_id, order_in_slot, SLOT.user_id, "
 			+ "monday, tuesday, wednesday, thursday, friday, saturday, sunday FROM DAY_DURATION INNER JOIN SLOT ON DAY_DURATION.slot_id = SLOT.slot_id";
-	String DAY_DURATION_PAGE_SELECT_INTO = " INTO :{page.dayDurationId}, :{page.name}, :{page.start}, :{page.end}, :{page.slot}, :{page.slotId}, :{page.userId}, :{page.monday}, :{page.tuesday}, :{page.wednesday}, :{page.thursday}, :{page.friday}, :{page.saturday}, :{page.sunday}";
+	String DAY_DURATION_PAGE_SELECT_INTO = " INTO :{page.dayDurationId}, :{page.name}, :{page.start}, :{page.end}, :{page.slot}, :{page.slotId}, :{page.orderInSlot}, :{page.userId}, :{page.monday}, :{page.tuesday}, :{page.wednesday}, :{page.thursday}, :{page.friday}, :{page.saturday}, :{page.sunday}";
 
 	String DAY_DURATION_SELECT = "SELECT DAY_DURATION.day_duration_id, DAY_DURATION.name, slot_start, slot_end, "
-			+ "monday, tuesday, wednesday, thursday, friday, saturday, sunday, weekly_perpetual, DAY_DURATION.slot_id, SLOT.slot_code";
+			+ "monday, tuesday, wednesday, thursday, friday, saturday, sunday, weekly_perpetual, order_in_slot, DAY_DURATION.slot_id, SLOT.slot_code";
 	String DAY_DURATION_SELECT_LIGHT = "SELECT day_duration_id, name, slot_id FROM DAY_DURATION WHERE 1=1";
 	String DAY_DURATION_SELECT_FILTER_SLOT_ID = " AND slot_id=:slotId";
 	String DAY_DURATION_SELECT_FILTER_SLOT_NAME = " AND SLOT.name=:slotName";
 	String DAY_DURATION_SELECT_FILTER_SLOT_USER_ID = " AND SLOT.user_id=:userId";
 	String DAY_DURATION_SELECT_FILTER_DAY_DURATION_ID = " AND day_duration_id=:dayDurationId";
 	String DAY_DURATION_SELECT_ORDER = " ORDER BY order_in_slot";
-	String DAY_DURATION_SELECT_INTO = " INTO :{dayDurationId}, :{name}, :{slotStart}, :{slotEnd}, :{monday}, :{tuesday}, :{wednesday}, :{thursday}, :{friday}, :{saturday}, :{sunday}, :{weeklyPerpetual}, :{slotId}, :{slotCode}";
+	String DAY_DURATION_SELECT_INTO = " INTO :{dayDurationId}, :{name}, :{slotStart}, :{slotEnd}, :{monday}, :{tuesday}, :{wednesday}, :{thursday}, :{friday}, :{saturday}, :{sunday}, :{weeklyPerpetual}, :{orderInSlot}, :{slotId}, :{slotCode}";
 	String DAY_DURATION_SELECT_FROM = " FROM DAY_DURATION";
 	String DAY_DURATION_SELECT_FROM_PLUS_GENERIC_WHERE = " FROM DAY_DURATION" + GENERIC_WHERE_FOR_SECURE_AND;
 
 	String DAY_DURATION_JOIN_SLOT = " JOIN SLOT on DAY_DURATION.slot_id = SLOT.slot_id";
 
 	String DAY_DURATION_UPDATE = "UPDATE DAY_DURATION SET name=:name, slot_start=:slotStart, slot_end=:slotEnd"
-			+ ", monday=:monday, tuesday=:tuesday, wednesday=:wednesday, thursday=:thursday, friday=:friday, saturday=:saturday, sunday=:sunday, weekly_perpetual=:weeklyPerpetual"
+			+ ", monday=:monday, tuesday=:tuesday, wednesday=:wednesday, thursday=:thursday, friday=:friday, saturday=:saturday, sunday=:sunday, weekly_perpetual=:weeklyPerpetual, order_in_slot=:orderInSlot"
 			+ " WHERE day_duration_id=:dayDurationId";
 
 	String DAY_DURATION_INSERT_SAMPLE = "INSERT INTO DAY_DURATION (day_duration_id, name, slot_start, slot_end, "

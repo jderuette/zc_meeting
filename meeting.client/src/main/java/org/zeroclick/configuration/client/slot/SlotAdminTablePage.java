@@ -28,11 +28,14 @@ public class SlotAdminTablePage extends AbstractSlotTablePage<Table> {
 			super.execInitTable();
 			this.getDayDurationIdColumn().setVisible(Boolean.TRUE);
 
-			this.getSlotIdColumn().setVisible(Boolean.TRUE);
-			this.getSlotIdColumn().setInitialAlwaysIncludeSortAtBegin(Boolean.FALSE);
 			this.getUserIdColumn().setVisible(Boolean.TRUE);
 			this.getUserIdColumn().setInitialAlwaysIncludeSortAtBegin(Boolean.FALSE);
-			this.getUserIdColumn().setInitialAlwaysIncludeSortAtBegin(Boolean.FALSE);
+
+			this.getSlotIdColumn().setVisible(Boolean.TRUE);
+			this.getSlotIdColumn().setInitialAlwaysIncludeSortAtBegin(Boolean.FALSE);
+
+			this.getOrderInSlotColumn().setVisible(Boolean.TRUE);
+			this.getOrderInSlotColumn().setInitialAlwaysIncludeSortAtBegin(Boolean.FALSE);
 		}
 
 		@Override

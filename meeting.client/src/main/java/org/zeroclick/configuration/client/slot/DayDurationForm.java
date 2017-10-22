@@ -9,12 +9,14 @@ import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractCancelButton;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractOkButton;
 import org.eclipse.scout.rt.client.ui.form.fields.datefield.AbstractDateField;
 import org.eclipse.scout.rt.client.ui.form.fields.groupbox.AbstractGroupBox;
+import org.eclipse.scout.rt.client.ui.form.fields.longfield.AbstractLongField;
 import org.eclipse.scout.rt.client.ui.form.fields.sequencebox.AbstractSequenceBox;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.zeroclick.configuration.client.slot.DayDurationForm.MainBox.CancelButton;
 import org.zeroclick.configuration.client.slot.DayDurationForm.MainBox.OkButton;
+import org.zeroclick.configuration.client.slot.DayDurationForm.MainBox.OrderInSlotField;
 import org.zeroclick.configuration.client.slot.DayDurationForm.MainBox.WeeklyPerpetualField;
 import org.zeroclick.configuration.shared.slot.DayDurationFormData;
 import org.zeroclick.configuration.shared.slot.ISlotService;
@@ -108,6 +110,10 @@ public class DayDurationForm extends AbstractForm {
 
 	public WeeklyPerpetualField getWeeklyPerpetualField() {
 		return this.getFieldByClass(WeeklyPerpetualField.class);
+	}
+
+	public OrderInSlotField getOrderInSlotField() {
+		return this.getFieldByClass(OrderInSlotField.class);
 	}
 
 	public OkButton getOkButton() {
@@ -270,6 +276,29 @@ public class DayDurationForm extends AbstractForm {
 			@Override
 			protected boolean getConfiguredEnabled() {
 				return Boolean.FALSE;
+			}
+		}
+
+		@Order(6000)
+		public class OrderInSlotField extends AbstractLongField {
+			@Override
+			protected String getConfiguredLabel() {
+				return TEXTS.get("zc.meeting.dayDuration.orderInSlot");
+			}
+
+			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.FALSE;
+			}
+
+			@Override
+			protected Long getConfiguredMinValue() {
+				return 0L;
+			}
+
+			@Override
+			protected Long getConfiguredMaxValue() {
+				return 999999999999L;
 			}
 		}
 

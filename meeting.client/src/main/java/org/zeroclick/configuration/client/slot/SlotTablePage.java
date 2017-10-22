@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.scout.rt.client.dto.Data;
+import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
 import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
 import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.action.menu.TreeMenuType;
@@ -62,6 +63,11 @@ public class SlotTablePage extends AbstractSlotTablePage<Table> {
 		@Override
 		protected String getConfiguredIconId() {
 			return Icons.Pencil;
+		}
+
+		@Override
+		protected String getConfiguredKeyStroke() {
+			return combineKeyStrokes(IKeyStroke.SHIFT, "e");
 		}
 
 		@Override

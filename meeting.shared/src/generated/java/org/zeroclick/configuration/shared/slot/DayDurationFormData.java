@@ -62,6 +62,10 @@ public class DayDurationFormData extends AbstractFormData {
 		return getPropertyByClass(NameProperty.class);
 	}
 
+	public OrderInSlot getOrderInSlot() {
+		return getFieldByClass(OrderInSlot.class);
+	}
+
 	public Saturday getSaturday() {
 		return getFieldByClass(Saturday.class);
 	}
@@ -164,6 +168,11 @@ public class DayDurationFormData extends AbstractFormData {
 	}
 
 	public static class NameProperty extends AbstractPropertyData<String> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class OrderInSlot extends AbstractValueFieldData<Long> {
 
 		private static final long serialVersionUID = 1L;
 	}

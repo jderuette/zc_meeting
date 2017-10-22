@@ -1,8 +1,6 @@
 package org.zeroclick.configuration.client.slot;
 
-import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.eclipse.scout.rt.client.dto.Data;
@@ -12,6 +10,7 @@ import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
 import org.eclipse.scout.rt.client.ui.basic.table.ITableRow;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractBooleanColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractDateColumn;
+import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractIntegerColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractLongColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractSmartColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractStringColumn;
@@ -22,15 +21,15 @@ import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.notification.INotificationListener;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
+import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeroclick.comon.date.DateHelper;
-import org.zeroclick.comon.user.AppUserHelper;
 import org.zeroclick.configuration.shared.slot.AbstractSlotTablePageData;
 import org.zeroclick.configuration.shared.slot.DayDurationFormData;
 import org.zeroclick.configuration.shared.slot.DayDurationModifiedNotification;
 import org.zeroclick.configuration.shared.slot.ISlotService;
+import org.zeroclick.configuration.shared.slot.ReadSlotPermission;
 import org.zeroclick.meeting.client.common.SlotLookupCall;
 
 @Data(AbstractSlotTablePageData.class)
@@ -68,6 +67,11 @@ public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.T
 		return super.execCreateChildPage(row);
 	}
 
+	protected Boolean isSlotAdmin() {
+		final int currentUserSlotLevel = ACCESS.getLevel(new ReadSlotPermission((Long) null));
+		return currentUserSlotLevel == ReadSlotPermission.LEVEL_ALL;
+	}
+
 	public class Table extends AbstractTable {
 
 		protected INotificationListener<DayDurationModifiedNotification> dayDurationModifiedListener;
@@ -79,7 +83,7 @@ public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.T
 
 		@Override
 		protected boolean getConfiguredSortEnabled() {
-			return Boolean.FALSE;
+			return Boolean.TRUE;
 		}
 
 		@Override
@@ -116,6 +120,8 @@ public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.T
 						final ITableRow row = AbstractSlotTablePage.this.getTable()
 								.getRow(dayDurationForm.getDayDurationId());
 						Table.this.updateTableRowFromForm(row, dayDurationForm);
+						Table.this.applyRowFilters();
+						Table.this.sort();
 
 					} catch (final RuntimeException e) {
 						LOG.error("Could not handle modified DayDuration. (" + Table.this.getTitle() + ")", e);
@@ -150,6 +156,7 @@ public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.T
 			datas.add(formData.getSlotEnd().getValue());
 			datas.add(formData.getSlotCode());
 			datas.add(formData.getSlotId());
+			datas.add(formData.getOrderInSlot().getValue());
 			datas.add(formData.getUserId());
 			datas.add(formData.getMonday().getValue());
 			datas.add(formData.getTuesday().getValue());
@@ -208,6 +215,10 @@ public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.T
 			return this.getColumnSet().getColumnByClass(UserIdColumn.class);
 		}
 
+		public AbstractSlotTablePage<?>.Table.OrderInSlotColumn getOrderInSlotColumn() {
+			return this.getColumnSet().getColumnByClass(OrderInSlotColumn.class);
+		}
+
 		public AbstractSlotTablePage<?>.Table.NameColumn getNameColumn() {
 			return this.getColumnSet().getColumnByClass(NameColumn.class);
 		}
@@ -249,19 +260,12 @@ public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.T
 			public String buildDisplayValue(final ITableRow row) {
 				final String defaultName = "zc.meeting.dayDuration.default";
 				final String value = this.getValue(row.getRowIndex());
+				final String slotName = Table.this.getSlotColumn().getDisplayText(row);
 				String displayValue;
 				if (null == value || value.isEmpty() || defaultName.equals(value)) {
-					final DateHelper dateHelper = BEANS.get(DateHelper.class);
-					final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
-					final ZoneId userZoneId = appUserHelper.getCurrentUserTimeZone();
-
-					final Date start = Table.this.getStartColumn().getValue(row.getRowIndex());
-					final Date end = Table.this.getEndColumn().getValue(row.getRowIndex());
-
-					displayValue = dateHelper.formatHours(start, userZoneId) + "-"
-							+ dateHelper.formatHours(end, userZoneId);
+					displayValue = slotName;
 				} else {
-					displayValue = TEXTS.get(value);
+					displayValue = slotName + " (" + TEXTS.get(value) + ")";
 				}
 				return displayValue;
 			}
@@ -290,21 +294,6 @@ public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.T
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.dayDuration.hour.start");
-			}
-
-			@Override
-			protected boolean getConfiguredSortAscending() {
-				return Boolean.TRUE;
-			}
-
-			@Override
-			protected int getConfiguredSortIndex() {
-				return 2;
-			}
-
-			@Override
-			protected boolean getConfiguredAlwaysIncludeSortAtBegin() {
-				return Boolean.TRUE;
 			}
 
 			@Override
@@ -354,18 +343,8 @@ public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.T
 			}
 
 			@Override
-			protected boolean getConfiguredSortAscending() {
+			protected boolean getConfiguredVisible() {
 				return Boolean.FALSE;
-			}
-
-			@Override
-			protected int getConfiguredSortIndex() {
-				return 1;
-			}
-
-			@Override
-			protected boolean getConfiguredAlwaysIncludeSortAtBegin() {
-				return Boolean.TRUE;
 			}
 
 			@Override
@@ -387,6 +366,21 @@ public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.T
 			}
 
 			@Override
+			protected boolean getConfiguredSortAscending() {
+				return Boolean.TRUE;
+			}
+
+			@Override
+			protected int getConfiguredSortIndex() {
+				return 2;
+			}
+
+			@Override
+			protected boolean getConfiguredAlwaysIncludeSortAtBegin() {
+				return Boolean.TRUE;
+			}
+
+			@Override
 			protected boolean getConfiguredVisible() {
 				return Boolean.FALSE;
 			}
@@ -395,6 +389,40 @@ public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.T
 			protected int getConfiguredWidth() {
 				return 50;
 			}
+		}
+
+		@Order(4625)
+		public class OrderInSlotColumn extends AbstractIntegerColumn {
+			@Override
+			protected String getConfiguredHeaderText() {
+				return TEXTS.get("zc.meeting.dayDuration.orderInSlot");
+			}
+
+			@Override
+			protected boolean getConfiguredSortAscending() {
+				return Boolean.TRUE;
+			}
+
+			@Override
+			protected int getConfiguredSortIndex() {
+				return 3;
+			}
+
+			@Override
+			protected boolean getConfiguredAlwaysIncludeSortAtBegin() {
+				return Boolean.TRUE;
+			}
+
+			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.FALSE;
+			}
+
+			@Override
+			protected int getConfiguredWidth() {
+				return 50;
+			}
+
 		}
 
 		@Order(4750)
@@ -421,7 +449,7 @@ public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.T
 
 			@Override
 			protected int getConfiguredSortIndex() {
-				return 0;
+				return 1;
 			}
 
 			@Override

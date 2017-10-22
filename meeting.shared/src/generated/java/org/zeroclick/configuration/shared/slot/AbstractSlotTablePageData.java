@@ -58,6 +58,7 @@ public abstract class AbstractSlotTablePageData extends AbstractTablePageData {
 		public static final String end = "end";
 		public static final String slot = "slot";
 		public static final String slotId = "slotId";
+		public static final String orderInSlot = "orderInSlot";
 		public static final String userId = "userId";
 		public static final String monday = "monday";
 		public static final String tuesday = "tuesday";
@@ -72,6 +73,7 @@ public abstract class AbstractSlotTablePageData extends AbstractTablePageData {
 		private Date m_end;
 		private Integer m_slot;
 		private Long m_slotId;
+		private Integer m_orderInSlot;
 		private Long m_userId;
 		private Boolean m_monday;
 		private Boolean m_tuesday;
@@ -127,6 +129,14 @@ public abstract class AbstractSlotTablePageData extends AbstractTablePageData {
 
 		public void setSlotId(Long newSlotId) {
 			m_slotId = newSlotId;
+		}
+
+		public Integer getOrderInSlot() {
+			return m_orderInSlot;
+		}
+
+		public void setOrderInSlot(Integer newOrderInSlot) {
+			m_orderInSlot = newOrderInSlot;
 		}
 
 		public Long getUserId() {
