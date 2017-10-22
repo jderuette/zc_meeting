@@ -29,6 +29,7 @@ import org.eclipse.scout.rt.client.ui.form.fields.tabbox.AbstractTabBox;
 import org.eclipse.scout.rt.client.ui.form.fields.tablefield.AbstractTableField;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
+import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
@@ -415,6 +416,16 @@ public class DocumentForm extends AbstractForm {
 							@Override
 							protected Class<? extends ILookupCall<Long>> getConfiguredLookupCall() {
 								return RoleAndSubscriptionLookupCall.class;
+							}
+
+							@Override
+							protected Long execValidateValue(final ITableRow row, final Long rawValue) {
+								if (Table.this.getRoleIdColumn().getValues().contains(rawValue)) {
+									throw new VetoException(
+											TEXTS.get("zc.document.link.roleAlreadyLinkedToThisDocument"));
+								}
+
+								return super.execValidateValue(row, rawValue);
 							}
 
 							@Override

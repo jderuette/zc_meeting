@@ -293,6 +293,11 @@ public class DocumentTablePage extends AbstractPageWithTable<Table> {
 			}
 
 			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.FALSE;
+			}
+
+			@Override
 			protected int getConfiguredWidth() {
 				return 100;
 			}
