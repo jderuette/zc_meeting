@@ -195,16 +195,20 @@ public class RoleTablePage extends AbstractPageWithTable<Table> {
 		}
 
 		@Order(2000)
-		public class RoleNameColumn extends AbstractStringColumn {
+		public class TypeColumn extends AbstractProposalColumn<String> {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("zc.user.role.name");
+				return TEXTS.get("zc.user.role.type");
 			}
 
 			@Override
-			protected void execDecorateCell(final Cell cell, final ITableRow row) {
-				final String translated = TEXTS.getWithFallback(cell.getText(), cell.getText());
-				cell.setText(translated);
+			protected boolean getConfiguredSummary() {
+				return Boolean.TRUE;
+			}
+
+			@Override
+			protected Class<? extends ILookupCall<String>> getConfiguredLookupCall() {
+				return RoleTypeLookupCall.class;
 			}
 
 			@Override
@@ -214,15 +218,21 @@ public class RoleTablePage extends AbstractPageWithTable<Table> {
 		}
 
 		@Order(3000)
-		public class TypeColumn extends AbstractProposalColumn<String> {
+		public class RoleNameColumn extends AbstractStringColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
-				return TEXTS.get("zc.user.role.type");
+				return TEXTS.get("zc.user.role.name");
 			}
 
 			@Override
-			protected Class<? extends ILookupCall<String>> getConfiguredLookupCall() {
-				return RoleTypeLookupCall.class;
+			protected boolean getConfiguredSummary() {
+				return Boolean.TRUE;
+			}
+
+			@Override
+			protected void execDecorateCell(final Cell cell, final ITableRow row) {
+				final String translated = TEXTS.getWithFallback(cell.getText(), cell.getText());
+				cell.setText(translated);
 			}
 
 			@Override
