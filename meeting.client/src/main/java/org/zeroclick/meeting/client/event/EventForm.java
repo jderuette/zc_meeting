@@ -448,7 +448,7 @@ public class EventForm extends AbstractForm {
 
 			@Override
 			protected boolean getConfiguredVisible() {
-				return Boolean.TRUE;
+				return Boolean.FALSE;
 			}
 		}
 
