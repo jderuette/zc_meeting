@@ -15,6 +15,7 @@ import org.zeroclick.common.document.link.AssignDocumentToRoleFormData;
 import org.zeroclick.common.shared.document.IDocumentService;
 import org.zeroclick.common.shared.document.ReadDocumentPermission;
 import org.zeroclick.configuration.shared.role.CreateRolePermission;
+import org.zeroclick.configuration.shared.role.IRolePermissionService;
 import org.zeroclick.configuration.shared.role.IRoleService;
 import org.zeroclick.configuration.shared.role.ReadRolePermission;
 import org.zeroclick.configuration.shared.role.RoleFormData;
@@ -102,7 +103,8 @@ public class RoleService extends CommonService implements IRoleService {
 		if (!ACCESS.check(new UpdateRolePermission())) {
 			super.throwAuthorizationFailed();
 		}
-		LOG.info("Deleting Role (and link to documents, and link to Users) for Role ID : " + formData.getRoleId());
+		LOG.info("Deleting Role (and link to documents, and link to Users and link to permissions) for Role ID : "
+				+ formData.getRoleId());
 
 		if (null == formData.getRoleId()) {
 			this.loadByRoleName(formData);
@@ -116,6 +118,8 @@ public class RoleService extends CommonService implements IRoleService {
 		final AssignDocumentToRoleFormData assignDocFormData = new AssignDocumentToRoleFormData();
 		assignDocFormData.getRoleId().setValue(formData.getRoleId());
 		this.deleteAssignDocumentByRole(assignDocFormData);
+
+		this.deletePermissionsByRole(formData.getRoleId());
 
 		SQL.insert(SQLs.ROLE_DELETE, formData);
 
@@ -155,6 +159,11 @@ public class RoleService extends CommonService implements IRoleService {
 		}
 
 		this.insertInsideNewTransaction(SQLs.ROLE_DELETE_LINKED_DOC_BY_ROLE, formData);
+	}
+
+	private void deletePermissionsByRole(final Long roleId) {
+		final IRolePermissionService rolePermissionService = BEANS.get(IRolePermissionService.class);
+		rolePermissionService.remove(roleId);
 	}
 
 	@Override
