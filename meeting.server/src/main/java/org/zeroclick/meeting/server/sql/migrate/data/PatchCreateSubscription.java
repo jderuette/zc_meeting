@@ -137,8 +137,8 @@ public class PatchCreateSubscription extends AbstractDataPatcher {
 		LOG.info("Create Subscription table upgraing default data");
 		final IAppParamsService appParamsService = BEANS.get(IAppParamsService.class);
 		// params to indicate limit for free event's users
-		SQL.insert(SQLs.PARAMS_INSERT_SAMPLE_WITH_CATEGORY + SQLs.PARAMS_INSERT_VALUES_SUB_FREE_EVENT_LIMIT);
-		SQL.insert(SQLs.PARAMS_INSERT_SAMPLE_WITH_CATEGORY + SQLs.PARAMS_INSERT_VALUES_SUB_INFO_EMAIL);
+		appParamsService.create("subFreeEventLimit", String.valueOf(10), "subscription");
+		appParamsService.create("subInfoEmail", "djer13@gmail.com", "subscription");
 
 		// change permission "createEvent" to level 0 for existing roles
 		SQL.insert(SQLs.ROLE_PERMISSION_CHANGE_EVENT_TO_HIERARCHIC);
@@ -255,6 +255,9 @@ public class PatchCreateSubscription extends AbstractDataPatcher {
 			appParamsService.delete(SubscriptionHelper.PARAM_KEY_URL_NAME_BASE + "4");
 			appParamsService.delete(SubscriptionHelper.PARAM_KEY_URL_BASE + "5");
 			appParamsService.delete(SubscriptionHelper.PARAM_KEY_URL_NAME_BASE + "5");
+
+			appParamsService.delete("subFreeEventLimit");
+			appParamsService.delete("subInfoEmail");
 		}
 
 	}

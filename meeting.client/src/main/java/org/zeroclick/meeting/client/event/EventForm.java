@@ -38,6 +38,7 @@ import org.zeroclick.meeting.client.common.DurationLookupCall;
 import org.zeroclick.meeting.client.common.EventStateLookupCall;
 import org.zeroclick.meeting.client.common.SlotLookupCall;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.CancelButton;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.CreatedDateField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.DurationField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.EmailField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.EndDateField;
@@ -212,6 +213,10 @@ public class EventForm extends AbstractForm {
 
 	public VenueField getVenueField() {
 		return this.getFieldByClass(VenueField.class);
+	}
+
+	public CreatedDateField getCreatedDateField() {
+		return this.getFieldByClass(CreatedDateField.class);
 	}
 
 	public OkButton getOkButton() {
@@ -429,13 +434,30 @@ public class EventForm extends AbstractForm {
 			}
 		}
 
+		@Order(8000)
+		public class CreatedDateField extends AbstractDateField {
+			@Override
+			protected String getConfiguredLabel() {
+				return TEXTS.get("zc.meeting.createdDate");
+			}
+
+			@Override
+			protected boolean getConfiguredHasTime() {
+				return Boolean.TRUE;
+			}
+
+			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.TRUE;
+			}
+		}
+
 		@Order(100000)
 		public class OkButton extends AbstractOkButton {
 			@Override
 			public String getLabel() {
 				return TEXTS.get("zc.meeting.scheduleMeeting");
 			}
-
 		}
 
 		@Order(101000)

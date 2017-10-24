@@ -31,7 +31,7 @@ public class PatchCreateVenue extends AbstractDataPatcher {
 
 	private static final String APP_PARAMS_TABLE_NAME = PatchCreateParamsTable.APP_PARAMS_TABLE_NAME;
 	public static final String APP_PARAMS_PATCHED_COLUMN = "category";
-	private static final String EVENT_TABLE_NAME = "EVENT";
+	private static final String EVENT_TABLE_NAME = "event";
 	public static final String EVENT_PATCHED_COLUMN = "venue";
 	private static final Logger LOG = LoggerFactory.getLogger(PatchCreateVenue.class);
 
@@ -70,12 +70,12 @@ public class PatchCreateVenue extends AbstractDataPatcher {
 		LOG.info("Create Venue column and default values upgrading data strcuture");
 		Boolean structureAltered = Boolean.FALSE;
 
-		if (this.getDatabaseHelper().existTable(APP_PARAMS_TABLE_NAME)) {
+		if (!this.getDatabaseHelper().isColumnExists(APP_PARAMS_TABLE_NAME, APP_PARAMS_PATCHED_COLUMN)) {
 			SQL.insert(SQLs.PARAMS_ALTER_TABLE_ADD_CATEGORY);
 			structureAltered = Boolean.TRUE;
 		}
 
-		if (this.getDatabaseHelper().existTable(EVENT_TABLE_NAME)) {
+		if (!this.getDatabaseHelper().isColumnExists(EVENT_TABLE_NAME, EVENT_PATCHED_COLUMN)) {
 			SQL.insert(SQLs.EVENT_ALTER_TABLE_ADD_VENUE);
 			structureAltered = Boolean.TRUE;
 		}

@@ -19,6 +19,7 @@ import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.CommonService;
+import org.zeroclick.comon.date.DateHelper;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper.SubscriptionHelperData;
 import org.zeroclick.configuration.shared.user.IUserService;
@@ -169,6 +170,9 @@ public class EventService extends CommonService implements IEventService {
 		formData.getDuration().setValue(30);
 		// TODO Djer move SlotLookup to shared Part ?
 		formData.getSlot().setValue(1);
+
+		final DateHelper dateHelper = BEANS.get(DateHelper.class);
+		formData.getCreatedDate().setValue(dateHelper.nowUtc());
 
 		formData.getOrganizer().setValue(super.userHelper.getCurrentUserId());
 

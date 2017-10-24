@@ -12,8 +12,10 @@ package org.zeroclick.meeting.server.sql;
 
 import org.zeroclick.configuration.shared.role.IRoleTypeLookupService;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchAddSlotCode;
+import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateParamsTable;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateSubscription;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateVenue;
+import org.zeroclick.meeting.server.sql.migrate.data.PatchEventAddCreatedDate;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchEventRejectReason;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchSlotTable;
 
@@ -23,8 +25,8 @@ public interface SQLs {
 	String SELECT_TABLE_NAMES_DERBY = "SELECT UPPER(tablename) FROM sys.systables INTO :result";
 	String SELECT_TABLE_NAMES_POSTGRESQL = "select UPPER(tables.table_name) from information_schema.tables INTO :result";
 
-	String SELECT_COLUMN_EXISTS_POSTGRESQL = "SELECT column_name FROM information_schema.columns WHERE table_name='__table__' and column_name='__column__'";
-	String GENERIC_REMOVE_COLUMN_POSTGRESQL = "ALTER TABLE __table__ DROP COLUMN __column__";
+	String SELECT_COLUMN_EXISTS_POSTGRESQL = "SELECT column_name FROM information_schema.columns WHERE UPPER(table_name)='UPPER(__table__)' and column_name='__column__'";
+	String GENERIC_REMOVE_COLUMN_POSTGRESQL = "ALTER TABLE UPPER(__table__) DROP COLUMN __column__";
 
 	String GENERIC_DROP_TABLE = "DROP TABLE __tableName__ CASCADE";
 	String GENERIC_CREATE_SEQUENCE = "CREATE SEQUENCE __seqName__ START __seqStart__";
@@ -48,7 +50,8 @@ public interface SQLs {
 
 	String AND_LIKE_CAUSE = "AND LOWER(%s) LIKE LOWER(:%s || '%%') ";
 
-	String EVENT_PAGE_SELECT = "SELECT event_id, organizer, organizer_email, duration, slot, email, guest_id, state, reason, subject, venue, startDate, endDate, externalIdRecipient, externalIdOrganizer  FROM EVENT WHERE 1=1";
+	String EVENT_PAGE_SELECT = "SELECT event_id, organizer, organizer_email, duration, slot, email, guest_id, state, reason, subject, venue, startDate, endDate, externalIdRecipient, externalIdOrganizer, "
+			+ PatchEventAddCreatedDate.PATCHED_COLUMN + "  FROM EVENT WHERE 1=1";
 	// + "CASE WHEN organizer = :currentUser THEN 1 ELSE 0 END AS held"
 	// + "CASE WHEN email = :currentUserEmail THEN 1 ELSE 0 END AS guest FROM
 	// EVENT WHERE 1=1";
@@ -66,7 +69,7 @@ public interface SQLs {
 	String EVENT_PAGE_SELECT_FILTER_RECIPIENT = " OR email = :currentUserEmail";
 	String EVENT_PAGE_SELECT_FILTER_USER_OR_RECIPIENT = " AND (organizer = :currentUser OR email = :currentUserEmail)";
 
-	String EVENT_PAGE_DATA_SELECT_INTO = " INTO :{page.eventId}, :{page.organizer}, :{page.organizerEmail}, :{page.duration}, :{page.slot}, :{page.email}, :{page.guestId}, :{page.state}, :{page.reason}, :{page.subject}, :{page.venue}, :{page.startDate}, :{page.endDate}, :{page.externalIdRecipient}, :{page.externalIdOrganizer}";
+	String EVENT_PAGE_DATA_SELECT_INTO = " INTO :{page.eventId}, :{page.organizer}, :{page.organizerEmail}, :{page.duration}, :{page.slot}, :{page.email}, :{page.guestId}, :{page.state}, :{page.reason}, :{page.subject}, :{page.venue}, :{page.startDate}, :{page.endDate}, :{page.externalIdRecipient}, :{page.externalIdOrganizer}, :{page.createdDate}";
 
 	String EVENT_SELECT_USERS_EVENT_GUEST = "SELECT event_id, organizer FROM EVENT WHERE guest_id=:currentUser";
 	String EVENT_SELECT_USERS_EVENT_HOST = "SELECT event_id, guest_id FROM EVENT WHERE organizer=:currentUser";
@@ -74,12 +77,13 @@ public interface SQLs {
 
 	String EVENT_INSERT = "INSERT INTO EVENT (event_id, organizer) " + "VALUES (:eventId, :organizer)";
 
-	String EVENT_UPDATE = "UPDATE EVENT SET organizer_email=:organizerEmail, duration=:duration, slot=:slot, email=:email, guest_id=:guestId, state=:state, subject=:subject, venue=:venue, startDate=:startDate, endDate=:endDate, externalIdRecipient=:externalIdRecipient, externalIdOrganizer=:externalIdOrganizer WHERE event_id=:eventId";
+	String EVENT_UPDATE = "UPDATE EVENT SET organizer_email=:organizerEmail, duration=:duration, slot=:slot, email=:email, guest_id=:guestId, state=:state, subject=:subject, venue=:venue, startDate=:startDate, endDate=:endDate, externalIdRecipient=:externalIdRecipient, externalIdOrganizer=:externalIdOrganizer, "
+			+ PatchEventAddCreatedDate.PATCHED_COLUMN + "=:createdDate WHERE event_id=:eventId";
 	String EVENT_UPDATE_STATE = "UPDATE EVENT SET state=:state, reason=:reason WHERE event_id=:eventId";
 
-	String EVENT_SELECT = "SELECT duration, slot, email, guest_id, state, reason, subject, venue, startDate, endDate, externalIdRecipient, externalIdOrganizer, organizer, organizer_email FROM EVENT"
-			+ " WHERE event_id=:eventId"
-			+ " INTO :duration, :slot, :email, :guestId, :state, :reason, :subject, :venue, :startDate, :endDate, :externalIdRecipient, :externalIdOrganizer, :organizer, :organizerEmail";
+	String EVENT_SELECT = "SELECT duration, slot, email, guest_id, state, reason, subject, venue, startDate, endDate, externalIdRecipient, externalIdOrganizer, organizer, organizer_email, "
+			+ PatchEventAddCreatedDate.PATCHED_COLUMN + " FROM EVENT" + " WHERE event_id=:eventId"
+			+ " INTO :duration, :slot, :email, :guestId, :state, :reason, :subject, :venue, :startDate, :endDate, :externalIdRecipient, :externalIdOrganizer, :organizer, :organizerEmail, :createdDate";
 
 	String EVENT_SELECT_REJECT = "SELECT organizer_email, email, subject, venue, organizer, guest_id, externalIdOrganizer, externalIdRecipient FROM EVENT WHERE event_id=:eventId INTO :organizerEmail, :email, :subject, :venue, :organizer, :guestId, :externalIdOrganizer, :externalIdRecipient";
 
@@ -106,11 +110,12 @@ public interface SQLs {
 
 	String EVENT_ALTER_TABLE_ADD_REASON = "ALTER TABLE EVENT ADD COLUMN " + PatchEventRejectReason.PATCHED_COLUMN
 			+ " VARCHAR(250)";
-	String EVENT_ALTER_TABLE_REMOVE_REASON = "ALTER TABLE EVENT DROP COLUMN " + PatchEventRejectReason.PATCHED_COLUMN;
 
 	String EVENT_ALTER_TABLE_ADD_VENUE = "ALTER TABLE EVENT ADD COLUMN " + PatchCreateVenue.EVENT_PATCHED_COLUMN
 			+ " VARCHAR(250)";
-	String EVENT_ALTER_TABLE_REMOVE_VENUE = "ALTER TABLE EVENT DROP COLUMN " + PatchCreateVenue.EVENT_PATCHED_COLUMN;
+
+	String EVENT_ALTER_TABLE_ADD_CREATED_DATE = "ALTER TABLE EVENT ADD COLUMN "
+			+ PatchEventAddCreatedDate.PATCHED_COLUMN + " TIMESTAMP";
 
 	/**
 	 * OAuth credential
@@ -161,8 +166,10 @@ public interface SQLs {
 
 	String ROLE_INSERT = "INSERT INTO ROLE (role_id, type) VALUES (:roleId, '" + IRoleTypeLookupService.TYPE_BUSINESS
 			+ "')";
+	String ROLE_INSERT_WITHOUT_TYPE = "INSERT INTO ROLE (role_id) VALUES (:roleId)";
 
 	String ROLE_UPDATE = "UPDATE ROLE SET name=:roleName, type=:type WHERE role_id=:roleId";
+	String ROLE_UPDATE_WITHOUT_TYPE = "UPDATE ROLE SET name=:roleName WHERE role_id=:roleId";
 
 	String ROLE_SELECT = "SELECT role_id, name, type FROM ROLE WHERE 1=1 AND role_id = :roleId";
 	String ROLE_SELECT_BY_NAME = "SELECT role_id, name, type FROM ROLE WHERE 1=1 AND name = :roleName";
@@ -457,7 +464,8 @@ public interface SQLs {
 
 	String PARAMS_INSERT_SAMPLE = "INSERT INTO APP_PARAMS (param_id, key, value)";
 	String PARAMS_INSERT_SAMPLE_WITH_CATEGORY = "INSERT INTO APP_PARAMS (param_id, key, category, value)";
-	String PARAMS_INSERT_VALUES_DATAVERSION = " VALUES(nextval('APP_PARAMS_ID_SEQ'), 'dataVersion', '1.0.0')";
+	String PARAMS_INSERT_VALUES_DATAVERSION = " VALUES(nextval('" + PatchCreateParamsTable.APP_PARAMS_ID_SEQ
+			+ "'), 'dataVersion', '1.0.0')";
 
 	String PARAMS_DELETE = "DELETE FROM APP_PARAMS WHERE key=:key";
 
@@ -465,11 +473,17 @@ public interface SQLs {
 
 	String PARAMS_ALTER_TABLE_ADD_CATEGORY = "ALTER TABLE APP_PARAMS ADD COLUMN "
 			+ PatchCreateVenue.APP_PARAMS_PATCHED_COLUMN + " VARCHAR(100)";
-	String PARAMS_INSERT_VALUES_SKYPE = " VALUES(nextval('APP_PARAMS_ID_SEQ'), 'zc.meeting.venue.skype', 'venue', 'zc.meeting.venue.skype')";
-	String PARAMS_INSERT_VALUES_PHONE = " VALUES(nextval('APP_PARAMS_ID_SEQ'), 'zc.meeting.venue.phone', 'venue', 'zc.meeting.venue.phone')";
+	String PARAMS_INSERT_VALUES_SKYPE = " VALUES(nextval('" + PatchCreateParamsTable.APP_PARAMS_ID_SEQ
+			+ "'), 'zc.meeting.venue.skype', 'venue', 'zc.meeting.venue.skype')";
+	String PARAMS_INSERT_VALUES_PHONE = " VALUES(nextval('" + PatchCreateParamsTable.APP_PARAMS_ID_SEQ
+			+ "'), 'zc.meeting.venue.phone', 'venue', 'zc.meeting.venue.phone')";
 
-	String PARAMS_INSERT_VALUES_SUB_FREE_EVENT_LIMIT = " VALUES(nextval('APP_PARAMS_ID_SEQ'), 'subFreeEventLimit', 'subscription', 10)";
-	String PARAMS_INSERT_VALUES_SUB_INFO_EMAIL = " VALUES(nextval('APP_PARAMS_ID_SEQ'), 'subInfoEmail', 'subscription', 'djer13@gmail.com')";
+	// String PARAMS_INSERT_VALUES_SUB_FREE_EVENT_LIMIT = "
+	// VALUES(nextval('APP_PARAMS_ID_SEQ'), 'subFreeEventLimit', 'subscription',
+	// 10)";
+	// String PARAMS_INSERT_VALUES_SUB_INFO_EMAIL = "
+	// VALUES(nextval('APP_PARAMS_ID_SEQ'), 'subInfoEmail', 'subscription',
+	// 'djer13@gmail.com')";
 
 	/**
 	 * Slot (and dayDuration) table

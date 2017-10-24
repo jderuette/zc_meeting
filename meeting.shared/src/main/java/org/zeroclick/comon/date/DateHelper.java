@@ -18,8 +18,11 @@ package org.zeroclick.comon.date;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DateFormat;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -69,10 +72,10 @@ public class DateHelper {
 		return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
 	}
 
-	public ZonedDateTime getZonedValue(final ZoneId userZoneId, final Date value) {
+	public ZonedDateTime getZonedValue(final ZoneId userZoneId, final Date date) {
 		ZonedDateTime zdt = null;
-		if (null != value) {
-			zdt = ZonedDateTime.ofInstant(value.toInstant(), userZoneId);
+		if (null != date) {
+			zdt = ZonedDateTime.ofInstant(date.toInstant(), userZoneId);
 		}
 		return zdt;
 	}
@@ -85,6 +88,34 @@ public class DateHelper {
 		return date;
 	}
 
+	public Date toUtcDate(final ZonedDateTime zonedDateTime) {
+		Date date = null;
+		if (null != zonedDateTime) {
+			date = Date.from(zonedDateTime.toInstant());
+		}
+		return date;
+	}
+
+	public Date toUtcDate(final Date dateFromUser) {
+		final int dateMinutOeffsetFromUtc = dateFromUser.getTimezoneOffset();
+		Date utcDate = dateFromUser;
+		if (dateMinutOeffsetFromUtc == 0) {
+			// Already UTC Time
+		} else {
+			final ZonedDateTime zdt = ZonedDateTime.from(dateFromUser.toInstant());
+			zdt.plusMinutes(dateMinutOeffsetFromUtc);
+			utcDate = Date.from(zdt.toInstant());
+		}
+		return utcDate;
+	}
+
+	public Date nowUtc() {
+		final Instant instant = Instant.now();
+		final OffsetDateTime odt = instant.atOffset(ZoneOffset.UTC);
+		final Date nowUtc = Date.from(odt.toInstant());
+		return nowUtc;	
+	}
+
 	public Date toUserDate(final ZonedDateTime zonedDateTime) {
 		Date date = null;
 		if (null != zonedDateTime) {
@@ -94,7 +125,7 @@ public class DateHelper {
 	}
 
 	public String format(final Date date, final ZoneId userZoneId) {
-		return this.format(this.getZonedValue(userZoneId, date));
+		return this.format(this.getZonedValue(userZoneId, this.toUtcDate(date)));
 	}
 
 	public String format(final ZonedDateTime zoneDateTime) {

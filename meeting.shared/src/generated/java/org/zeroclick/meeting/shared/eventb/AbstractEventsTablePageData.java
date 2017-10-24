@@ -55,6 +55,7 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 		public static final String eventId = "eventId";
 		public static final String organizer = "organizer";
 		public static final String organizerEmail = "organizerEmail";
+		public static final String createdDate = "createdDate";
 		public static final String guestId = "guestId";
 		public static final String email = "email";
 		public static final String subject = "subject";
@@ -70,6 +71,7 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 		private Long m_eventId;
 		private Long m_organizer;
 		private String m_organizerEmail;
+		private Date m_createdDate;
 		private Long m_guestId;
 		private String m_email;
 		private String m_subject;
@@ -105,6 +107,14 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 
 		public void setOrganizerEmail(String newOrganizerEmail) {
 			m_organizerEmail = newOrganizerEmail;
+		}
+
+		public Date getCreatedDate() {
+			return m_createdDate;
+		}
+
+		public void setCreatedDate(Date newCreatedDate) {
+			m_createdDate = newCreatedDate;
 		}
 
 		public Long getGuestId() {

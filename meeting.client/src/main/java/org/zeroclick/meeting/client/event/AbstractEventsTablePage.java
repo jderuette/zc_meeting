@@ -587,6 +587,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			datas.add(formData.getEventId());
 			datas.add(formData.getOrganizer().getValue());
 			datas.add(formData.getOrganizerEmail().getValue());
+			datas.add(formData.getCreatedDate().getValue());
 			datas.add(formData.getGuestId().getValue());
 			datas.add(formData.getEmail().getValue());
 			datas.add(formData.getSubject().getValue());
@@ -976,6 +977,10 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			return this.getColumnSet().getColumnByClass(VenueColumn.class);
 		}
 
+		public AbstractEventsTablePage<?>.Table.CreatedDateColumn getCreatedDateColumn() {
+			return this.getColumnSet().getColumnByClass(CreatedDateColumn.class);
+		}
+
 		public AbstractEventsTablePage<?>.Table.OrganizerColumn getOrganizerColumn() {
 			return this.getColumnSet().getColumnByClass(OrganizerColumn.class);
 		}
@@ -1044,6 +1049,24 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			@Override
 			protected int getConfiguredWidth() {
 				return 150;
+			}
+		}
+
+		@Order(35)
+		public class CreatedDateColumn extends AbstractZonedDateColumn {
+			@Override
+			protected String getConfiguredHeaderText() {
+				return TEXTS.get("zc.meeting.createdDate");
+			}
+
+			@Override
+			protected boolean getConfiguredHasTime() {
+				return Boolean.TRUE;
+			}
+
+			@Override
+			protected int getConfiguredWidth() {
+				return 100;
 			}
 		}
 

@@ -178,7 +178,11 @@ public abstract class AbstractDataPatcher implements IDataPatcher {
 
 			final RoleFormData roleformData = this.getSuperUserRole();
 			if (null != roleformData.getRoleId()) {
-				this.addAllPermissions(roleformData.getRoleId());
+				try {
+					this.addAllPermissions(roleformData.getRoleId());
+				} catch (final Exception e) {
+					LOG.warn("Cannot refresh superUser permisisons : " + e);
+				}
 			} else {
 				LOG.warn("Cannot refresh superUser's role because this role dosen't exists");
 			}
@@ -187,14 +191,17 @@ public abstract class AbstractDataPatcher implements IDataPatcher {
 					"Cannot refresh superUser's Role, because sourceCode version is too old to handle roles correctly ("
 							+ sourceCodeVersion + ")");
 		}
-
 	}
 
 	private RoleFormData getSuperUserRole() {
 		final IRoleService roleService = BEANS.get(IRoleService.class);
 		final RoleFormData roleFormData = new RoleFormData();
 		roleFormData.getRoleName().setValue(SUPER_USER_ROLE_NAME);
-		roleService.load(roleFormData);
+		try {
+			roleService.load(roleFormData);
+		} catch (final Exception e) {
+			LOG.warn("Cannot load superUser Role : " + e);
+		}
 		return roleFormData;
 	}
 

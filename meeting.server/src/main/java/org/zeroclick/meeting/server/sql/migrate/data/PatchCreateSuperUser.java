@@ -64,7 +64,7 @@ public class PatchCreateSuperUser extends AbstractDataPatcher {
 	 */
 	@Override
 	public Version getVersion() {
-		return Version.valueOf("1.1.5");
+		return Version.valueOf("1.1.4");
 	}
 
 	/*
@@ -119,8 +119,8 @@ public class PatchCreateSuperUser extends AbstractDataPatcher {
 			superUserRoleFormData.getRoleName().setValue(SUPER_USER_ROLE_NAME);
 			superUserRoleFormData.getType().setValue(IRoleTypeLookupService.TYPE_TECH);
 
-			SQL.insert(SQLs.ROLE_INSERT, superUserRoleFormData);
-			SQL.update(SQLs.ROLE_UPDATE, superUserRoleFormData);
+			SQL.insert(SQLs.ROLE_INSERT_WITHOUT_TYPE, superUserRoleFormData);
+			SQL.update(SQLs.ROLE_UPDATE_WITHOUT_TYPE, superUserRoleFormData);
 
 			// add "ALL" permission to superUser Role
 			this.addAllPermissions(this.superUserRoleId);

@@ -31,7 +31,7 @@ import com.github.zafarkhaja.semver.Version;
  */
 public class PatchAddSlotCode extends AbstractDataPatcher {
 
-	private static final String SLOT_TABLE_NAME = "SLOT";
+	private static final String SLOT_TABLE_NAME = "slot";
 	public static final String SLOT_PATCHED_COLUMN = "slot_code";
 
 	private static final Logger LOG = LoggerFactory.getLogger(PatchAddSlotCode.class);
@@ -75,9 +75,6 @@ public class PatchAddSlotCode extends AbstractDataPatcher {
 			SQL.insert(SQLs.SLOT_ALTER_TABLE_ADD_CODE);
 			structureAltered = Boolean.TRUE;
 		}
-
-		// as it create a Table force a refresh of Table Cache
-		this.getDatabaseHelper().resetExistingTablesCache();
 
 		return structureAltered;
 	}

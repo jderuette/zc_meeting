@@ -20,6 +20,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Date;
 
+import org.eclipse.scout.rt.client.ui.basic.cell.Cell;
 import org.eclipse.scout.rt.client.ui.basic.table.ITableRow;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractDateColumn;
 import org.eclipse.scout.rt.platform.BEANS;
@@ -73,13 +74,30 @@ public abstract class AbstractZonedDateColumn extends AbstractDateColumn {
 
 	public void setValue(final int rowIndex, final ZonedDateTime rawValue) {
 		if (null != rawValue) {
-			this.setValue(this.getTable().getRow(rowIndex), this.getDateHelper().toDate(rawValue));
+			this.setValue(this.getTable().getRow(rowIndex), rawValue);
 		}
 	}
 
 	public void setValue(final ITableRow row, final ZonedDateTime rawValue) {
 		if (null != rawValue && null != row) {
-			this.setValue(this.getTable().getRow(row.getRowIndex()), this.getDateHelper().toDate(rawValue));
+			this.setValue(row, this.getDateHelper().toDate(rawValue));
+		}
+	}
+
+	@Override
+	protected void execDecorateCell(final Cell cell, final ITableRow row) {
+		if (null != cell.getValue()) {
+			final Date utcDate = (Date) cell.getValue();
+			cell.setText(this.getDateHelper().format(utcDate, this.getAppUserHelper().getCurrentUserTimeZone()));
+		}
+	}
+
+	@Override
+	protected Date execValidateValue(final ITableRow row, final Date rawValue) {
+		if (null != rawValue) {
+			return this.getDateHelper().toUtcDate(rawValue);
+		} else {
+			return null;
 		}
 	}
 

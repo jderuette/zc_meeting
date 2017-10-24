@@ -55,20 +55,20 @@ public class DatabaseHelper {
 	}
 
 	public void dropTable(final String tableName, final Boolean forceRefreshTableCache) {
-		if (this.getExistingTables(forceRefreshTableCache).contains(tableName)) {
-			SQL.update(SQLs.GENERIC_DROP_TABLE.replace("__tableName__", tableName));
+		if (this.existTable(tableName, forceRefreshTableCache)) {
+			SQL.update(SQLs.GENERIC_DROP_TABLE.replace("__tableName__", tableName.toUpperCase()));
 		} else {
-			LOG.info("Table : " + tableName + " already exists (tested with force refresh ? " + forceRefreshTableCache
-					+ "), not created");
+			LOG.warn("Table : " + tableName + " does not exists (tested with force refresh ? " + forceRefreshTableCache
+					+ "), not droped");
 		}
 	}
 
 	public void createSequence(final String sequenceName, final Integer start) {
-		if (!this.isSequenceExists(sequenceName)) {
-			SQL.update(SQLs.GENERIC_CREATE_SEQUENCE.replace("__seqName__", sequenceName).replace("__seqStart__",
-					start.toString()));
+		if (!this.isSequenceExists(sequenceName.toUpperCase())) {
+			SQL.update(SQLs.GENERIC_CREATE_SEQUENCE.replace("__seqName__", sequenceName.toUpperCase())
+					.replace("__seqStart__", start.toString()));
 		} else {
-			LOG.info("Sequence : " + sequenceName + " already exists, not created");
+			LOG.warn("Sequence : " + sequenceName + " already exists, not created");
 		}
 	}
 
@@ -77,8 +77,8 @@ public class DatabaseHelper {
 	}
 
 	public void dropSequence(final String sequenceName) {
-		if (this.isSequenceExists(sequenceName)) {
-			SQL.update(SQLs.GENERIC_DROP_SEQUENCE.replace("__seqName__", sequenceName));
+		if (this.isSequenceExists(sequenceName.toUpperCase())) {
+			SQL.update(SQLs.GENERIC_DROP_SEQUENCE.replace("__seqName__", sequenceName.toUpperCase()));
 		} else {
 			LOG.warn("Sequence : " + sequenceName + " dosen't exists, no DROP required");
 		}
@@ -87,7 +87,8 @@ public class DatabaseHelper {
 	public Boolean isSequenceExists(final String sequenceName) {
 		Boolean sequenceExists = Boolean.TRUE;
 
-		final Object sequences[][] = SQL.select(SQLs.GENERIC_SEQUENCE_EXISTS.replace("__seqName__", sequenceName));
+		final Object sequences[][] = SQL
+				.select(SQLs.GENERIC_SEQUENCE_EXISTS.replace("__seqName__", sequenceName.toUpperCase()));
 
 		if (null == sequences || sequences.length == 0 || sequences[0].length == 0 || null == sequences[0][0]) {
 			sequenceExists = Boolean.FALSE;
@@ -249,7 +250,11 @@ public class DatabaseHelper {
 		final RolePermissionService rolePermissionService = BEANS.get(RolePermissionService.class);
 		final List<String> permissions = new ArrayList<>();
 		permissions.add(permissionName);
-		rolePermissionService.remove(roleId, permissions);
+		try {
+			rolePermissionService.remove(roleId, permissions);
+		} catch (final Exception e) {
+			LOG.warn("Cannot remove permission : " + permissionName + " from role : " + roleId + " : " + e);
+		}
 	}
 
 	public void deletePrimaryKey(final String tableName) {
