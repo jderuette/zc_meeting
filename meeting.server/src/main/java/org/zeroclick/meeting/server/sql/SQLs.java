@@ -25,7 +25,7 @@ public interface SQLs {
 	String SELECT_TABLE_NAMES_DERBY = "SELECT UPPER(tablename) FROM sys.systables INTO :result";
 	String SELECT_TABLE_NAMES_POSTGRESQL = "select UPPER(tables.table_name) from information_schema.tables INTO :result";
 
-	String SELECT_COLUMN_EXISTS_POSTGRESQL = "SELECT column_name FROM information_schema.columns WHERE UPPER(table_name)='UPPER(__table__)' and UPPER(column_name)='UPPER(__column__)'";
+	String SELECT_COLUMN_EXISTS_POSTGRESQL = "SELECT column_name FROM information_schema.columns WHERE UPPER(table_name)=UPPER('__table__') and UPPER(column_name)=UPPER('__column__')";
 	String GENERIC_REMOVE_COLUMN_POSTGRESQL = "ALTER TABLE UPPER(__table__) DROP COLUMN __column__";
 
 	String GENERIC_DROP_TABLE = "DROP TABLE __tableName__ CASCADE";
