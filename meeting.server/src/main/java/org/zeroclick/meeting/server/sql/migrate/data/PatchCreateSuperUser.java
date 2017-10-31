@@ -113,14 +113,19 @@ public class PatchCreateSuperUser extends AbstractDataPatcher {
 			// create super role, should only apply to this create User
 			final RoleFormData superUserRoleFormData = new RoleFormData();
 			// get the RoleId
-			this.superUserRoleId = DatabaseHelper.get().getNextVal(ROLE_ID_SEQ);
+			this.superUserRoleId = this.getDatabaseHelper().getNextVal(ROLE_ID_SEQ);
 
 			superUserRoleFormData.setRoleId(this.superUserRoleId);
 			superUserRoleFormData.getRoleName().setValue(SUPER_USER_ROLE_NAME);
 			superUserRoleFormData.getType().setValue(IRoleTypeLookupService.TYPE_TECH);
 
-			SQL.insert(SQLs.ROLE_INSERT_WITHOUT_TYPE, superUserRoleFormData);
-			SQL.update(SQLs.ROLE_UPDATE_WITHOUT_TYPE, superUserRoleFormData);
+			if (this.getDatabaseHelper().isColumnExists("ROLE", "type")) {
+				SQL.insert(SQLs.ROLE_INSERT, superUserRoleFormData);
+				SQL.update(SQLs.ROLE_UPDATE, superUserRoleFormData);
+			} else {
+				SQL.insert(SQLs.ROLE_INSERT_WITHOUT_TYPE, superUserRoleFormData);
+				SQL.update(SQLs.ROLE_UPDATE_WITHOUT_TYPE, superUserRoleFormData);
+			}
 
 			// add "ALL" permission to superUser Role
 			this.addAllPermissions(this.superUserRoleId);

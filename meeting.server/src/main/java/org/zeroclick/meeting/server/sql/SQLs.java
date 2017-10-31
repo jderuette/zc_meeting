@@ -164,9 +164,8 @@ public interface SQLs {
 
 	String ROLE_PAGE_DATA_SELECT_INTO = " INTO :{role.roleId}, :{role.roleName}, :{role.type}";
 
-	String ROLE_INSERT = "INSERT INTO ROLE (role_id, type) VALUES (:roleId, '" + IRoleTypeLookupService.TYPE_BUSINESS
-			+ "')";
 	String ROLE_INSERT_WITHOUT_TYPE = "INSERT INTO ROLE (role_id) VALUES (:roleId)";
+	String ROLE_INSERT = "INSERT INTO ROLE (role_id, type) VALUES (:roleId, :type)";
 
 	String ROLE_UPDATE = "UPDATE ROLE SET name=:roleName, type=:type WHERE role_id=:roleId";
 	String ROLE_UPDATE_WITHOUT_TYPE = "UPDATE ROLE SET name=:roleName WHERE role_id=:roleId";
