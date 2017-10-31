@@ -231,13 +231,13 @@ public class PatchCreateSubscription extends AbstractDataPatcher {
 
 		this.getDatabaseHelper().removeColumn(PATCHED_TABLE_ROLE, ADDED_ROLE_COLUMN);
 
-		LOG.info("Create Subscription table table downgrading (default) data");
+		LOG.info("Create Subscription table downgrading (default) data");
 
-		this.getDatabaseHelper().removeSubFreePermission(PERMISSION_CREATE_EVENT_NAME);
+		SQL.insert(SQLs.ROLE_PERMISSION_DELETE_BY_ROLE, new NVPair("roleId", 3));
 		SQL.insert(SQLs.ROLE_DELETE, new NVPair("roleId", 3));
-		this.getDatabaseHelper().removeSubProPermission(PERMISSION_CREATE_EVENT_NAME);
+		SQL.insert(SQLs.ROLE_PERMISSION_DELETE_BY_ROLE, new NVPair("roleId", 4));
 		SQL.insert(SQLs.ROLE_DELETE, new NVPair("roleId", 4));
-		this.getDatabaseHelper().removeSubBusinessPermission(PERMISSION_CREATE_EVENT_NAME);
+		SQL.insert(SQLs.ROLE_PERMISSION_DELETE_BY_ROLE, new NVPair("roleId", 5));
 		SQL.insert(SQLs.ROLE_DELETE, new NVPair("roleId", 5));
 
 		// Remove default roles to manage appParams using GUI (and forms)
