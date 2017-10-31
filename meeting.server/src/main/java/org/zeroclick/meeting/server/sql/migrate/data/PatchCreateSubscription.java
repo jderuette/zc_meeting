@@ -90,12 +90,14 @@ public class PatchCreateSubscription extends AbstractDataPatcher {
 		Boolean structureAltered = Boolean.FALSE;
 
 		if (this.getDatabaseHelper().existTable(PATCHED_TABLE_USER_ROLE)) {
-			SQL.insert(SQLs.USER_ROLE_ADD_START_DATE);
-			SQL.insert(SQLs.USER_ROLE_START_DATE_ADD_DEFAULT);
+			if (!this.getDatabaseHelper().isColumnExists(PATCHED_TABLE_USER_ROLE, ADDED_USER_ROLE_COLUMN)) {
+				SQL.insert(SQLs.USER_ROLE_ADD_START_DATE);
+				SQL.insert(SQLs.USER_ROLE_START_DATE_ADD_DEFAULT);
 
-			SQL.insert(SQLs.USER_ROLE_PK_DROP);
-			SQL.insert(SQLs.USER_ROLE_START_DATE_NOW_TO_EXISTING);
-			SQL.insert(SQLs.USER_ROLE_PK_ADD_START_DATE);
+				SQL.insert(SQLs.USER_ROLE_PK_DROP);
+				SQL.insert(SQLs.USER_ROLE_START_DATE_NOW_TO_EXISTING);
+				SQL.insert(SQLs.USER_ROLE_PK_ADD_START_DATE);
+			}
 
 			structureAltered = Boolean.TRUE;
 		}
