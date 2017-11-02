@@ -105,7 +105,7 @@ public class EventMessageHelper {
 
 		String venue = null;
 		if (null != formData.getVenue().getValue()) {
-			venue = TextsHelper.get(receiverId, formData.getVenue().getValue());
+			venue = " (" + TextsHelper.get(receiverId, formData.getVenue().getValue()) + ")";
 		}
 		values.add(venue);// 12
 		values.add(new ApplicationUrlProperty().getValue()); // 13
