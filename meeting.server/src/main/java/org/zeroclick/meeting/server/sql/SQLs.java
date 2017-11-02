@@ -11,6 +11,7 @@
 package org.zeroclick.meeting.server.sql;
 
 import org.zeroclick.configuration.shared.role.IRoleTypeLookupService;
+import org.zeroclick.meeting.server.sql.migrate.data.PatchAddLastLogin;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchAddSlotCode;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateParamsTable;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateSubscription;
@@ -384,8 +385,18 @@ public interface SQLs {
 	 */
 	String USER_CREATE_TABLE = "CREATE TABLE APP_USER (user_id INTEGER NOT NULL, login VARCHAR(50), email VARCHAR(120), password VARCHAR(256), time_zone VARCHAR(120), CONSTRAINT USER_PK PRIMARY KEY (user_id), CONSTRAINT USER_UNIQUE_EMAIL UNIQUE (email))";
 
-	String USER_PAGE_SELECT = "select user_id, login, email, time_zone, invited_by, language FROM APP_USER WHERE 1=1";
-	String USER_PAGE_DATA_SELECT_INTO = " INTO :{page.userId}, :{page.login}, :{page.email}, :{page.timeZone}, :{page.invitedBy}, :{page.language}";
+	String USER_FROM = " FROM APP_USER";
+
+	String USER_PAGE_SELECT = "select user_id, login, email, time_zone, invited_by, language, "
+			+ PatchAddLastLogin.PATCHED_ADDED_COLUMN;
+	String USER_PAGE_DATA_SELECT_INTO = " INTO :{page.userId}, :{page.login}, :{page.email}, :{page.timeZone}, :{page.invitedBy}, :{page.language},  :{page.lastLogin}";
+
+	String USER_PAGE_ADD_STATS_SELECT = ", nbOrganizedWaitingEvent, nbInvetedWaitingEvent";
+	String USER_PAGE_ADD_STATS = " left outer join (select organizer, count(event_id) as nbOrganizedWaitingEvent FROM EVENT WHERE state='ASKED' GROUP BY organizer) as stat2 ON stat2.organizer=user_id"
+			+ " left outer join (select guest_id, count(event_id) as nbInvetedWaitingEvent FROM EVENT WHERE state='ASKED' GROUP BY guest_id) as stat3 ON stat3.guest_id=user_id";
+	String USER_PAGE_ADD_STATS_INTO = ", :{page.NbOrganizedEventWaiting}, :{page.NbInvitedEventWaiting}";
+
+	String USER_STATS_NB_PROCESSED_EVENT = "select count(event_id) FROM EVENT WHERE organizer=:userId OR guest_id=:userId INTO :{nbProcessedEvent}";
 
 	String USER_SELECT = "SELECT user_id, login, email, password, time_zone, invited_by, language FROM APP_USER WHERE 1=1";
 	String USER_SELECT_ID_ONLY = "SELECT user_id FROM APP_USER WHERE 1=1";
@@ -412,12 +423,18 @@ public interface SQLs {
 
 	String USER_INSERT = "INSERT INTO APP_USER (user_id) VALUES (:userId)";
 
+	String USER_UPDATE_LATS_LOGIN = "UPDATE APP_USER set " + PatchAddLastLogin.PATCHED_ADDED_COLUMN
+			+ "=now() WHERE user_id=:userId";
+
 	String USER_ALTER_TABLE_INVITED_BY = "ALTER TABLE APP_USER ADD COLUMN invited_by INTEGER";
 	String USER_ALTER_TABLE_INVITED_BY_CONSTRAINT = "ALTER TABLE APP_USER ADD CONSTRAINT FK_INVITED_BY FOREIGN KEY (invited_by) REFERENCES APP_USER(user_id)";
 	String USER_ALTER_TABLE_REMOVE_INVITED_BY = "ALTER TABLE APP_USER DROP COLUMN invited_by";
 
 	String USER_ALTER_TABLE_LANGUAGE = "ALTER TABLE APP_USER ADD COLUMN language VARCHAR(5)";
 	String USER_ALTER_TABLE_REMOVE_LANGUAGE = "ALTER TABLE APP_USER DROP COLUMN language";
+
+	String USER_ALTER_TABLE_ADD_LAST_LOGIN = "ALTER TABLE APP_USER ADD COLUMN last_login TIMESTAMP";
+
 	/**
 	 * Password not updated use USER_UPDATE_PASSWORD
 	 */

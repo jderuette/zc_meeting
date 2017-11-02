@@ -36,6 +36,7 @@ import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.configuration.shared.user.UserModifiedNotification;
 import org.zeroclick.configuration.shared.user.UserTablePageData;
+import org.zeroclick.configuration.shared.user.UserTablePageData.UserTableRowData;
 import org.zeroclick.configuration.shared.user.ValidateCpsFormData;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.shared.security.AccessControlService;
@@ -60,9 +61,13 @@ public class UserService extends CommonService implements IUserService {
 			currentConnectedUserId = super.userHelper.getCurrentUserId();
 		}
 
-		final String sql = SQLs.USER_PAGE_SELECT + ownerFilter + SQLs.USER_PAGE_DATA_SELECT_INTO;
+		final String sql = SQLs.USER_PAGE_SELECT + SQLs.USER_PAGE_ADD_STATS_SELECT + SQLs.USER_FROM
+				+ SQLs.USER_PAGE_ADD_STATS + SQLs.GENERIC_WHERE_FOR_SECURE_AND + ownerFilter
+				+ SQLs.USER_PAGE_DATA_SELECT_INTO + SQLs.USER_PAGE_ADD_STATS_INTO;
 
 		SQL.selectInto(sql, new NVPair("page", pageData), new NVPair("currentUser", currentConnectedUserId));
+
+		this.addNbProcessedEventStat(pageData);
 
 		return pageData;
 	}
@@ -204,6 +209,19 @@ public class UserService extends CommonService implements IUserService {
 
 	private UserFormData getRoles(final Long userId) {
 		return this.getRoles(userId, Boolean.FALSE);
+	}
+
+	private void addNbProcessedEventStat(final UserTablePageData pageData) {
+
+		if (pageData.getRowCount() > 0) {
+			for (final UserTableRowData row : pageData.getRows()) {
+				final Long userId = row.getUserId();
+				if (null != userId) {
+					SQL.selectInto(SQLs.USER_STATS_NB_PROCESSED_EVENT, row);
+				}
+			}
+		}
+
 	}
 
 	/**
@@ -757,6 +775,15 @@ public class UserService extends CommonService implements IUserService {
 			}
 		}
 		return allUserIds;
+	}
+
+	@Override
+	public UserFormData loggedIn(final UserFormData userData) {
+		// No permision check, because used during login
+		LOG.info("User " + userData.getEmail() + " (login : " + userData.getLogin()
+				+ ") juste logged in, updating stats data");
+		SQL.insert(SQLs.USER_UPDATE_LATS_LOGIN, userData);
+		return userData;
 	}
 
 	@Override

@@ -65,4 +65,11 @@ public interface IUserService extends IService {
 
 	ValidateCpsFormData getActiveSubscriptionDetails(Long userId);
 
+	/**
+	 * Use to indicate this user just logged In
+	 *
+	 * @param savedPassword
+	 */
+	UserFormData loggedIn(UserFormData userData);
+
 }
