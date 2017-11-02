@@ -113,7 +113,7 @@ public class DateHelper {
 		final Instant instant = Instant.now();
 		final OffsetDateTime odt = instant.atOffset(ZoneOffset.UTC);
 		final Date nowUtc = Date.from(odt.toInstant());
-		return nowUtc;	
+		return nowUtc;
 	}
 
 	public Date toUserDate(final ZonedDateTime zonedDateTime) {
@@ -122,6 +122,10 @@ public class DateHelper {
 			date = Date.from(zonedDateTime.plusSeconds(zonedDateTime.getOffset().getTotalSeconds()).toInstant());
 		}
 		return date;
+	}
+
+	public String format(final Date date, final ZoneId userZoneId, final Boolean ignoreHours) {
+		return this.format(this.getZonedValue(userZoneId, this.toUtcDate(date)), ignoreHours);
 	}
 
 	public String format(final Date date, final ZoneId userZoneId) {

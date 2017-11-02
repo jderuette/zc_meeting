@@ -76,13 +76,13 @@ public class EventMessageHelper {
 
 		String startDate = null;
 		if (null != formData.getStartDate().getValue()) {
-			startDate = this.getDateHelper().format(formData.getStartDate().getValue(), userZoneId);
+			startDate = this.getDateHelper().format(formData.getStartDate().getValue(), userZoneId, Boolean.TRUE);
 		}
 		values.add(startDate);// 5
 
 		String endDate = null;
 		if (null != formData.getEndDate().getValue()) {
-			endDate = this.getDateHelper().format(formData.getEndDate().getValue(), userZoneId);
+			endDate = this.getDateHelper().format(formData.getEndDate().getValue(), userZoneId, Boolean.TRUE);
 		}
 		values.add(endDate);// 6
 		values.add(formData.getReason().getValue());// 7
