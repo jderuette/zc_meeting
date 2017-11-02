@@ -154,7 +154,7 @@ public class ValidateCpsForm extends AbstractForm {
 	private void initFormAfterLoad() {
 
 		if (null == this.getStartDateField().getValue()) {
-			this.getStartDateField().setValue(this.getNowUserDate());
+			this.getStartDateField().setValue(new Date());// Use UTC !!
 		}
 
 		if (null == this.getSubscriptionIdField().getValue()) {
