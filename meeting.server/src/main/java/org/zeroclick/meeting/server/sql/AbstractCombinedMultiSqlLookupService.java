@@ -36,6 +36,7 @@ import org.eclipse.scout.rt.shared.ScoutTexts;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupRow;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupService;
+import org.eclipse.scout.rt.shared.services.lookup.LookupRow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.comon.text.TextsHelper;
@@ -115,6 +116,15 @@ public abstract class AbstractCombinedMultiSqlLookupService<T> extends AbstractS
 			if (null != data && !data.isEmpty()) {
 				break;
 			}
+		}
+
+		// when search by key, always at least return the current searched key
+		// as row
+		// TO avoid invisible celle.getText in AbstractProposalColumn (when
+		// updateDisplayText)
+		if (null == combinedRows || combinedRows.isEmpty()) {
+			final ILookupRow<T> row = new LookupRow<>(call.getKey(), call.getKey().toString());
+			combinedRows.add(row);
 		}
 
 		return this.handlePostQueries(combinedRows);
