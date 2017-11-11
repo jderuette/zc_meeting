@@ -87,7 +87,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	private final Map<Long, String> cachedUserTimeZone = new HashMap<>();
 
 	protected boolean isUserCalendarConfigured() {
-		return GoogleApiHelper.get().isCalendarConfigured();
+		return BEANS.get(GoogleApiHelper.class).isCalendarConfigured();
 	}
 
 	@Override
@@ -506,9 +506,9 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			final Boolean endDateEmpty = null == this.getEndDateColumn().getValue(row.getRowIndex());
 			final String rowState = this.getStateColumn().getValue(row.getRowIndex());
 			return null != row && "ASKED".equals(rowState) && startDateEmpty && endDateEmpty
-					&& GoogleApiHelper.get().isCalendarConfigured(hostId)
-					&& GoogleApiHelper.get().isCalendarConfigured(attendeeId) && this.isTimeZoneValid(attendeeId)
-					&& this.isTimeZoneValid(hostId) && this.isGuestCurrentUser(row);
+					&& BEANS.get(GoogleApiHelper.class).isCalendarConfigured(hostId)
+					&& BEANS.get(GoogleApiHelper.class).isCalendarConfigured(attendeeId)
+					&& this.isTimeZoneValid(attendeeId) && this.isTimeZoneValid(hostId) && this.isGuestCurrentUser(row);
 		}
 
 		@Override

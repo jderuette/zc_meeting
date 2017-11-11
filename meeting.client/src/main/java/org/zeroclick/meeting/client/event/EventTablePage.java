@@ -402,7 +402,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					.append(endDate).append(" for user : ").append(userId);
 			LOG.info(builder.toString());
 
-			final GoogleApiHelper googleHelper = GoogleApiHelper.get();
+			final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
 
 			final ZoneId userZoneId = EventTablePage.this.getAppUserHelper().getUserZoneId(userId);
 
@@ -469,7 +469,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 		private List<Event> getEvents(final ZonedDateTime startDate, final ZonedDateTime endDate, final Long userId)
 				throws IOException {
-			final GoogleApiHelper googleHelper = GoogleApiHelper.get();
+			final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
 			Calendar gCalendarService;
 
 			try {
@@ -533,13 +533,14 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					event = itEvent.next();
 					isFirstEvent = Boolean.FALSE;
 				}
-				final ZonedDateTime eventZonedStartDate = GoogleApiHelper.get().fromEventDateTime(event.getStart());
+				final ZonedDateTime eventZonedStartDate = BEANS.get(GoogleApiHelper.class)
+						.fromEventDateTime(event.getStart());
 				final DayOfWeek eventLocalStartDateDay = eventZonedStartDate.getDayOfWeek();
 				if (eventZonedStartDate.isAfter(startDate)) {
 					// freeTime from startDate to the beginning of the event
 					freeTime.add(new DayDuration(startDate.toOffsetDateTime().toOffsetTime(),
 							eventZonedStartDate.toLocalTime()
-									.atOffset(GoogleApiHelper.get().timeOffset(event.getStart())),
+									.atOffset(BEANS.get(GoogleApiHelper.class).timeOffset(event.getStart())),
 							CollectionUtility.arrayList(eventLocalStartDateDay), Boolean.FALSE));
 					if (itEvent.hasNext()) {
 						event = itEvent.next();
@@ -547,7 +548,8 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				} else {
 					// freeTime from end of this event to begin of the next (if
 					// this event ends before the endDate)
-					final ZonedDateTime eventZonedEndDate = GoogleApiHelper.get().fromEventDateTime(event.getEnd());
+					final ZonedDateTime eventZonedEndDate = BEANS.get(GoogleApiHelper.class)
+							.fromEventDateTime(event.getEnd());
 					if (eventZonedEndDate.isBefore(endDate)) {
 						Event nextEvent = null;
 						if (itEvent.hasNext()) {
@@ -561,8 +563,9 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 							nextEventLocalStartDate = endDate;
 							offset = endDate.getOffset();
 						} else {
-							nextEventLocalStartDate = GoogleApiHelper.get().fromEventDateTime(nextEvent.getStart());
-							offset = GoogleApiHelper.get().timeOffset(nextEvent.getStart());
+							nextEventLocalStartDate = BEANS.get(GoogleApiHelper.class)
+									.fromEventDateTime(nextEvent.getStart());
+							offset = BEANS.get(GoogleApiHelper.class).timeOffset(nextEvent.getStart());
 						}
 						freeTime.add(new DayDuration(eventZonedEndDate.toLocalTime().atOffset(offset),
 								nextEventLocalStartDate.toLocalTime().atOffset(offset),
@@ -584,7 +587,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			LOG.debug("Creating (Google) Event from : " + startDate + " to " + endDate + ", for :" + forUserId
 					+ " (attendee :" + withEmail + ")");
 
-			final GoogleApiHelper googleHelper = GoogleApiHelper.get();
+			final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
 
 			Calendar googleCalendarService;
 
@@ -622,7 +625,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			LOG.debug("Acceptiing (Google) Event from (" + organizerEvent.getOrganizer().getEmail() + "), for :"
 					+ userId);
 
-			final GoogleApiHelper googleHelper = GoogleApiHelper.get();
+			final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
 
 			Calendar gCalendarService;
 

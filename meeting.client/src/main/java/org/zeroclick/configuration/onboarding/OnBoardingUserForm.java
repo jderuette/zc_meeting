@@ -163,7 +163,7 @@ public class OnBoardingUserForm extends AbstractForm {
 			@Override
 			protected void execInitField() {
 				super.execInitField();
-				if (GoogleApiHelper.get().isCalendarConfigured()) {
+				if (BEANS.get(GoogleApiHelper.class).isCalendarConfigured()) {
 					this.setActive();
 				} else {
 					this.setInactive();

@@ -409,7 +409,7 @@ public class RejectEventForm extends AbstractForm {
 
 		private Calendar getCalendarService(final Long userId) {
 			Calendar gCalendarSrv = null;
-			final GoogleApiHelper googleHelper = GoogleApiHelper.get();
+			final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
 			try {
 				if (null != userId) {
 					gCalendarSrv = googleHelper.getCalendarService(userId);

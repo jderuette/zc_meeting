@@ -12,6 +12,7 @@ import org.zeroclick.configuration.client.slot.SlotAdminTablePage;
 import org.zeroclick.configuration.client.slot.SlotForm;
 import org.zeroclick.configuration.client.slot.SlotTablePage;
 import org.zeroclick.configuration.shared.slot.ReadSlotPermission;
+import org.zeroclick.meeting.client.calendar.CalendarConfigurationTablePage;
 import org.zeroclick.meeting.client.event.EventAdminTablePage;
 import org.zeroclick.meeting.client.event.EventAskedTablePage;
 import org.zeroclick.meeting.client.event.EventProcessedTablePage;
@@ -60,12 +61,16 @@ public class MeetingOutline extends AbstractOutline {
 				TEXTS.get("zc.meeting.slot.config") + "(tree)");
 		slotForm.setVisibleGranted(isSlotAdmin);
 
+		final CalendarConfigurationTablePage calendarConfigurationTablePage = new CalendarConfigurationTablePage();
+		calendarConfigurationTablePage.setVisibleGranted(Boolean.TRUE);
+
 		pageList.add(eventTablePage);
 		pageList.add(eventAskedTablePage);
 		pageList.add(eventProcessedTablePage);
 		pageList.add(eventAdminTablePage);
 		pageList.add(slotTablePage);
 		pageList.add(slotAdminTablePage);
+		pageList.add(calendarConfigurationTablePage);
 		pageList.add(slotForm);
 	}
 

@@ -13,6 +13,7 @@ package org.zeroclick.meeting.server.sql;
 import org.zeroclick.configuration.shared.role.IRoleTypeLookupService;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchAddLastLogin;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchAddSlotCode;
+import org.zeroclick.meeting.server.sql.migrate.data.PatchConfigureAgenda;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateParamsTable;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateSubscription;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateVenue;
@@ -663,4 +664,22 @@ public interface SQLs {
 			+ PatchCreateSubscription.ROLE_DOCUMENT_TABLE_NAME + " WHERE role_id=:roleId AND document_id=:documentId";
 
 	String ROLE_DOCUMENT_SELECT_ROLE_DOCUMENT_INTO = " INTO :documentId, :roleId, :startDate";
+
+	/**
+	 * User custom configuration for his agendas
+	 */
+
+	String AGENDA_CONFIG_CREATE = "CREATE TABLE " + PatchConfigureAgenda.AGENDA_CONFIG_TABLE_NAME
+			+ "(agenda_config_id INTEGER NOT NULL, external_id VARCHAR(250) NOT NULL, process_full_day_event BOOLEAN NOT NULL, process_busy_event BOOLEAN NOT NULL, process_not_registred_on_event BOOLEAN NOT NULL, oAuth_credential_id INTEGER NOT NULL,"
+			+ " CONSTRAINT " + PatchConfigureAgenda.AGENDA_CONFIG_TABLE_NAME + "_PK PRIMARY KEY (agenda_config_id),"
+			+ " CONSTRAINT " + PatchConfigureAgenda.AGENDA_CONFIG_TABLE_NAME
+			+ "_OAUHTCREDENTIAL_FK FOREIGN KEY (oAuth_credential_id) REFERENCES OAUHTCREDENTIAL(api_credential_id))";
+
+	String AGENDA_CONFIG_PAGE_SELECT = "select agenda_config_id, external_id, process_full_day_event, process_busy_event, process_not_registred_on_event, oAuth_credential_id FROM "
+			+ PatchConfigureAgenda.AGENDA_CONFIG_TABLE_NAME
+			+ " INNER JOIN OAUHTCREDENTIAL ON oAuth_credential_id=api_credential_id WHERE 1=1";
+	String AGENDA_CONFIG_PAGE_SELECT_INTO = " INTO :{page.calendarConfigurationId}, :{page.externalId}, :{page.processFullDayEvent}, :{page.ProcessFreeEvent}, :{page.processNotRegistredOnEvent}, :{page.OAuthCredentialId}";
+
+	String AGENDA_CONFIG_PAGE_SELECT_FILTER_USER = " AND user_id = :currentUser";
+
 }

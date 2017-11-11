@@ -28,22 +28,30 @@ import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.eclipse.scout.rt.platform.ApplicationScoped;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.config.AbstractStringConfigProperty;
 import org.eclipse.scout.rt.platform.config.CONFIG;
+import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
 import org.zeroclick.meeting.client.common.CallTrackerService;
 import org.zeroclick.meeting.client.common.UserAccessRequiredException;
+import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
+import org.zeroclick.meeting.shared.calendar.CalendarConfigurationTablePageData.CalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
 import com.google.api.client.auth.oauth2.AuthorizationCodeFlow;
@@ -59,6 +67,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.DateTime;
 import com.google.api.client.util.store.DataStoreFactory;
 import com.google.api.services.calendar.Calendar;
+import com.google.api.services.calendar.Calendar.CalendarList.List;
 import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
@@ -67,24 +76,18 @@ import com.google.api.services.calendar.model.EventDateTime;
  * @author djer
  *
  */
+@ApplicationScoped
 public class GoogleApiHelper {
 
 	private static final Logger LOG = LoggerFactory.getLogger(GoogleApiHelper.class);
 
-	private static GoogleApiHelper instance;
-	private final CallTrackerService<Long> callTracker;
-	private final DataStoreFactory dataStoreFactory;
+	private CallTrackerService<Long> callTracker;
+	private DataStoreFactory dataStoreFactory;
 
-	private GoogleApiHelper() {
+	@PostConstruct
+	public void init() {
 		this.callTracker = new CallTrackerService<>(5, Duration.ofMinutes(1), "GoogleApiHelper create API flow");
 		this.dataStoreFactory = new ScoutDataStoreFactory();
-	}
-
-	public static GoogleApiHelper get() {
-		if (null == instance) {
-			instance = new GoogleApiHelper();
-		}
-		return instance;
 	}
 
 	private GoogleClientSecrets getClientSecret() throws IOException {
@@ -360,6 +363,32 @@ public class GoogleApiHelper {
 		}
 		return isConfigured;
 
+	}
+
+	public Map<String, AbstractCalendarConfigurationTableRowData> getCalendars(final Long userId) {
+		final Map<String, AbstractCalendarConfigurationTableRowData> calendars = new HashMap<>();
+		try {
+			final Calendar calendarService = this.getCalendarService(userId);
+			final List calendarsList = calendarService.calendarList().list();
+			final Set<String> calendarsKeys = calendarsList.keySet();
+
+			for (final String calendarKey : calendarsKeys) {
+				final com.google.api.services.calendar.model.Calendar cal = calendarService.calendars().get(calendarKey)
+						.execute();
+				calendars.put(calendarKey, this.toCalendarConfig(cal));
+			}
+		} catch (final IOException e) {
+			LOG.warn("Cannot get (Google) calendar Service for user : " + userId, e);
+			throw new VetoException("Cannot get your Google calendar Data");
+		}
+		return calendars;
+	}
+
+	private AbstractCalendarConfigurationTableRowData toCalendarConfig(
+			final com.google.api.services.calendar.model.Calendar cal) {
+		final CalendarConfigurationTableRowData calendarConfigData = new CalendarConfigurationTableRowData();
+		calendarConfigData.setExternalId(cal.getId());
+		return calendarConfigData;
 	}
 
 	/**
