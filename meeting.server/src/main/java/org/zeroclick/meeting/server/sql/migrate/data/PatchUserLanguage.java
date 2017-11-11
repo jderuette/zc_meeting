@@ -32,6 +32,9 @@ public class PatchUserLanguage extends AbstractDataPatcher {
 
 	private static final Logger LOG = LoggerFactory.getLogger(PatchUserLanguage.class);
 
+	private static final String PATCHED_TABLE = "app_user";
+	private static final String PATCHED_COLUMN = "language";
+
 	public PatchUserLanguage() {
 		this.setDescription("Add Language colum on User");
 	}
@@ -63,14 +66,14 @@ public class PatchUserLanguage extends AbstractDataPatcher {
 
 	private void migrateStrucutre() {
 		LOG.info("User Language  upgrading data strcuture");
-		if (!this.getDatabaseHelper().isColumnExists("app_user", "language")) {
+		if (!this.getDatabaseHelper().isColumnExists(PATCHED_TABLE, PATCHED_COLUMN)) {
 			SQL.insert(SQLs.USER_ALTER_TABLE_LANGUAGE);
 		}
 	}
 
 	private void migrateData() {
 		LOG.info("User Language data migration start");
-		SQL.update("UPDATE APP_USER set language='FR' where login=:login", new NVPair("login", "d"));
+		SQL.update("UPDATE APP_USER set language='FR' where login=:login", new NVPair("login", "djer13"));
 	}
 
 	/*
@@ -80,7 +83,8 @@ public class PatchUserLanguage extends AbstractDataPatcher {
 	 */
 	@Override
 	protected void undo() {
-		LOG.info("User Language downgrading data strcuture NOT RUN (need bug fix)");
+		LOG.info("User Language downgrading data strcuture");
+		this.getDatabaseHelper().removeColumn(PATCHED_TABLE, PATCHED_COLUMN);
 	}
 
 }

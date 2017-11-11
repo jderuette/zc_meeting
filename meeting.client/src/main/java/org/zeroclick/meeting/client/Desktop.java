@@ -37,6 +37,7 @@ import org.zeroclick.configuration.client.api.ApiCreatedNotificationHandler;
 import org.zeroclick.configuration.client.api.ApiDeletedNotificationHandler;
 import org.zeroclick.configuration.client.user.UserForm;
 import org.zeroclick.configuration.client.user.UserModifiedNotificationHandler;
+import org.zeroclick.configuration.client.user.ValidateCpsForm;
 import org.zeroclick.configuration.onboarding.OnBoardingUserForm;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
 import org.zeroclick.configuration.shared.api.ApiDeletedNotification;
@@ -129,6 +130,16 @@ public class Desktop extends AbstractDesktop {
 			form.getUserIdField().setValue(currentUserId);
 			form.setEnabledPermission(new UpdateUserPermission(currentUserId));
 			form.startModify();
+			form.waitFor();
+		}
+
+		// check CPS validity
+		final UserFormData userDetails = userService.getCurrentUserDetails();
+		if (!userDetails.getActiveSubscriptionValid()) {
+			final ValidateCpsForm validateCpsForm = new ValidateCpsForm();
+			validateCpsForm.startReValidate(currentUserId);
+			// accepted CPS/withdraw and respective Date are let empty to force
+			// User re-check
 		}
 	}
 
@@ -292,7 +303,7 @@ public class Desktop extends AbstractDesktop {
 			protected String getConfiguredText() {
 				final IUserService userService = BEANS.get(IUserService.class);
 				final UserFormData userDetails = userService.getCurrentUserDetails();
-				return TEXTS.get("zc.user.logedAs", userDetails.getEmail().getValue());
+				return TEXTS.get("zc.user.loggedAs", userDetails.getEmail().getValue());
 			}
 
 			@Override

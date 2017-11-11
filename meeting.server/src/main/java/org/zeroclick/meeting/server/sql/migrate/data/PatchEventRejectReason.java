@@ -31,6 +31,9 @@ public class PatchEventRejectReason extends AbstractDataPatcher {
 
 	private static final Logger LOG = LoggerFactory.getLogger(PatchEventRejectReason.class);
 
+	private static final String PATCHED_TABLE = "event";
+	public static final String PATCHED_COLUMN = "reason";
+
 	public PatchEventRejectReason() {
 		this.setDescription("Add reason column on event when user refuse/cancel event");
 	}
@@ -51,7 +54,7 @@ public class PatchEventRejectReason extends AbstractDataPatcher {
 
 	private void migrateStrucutre() {
 		LOG.info("Event reject Reason upgrading data strcuture");
-		if (!this.getDatabaseHelper().isColumnExists("event", "reason")) {
+		if (!this.getDatabaseHelper().isColumnExists(PATCHED_TABLE, PATCHED_COLUMN)) {
 			SQL.insert(SQLs.EVENT_ALTER_TABLE_ADD_REASON);
 		}
 
@@ -63,10 +66,7 @@ public class PatchEventRejectReason extends AbstractDataPatcher {
 
 	@Override
 	public void undo() {
-		LOG.info("Event reject Reason downgrading data strcuture NOT RUN (need bug fix)");
-		// FIXME Djer SQL.update/insert/select "freeze" with DDL statement
-		// "alter Table drop .."
-		// SQL.select(SQLs.EVENT_ALTER_TABLE_REMOVE_REASON);
+		LOG.info("Event reject Reason downgrading data strcuture");
+		this.getDatabaseHelper().removeColumn(PATCHED_TABLE, PATCHED_COLUMN);
 	}
-
 }

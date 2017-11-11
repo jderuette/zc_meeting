@@ -8,6 +8,7 @@ import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
 import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.action.menu.TableMenuType;
 import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
+import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractIntegerColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractLongColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractSmartColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractStringColumn;
@@ -27,6 +28,7 @@ import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.LanguageLookupCall;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.configuration.shared.user.UserTablePageData;
+import org.zeroclick.ui.form.columns.zoneddatecolumn.AbstractZonedDateColumn;
 
 @Data(UserTablePageData.class)
 public class UserTablePage extends AbstractPageWithTable<Table> {
@@ -147,6 +149,22 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 			return this.getColumnSet().getColumnByClass(LanguageColumn.class);
 		}
 
+		public LastLoginColumn getLastLoginColumn() {
+			return this.getColumnSet().getColumnByClass(LastLoginColumn.class);
+		}
+
+		public NbOrganizedEventWaitingColumn getNbOrganizedEventWaitingColumn() {
+			return this.getColumnSet().getColumnByClass(NbOrganizedEventWaitingColumn.class);
+		}
+
+		public NbInvitedEventWaitingColumn getNbInvitedEventWaitingColumn() {
+			return this.getColumnSet().getColumnByClass(NbInvitedEventWaitingColumn.class);
+		}
+
+		public NbProcessedEventColumn getNbProcessedEventColumn() {
+			return this.getColumnSet().getColumnByClass(NbProcessedEventColumn.class);
+		}
+
 		public TimeZoneColumn getTimeZoneColumn() {
 			return this.getColumnSet().getColumnByClass(TimeZoneColumn.class);
 		}
@@ -235,6 +253,58 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 			@Override
 			protected int getConfiguredWidth() {
 				return 100;
+			}
+		}
+
+		@Order(6000)
+		public class LastLoginColumn extends AbstractZonedDateColumn {
+			@Override
+			protected String getConfiguredHeaderText() {
+				return TEXTS.get("zc.user.lastLogin");
+			}
+
+			@Override
+			protected int getConfiguredWidth() {
+				return 100;
+			}
+		}
+
+		@Order(7000)
+		public class NbProcessedEventColumn extends AbstractIntegerColumn {
+			@Override
+			protected String getConfiguredHeaderText() {
+				return TEXTS.get("zc.user.nbProcessedEvent");
+			}
+
+			@Override
+			protected int getConfiguredWidth() {
+				return 50;
+			}
+		}
+
+		@Order(8000)
+		public class NbOrganizedEventWaitingColumn extends AbstractIntegerColumn {
+			@Override
+			protected String getConfiguredHeaderText() {
+				return TEXTS.get("zc.user.nbOrganizedEventWainting");
+			}
+
+			@Override
+			protected int getConfiguredWidth() {
+				return 50;
+			}
+		}
+
+		@Order(9000)
+		public class NbInvitedEventWaitingColumn extends AbstractIntegerColumn {
+			@Override
+			protected String getConfiguredHeaderText() {
+				return TEXTS.get("zc.user.nbInvitedEventWaiting");
+			}
+
+			@Override
+			protected int getConfiguredWidth() {
+				return 50;
 			}
 		}
 

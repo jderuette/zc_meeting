@@ -15,14 +15,28 @@ limitations under the License.
  */
 package org.zeroclick.meeting.server.sql.migrate;
 
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Set;
+
 import org.eclipse.scout.rt.platform.BEANS;
+import org.eclipse.scout.rt.platform.config.CONFIG;
 import org.eclipse.scout.rt.platform.context.RunContext;
 import org.eclipse.scout.rt.platform.exception.ExceptionHandler;
+import org.eclipse.scout.rt.platform.holders.NVPair;
 import org.eclipse.scout.rt.platform.util.concurrent.IRunnable;
+import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.VersionHelper;
+import org.zeroclick.configuration.shared.params.IAppParamsService;
+import org.zeroclick.configuration.shared.role.AssignToRoleFormData;
+import org.zeroclick.configuration.shared.role.IAppPermissionService;
+import org.zeroclick.configuration.shared.role.IRoleService;
+import org.zeroclick.configuration.shared.role.RoleFormData;
 import org.zeroclick.meeting.server.sql.DatabaseHelper;
+import org.zeroclick.meeting.server.sql.DatabaseProperties.SuperUserSubjectProperty;
+import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.server.sql.SuperUserRunContextProducer;
 
 import com.github.zafarkhaja.semver.Version;
@@ -34,6 +48,8 @@ import com.github.zafarkhaja.semver.Version;
 public abstract class AbstractDataPatcher implements IDataPatcher {
 
 	private static final Logger LOG = LoggerFactory.getLogger(AbstractDataPatcher.class);
+
+	protected static final String SUPER_USER_ROLE_NAME = "SuperUser";
 
 	private final DatabaseHelper databaseHelper;
 
@@ -56,12 +72,12 @@ public abstract class AbstractDataPatcher implements IDataPatcher {
 	}
 
 	protected Version getDataVersion() {
-		final AppParamsService appParamsService = BEANS.get(AppParamsService.class);
+		final IAppParamsService appParamsService = BEANS.get(IAppParamsService.class);
 
 		// Table APP_PARAMS may not be patched yet
 		String versionTxt;
 		if (this.getDatabaseHelper().existTable("APP_PARAMS")) {
-			versionTxt = appParamsService.getValue(AppParamsService.KEY_DATA_VERSION);
+			versionTxt = appParamsService.getValue(IAppParamsService.KEY_DATA_VERSION);
 		} else {
 			LOG.warn("Table APP_PARAMS does NOT exist (yet). Returning default dataVersion");
 			versionTxt = "0.0.0";
@@ -81,6 +97,7 @@ public abstract class AbstractDataPatcher implements IDataPatcher {
 				@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 				public void run() throws Exception {
 					AbstractDataPatcher.this.execute();
+					AbstractDataPatcher.this.refreshSuperUserPermissions();
 				}
 			};
 
@@ -103,6 +120,7 @@ public abstract class AbstractDataPatcher implements IDataPatcher {
 				@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 				public void run() throws Exception {
 					AbstractDataPatcher.this.undo();
+					AbstractDataPatcher.this.refreshSuperUserPermissions();
 					// TODO Djer how to reliably go back to the real previous
 					// version ? (storing each patch action a specific table ?)
 					// AbstractDataPatcher.this.updateDataVersion(AbstractDataPatcher.this.getVersion());
@@ -119,7 +137,7 @@ public abstract class AbstractDataPatcher implements IDataPatcher {
 
 	@Override
 	/**
-	 * ByDefault return TRUE if major/minor sourceCode version is strictly
+	 * By Default return TRUE if major/minor sourceCode version is strictly
 	 * higher than data version<br />
 	 * Follow the semVer standard (see http://semver.org/)<<br />
 	 * General semVer format : Major.Minor.Patch-pre-release+Build metadata :
@@ -147,9 +165,81 @@ public abstract class AbstractDataPatcher implements IDataPatcher {
 	}
 
 	private void updateDataVersion(final Version version) {
-		final AppParamsService appParamsService = BEANS.get(AppParamsService.class);
+		final IAppParamsService appParamsService = BEANS.get(IAppParamsService.class);
 
-		appParamsService.store(AppParamsService.KEY_DATA_VERSION, version.toString());
+		appParamsService.store(IAppParamsService.KEY_DATA_VERSION, version.toString());
+	}
+
+	private void refreshSuperUserPermissions() {
+		LOG.debug("Refreshing SuperUser role with current existing permissions");
+		final Version sourceCodeVersion = this.getSourceCodeVersion();
+
+		if (sourceCodeVersion.greaterThan(Version.valueOf("1.1.5"))) {
+
+			final RoleFormData roleformData = this.getSuperUserRole();
+			if (null != roleformData.getRoleId()) {
+				try {
+					this.addAllPermissions(roleformData.getRoleId());
+				} catch (final Exception e) {
+					LOG.warn("Cannot refresh superUser permisisons : " + e);
+				}
+			} else {
+				LOG.warn("Cannot refresh superUser's role because this role dosen't exists");
+			}
+		} else {
+			LOG.info(
+					"Cannot refresh superUser's Role, because sourceCode version is too old to handle roles correctly ("
+							+ sourceCodeVersion + ")");
+		}
+	}
+
+	private RoleFormData getSuperUserRole() {
+		final IRoleService roleService = BEANS.get(IRoleService.class);
+		final RoleFormData roleFormData = new RoleFormData();
+		roleFormData.getRoleName().setValue(SUPER_USER_ROLE_NAME);
+		try {
+			roleService.load(roleFormData);
+		} catch (final Exception e) {
+			LOG.warn("Cannot load superUser Role : " + e);
+		}
+		return roleFormData;
+	}
+
+	protected void addAllPermissions(final Long roleId) {
+		// add "ALL" permission to superUser Role
+		final AssignToRoleFormData permissionFormData = new AssignToRoleFormData();
+		this.clearAndAddAllPermissions(permissionFormData);
+		permissionFormData.getRoleId().setValue(roleId);
+		permissionFormData.getLevel().setValue(100L);
+		SQL.insert(SQLs.ROLE_PERMISSION_DELETE_BY_ROLE, new NVPair("roleId", roleId));
+		SQL.insert(SQLs.ROLE_PERMISSION_INSERT, permissionFormData);
+	}
+
+	private void clearAndAddAllPermissions(final AssignToRoleFormData permissionFormData) {
+		final IAppPermissionService appPermissionService = BEANS.get(IAppPermissionService.class);
+
+		final Object[][] allPermissions = appPermissionService.getpermissions();
+
+		permissionFormData.setPermission(new ArrayList<>());
+		for (final Object[] permission : allPermissions) {
+			final String permissionName = (String) permission[0];
+			if (null != permissionName && !"".equals(permissionName)) {
+				permissionFormData.getPermission().add(permissionName);
+			}
+		}
+	}
+
+	protected String getSuperUserPrincipal() {
+		final Set<Principal> superUserPrincipals = CONFIG.getPropertyValue(SuperUserSubjectProperty.class)
+				.getPrincipals();
+		String firstSuperUserPrincipal = null;
+		for (final Principal principal : superUserPrincipals) {
+			if (null == firstSuperUserPrincipal || "".equals(firstSuperUserPrincipal)) {
+				firstSuperUserPrincipal = principal.getName();
+			}
+		}
+
+		return firstSuperUserPrincipal;
 	}
 
 	protected DatabaseHelper getDatabaseHelper() {

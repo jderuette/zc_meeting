@@ -29,8 +29,8 @@ import com.github.zafarkhaja.semver.Version;
  */
 public class PatchCreateParamsTable extends AbstractDataPatcher {
 
-	private static final String APP_PARAMS_TABLE_NAME = "APP_PARAMS";
-	private static final String APP_PARAMS_ID_SEQ = "APP_PARAMS_ID_SEQ";
+	public static final String APP_PARAMS_TABLE_NAME = "app_params";
+	public static final String APP_PARAMS_ID_SEQ = "APP_PARAMS_ID_SEQ";
 	private static final Logger LOG = LoggerFactory.getLogger(PatchCreateParamsTable.class);
 
 	public PatchCreateParamsTable() {
@@ -91,12 +91,8 @@ public class PatchCreateParamsTable extends AbstractDataPatcher {
 	@Override
 	public void undo() {
 		LOG.info("Create param table downgrading data strcuture");
-		if (this.getDatabaseHelper().isSequenceExists(APP_PARAMS_ID_SEQ)) {
-			this.getDatabaseHelper().dropSequence(APP_PARAMS_ID_SEQ);
-		}
-		if (this.getDatabaseHelper().existTable(APP_PARAMS_TABLE_NAME)) {
-			SQL.insert(SQLs.PARAMS_DROP_TABLE);
-		}
+		this.getDatabaseHelper().dropSequence(APP_PARAMS_ID_SEQ);
+		this.getDatabaseHelper().dropTable(APP_PARAMS_TABLE_NAME);
 	}
 
 }

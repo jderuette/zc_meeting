@@ -15,14 +15,18 @@ limitations under the License.
  */
 package org.zeroclick.meeting.server.sql;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
+import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.holders.NVPair;
 import org.eclipse.scout.rt.platform.holders.StringArrayHolder;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.configuration.server.role.RolePermissionService;
 
 /**
  * @author djer
@@ -47,17 +51,24 @@ public class DatabaseHelper {
 	}
 
 	public void dropTable(final String tableName) {
-		if (this.getExistingTables(Boolean.TRUE).contains(tableName)) {
-			SQL.update(SQLs.GENERIC_DROP_TABLE.replace("__tableName__", tableName));
+		this.dropTable(tableName, Boolean.TRUE);
+	}
+
+	public void dropTable(final String tableName, final Boolean forceRefreshTableCache) {
+		if (this.existTable(tableName, forceRefreshTableCache)) {
+			SQL.update(SQLs.GENERIC_DROP_TABLE.replace("__tableName__", tableName.toUpperCase()));
+		} else {
+			LOG.warn("Table : " + tableName + " does not exists (tested with force refresh ? " + forceRefreshTableCache
+					+ "), not droped");
 		}
 	}
 
 	public void createSequence(final String sequenceName, final Integer start) {
-		if (!this.isSequenceExists(sequenceName)) {
-			SQL.update(SQLs.GENERIC_CREATE_SEQUENCE.replace("__seqName__", sequenceName).replace("__seqStart__",
-					start.toString()));
+		if (!this.isSequenceExists(sequenceName.toUpperCase())) {
+			SQL.update(SQLs.GENERIC_CREATE_SEQUENCE.replace("__seqName__", sequenceName.toUpperCase())
+					.replace("__seqStart__", start.toString()));
 		} else {
-			LOG.info("Sequence : " + sequenceName + " already exists, not created");
+			LOG.warn("Sequence : " + sequenceName + " already exists, not created");
 		}
 	}
 
@@ -66,15 +77,18 @@ public class DatabaseHelper {
 	}
 
 	public void dropSequence(final String sequenceName) {
-		if (this.isSequenceExists(sequenceName)) {
-			SQL.update(SQLs.GENERIC_DROP_SEQUENCE.replace("__seqName__", sequenceName));
+		if (this.isSequenceExists(sequenceName.toUpperCase())) {
+			SQL.update(SQLs.GENERIC_DROP_SEQUENCE.replace("__seqName__", sequenceName.toUpperCase()));
+		} else {
+			LOG.warn("Sequence : " + sequenceName + " dosen't exists, no DROP required");
 		}
 	}
 
 	public Boolean isSequenceExists(final String sequenceName) {
 		Boolean sequenceExists = Boolean.TRUE;
 
-		final Object sequences[][] = SQL.select(SQLs.GENERIC_SEQUENCE_EXISTS.replace("__seqName__", sequenceName));
+		final Object sequences[][] = SQL
+				.select(SQLs.GENERIC_SEQUENCE_EXISTS.replace("__seqName__", sequenceName.toUpperCase()));
 
 		if (null == sequences || sequences.length == 0 || sequences[0].length == 0 || null == sequences[0][0]) {
 			sequenceExists = Boolean.FALSE;
@@ -116,7 +130,11 @@ public class DatabaseHelper {
 	}
 
 	public Boolean existTable(final String tableName) {
-		return this.getExistingTables().contains(tableName);
+		return this.getExistingTables().contains(tableName.toUpperCase());
+	}
+
+	public Boolean existTable(final String tableName, final Boolean refreshCache) {
+		return this.getExistingTables(refreshCache).contains(tableName.toUpperCase());
 	}
 
 	/**
@@ -134,6 +152,25 @@ public class DatabaseHelper {
 			columnExists = Boolean.FALSE;
 		}
 		return columnExists;
+	}
+
+	/**
+	 * remove column "column" from table "table" if exists
+	 *
+	 * @param table
+	 * @param column
+	 */
+	public void removeColumn(final String table, final String column) {
+		if (this.isColumnExists(table, column)) {
+			SQLs.GENERIC_REMOVE_COLUMN_POSTGRESQL.replace("__table__", table).replaceAll("__column__", column);
+		} else {
+			LOG.warn("Cannot remove column : " + column + " on table : " + table
+					+ " because this column dosen't exists !");
+		}
+	}
+
+	public Long getNextVal(final String sequenceName) {
+		return SQL.getSequenceNextval(sequenceName);
 	}
 
 	/**
@@ -155,4 +192,82 @@ public class DatabaseHelper {
 		this.existingTables = null;
 	}
 
+	public void addAdminPermission(final String permissionName) {
+		this.addPermissionToRole(1L, permissionName, 100);
+	}
+
+	public void addAdminPermission(final String permissionName, final Integer level) {
+		this.addPermissionToRole(1L, permissionName, level);
+	}
+
+	public void addStandardUserPermission(final String permissionName) {
+		this.addPermissionToRole(2L, permissionName, 50);
+	}
+
+	public void addStandardUserPermission(final String permissionName, final Integer level) {
+		this.addPermissionToRole(2L, permissionName, level);
+	}
+
+	public void addSubFreePermission(final String permissionName, final Integer level) {
+		this.addPermissionToRole(3L, permissionName, level);
+	}
+
+	public void addSubProPermission(final String permissionName, final Integer level) {
+		this.addPermissionToRole(4L, permissionName, level);
+	}
+
+	public void addSubBusinessPermission(final String permissionName, final Integer level) {
+		this.addPermissionToRole(5L, permissionName, level);
+	}
+
+	public void removeAdminPermission(final String permissionName) {
+		this.removePermissionToRole(1L, permissionName);
+	}
+
+	public void removeStandardUserPermission(final String permissionName) {
+		this.removePermissionToRole(2L, permissionName);
+	}
+
+	public void removeSubFreePermission(final String permissionName) {
+		this.removePermissionToRole(3L, permissionName);
+	}
+
+	public void removeSubProPermission(final String permissionName) {
+		this.removePermissionToRole(4L, permissionName);
+	}
+
+	public void removeSubBusinessPermission(final String permissionName) {
+		this.removePermissionToRole(5L, permissionName);
+	}
+
+	public void addPermissionToRole(final Long roleId, final String permissionName, final Integer level) {
+		SQL.insert(SQLs.ROLE_PERMISSION_INSERT_SAMPLE + SQLs.ROLE_GENERIC_VALUES_ADD
+				.replaceAll("__roleId__", String.valueOf(roleId)).replaceAll("__permissionName__", permissionName)
+				.replaceAll("__level__", String.valueOf(level)));
+	}
+
+	public void removePermissionToRole(final Long roleId, final String permissionName) {
+		final RolePermissionService rolePermissionService = BEANS.get(RolePermissionService.class);
+		final List<String> permissions = new ArrayList<>();
+		permissions.add(permissionName);
+		try {
+			rolePermissionService.remove(roleId, permissions);
+		} catch (final Exception e) {
+			LOG.warn("Cannot remove permission : " + permissionName + " from role : " + roleId + " : " + e);
+		}
+	}
+
+	public void deletePrimaryKey(final String tableName) {
+		final String constraintName = tableName + "_PK";
+		this.deleteConstraints(tableName, constraintName);
+	}
+
+	public void deleteConstraints(final String tableName, final String constraintName) {
+		if (this.existTable(tableName, Boolean.TRUE)) {
+			SQL.insert(SQLs.GENERIC_DROP_CONSTRAINT.replaceAll("__table__", tableName).replaceAll("__constraintName__",
+					constraintName));
+		} else {
+			LOG.warn("Can't drop constraints : " + constraintName + " beacause table " + tableName + " does not exist");
+		}
+	}
 }

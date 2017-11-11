@@ -20,6 +20,8 @@ public interface IUserService extends IService {
 
 	UserFormData store(UserFormData formData);
 
+	void delete(UserFormData userFormData);
+
 	boolean isOwn(Long userId);
 
 	UserTablePageData getUserTableData(SearchFilter filter);
@@ -47,5 +49,27 @@ public interface IUserService extends IService {
 	OnBoardingUserFormData store(OnBoardingUserFormData formData);
 
 	String getUserLanguage(Long guestId);
+
+	Set<Long> getAllUserId();
+
+	/**
+	 * For data migration
+	 */
+	void addSubFreeToAllUsers();
+
+	ValidateCpsFormData load(ValidateCpsFormData formData);
+
+	ValidateCpsFormData store(ValidateCpsFormData formData);
+
+	ValidateCpsFormData create(ValidateCpsFormData formData);
+
+	ValidateCpsFormData getActiveSubscriptionDetails(Long userId);
+
+	/**
+	 * Use to indicate this user just logged In
+	 *
+	 * @param savedPassword
+	 */
+	UserFormData loggedIn(UserFormData userData);
 
 }

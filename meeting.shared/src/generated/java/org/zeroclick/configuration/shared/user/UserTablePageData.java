@@ -1,5 +1,7 @@
 package org.zeroclick.configuration.shared.user;
 
+import java.util.Date;
+
 import javax.annotation.Generated;
 
 import org.eclipse.scout.rt.shared.data.basic.table.AbstractTableRowData;
@@ -58,12 +60,20 @@ public class UserTablePageData extends AbstractTablePageData {
 		public static final String timeZone = "timeZone";
 		public static final String invitedBy = "invitedBy";
 		public static final String language = "language";
+		public static final String lastLogin = "lastLogin";
+		public static final String nbProcessedEvent = "nbProcessedEvent";
+		public static final String nbOrganizedEventWaiting = "nbOrganizedEventWaiting";
+		public static final String nbInvitedEventWaiting = "nbInvitedEventWaiting";
 		private Long m_userId;
 		private String m_login;
 		private String m_email;
 		private String m_timeZone;
 		private Long m_invitedBy;
 		private String m_language;
+		private Date m_lastLogin;
+		private Integer m_nbProcessedEvent;
+		private Integer m_nbOrganizedEventWaiting;
+		private Integer m_nbInvitedEventWaiting;
 
 		public Long getUserId() {
 			return m_userId;
@@ -111,6 +121,38 @@ public class UserTablePageData extends AbstractTablePageData {
 
 		public void setLanguage(String newLanguage) {
 			m_language = newLanguage;
+		}
+
+		public Date getLastLogin() {
+			return m_lastLogin;
+		}
+
+		public void setLastLogin(Date newLastLogin) {
+			m_lastLogin = newLastLogin;
+		}
+
+		public Integer getNbProcessedEvent() {
+			return m_nbProcessedEvent;
+		}
+
+		public void setNbProcessedEvent(Integer newNbProcessedEvent) {
+			m_nbProcessedEvent = newNbProcessedEvent;
+		}
+
+		public Integer getNbOrganizedEventWaiting() {
+			return m_nbOrganizedEventWaiting;
+		}
+
+		public void setNbOrganizedEventWaiting(Integer newNbOrganizedEventWaiting) {
+			m_nbOrganizedEventWaiting = newNbOrganizedEventWaiting;
+		}
+
+		public Integer getNbInvitedEventWaiting() {
+			return m_nbInvitedEventWaiting;
+		}
+
+		public void setNbInvitedEventWaiting(Integer newNbInvitedEventWaiting) {
+			m_nbInvitedEventWaiting = newNbInvitedEventWaiting;
 		}
 	}
 }

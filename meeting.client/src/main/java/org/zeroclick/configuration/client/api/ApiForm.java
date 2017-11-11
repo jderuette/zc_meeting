@@ -42,6 +42,8 @@ public class ApiForm extends AbstractForm {
 	private String repositoryId;
 	private byte[] providerData;
 
+	private Boolean deleteAction;
+
 	@FormData
 	public Long getApiCredentialId() {
 		return this.apiCredentialId;
@@ -88,14 +90,17 @@ public class ApiForm extends AbstractForm {
 	}
 
 	public void startModify() {
+		this.deleteAction = Boolean.FALSE;
 		this.startInternalExclusive(new ModifyHandler());
 	}
 
 	public void startNew() {
+		this.deleteAction = Boolean.FALSE;
 		this.startInternal(new NewHandler());
 	}
 
 	public void startDelete() {
+		this.deleteAction = Boolean.TRUE;
 		this.startInternal(new DeleteHandler());
 	}
 
@@ -225,9 +230,12 @@ public class ApiForm extends AbstractForm {
 
 			@Override
 			protected boolean execIsSaveNeeded() {
-				// TODO Djer do this only in "delete" useless in "edit".
 				// to force form save even if no modification done in Fields
-				return Boolean.TRUE;
+				if (ApiForm.this.deleteAction) {
+					return Boolean.TRUE;
+				} else {
+					return Boolean.FALSE;
+				}
 			}
 		}
 

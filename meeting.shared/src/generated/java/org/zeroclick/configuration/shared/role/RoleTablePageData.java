@@ -53,16 +53,26 @@ public class RoleTablePageData extends AbstractTablePageData {
 
 		private static final long serialVersionUID = 1L;
 		public static final String roleId = "roleId";
+		public static final String type = "type";
 		public static final String roleName = "roleName";
-		private Integer m_roleId;
+		private Long m_roleId;
+		private String m_type;
 		private String m_roleName;
 
-		public Integer getRoleId() {
+		public Long getRoleId() {
 			return m_roleId;
 		}
 
-		public void setRoleId(Integer newRoleId) {
+		public void setRoleId(Long newRoleId) {
 			m_roleId = newRoleId;
+		}
+
+		public String getType() {
+			return m_type;
+		}
+
+		public void setType(String newType) {
+			m_type = newType;
 		}
 
 		public String getRoleName() {

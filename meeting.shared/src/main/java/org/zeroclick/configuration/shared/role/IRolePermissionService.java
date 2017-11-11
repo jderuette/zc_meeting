@@ -29,6 +29,18 @@ public interface IRolePermissionService extends IService {
 
 	AssignToRoleFormData create(AssignToRoleFormData formData);
 
-	void remove(Integer roleId, List<String> permissions);
+	void remove(Long roleId, List<String> permissions);
+
+	/**
+	 * Remove ALL permissions associate with this role
+	 * 
+	 * @param roleId
+	 */
+	void remove(Long roleId);
+
+	/**
+	 * To help in data migration (when adding startDate as contributing PK)
+	 */
+	void setDefaultStartDateToExistingUserRole();
 
 }

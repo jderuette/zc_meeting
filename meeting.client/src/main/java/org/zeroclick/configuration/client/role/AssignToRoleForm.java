@@ -91,13 +91,18 @@ public class AssignToRoleForm extends AbstractForm {
 			}
 
 			@Override
+			protected boolean getConfiguredMandatory() {
+				return Boolean.TRUE;
+			}
+
+			@Override
 			protected Long getConfiguredMinValue() {
 				return 0L;
 			}
 
 			@Override
 			protected Long getConfiguredMaxValue() {
-				return 100L;
+				return 1000L;
 			}
 		}
 

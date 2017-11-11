@@ -16,6 +16,7 @@ limitations under the License.
 package org.zeroclick.configuration.server.role;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.eclipse.scout.rt.platform.BEANS;
@@ -28,6 +29,7 @@ import org.zeroclick.common.CommonService;
 import org.zeroclick.configuration.shared.role.AssignToRoleFormData;
 import org.zeroclick.configuration.shared.role.CreateAssignToRolePermission;
 import org.zeroclick.configuration.shared.role.IRolePermissionService;
+import org.zeroclick.configuration.shared.role.UpdateAssignToRolePermission;
 import org.zeroclick.meeting.server.security.ServerAccessControlService;
 import org.zeroclick.meeting.server.sql.SQLs;
 
@@ -60,10 +62,23 @@ public class RolePermissionService extends CommonService implements IRolePermiss
 	}
 
 	@Override
-	public void remove(final Integer roleId, final List<String> permissions) {
+	public void remove(final Long roleId, final List<String> permissions) {
+		if (!ACCESS.check(new UpdateAssignToRolePermission())) {
+			super.throwAuthorizationFailed();
+		}
 		LOG.info("Removing permission(s) to role :" + roleId + " : " + permissions);
 		SQL.insert(SQLs.ROLE_PERMISSION_DELETE, new NVPair("roleId", roleId), new NVPair("permissions", permissions));
-		this.clearCacheOfUsersWithRole(Long.valueOf(roleId));
+		this.clearCacheOfUsersWithRole(roleId);
+	}
+
+	@Override
+	public void remove(final Long roleId) {
+		if (!ACCESS.check(new UpdateAssignToRolePermission())) {
+			super.throwAuthorizationFailed();
+		}
+		LOG.info("Removing ALL permission(s) to role :" + roleId);
+		SQL.insert(SQLs.ROLE_PERMISSION_DELETE_BY_ROLE, new NVPair("roleId", roleId));
+		this.clearCacheOfUsersWithRole(roleId);
 	}
 
 	/**
@@ -75,7 +90,7 @@ public class RolePermissionService extends CommonService implements IRolePermiss
 		final Object[][] users = this.getUsersByRole(roleId);
 		final List<String> userIdList = new ArrayList<>();
 		for (int i = 0; i < users.length; i++) {
-			userIdList.add((String) users[i][0]);
+			userIdList.add(String.valueOf(users[i][0]));
 		}
 
 		BEANS.get(ServerAccessControlService.class).clearCacheOfUsersIds(userIdList);
@@ -85,7 +100,33 @@ public class RolePermissionService extends CommonService implements IRolePermiss
 
 		final StringBuilder sql = new StringBuilder();
 
-		sql.append(SQLs.USER_ROLE_SELECT).append(SQLs.USER_ROLE_SELECT_FILTER_ROLE);
+		sql.append(SQLs.USER_ROLE_SELECT).append(SQLs.USER_ROLE_SELECT_FILTER_ROLE_ID);
 		return SQL.select(sql.toString(), new NVPair("roleId", roleId));
 	}
+
+	private Object[][] getAllUsersRole() {
+
+		final StringBuilder sql = new StringBuilder();
+
+		sql.append(SQLs.USER_ROLE_SELECT);
+		return SQL.select(sql.toString());
+	}
+
+	@Override
+	public void setDefaultStartDateToExistingUserRole() {
+		LOG.info("Adding default start date to All existing User_Role");
+
+		// Important : start_date MUST be unique, so avoid update in one
+		// statement
+		final Object[][] existingUserRole = this.getAllUsersRole();
+
+		if (null != existingUserRole && existingUserRole.length > 0) {
+			for (int row = 0; row < existingUserRole.length; row++) {
+				final Object[] userRole = existingUserRole[row];
+				SQL.update(SQLs.USER_ROLE_UPDATE_START_DATE_BEFORE_NEW_PK, new NVPair("startDate", new Date()),
+						new NVPair("userId", userRole[0]), new NVPair("roleId", userRole[1]));
+			}
+		}
+	}
+
 }

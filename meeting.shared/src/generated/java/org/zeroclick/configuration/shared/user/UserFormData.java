@@ -1,11 +1,14 @@
 package org.zeroclick.configuration.shared.user;
 
+import java.util.Date;
 import java.util.Set;
 
 import javax.annotation.Generated;
 
+import org.eclipse.scout.rt.shared.data.basic.table.AbstractTableRowData;
 import org.eclipse.scout.rt.shared.data.form.AbstractFormData;
 import org.eclipse.scout.rt.shared.data.form.fields.AbstractValueFieldData;
+import org.eclipse.scout.rt.shared.data.form.fields.tablefield.AbstractTableFieldBeanData;
 import org.eclipse.scout.rt.shared.data.form.properties.AbstractPropertyData;
 
 /**
@@ -17,6 +20,24 @@ import org.eclipse.scout.rt.shared.data.form.properties.AbstractPropertyData;
 public class UserFormData extends AbstractFormData {
 
 	private static final long serialVersionUID = 1L;
+
+	/**
+	 * access method for property ActiveSubscriptionValid.
+	 */
+	public Boolean getActiveSubscriptionValid() {
+		return getActiveSubscriptionValidProperty().getValue();
+	}
+
+	/**
+	 * access method for property ActiveSubscriptionValid.
+	 */
+	public void setActiveSubscriptionValid(Boolean activeSubscriptionValid) {
+		getActiveSubscriptionValidProperty().setValue(activeSubscriptionValid);
+	}
+
+	public ActiveSubscriptionValidProperty getActiveSubscriptionValidProperty() {
+		return getPropertyByClass(ActiveSubscriptionValidProperty.class);
+	}
 
 	/**
 	 * access method for property Autofilled.
@@ -100,12 +121,25 @@ public class UserFormData extends AbstractFormData {
 		return getFieldByClass(SendUserInviteEmail.class);
 	}
 
+	public SubscriptionBox getSubscriptionBox() {
+		return getFieldByClass(SubscriptionBox.class);
+	}
+
+	public SubscriptionsListTable getSubscriptionsListTable() {
+		return getFieldByClass(SubscriptionsListTable.class);
+	}
+
 	public TimeZone getTimeZone() {
 		return getFieldByClass(TimeZone.class);
 	}
 
 	public UserId getUserId() {
 		return getFieldByClass(UserId.class);
+	}
+
+	public static class ActiveSubscriptionValidProperty extends AbstractPropertyData<Boolean> {
+
+		private static final long serialVersionUID = 1L;
 	}
 
 	public static class AutofilledProperty extends AbstractPropertyData<Boolean> {
@@ -156,6 +190,105 @@ public class UserFormData extends AbstractFormData {
 	public static class SendUserInviteEmail extends AbstractValueFieldData<Boolean> {
 
 		private static final long serialVersionUID = 1L;
+	}
+
+	public static class SubscriptionBox extends AbstractValueFieldData<Long> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class SubscriptionsListTable extends AbstractTableFieldBeanData {
+
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public SubscriptionsListTableRowData addRow() {
+			return (SubscriptionsListTableRowData) super.addRow();
+		}
+
+		@Override
+		public SubscriptionsListTableRowData addRow(int rowState) {
+			return (SubscriptionsListTableRowData) super.addRow(rowState);
+		}
+
+		@Override
+		public SubscriptionsListTableRowData createRow() {
+			return new SubscriptionsListTableRowData();
+		}
+
+		@Override
+		public Class<? extends AbstractTableRowData> getRowType() {
+			return SubscriptionsListTableRowData.class;
+		}
+
+		@Override
+		public SubscriptionsListTableRowData[] getRows() {
+			return (SubscriptionsListTableRowData[]) super.getRows();
+		}
+
+		@Override
+		public SubscriptionsListTableRowData rowAt(int index) {
+			return (SubscriptionsListTableRowData) super.rowAt(index);
+		}
+
+		public void setRows(SubscriptionsListTableRowData[] rows) {
+			super.setRows(rows);
+		}
+
+		public static class SubscriptionsListTableRowData extends AbstractTableRowData {
+
+			private static final long serialVersionUID = 1L;
+			public static final String subscriptionId = "subscriptionId";
+			public static final String userId = "userId";
+			public static final String startDate = "startDate";
+			public static final String acceptedCpsDate = "acceptedCpsDate";
+			public static final String acceptedWithdrawalDate = "acceptedWithdrawalDate";
+			private Long m_subscriptionId;
+			private Long m_userId;
+			private Date m_startDate;
+			private Date m_acceptedCpsDate;
+			private Date m_acceptedWithdrawalDate;
+
+			public Long getSubscriptionId() {
+				return m_subscriptionId;
+			}
+
+			public void setSubscriptionId(Long newSubscriptionId) {
+				m_subscriptionId = newSubscriptionId;
+			}
+
+			public Long getUserId() {
+				return m_userId;
+			}
+
+			public void setUserId(Long newUserId) {
+				m_userId = newUserId;
+			}
+
+			public Date getStartDate() {
+				return m_startDate;
+			}
+
+			public void setStartDate(Date newStartDate) {
+				m_startDate = newStartDate;
+			}
+
+			public Date getAcceptedCpsDate() {
+				return m_acceptedCpsDate;
+			}
+
+			public void setAcceptedCpsDate(Date newAcceptedCpsDate) {
+				m_acceptedCpsDate = newAcceptedCpsDate;
+			}
+
+			public Date getAcceptedWithdrawalDate() {
+				return m_acceptedWithdrawalDate;
+			}
+
+			public void setAcceptedWithdrawalDate(Date newAcceptedWithdrawalDate) {
+				m_acceptedWithdrawalDate = newAcceptedWithdrawalDate;
+			}
+		}
 	}
 
 	public static class TimeZone extends AbstractValueFieldData<String> {

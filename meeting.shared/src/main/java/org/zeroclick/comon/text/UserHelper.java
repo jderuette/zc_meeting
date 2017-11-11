@@ -15,6 +15,10 @@ limitations under the License.
  */
 package org.zeroclick.comon.text;
 
+import java.security.AccessController;
+
+import javax.security.auth.Subject;
+
 import org.eclipse.scout.rt.platform.ApplicationScoped;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.zeroclick.meeting.shared.security.AccessControlService;
@@ -29,5 +33,9 @@ public class UserHelper {
 	public Long getCurrentUserId() {
 		final AccessControlService acs = BEANS.get(AccessControlService.class);
 		return acs.getZeroClickUserIdOfCurrentSubject();
+	}
+
+	public Subject getCurrentUserSubject() {
+		return Subject.getSubject(AccessController.getContext());
 	}
 }

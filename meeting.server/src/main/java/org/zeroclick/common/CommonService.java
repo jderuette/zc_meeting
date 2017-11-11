@@ -19,7 +19,12 @@ import javax.annotation.PostConstruct;
 
 import org.eclipse.scout.rt.platform.ApplicationScoped;
 import org.eclipse.scout.rt.platform.BEANS;
+import org.eclipse.scout.rt.platform.context.RunContext;
 import org.eclipse.scout.rt.platform.exception.VetoException;
+import org.eclipse.scout.rt.platform.job.Jobs;
+import org.eclipse.scout.rt.platform.util.concurrent.IRunnable;
+import org.eclipse.scout.rt.server.context.ServerRunContextProducer;
+import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.zeroclick.comon.text.UserHelper;
 
@@ -40,5 +45,39 @@ public class CommonService {
 
 	public void throwAuthorizationFailed() throws VetoException {
 		throw new VetoException(TEXTS.get("AuthorizationFailed"));
+	}
+
+	protected void insertInsideNewTransaction(final String sql, final Object... bindBases) {
+		Jobs.schedule(new IRunnable() {
+
+			@Override
+			public void run() throws Exception {
+				SQL.insert(sql, bindBases);
+			}
+		}, Jobs.newInput().withRunContext(this.buildNewTransactionRunContext()));
+	}
+
+	protected void updateInsideNewTransaction(final String sql, final Object... bindBases) {
+		Jobs.schedule(new IRunnable() {
+
+			@Override
+			public void run() throws Exception {
+				SQL.update(sql, bindBases);
+			}
+		}, Jobs.newInput().withRunContext(this.buildNewTransactionRunContext()));
+	}
+
+	protected void selectIntoInsideNewTransaction(final String sql, final Object... bindBases) {
+		Jobs.schedule(new IRunnable() {
+
+			@Override
+			public void run() throws Exception {
+				SQL.selectInto(sql, bindBases);
+			}
+		}, Jobs.newInput().withRunContext(this.buildNewTransactionRunContext()));
+	}
+
+	private RunContext buildNewTransactionRunContext() {
+		return new ServerRunContextProducer().produce(this.userHelper.getCurrentUserSubject());
 	}
 }

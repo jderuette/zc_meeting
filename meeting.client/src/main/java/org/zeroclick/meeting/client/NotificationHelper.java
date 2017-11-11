@@ -17,6 +17,8 @@ package org.zeroclick.meeting.client;
 
 import org.eclipse.scout.rt.platform.ApplicationScoped;
 import org.eclipse.scout.rt.platform.status.IStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author djer
@@ -25,23 +27,44 @@ import org.eclipse.scout.rt.platform.status.IStatus;
 @ApplicationScoped
 public class NotificationHelper {
 
+	private static final Logger LOG = LoggerFactory.getLogger(NotificationHelper.class);
+
+	private static final Long DURATION_SHORT = 5000L;
+	private static final Long DURATION_MEDIUM = 10000L;
+
 	public void addProcessingNotification(final String messageKey) {
-		final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
-		desktop.addNotification(IStatus.INFO, 5000l, Boolean.TRUE, messageKey);
+		this.addDesktopNotification(IStatus.INFO, DURATION_SHORT, messageKey);
 	}
 
 	public void addProcessingNotification(final String messageKey, final String... messageArguments) {
-		final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
-		desktop.addNotification(IStatus.INFO, 5000l, Boolean.TRUE, messageKey, messageArguments);
+		this.addDesktopNotification(IStatus.INFO, DURATION_SHORT, messageKey, messageArguments);
 	}
 
 	public void addProccessedNotification(final String messageKey) {
-		final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
-		desktop.addNotification(IStatus.OK, 10000l, Boolean.TRUE, messageKey);
+		this.addDesktopNotification(IStatus.OK, DURATION_MEDIUM, messageKey);
 	}
 
 	public void addProccessedNotification(final String messageKey, final String... messageArguments) {
+		this.addDesktopNotification(IStatus.OK, DURATION_MEDIUM, messageKey, messageArguments);
+	}
+
+	private void addDesktopNotification(final Integer severity, final Long duration, final String messageKey) {
+		this.addDesktopNotification(severity, duration, messageKey, (String[]) null);
+	}
+
+	private void addDesktopNotification(final Integer severity, final Long duration, final String messageKey,
+			final String... messageArguments) {
 		final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
-		desktop.addNotification(IStatus.OK, 10000l, Boolean.TRUE, messageKey, messageArguments);
+
+		if (null != desktop) {
+			if (null == messageArguments) {
+				desktop.addNotification(severity, duration, Boolean.TRUE, messageKey);
+			} else {
+				desktop.addNotification(severity, duration, Boolean.TRUE, messageKey, messageArguments);
+			}
+		} else {
+			LOG.warn("Unable to publish Notification because desktop is null, severity : " + severity
+					+ ", messageKey : " + messageKey);
+		}
 	}
 }

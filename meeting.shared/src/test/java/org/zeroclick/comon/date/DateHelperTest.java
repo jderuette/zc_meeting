@@ -26,6 +26,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import org.eclipse.scout.rt.platform.BEANS;
 import org.junit.Test;
 
 /**
@@ -39,7 +40,7 @@ public class DateHelperTest {
 	private static final String DEFAULT_DATE_FORMAT = "dd-MM-yyyy hh:mm:ss";
 
 	private ZonedDateTime buildZonedDateTime(final String zoneId, final String date) throws ParseException {
-		final DateHelper dateHelper = DateHelper.get();
+		final DateHelper dateHelper = BEANS.get(DateHelper.class);
 		final SimpleDateFormat dateformater = new SimpleDateFormat(DEFAULT_DATE_FORMAT);
 		final ZonedDateTime ZonedDateTime = dateHelper.getZonedValue(ZoneId.of(zoneId), dateformater.parse(date));
 
@@ -48,7 +49,7 @@ public class DateHelperTest {
 
 	private ZonedDateTime getZonedNow(final String zoneId, final Integer hours, final Integer minutes,
 			final Integer secondes) {
-		final DateHelper dateHelper = DateHelper.get();
+		final DateHelper dateHelper = BEANS.get(DateHelper.class);
 
 		final Calendar cal = new GregorianCalendar();
 		cal.set(Calendar.HOUR_OF_DAY, hours);
@@ -64,7 +65,7 @@ public class DateHelperTest {
 
 	@Test
 	public void testGetRelativeTimeShift_tomorrow() throws ParseException {
-		final DateHelper dateHelper = DateHelper.get();
+		final DateHelper dateHelper = BEANS.get(DateHelper.class);
 
 		final ZonedDateTime ZonedNow = this.getZonedNow(DEFAULT_TEST_TIME_ZONE, 13, 8, 15);
 		final ZonedDateTime ZonedMeetingStart = this.getZonedNow(DEFAULT_TEST_TIME_ZONE, 9, 15, 0).plusDays(1);
@@ -76,7 +77,7 @@ public class DateHelperTest {
 
 	@Test
 	public void testGetRelativeTimeShift_tomorrowAlmost24Hours() throws ParseException {
-		final DateHelper dateHelper = DateHelper.get();
+		final DateHelper dateHelper = BEANS.get(DateHelper.class);
 
 		final ZonedDateTime ZonedNow = this.getZonedNow(DEFAULT_TEST_TIME_ZONE, 13, 8, 15);
 		final ZonedDateTime ZonedMeetingStart = this.getZonedNow(DEFAULT_TEST_TIME_ZONE, 13, 8, 14).plusDays(1);
@@ -88,7 +89,7 @@ public class DateHelperTest {
 
 	@Test
 	public void testGetRelativeTimeShift_tomorrow24Hours() throws ParseException {
-		final DateHelper dateHelper = DateHelper.get();
+		final DateHelper dateHelper = BEANS.get(DateHelper.class);
 
 		final ZonedDateTime ZonedNow = this.getZonedNow(DEFAULT_TEST_TIME_ZONE, 13, 8, 15);
 		final ZonedDateTime ZonedMeetingStart = this.getZonedNow(DEFAULT_TEST_TIME_ZONE, 13, 8, 15).plusDays(1);
@@ -100,7 +101,7 @@ public class DateHelperTest {
 
 	@Test
 	public void testGetRelativeTimeShift_todayAfter() throws ParseException {
-		final DateHelper dateHelper = DateHelper.get();
+		final DateHelper dateHelper = BEANS.get(DateHelper.class);
 
 		final ZonedDateTime ZonedNow = this.getZonedNow(DEFAULT_TEST_TIME_ZONE, 13, 8, 15);
 		final ZonedDateTime ZonedMeetingStart = this.getZonedNow(DEFAULT_TEST_TIME_ZONE, 19, 0, 0);
@@ -112,7 +113,7 @@ public class DateHelperTest {
 
 	@Test
 	public void testGetRelativeTimeShift_todayBefore() throws ParseException {
-		final DateHelper dateHelper = DateHelper.get();
+		final DateHelper dateHelper = BEANS.get(DateHelper.class);
 
 		final ZonedDateTime ZonedNow = this.getZonedNow(DEFAULT_TEST_TIME_ZONE, 13, 8, 15);
 		final ZonedDateTime ZonedMeetingStart = this.getZonedNow(DEFAULT_TEST_TIME_ZONE, 9, 30, 0);
@@ -124,7 +125,7 @@ public class DateHelperTest {
 
 	@Test
 	public void testGetRelativeTimeShift_todayExactlySame() throws ParseException {
-		final DateHelper dateHelper = DateHelper.get();
+		final DateHelper dateHelper = BEANS.get(DateHelper.class);
 
 		final ZonedDateTime ZonedNow = this.getZonedNow(DEFAULT_TEST_TIME_ZONE, 13, 8, 15);
 		final ZonedDateTime ZonedMeetingStart = this.getZonedNow(DEFAULT_TEST_TIME_ZONE, 13, 8, 15);
@@ -136,7 +137,7 @@ public class DateHelperTest {
 
 	@Test
 	public void testGetRelativeTimeShift_yesterday() throws ParseException {
-		final DateHelper dateHelper = DateHelper.get();
+		final DateHelper dateHelper = BEANS.get(DateHelper.class);
 
 		final ZonedDateTime ZonedNow = this.getZonedNow(DEFAULT_TEST_TIME_ZONE, 13, 8, 15);
 		final ZonedDateTime ZonedMeetingStart = this.getZonedNow(DEFAULT_TEST_TIME_ZONE, 23, 45, 0).minusDays(1);
@@ -148,7 +149,7 @@ public class DateHelperTest {
 
 	@Test
 	public void testGetRelativeTimeShift_yesterdayAlmost24Hours() throws ParseException {
-		final DateHelper dateHelper = DateHelper.get();
+		final DateHelper dateHelper = BEANS.get(DateHelper.class);
 
 		final ZonedDateTime ZonedNow = this.getZonedNow(DEFAULT_TEST_TIME_ZONE, 13, 8, 15);
 		final ZonedDateTime ZonedMeetingStart = this.getZonedNow(DEFAULT_TEST_TIME_ZONE, 13, 8, 16).minusDays(1);
@@ -160,7 +161,7 @@ public class DateHelperTest {
 
 	@Test
 	public void testGetRelativeTimeShift_yesterday24Hours() throws ParseException {
-		final DateHelper dateHelper = DateHelper.get();
+		final DateHelper dateHelper = BEANS.get(DateHelper.class);
 
 		final ZonedDateTime ZonedNow = this.getZonedNow(DEFAULT_TEST_TIME_ZONE, 13, 8, 15);
 		final ZonedDateTime ZonedMeetingStart = this.getZonedNow(DEFAULT_TEST_TIME_ZONE, 13, 8, 15).minusDays(1);
@@ -172,7 +173,7 @@ public class DateHelperTest {
 
 	@Test
 	public void testGetRelativeTimeShift_inSevenDays() throws ParseException {
-		final DateHelper dateHelper = DateHelper.get();
+		final DateHelper dateHelper = BEANS.get(DateHelper.class);
 
 		final ZonedDateTime ZonedNow = this.getZonedNow(DEFAULT_TEST_TIME_ZONE, 13, 8, 15);
 		final ZonedDateTime ZonedMeetingStart = ZonedNow.plusDays(7);
@@ -184,7 +185,7 @@ public class DateHelperTest {
 
 	@Test
 	public void testGetStartPoint() throws ParseException {
-		final DateHelper dateHelper = DateHelper.get();
+		final DateHelper dateHelper = BEANS.get(DateHelper.class);
 
 		final ZonedDateTime ZonedStart = this.getZonedNow(DEFAULT_TEST_TIME_ZONE, 13, 8, 15);
 

@@ -5,7 +5,7 @@
 
   <variable scope="context" name="mdcPattern" value="principal=%X{subject.principal.name}, serverSession=%X{scout.session.id}, jobName=%X{scout.job.name}, cid=%X{scout.correlation.id}" />
   <!-- <variable scope="context" name="mdcPatternWithoutEmptyValues" value="%replace(${mdcPattern}){'(, )?\\w+=((?=\\1)|, |$)', ''}" /> -->
-  <variable scope="context" name="logPattern" value="%date{ISO8601} %-5level [%thread] %logger - %msg -Ex: %ex MDC[${mdcPattern}]" />
+  <variable scope="context" name="logPattern" value="%date{ISO8601} %-5level [%thread] %logger - %msg -Ex: %ex MDC[${mdcPattern}]%n" />
 
   <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="FILE">
     <!-- Sample for Tomcat Log Folder -->

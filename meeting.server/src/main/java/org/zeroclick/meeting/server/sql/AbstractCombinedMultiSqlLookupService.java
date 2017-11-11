@@ -26,6 +26,8 @@ import org.eclipse.scout.rt.platform.annotations.ConfigOperation;
 import org.eclipse.scout.rt.platform.annotations.ConfigProperty;
 import org.eclipse.scout.rt.platform.exception.ProcessingException;
 import org.eclipse.scout.rt.platform.exception.VetoException;
+import org.eclipse.scout.rt.platform.nls.NlsLocale;
+import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.platform.util.TypeCastUtility;
 import org.eclipse.scout.rt.server.jdbc.ISqlService;
 import org.eclipse.scout.rt.server.jdbc.SQL;
@@ -36,6 +38,7 @@ import org.eclipse.scout.rt.shared.services.lookup.ILookupRow;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.comon.text.TextsHelper;
 
 /**
  * Extension of {@link AbstractSqlLookupService}.
@@ -47,6 +50,9 @@ import org.slf4j.LoggerFactory;
  * <li>Allow to use **one** custom BindBase in all your queries
  * ({@link #getConfiguredBindBase()})</li>
  * <ul>
+ *
+ * To get higher performance when searching by key, put SQL in order to maximize
+ * first request get result/lower cost
  *
  * @author djer
  *
@@ -61,17 +67,7 @@ public abstract class AbstractCombinedMultiSqlLookupService<T> extends AbstractS
 	 */
 	@ConfigProperty(ConfigProperty.SQL)
 	@Order(12)
-	protected List<String> getConfiguredSqlSelects() {
-		return null;
-	}
-
-	/**
-	 * ONE other bindBase to pass to the query
-	 *
-	 * @return
-	 */
-	@Order(15)
-	protected Object getConfiguredBindBase() {
+	protected List<SqlLookupConfiguration> getConfiguredSqlSelects() {
 		return null;
 	}
 
@@ -104,12 +100,21 @@ public abstract class AbstractCombinedMultiSqlLookupService<T> extends AbstractS
 		};
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public List<ILookupRow<T>> getDataByKey(final ILookupCall<T> call) {
 		final List<ILookupRow<T>> combinedRows = new ArrayList<>();
-		final List<String> sqls = this.getConfiguredSqlSelects();
-		for (final String sql : sqls) {
-			combinedRows.addAll(this.execLoadLookupRows(sql, this.filterSqlByKey(sql), call));
+		final List<SqlLookupConfiguration> sqls = this.getConfiguredSqlSelects();
+		for (final SqlLookupConfiguration sqlConfig : sqls) {
+			this.configureCall(call, sqlConfig);
+
+			final List<ILookupRow<T>> data = this.execLoadLookupRows(sqlConfig, this.filterSqlByKey(sqlConfig.getSql()),
+					call);
+			combinedRows.addAll(data);
+			// By key we stop when we found one
+			if (null != data && !data.isEmpty()) {
+				break;
+			}
 		}
 
 		return this.handlePostQueries(combinedRows);
@@ -118,15 +123,16 @@ public abstract class AbstractCombinedMultiSqlLookupService<T> extends AbstractS
 	@Override
 	public List<ILookupRow<T>> getDataByText(final ILookupCall<T> call) {
 		final List<ILookupRow<T>> combinedRows = new ArrayList<>();
-		final List<String> sqls = this.getConfiguredSqlSelects();
-		for (final String sql : sqls) {
+		final List<SqlLookupConfiguration> sqls = this.getConfiguredSqlSelects();
+		for (final SqlLookupConfiguration sqlConfig : sqls) {
+			this.configureCall(call, sqlConfig);
 			// change wildcards in text to db specific wildcards
 			if (call.getText() != null) {
 				final String text = call.getText();
 				final String sqlWildcard = BEANS.get(ISqlService.class).getSqlStyle().getLikeWildcard();
 				call.setText(text.replace(call.getWildcard(), sqlWildcard));
 			}
-			combinedRows.addAll(this.execLoadLookupRows(sql, this.filterSqlByText(sql), call));
+			combinedRows.addAll(this.execLoadLookupRows(sqlConfig, this.filterSqlByText(sqlConfig.getSql()), call));
 		}
 		return this.handlePostQueries(combinedRows);
 	}
@@ -134,12 +140,13 @@ public abstract class AbstractCombinedMultiSqlLookupService<T> extends AbstractS
 	@Override
 	public List<ILookupRow<T>> getDataByAll(final ILookupCall<T> call) {
 		final List<ILookupRow<T>> combinedRows = new ArrayList<>();
-		final List<String> sqls = this.getConfiguredSqlSelects();
-		for (final String sql : sqls) {
-			if (containsRefusingAllTag(sql)) {
+		final List<SqlLookupConfiguration> sqls = this.getConfiguredSqlSelects();
+		for (final SqlLookupConfiguration sqlConfig : sqls) {
+			this.configureCall(call, sqlConfig);
+			if (containsRefusingAllTag(sqlConfig.getSql())) {
 				throw new VetoException(ScoutTexts.get("SearchTextIsTooGeneral"));
 			}
-			combinedRows.addAll(this.execLoadLookupRows(sql, this.filterSqlByAll(sql), call));
+			combinedRows.addAll(this.execLoadLookupRows(sqlConfig, this.filterSqlByAll(sqlConfig.getSql()), call));
 		}
 		return this.handlePostQueries(combinedRows);
 	}
@@ -147,9 +154,10 @@ public abstract class AbstractCombinedMultiSqlLookupService<T> extends AbstractS
 	@Override
 	public List<ILookupRow<T>> getDataByRec(final ILookupCall<T> call) {
 		final List<ILookupRow<T>> combinedRows = new ArrayList<>();
-		final List<String> sqls = this.getConfiguredSqlSelects();
-		for (final String sql : sqls) {
-			combinedRows.addAll(this.execLoadLookupRows(sql, this.filterSqlByRec(sql), call));
+		final List<SqlLookupConfiguration> sqls = this.getConfiguredSqlSelects();
+		for (final SqlLookupConfiguration sqlConfig : sqls) {
+			this.configureCall(call, sqlConfig);
+			combinedRows.addAll(this.execLoadLookupRows(sqlConfig, this.filterSqlByRec(sqlConfig.getSql()), call));
 		}
 		return this.handlePostQueries(combinedRows);
 	}
@@ -162,10 +170,41 @@ public abstract class AbstractCombinedMultiSqlLookupService<T> extends AbstractS
 	@Override
 	protected List<ILookupRow<T>> execLoadLookupRows(final String originalSql, final String preprocessedSql,
 			final ILookupCall<T> call) {
-		final Object bindBase = this.getConfiguredBindBase();
-		final Object[][] data = SQL.selectLimited(preprocessedSql, call.getMaxRowCount(), call, bindBase);
+		final SqlLookupConfiguration sqlConfig = new SqlLookupConfiguration(originalSql);
+		this.configureCall(call, sqlConfig);
+		return this.execLoadLookupRows(sqlConfig, preprocessedSql, call);
+	}
+
+	/**
+	 * This method is called on server side to load lookup rows.
+	 */
+	@ConfigOperation
+	@Order(10)
+	protected List<ILookupRow<T>> execLoadLookupRows(final SqlLookupConfiguration sqlConfig,
+			final String preprocessedSql, final ILookupCall<T> call) {
+		final Object bindBase = sqlConfig.getBindBase();
+		String cleanedPreproccesseSql = preprocessedSql;
+		Object[][] filteredData;
+		if (sqlConfig.getTranslatedColumn() >= 0) {
+			// remove the <text> filter, else will be applied on NLS key
+			// (instead of value)
+			cleanedPreproccesseSql = preprocessedSql.replaceAll(" AND \\S+ LIKE :text", "");
+		}
+		if (!sqlConfig.isCaseSensitive()) {
+			cleanedPreproccesseSql = cleanedPreproccesseSql.replaceAll("(AND )(\\S+)( LIKE :text)", " $1 lower($2) $3");
+		}
+		final Object[][] data = SQL.selectLimited(cleanedPreproccesseSql, call.getMaxRowCount(), call, bindBase);
 		if (this.getConfiguredSortColumn() >= 0) {
 			sortData(data, this.getConfiguredSortColumn());
+		}
+
+		if (sqlConfig.getTranslatedColumn() >= 0) {
+			this.applyTranslation(data, sqlConfig);
+			// apply filter on *translated* data, filter "<text>.... </text>
+			// should no be in original SQL
+			filteredData = this.filterTranslatedColumn(data, call, sqlConfig);
+		} else {
+			filteredData = data;
 		}
 		try {
 			Class<?> genericsParameterClass = Object.class;
@@ -176,10 +215,67 @@ public abstract class AbstractCombinedMultiSqlLookupService<T> extends AbstractS
 				LOG.warn("Unable to calculate type parameters for lookup service '" + this.getClass().getName()
 						+ "'. No key type validation will be performed.");
 			}
-			return createLookupRowArray(data, call, genericsParameterClass);
+			return createLookupRowArray(filteredData, call, genericsParameterClass);
 		} catch (final IllegalArgumentException e) {
 			throw new ProcessingException(
 					"Unable to load lookup rows for lookup service '" + this.getClass().getName() + "'.", e);
+		}
+	}
+
+	protected void applyTranslation(final Object[][] data, final SqlLookupConfiguration sqlConfig) {
+		if (null != data && data.length > 0) {
+			for (final Object[] row : data) {
+				if (null != row && null != row[sqlConfig.getTranslatedColumn()]) {
+					final String translated = TextsHelper.get((String) row[sqlConfig.getTranslatedColumn()]);
+					if (null != translated) {
+						row[sqlConfig.getTranslatedColumn()] = translated;
+					}
+				}
+			}
+		}
+	}
+
+	protected Object[][] filterTranslatedColumn(final Object[][] data, final ILookupCall<T> call,
+			final SqlLookupConfiguration sqlConfig) {
+		String searchedText = call.getText();
+		final List<Object[]> filteredRows = new ArrayList<>();
+		Object[][] filteredRowRet;
+		if (null != searchedText && null != data && data.length > 0) {
+			// remove "SQL" wildcard and replace * by .* (regexp)
+			searchedText = searchedText.replaceAll("\\*", ".*").replaceAll("%", ".*");
+			final int j = 0;
+			for (int i = 0; i < data.length; i++) {
+				final Object[] row = data[i];
+				if (null != row && null != row[sqlConfig.getTranslatedColumn()]) {
+					final String translated = (String) row[sqlConfig.getTranslatedColumn()];
+					String translatedSearched = translated;
+					if (!sqlConfig.isCaseSensitive()) {
+						translatedSearched = translated.toLowerCase(NlsLocale.get());
+					}
+					if (null == translated || searchedText.isEmpty()
+							|| translatedSearched.matches(searchedText.toLowerCase(NlsLocale.get()))) {
+						filteredRows.add(row.clone());
+					}
+				}
+			}
+			filteredRowRet = CollectionUtility.toArray(filteredRows, Object[].class);
+
+		} else {
+			// no filters return a data copy
+			filteredRowRet = data.clone();
+		}
+
+		return filteredRowRet;
+	}
+
+	protected void configureCall(final ILookupCall<T> call, final SqlLookupConfiguration sqlConfig) {
+		if (null != call.getText() && !call.getText().isEmpty()) {
+			if (Boolean.FALSE == sqlConfig.isCaseSensitive()) {
+				call.setText(call.getText().toLowerCase(NlsLocale.get()));
+			}
+			if (sqlConfig.isAutoFirstWildcard() && !call.getText().startsWith(call.getWildcard())) {
+				call.setText(call.getWildcard() + call.getText());
+			}
 		}
 	}
 

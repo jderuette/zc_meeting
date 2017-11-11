@@ -236,11 +236,13 @@ public class OnBoardingUserForm extends AbstractForm {
 			service.store(formData);
 
 			if (OnBoardingUserForm.this.getLanguageField().getValueChanged()) {
+				if (OnBoardingUserForm.this.isSaveNeeded()) {
+					// Try to avoid popup "save unsaved forms"
+					OnBoardingUserForm.this.markSaved();
+					OnBoardingUserForm.this.setAskIfNeedSave(Boolean.FALSE);
+				}
 				OnBoardingUserForm.this.getLanguageField().askToReloadSession();
 			}
-
-			// ClientSession.get().getDesktop().openUri("/addGoogleCalendar",
-			// OpenUriAction.NEW_WINDOW);
 		}
 	}
 

@@ -81,8 +81,8 @@ public class ScoutServiceCredentialVerifier implements ICredentialVerifier {
 					final UserFormData userFormDataInput = new UserFormData();
 					userFormDataInput.getLogin().setValue(username);
 					userFormDataInput.getEmail().setValue(username);
-					final UserFormData sserPassFormData = userService.getPassword(userFormDataInput);
-					return sserPassFormData;
+					final UserFormData userPassFormData = userService.getPassword(userFormDataInput);
+					return userPassFormData;
 				}
 			}, Jobs.newInput()
 					.withRunContext(ClientRunContexts.copyCurrent().withSubject(this.retrievePasswordCheckerSubject())
@@ -110,7 +110,31 @@ public class ScoutServiceCredentialVerifier implements ICredentialVerifier {
 			return AUTH_FORBIDDEN;
 		}
 		LOG.info("User : " + username + " with correct password");
+		this.updateLogedInUserData(savedPassword);
+
 		return AUTH_OK;
+	}
+
+	private void updateLogedInUserData(final UserFormData savedPassword) {
+		if (this.isTunnelServiceActive()) {
+			// final IFuture<UserFormData> userDataUpdateCaller =
+			Jobs.schedule(new Callable<UserFormData>() {
+				@Override
+				@SuppressWarnings("PMD.SignatureDeclareThrowsException")
+				public UserFormData call() throws Exception {
+					final IUserService userService = BEANS.get(IUserService.class);
+					return userService.loggedIn(savedPassword);
+				}
+			}, Jobs.newInput()
+					.withRunContext(ClientRunContexts.copyCurrent().withSubject(this.retrievePasswordCheckerSubject())
+							.withUserAgent(UserAgents.createDefault()).withSession(null, false))
+					.withName("Update UserData after login"));
+			// userDataUpdateCaller.awaitDoneAndGet(30, TimeUnit.SECONDS);
+		} else {
+			LOG.warn(
+					"Cannot update User LogedIn data because ServiceTunel is not active (impacted user authentication : "
+							+ savedPassword.getEmail() + " (login : " + savedPassword.getLogin() + ")");
+		}
 	}
 
 	private Boolean isTunnelServiceActive() {

@@ -40,13 +40,14 @@ public class DayDuration {
 	private final OffsetTime end;
 	private final List<DayOfWeek> validDayOfWeek;
 	private final Boolean weeklyerpetual;
+	private final Boolean defaultFromSlot;
 
 	public DayDuration(final OffsetTime start, final OffsetTime end) {
 		this.start = start;
 		this.end = end;
 		this.validDayOfWeek = DayOfWeekLists.ALL_DAYS;
 		this.weeklyerpetual = Boolean.TRUE;
-
+		this.defaultFromSlot = Boolean.TRUE;
 	}
 
 	public DayDuration(final OffsetTime start, final OffsetTime end, final List<DayOfWeek> validDayOfWeek) {
@@ -54,6 +55,7 @@ public class DayDuration {
 		this.end = end;
 		this.validDayOfWeek = validDayOfWeek;
 		this.weeklyerpetual = Boolean.TRUE;
+		this.defaultFromSlot = Boolean.TRUE;
 	}
 
 	public DayDuration(final OffsetTime start, final OffsetTime end, final List<DayOfWeek> validDayOfWeek,
@@ -62,6 +64,16 @@ public class DayDuration {
 		this.end = end;
 		this.validDayOfWeek = validDayOfWeek;
 		this.weeklyerpetual = weeklyerpetual;
+		this.defaultFromSlot = Boolean.TRUE;
+	}
+
+	public DayDuration(final OffsetTime start, final OffsetTime end, final List<DayOfWeek> validDayOfWeek,
+			final Boolean weeklyerpetual, final Boolean isDefaultFromSlot) {
+		this.start = start;
+		this.end = end;
+		this.validDayOfWeek = validDayOfWeek;
+		this.weeklyerpetual = weeklyerpetual;
+		this.defaultFromSlot = isDefaultFromSlot;
 	}
 
 	@SuppressWarnings("PMD.CollapsibleIfStatements")
@@ -194,4 +206,7 @@ public class DayDuration {
 		return this.weeklyerpetual;
 	}
 
+	public Boolean isDefaultFromSlot() {
+		return this.defaultFromSlot;
+	}
 }

@@ -66,4 +66,14 @@ public class AccessControlService extends AbstractAccessControlService<String> {
 		return userServcie.getUserNotificationIds(userId);
 	}
 
+	/**
+	 * Clear the cache with the passed userIdss (loin and Email)
+	 *
+	 * @param userId
+	 *            login or email to user cache
+	 */
+	public void clearUserCache(final Set<String> userIds) {
+		this.clearCache(userIds);
+	}
+
 }

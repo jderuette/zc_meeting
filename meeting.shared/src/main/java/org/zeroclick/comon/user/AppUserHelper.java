@@ -18,10 +18,13 @@ package org.zeroclick.comon.user;
 import java.time.Clock;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Date;
 
+import org.eclipse.scout.rt.platform.ApplicationScoped;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.comon.date.DateHelper;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
@@ -29,22 +32,10 @@ import org.zeroclick.meeting.shared.security.AccessControlService;
  * @author djer
  *
  */
+@ApplicationScoped
 public class AppUserHelper {
 
 	private static final Logger LOG = LoggerFactory.getLogger(AppUserHelper.class);
-
-	static AppUserHelper instance;
-
-	private AppUserHelper() {
-
-	}
-
-	public static AppUserHelper get() {
-		if (null == instance) {
-			instance = new AppUserHelper();
-		}
-		return instance;
-	}
 
 	protected String getUserTimeZone(final Long userId) {
 		final IUserService userService = BEANS.get(IUserService.class);
@@ -73,6 +64,13 @@ public class AppUserHelper {
 
 	public ZonedDateTime getUserNow(final Long userId) {
 		return ZonedDateTime.now(Clock.system(this.getUserZoneId(userId)));
+	}
+
+	public Date getUserNowInHisTimeZone(final Long userId) {
+		final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
+		final DateHelper dateHelper = BEANS.get(DateHelper.class);
+
+		return dateHelper.toUserDate(appUserHelper.getUserNow(userId));
 	}
 
 	public Long getCurrentUserId() {

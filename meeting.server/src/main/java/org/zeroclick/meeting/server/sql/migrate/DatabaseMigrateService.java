@@ -82,6 +82,18 @@ public class DatabaseMigrateService {
 			}
 		});
 
+		if (LOG.isDebugEnabled()) {
+			final StringBuilder builder = new StringBuilder(256);
+			builder.append("List of ordered Patchers : ");
+			for (final IBean<IDataPatcher> beanPatch : patchs) {
+				final IDataPatcher patch = beanPatch.getInstance();
+				builder.append(patch.getClass().getSimpleName()).append(" : ").append(patch.getDescription())
+						.append("==>").append(patch.getVersion()).append(" | ");
+			}
+
+			LOG.debug(builder.toString());
+		}
+
 		return patchs;
 	}
 
