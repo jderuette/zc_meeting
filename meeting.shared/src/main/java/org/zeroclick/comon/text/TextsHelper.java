@@ -15,7 +15,9 @@ limitations under the License.
  */
 package org.zeroclick.comon.text;
 
+import java.util.Iterator;
 import java.util.Locale;
+import java.util.Map;
 
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.nls.NlsLocale;
@@ -89,5 +91,21 @@ public class TextsHelper extends TEXTS {
 		}
 
 		return destLocal;
+	}
+
+	public static String getKeyByText(final String text) {
+		final Map<String, String> allTranslations = ScoutTexts.getInstance().getTextMap(NlsLocale.get());
+		if (allTranslations.containsValue(text)) {
+			final Iterator<String> itKeys = allTranslations.keySet().iterator();
+			while (itKeys.hasNext()) {
+				final String key = itKeys.next();
+				final String value = allTranslations.get(key);
+				if (value.equals(text)) {
+					// early break
+					return key;
+				}
+			}
+		}
+		return null;
 	}
 }

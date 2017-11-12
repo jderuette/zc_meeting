@@ -1,8 +1,6 @@
 package org.zeroclick.meeting.client.event;
 
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -31,10 +29,8 @@ import org.eclipse.scout.rt.client.ui.form.fields.tablefield.AbstractTableField;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.exception.VetoException;
-import org.eclipse.scout.rt.platform.nls.NlsLocale;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.platform.util.StringUtility;
-import org.eclipse.scout.rt.shared.ScoutTexts;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.zeroclick.common.email.IMailSender;
@@ -462,6 +458,58 @@ public class EventForm extends AbstractForm {
 							}
 						}
 
+						@Order(1500)
+						public class ImportEmailsMenu extends AbstractMenu {
+							@Override
+							protected String getConfiguredText() {
+								return TEXTS.get("zc.meeting.attendeeEmail.import");
+							}
+
+							@Override
+							protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+								return CollectionUtility.hashSet(TableMenuType.SingleSelection,
+										TableMenuType.EmptySpace);
+							}
+
+							@Override
+							protected String getConfiguredIconId() {
+								return Icons.List;
+							}
+
+							@Override
+							protected String getConfiguredKeyStroke() {
+								return combineKeyStrokes(IKeyStroke.SHIFT, "i");
+							}
+
+							@Override
+							protected void execAction() {
+								final ImportEmailsForm form = new ImportEmailsForm();
+								form.getValueSeparatorField().setValue(",");
+
+								form.startNew();
+
+								form.waitFor();
+
+								if (form.getImportedEmailPreviewField().getTable().getRowCount() > 0) {
+									for (final ITableRow importedRow : form.getImportedEmailPreviewField().getTable()
+											.getRows()) {
+										final String importedEmail = (String) importedRow
+												.getCell(form.getImportedEmailPreviewField().getTable()
+														.getEmailsColumn().getColumnIndex())
+												.getValue();
+										if (!EventForm.this.existEmail(importedEmail)) {
+											final ITableRow newRow = EventForm.this.getEmailsField().getTable()
+													.createRow();
+											final Cell cell = new Cell();
+											cell.setValue(importedEmail);
+											newRow.setCell(Table.this.getEmailColumn().getColumnIndex(), cell);
+											EventForm.this.getEmailsField().getTable().addRow(newRow);
+										}
+									}
+								}
+							}
+						}
+
 						@Order(2000)
 						public class RemoveEmailMenu extends AbstractMenu {
 							@Override
@@ -520,12 +568,15 @@ public class EventForm extends AbstractForm {
 								return Boolean.TRUE;
 							}
 
-							@Override
-							protected void execDecorateCell(final Cell cell, final ITableRow row) {
-								if ((null == cell.getText() || "".equals(cell.getText())) && null != cell.getValue()) {
-									cell.setText(cell.getValue().toString());
-								}
-							}
+							// @Override
+							// protected void execDecorateCell(final Cell cell,
+							// final ITableRow row) {
+							// if ((null == cell.getText() ||
+							// "".equals(cell.getText())) && null !=
+							// cell.getValue()) {
+							// cell.setText(cell.getValue().toString());
+							// }
+							// }
 
 							@Override
 							protected Class<? extends ILookupCall<String>> getConfiguredLookupCall() {
@@ -534,9 +585,9 @@ public class EventForm extends AbstractForm {
 
 							@Override
 							protected String execValidateValue(final ITableRow row, final String rawValue) {
-								EventForm.this.validateEmail(rawValue);
-								// if not veto thrown, continue
 								if (null != rawValue && rawValue.length() > 0) {
+									EventForm.this.checkAttendeeEmail(rawValue);
+									// if not veto thrown, continue
 									EventForm.this.getMultipleEmailBox().updateNbEmail();
 								}
 								return super.execValidateValue(row, rawValue);
@@ -809,17 +860,9 @@ public class EventForm extends AbstractForm {
 			// required *before* save (for sending email)
 			formData.setLastModifier(acs.getZeroClickUserIdOfCurrentSubject());
 
-			final Map<String, String> allTranslations = ScoutTexts.getInstance().getTextMap(NlsLocale.get());
-			if (allTranslations.containsValue(venue)) {
-				final Iterator<String> itKeys = allTranslations.keySet().iterator();
-				while (itKeys.hasNext()) {
-					final String key = itKeys.next();
-					final String value = allTranslations.get(key);
-					if (value.equals(venue)) {
-						formData.getVenue().setValue(key);
-						break;
-					}
-				}
+			final String venueKey = TextsHelper.getKeyByText(venue);
+			if (null != venueKey) {
+				formData.getVenue().setValue(venueKey);
 			}
 
 			if (null == eventGuest) {
@@ -853,6 +896,20 @@ public class EventForm extends AbstractForm {
 				throw new VetoException(TEXTS.get("zc.common.cannotSendEmail"));
 			}
 		}
+	}
+
+	private Boolean existEmail(final String checkedEmail) {
+		final List<ITableRow> existingRows = this.getEmailsField().getTable().getRows();
+
+		for (final ITableRow row : existingRows) {
+			if (row.getCell(this.getEmailsField().getTable().getEmailColumn().getColumnIndex()).getValue()
+					.equals(checkedEmail)) {
+				// earlyBreak
+				return Boolean.TRUE;
+			}
+		}
+
+		return Boolean.FALSE;
 	}
 
 	public class AcceptHandler extends AbstractFormHandler {
