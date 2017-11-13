@@ -659,6 +659,11 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			}
 
 			@Override
+			protected String getConfiguredIconId() {
+				return Icons.Plus;
+			}
+
+			@Override
 			protected void execInitAction() {
 				// final SubscriptionHelper subHelper =
 				// BEANS.get(SubscriptionHelper.class);
