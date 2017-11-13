@@ -181,6 +181,11 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 			}
 
 			@Override
+			protected boolean getConfiguredSummary() {
+				return Boolean.TRUE;
+			}
+
+			@Override
 			protected int getConfiguredWidth() {
 				return 128;
 			}
@@ -204,6 +209,11 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.common.email");
+			}
+
+			@Override
+			protected boolean getConfiguredSummary() {
+				return Boolean.TRUE;
 			}
 
 			@Override
