@@ -527,22 +527,27 @@ public class EventForm extends AbstractForm {
 
 								form.waitFor();
 
-								if (form.getImportedEmailPreviewField().getTable().getRowCount() > 0) {
-									for (final ITableRow importedRow : form.getImportedEmailPreviewField().getTable()
-											.getRows()) {
-										final String importedEmail = (String) importedRow
-												.getCell(form.getImportedEmailPreviewField().getTable()
-														.getEmailsColumn().getColumnIndex())
-												.getValue();
-										if (!EventForm.this.existEmail(importedEmail)) {
-											final ITableRow newRow = EventForm.this.getEmailsField().getTable()
-													.createRow();
-											final Cell cell = new Cell();
-											cell.setValue(importedEmail);
-											newRow.setCell(Table.this.getEmailColumn().getColumnIndex(), cell);
-											EventForm.this.getEmailsField().getTable().addRow(newRow);
+								if (form.isFormStored()) {
+									if (form.getImportedEmailPreviewField().getTable().getRowCount() > 0) {
+										for (final ITableRow importedRow : form.getImportedEmailPreviewField()
+												.getTable().getRows()) {
+											final String importedEmail = (String) importedRow
+													.getCell(form.getImportedEmailPreviewField().getTable()
+															.getEmailsColumn().getColumnIndex())
+													.getValue();
+											if (!EventForm.this.existEmail(importedEmail)) {
+												final ITableRow newRow = EventForm.this.getEmailsField().getTable()
+														.createRow();
+												final Cell cell = new Cell();
+												cell.setValue(importedEmail);
+												newRow.setCell(Table.this.getEmailColumn().getColumnIndex(), cell);
+												EventForm.this.getEmailsField().getTable().addRow(newRow);
+											}
 										}
 									}
+									// when done in "mass" emailsFiled.execValue
+									// don't count the "current" row
+									EventForm.this.updateNbEmail();
 								}
 							}
 						}

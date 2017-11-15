@@ -17,6 +17,10 @@ public class ImportEmailsFormData extends AbstractFormData {
 
 	private static final long serialVersionUID = 1L;
 
+	public AppendToExisting getAppendToExisting() {
+		return getFieldByClass(AppendToExisting.class);
+	}
+
 	public ImportedEmailPreview getImportedEmailPreview() {
 		return getFieldByClass(ImportedEmailPreview.class);
 	}
@@ -27,6 +31,11 @@ public class ImportEmailsFormData extends AbstractFormData {
 
 	public ValueSeparator getValueSeparator() {
 		return getFieldByClass(ValueSeparator.class);
+	}
+
+	public static class AppendToExisting extends AbstractValueFieldData<Boolean> {
+
+		private static final long serialVersionUID = 1L;
 	}
 
 	public static class ImportedEmailPreview extends AbstractTableFieldBeanData {

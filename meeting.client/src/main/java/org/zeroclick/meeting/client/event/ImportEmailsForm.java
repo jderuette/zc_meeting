@@ -12,6 +12,7 @@ import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractStringColumn;
 import org.eclipse.scout.rt.client.ui.form.AbstractForm;
 import org.eclipse.scout.rt.client.ui.form.AbstractFormHandler;
+import org.eclipse.scout.rt.client.ui.form.fields.booleanfield.AbstractBooleanField;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractCancelButton;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractOkButton;
 import org.eclipse.scout.rt.client.ui.form.fields.groupbox.AbstractGroupBox;
@@ -23,6 +24,7 @@ import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.zeroclick.meeting.client.common.ValueSeparatorLookupCall;
+import org.zeroclick.meeting.client.event.ImportEmailsForm.MainBox.AppendToExistingField;
 import org.zeroclick.meeting.client.event.ImportEmailsForm.MainBox.CancelButton;
 import org.zeroclick.meeting.client.event.ImportEmailsForm.MainBox.ImportedEmailPreviewField;
 import org.zeroclick.meeting.client.event.ImportEmailsForm.MainBox.OkButton;
@@ -41,6 +43,11 @@ public class ImportEmailsForm extends AbstractForm {
 
 	public void startNew() {
 		this.startInternal(new NewHandler());
+	}
+
+	@Override
+	protected boolean getConfiguredAskIfNeedSave() {
+		return Boolean.FALSE;
 	}
 
 	public CancelButton getCancelButton() {
@@ -63,6 +70,10 @@ public class ImportEmailsForm extends AbstractForm {
 		return this.getFieldByClass(ImportedEmailPreviewField.class);
 	}
 
+	public AppendToExistingField getAppendToExistingField() {
+		return this.getFieldByClass(AppendToExistingField.class);
+	}
+
 	public OkButton getOkButton() {
 		return this.getFieldByClass(OkButton.class);
 	}
@@ -73,6 +84,7 @@ public class ImportEmailsForm extends AbstractForm {
 		final ValueSeparatorLookupCall valueSeparatorLookupCall = new ValueSeparatorLookupCall();
 		valueSeparatorLookupCall.setText(separator);
 		final String separatorKey = valueSeparatorLookupCall.getDataByText().get(0).getKey();
+		final Boolean appendToExisting = this.getAppendToExistingField().getValue();
 		List<String> emails = null;
 
 		if (null != rawData && !rawData.isEmpty()) {
@@ -80,6 +92,9 @@ public class ImportEmailsForm extends AbstractForm {
 		}
 
 		if (null != emails && !emails.isEmpty()) {
+			if (null == appendToExisting || !appendToExisting) {
+				this.getImportedEmailPreviewField().getTable().deleteAllRows();
+			}
 			this.getImportedEmailPreviewField().getTable().addRowsByArray(emails);
 		} else {
 			this.getImportedEmailPreviewField().getTable().deleteAllRows();
@@ -107,6 +122,10 @@ public class ImportEmailsForm extends AbstractForm {
 				return ValueSeparatorLookupCall.class;
 			}
 
+			@Override
+			protected void execChangedValue() {
+				ImportEmailsForm.this.fillPreview();
+			}
 		}
 
 		@Order(2000)
@@ -143,6 +162,14 @@ public class ImportEmailsForm extends AbstractForm {
 		}
 
 		@Order(3000)
+		public class AppendToExistingField extends AbstractBooleanField {
+			@Override
+			protected String getConfiguredLabel() {
+				return TEXTS.get("zc.meeting.event.importEmails.appendToExisting");
+			}
+		}
+
+		@Order(4000)
 		public class ImportedEmailPreviewField extends AbstractTableField<ImportedEmailPreviewField.Table> {
 			public class Table extends AbstractTable {
 
