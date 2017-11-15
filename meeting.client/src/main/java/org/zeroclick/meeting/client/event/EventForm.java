@@ -495,9 +495,12 @@ public class EventForm extends AbstractForm {
 								final ITableRow row = Table.this.createRow();
 								Table.this.addRow(row);
 								row.getCellForUpdate(Table.this.getEmailColumn()).setEditable(Boolean.TRUE);
+								EmailsField.this.getTable().selectLastRow();
+								EmailsField.this.getTable().scrollToSelection();
 								// clear the "one Email" field
 								EventForm.this.getEmailField().setMandatory(Boolean.FALSE);
 								EventForm.this.getEmailField().resetValue();
+
 							}
 						}
 
