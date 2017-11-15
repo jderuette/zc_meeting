@@ -452,7 +452,10 @@ public class EventForm extends AbstractForm {
 
 							@Override
 							protected void execAction() {
-								Table.this.addRow(Boolean.FALSE);
+								final ITableRow row = Table.this.createRow();
+								Table.this.addRow(row);
+								row.getCellForUpdate(Table.this.getEmailColumn()).setEditable(Boolean.TRUE);
+								// clear the "one Email" field
 								EventForm.this.getEmailField().setMandatory(Boolean.FALSE);
 								EventForm.this.getEmailField().resetValue();
 							}
@@ -511,6 +514,35 @@ public class EventForm extends AbstractForm {
 						}
 
 						@Order(2000)
+						public class EditEmailMenu extends AbstractMenu {
+							@Override
+							protected String getConfiguredText() {
+								return TEXTS.get("zc.meeting.attendeeEmail.edit");
+							}
+
+							@Override
+							protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+								return CollectionUtility.hashSet(TableMenuType.SingleSelection);
+							}
+
+							@Override
+							protected String getConfiguredIconId() {
+								return Icons.Pencil;
+							}
+
+							@Override
+							protected String getConfiguredKeyStroke() {
+								return combineKeyStrokes(IKeyStroke.SHIFT, "i");
+							}
+
+							@Override
+							protected void execAction() {
+								EmailsField.this.getTable().getSelectedRow()
+										.getCellForUpdate(Table.this.getEmailColumn()).setEditable(Boolean.TRUE);
+							}
+						}
+
+						@Order(3000)
 						public class RemoveEmailMenu extends AbstractMenu {
 							@Override
 							protected String getConfiguredText() {
@@ -564,21 +596,6 @@ public class EventForm extends AbstractForm {
 							}
 
 							@Override
-							protected boolean getConfiguredEditable() {
-								return Boolean.TRUE;
-							}
-
-							// @Override
-							// protected void execDecorateCell(final Cell cell,
-							// final ITableRow row) {
-							// if ((null == cell.getText() ||
-							// "".equals(cell.getText())) && null !=
-							// cell.getValue()) {
-							// cell.setText(cell.getValue().toString());
-							// }
-							// }
-
-							@Override
 							protected Class<? extends ILookupCall<String>> getConfiguredLookupCall() {
 								return KnowEmailLookupCall.class;
 							}
@@ -589,6 +606,11 @@ public class EventForm extends AbstractForm {
 									EventForm.this.checkAttendeeEmail(rawValue);
 									// if not veto thrown, continue
 									EventForm.this.getMultipleEmailBox().updateNbEmail();
+								}
+								if (null == rawValue || rawValue.isEmpty()) {
+									row.getCellForUpdate(Table.this.getEmailColumn()).setEditable(Boolean.TRUE);
+								} else {
+									row.getCellForUpdate(Table.this.getEmailColumn()).setEditable(Boolean.FALSE);
 								}
 								return super.execValidateValue(row, rawValue);
 							}
