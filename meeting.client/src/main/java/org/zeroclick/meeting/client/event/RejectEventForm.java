@@ -10,7 +10,6 @@ import org.eclipse.scout.rt.client.ui.form.AbstractFormHandler;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractCancelButton;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractOkButton;
 import org.eclipse.scout.rt.client.ui.form.fields.groupbox.AbstractGroupBox;
-import org.eclipse.scout.rt.client.ui.form.fields.smartfield.AbstractProposalField;
 import org.eclipse.scout.rt.client.ui.form.fields.stringfield.AbstractStringField;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
@@ -309,10 +308,27 @@ public class RejectEventForm extends AbstractForm {
 		}
 
 		@Order(4500)
-		public class VenueField extends AbstractProposalField<String> {
+		public class VenueField extends AbstractStringField {
 			@Override
 			protected String getConfiguredLabel() {
 				return TEXTS.get("zc.meeting.venue");
+			}
+
+			@Override
+			protected void execInitField() {
+				this.setValueChangeTriggerEnabled(Boolean.TRUE);
+				this.changeDisplayText();
+			}
+
+			@Override
+			protected void execChangedValue() {
+				this.changeDisplayText();
+			}
+
+			private void changeDisplayText() {
+				if (this.getValue() != null && !this.getValue().isEmpty()) {
+					this.setDisplayText(TEXTS.get(this.getValue()));
+				}
 			}
 
 			@Override
