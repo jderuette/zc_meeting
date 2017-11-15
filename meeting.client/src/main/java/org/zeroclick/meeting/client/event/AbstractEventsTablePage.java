@@ -1065,6 +1065,16 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			}
 
 			@Override
+			protected int getConfiguredSortIndex() {
+				return 0;
+			}
+
+			@Override
+			protected boolean getConfiguredSortAscending() {
+				return Boolean.TRUE;
+			}
+
+			@Override
 			protected boolean getConfiguredHasTime() {
 				return Boolean.TRUE;
 			}
