@@ -461,6 +461,12 @@ public class EventForm extends AbstractForm {
 							return Boolean.FALSE;
 						}
 
+						@Override
+						protected void execRowAction(final ITableRow row) {
+							final EditEmailMenu editEmailMenu = new EditEmailMenu();
+							editEmailMenu.doAction();
+						}
+
 						@Order(1000)
 						public class AddEmailMenu extends AbstractMenu {
 							@Override
