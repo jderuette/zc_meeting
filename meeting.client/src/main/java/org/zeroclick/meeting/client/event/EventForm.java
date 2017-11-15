@@ -169,6 +169,24 @@ public class EventForm extends AbstractForm {
 		this.startInternal(new NewHandler());
 	}
 
+	public Integer getNbEmails() {
+		Integer nbEmails = 0;
+		if (EventForm.this.getEmailsField().getTable().getRowCount() > 0) {
+			nbEmails = EventForm.this.getEmailsField().getTable().getRowCount();
+		} else {
+			if (null != EventForm.this.getEmailField().getValue()
+					&& !EventForm.this.getEmailField().getValue().isEmpty()) {
+				nbEmails = 1;
+			}
+		}
+		return nbEmails;
+	}
+
+	protected void updateNbEmail() {
+		EventForm.this.getMultipleEmailBox().updateLabel();
+		EventForm.this.getOkButton().updateLabel();
+	}
+
 	public void startAccept() {
 		this.startInternal(new AcceptHandler());
 	}
@@ -361,6 +379,13 @@ public class EventForm extends AbstractForm {
 						return KnowEmailLookupCall.class;
 					}
 
+					@Override
+					protected void execChangedValue() {
+						// clear the attendee "list"
+						EventForm.this.getEmailsField().getTable().deleteAllRows();
+						EventForm.this.updateNbEmail();
+					}
+
 					// some validation logic done on save due to limitation in
 					// proposalField (No maxLeng, execvalidate final
 				}
@@ -368,9 +393,27 @@ public class EventForm extends AbstractForm {
 
 			@Order(2000)
 			public class MultipleEmailBox extends AbstractGroupBox {
+
+				public void updateLabel() {
+					this.setLabel(this.buildLabel());
+				}
+
+				private String buildLabel() {
+					final Integer nbEmails = EventForm.this.getEmailsField().getTable().getRowCount();
+					return this.buildLabel(nbEmails);
+				}
+
+				private String buildLabel(final Integer nbAttendee) {
+					String text = TEXTS.get("zc.meeting.multipleEmails");
+					if (nbAttendee > 0) {
+						text = TEXTS.get("zc.meeting.multipleEmails") + " (" + nbAttendee + ")";
+					}
+					return text;
+				}
+
 				@Override
 				protected String getConfiguredLabel() {
-					return TEXTS.get("zc.meeting.multipleEmails");
+					return this.buildLabel(0);
 				}
 
 				@Override
@@ -388,15 +431,6 @@ public class EventForm extends AbstractForm {
 					return Boolean.TRUE;
 				}
 
-				protected void updateNbEmail() {
-					final int nbRow = EventForm.this.getEmailsField().getTable().getRowCount();
-					if (nbRow == 0) {
-						this.setLabel(this.getConfiguredLabel());
-					} else {
-						this.setLabel(this.getConfiguredLabel() + " (" + nbRow + ")");
-					}
-				}
-
 				@Order(1100)
 				public class EmailsField extends AbstractTableField<EmailsField.Table> {
 
@@ -412,7 +446,7 @@ public class EventForm extends AbstractForm {
 
 					@Override
 					protected int getConfiguredGridH() {
-						return 6;
+						return 4;
 					}
 
 					public class Table extends AbstractTable {
@@ -575,7 +609,7 @@ public class EventForm extends AbstractForm {
 								if (Table.this.getRowCount() == 0) {
 									EventForm.this.getEmailField().setMandatory(Boolean.TRUE);
 								}
-								EventForm.this.getMultipleEmailBox().updateNbEmail();
+								EventForm.this.updateNbEmail();
 							}
 						}
 
@@ -602,17 +636,25 @@ public class EventForm extends AbstractForm {
 
 							@Override
 							protected String execValidateValue(final ITableRow row, final String rawValue) {
-								if (null != rawValue && rawValue.length() > 0) {
-									EventForm.this.checkAttendeeEmail(rawValue);
+								String validateRawValue = rawValue;
+								if (null != validateRawValue && !validateRawValue.isEmpty()) {
+									validateRawValue = rawValue.toLowerCase();
+									EventForm.this.checkAttendeeEmail(validateRawValue);
+									this.checkEmailAlreadyAttendee(validateRawValue);
 									// if not veto thrown, continue
-									EventForm.this.getMultipleEmailBox().updateNbEmail();
-								}
-								if (null == rawValue || rawValue.isEmpty()) {
-									row.getCellForUpdate(Table.this.getEmailColumn()).setEditable(Boolean.TRUE);
-								} else {
+									EventForm.this.updateNbEmail();
 									row.getCellForUpdate(Table.this.getEmailColumn()).setEditable(Boolean.FALSE);
+								} else {
+									row.getCellForUpdate(Table.this.getEmailColumn()).setEditable(Boolean.TRUE);
 								}
-								return super.execValidateValue(row, rawValue);
+								return validateRawValue;
+							}
+
+							private void checkEmailAlreadyAttendee(final String rawValue) {
+								if (null != rawValue && EventForm.this.existEmail(rawValue.toLowerCase())) {
+									throw new VetoException(
+											TEXTS.get("zc.meeting.attendeeAlreadyInInvitedList", rawValue));
+								}
 							}
 
 							@Override
@@ -769,9 +811,19 @@ public class EventForm extends AbstractForm {
 
 		@Order(100000)
 		public class OkButton extends AbstractOkButton {
+
+			public void updateLabel() {
+				final int nbEmail = EventForm.this.getNbEmails();
+				this.setLabel(this.buildLabel(nbEmail));
+			}
+
+			private String buildLabel(final Integer nbAttendee) {
+				return TEXTS.get("zc.meeting.scheduleMeeting", String.valueOf(nbAttendee));
+			}
+
 			@Override
 			public String getLabel() {
-				return TEXTS.get("zc.meeting.scheduleMeeting");
+				return this.buildLabel(0);
 			}
 		}
 
@@ -924,8 +976,9 @@ public class EventForm extends AbstractForm {
 		final List<ITableRow> existingRows = this.getEmailsField().getTable().getRows();
 
 		for (final ITableRow row : existingRows) {
-			if (row.getCell(this.getEmailsField().getTable().getEmailColumn().getColumnIndex()).getValue()
-					.equals(checkedEmail)) {
+			final Object rowEmail = row.getCell(this.getEmailsField().getTable().getEmailColumn().getColumnIndex())
+					.getValue();
+			if (null != rowEmail && rowEmail.equals(checkedEmail.toLowerCase())) {
 				// earlyBreak
 				return Boolean.TRUE;
 			}
