@@ -27,13 +27,13 @@ import com.github.zafarkhaja.semver.Version;
  * @author djer
  *
  */
-public class PatchConfigureAgenda extends AbstractDataPatcher {
+public class PatchConfigureCalendar extends AbstractDataPatcher {
 
 	public static final String AGENDA_CONFIG_TABLE_NAME = "AGENDA_CONFIGURATION";
 
-	private static final Logger LOG = LoggerFactory.getLogger(PatchConfigureAgenda.class);
+	private static final Logger LOG = LoggerFactory.getLogger(PatchConfigureCalendar.class);
 
-	public PatchConfigureAgenda() {
+	public PatchConfigureCalendar() {
 		this.setDescription("Add agenda configuration and default required params key/value");
 	}
 
