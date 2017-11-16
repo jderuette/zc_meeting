@@ -183,6 +183,11 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 			}
 
 			@Override
+			protected boolean getConfiguredSummary() {
+				return Boolean.TRUE;
+			}
+
+			@Override
 			protected int getConfiguredWidth() {
 				return 128;
 			}
@@ -237,6 +242,11 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.user.userId");
+			}
+
+			@Override
+			protected boolean getConfiguredSummary() {
+				return Boolean.TRUE;
 			}
 
 			@Override

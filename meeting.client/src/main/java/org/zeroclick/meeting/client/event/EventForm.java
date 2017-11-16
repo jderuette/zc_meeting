@@ -1,10 +1,18 @@
 package org.zeroclick.meeting.client.event;
 
-import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.eclipse.scout.rt.client.dto.FormData;
+import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
+import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
+import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
+import org.eclipse.scout.rt.client.ui.action.menu.TableMenuType;
+import org.eclipse.scout.rt.client.ui.basic.cell.Cell;
+import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
+import org.eclipse.scout.rt.client.ui.basic.table.ITableRow;
+import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractProposalColumn;
 import org.eclipse.scout.rt.client.ui.form.AbstractForm;
 import org.eclipse.scout.rt.client.ui.form.AbstractFormHandler;
 import org.eclipse.scout.rt.client.ui.form.IForm;
@@ -16,12 +24,13 @@ import org.eclipse.scout.rt.client.ui.form.fields.longfield.AbstractLongField;
 import org.eclipse.scout.rt.client.ui.form.fields.smartfield.AbstractProposalField;
 import org.eclipse.scout.rt.client.ui.form.fields.smartfield.AbstractSmartField;
 import org.eclipse.scout.rt.client.ui.form.fields.stringfield.AbstractStringField;
+import org.eclipse.scout.rt.client.ui.form.fields.tabbox.AbstractTabBox;
+import org.eclipse.scout.rt.client.ui.form.fields.tablefield.AbstractTableField;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.exception.VetoException;
-import org.eclipse.scout.rt.platform.nls.NlsLocale;
+import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.platform.util.StringUtility;
-import org.eclipse.scout.rt.shared.ScoutTexts;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.zeroclick.common.email.IMailSender;
@@ -40,7 +49,11 @@ import org.zeroclick.meeting.client.common.SlotLookupCall;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.CancelButton;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.CreatedDateField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.DurationField;
-import org.zeroclick.meeting.client.event.EventForm.MainBox.EmailField;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.EmailChooserBox;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.EmailChooserBox.MultipleEmailBox;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.EmailChooserBox.MultipleEmailBox.EmailsField;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.EmailChooserBox.OneEmailBox;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.EmailChooserBox.OneEmailBox.EmailField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.EndDateField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.GuestIdField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.OkButton;
@@ -52,6 +65,7 @@ import org.zeroclick.meeting.client.event.EventForm.MainBox.StartDateField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.StateField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.SubjectField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.VenueField;
+import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.KnowEmailLookupCall;
@@ -155,6 +169,24 @@ public class EventForm extends AbstractForm {
 		this.startInternal(new NewHandler());
 	}
 
+	public Integer getNbEmails() {
+		Integer nbEmails = 0;
+		if (EventForm.this.getEmailsField().getTable().getRowCount() > 0) {
+			nbEmails = EventForm.this.getEmailsField().getTable().getRowCount();
+		} else {
+			if (null != EventForm.this.getEmailField().getValue()
+					&& !EventForm.this.getEmailField().getValue().isEmpty()) {
+				nbEmails = 1;
+			}
+		}
+		return nbEmails;
+	}
+
+	protected void updateNbEmail() {
+		EventForm.this.getMultipleEmailBox().updateLabel();
+		EventForm.this.getOkButton().updateLabel();
+	}
+
 	public void startAccept() {
 		this.startInternal(new AcceptHandler());
 	}
@@ -219,6 +251,22 @@ public class EventForm extends AbstractForm {
 		return this.getFieldByClass(CreatedDateField.class);
 	}
 
+	public EmailsField getEmailsField() {
+		return this.getFieldByClass(EmailsField.class);
+	}
+
+	public EmailChooserBox getEmailChooserBox() {
+		return this.getFieldByClass(EmailChooserBox.class);
+	}
+
+	public OneEmailBox getOneEmailBox() {
+		return this.getFieldByClass(OneEmailBox.class);
+	}
+
+	public MultipleEmailBox getMultipleEmailBox() {
+		return this.getFieldByClass(MultipleEmailBox.class);
+	}
+
 	public OkButton getOkButton() {
 		return this.getFieldByClass(OkButton.class);
 	}
@@ -236,7 +284,7 @@ public class EventForm extends AbstractForm {
 			return 1;
 		}
 
-		@Order(900)
+		@Order(1000)
 		public class OrganizerField extends AbstractLongField {
 			@Override
 			protected String getConfiguredLabel() {
@@ -249,7 +297,7 @@ public class EventForm extends AbstractForm {
 			}
 		}
 
-		@Order(950)
+		@Order(2000)
 		public class OrganizerEmailField extends org.zeroclick.ui.form.fields.emailfield.EmailField {
 			@Override
 			protected String getConfiguredLabel() {
@@ -263,7 +311,7 @@ public class EventForm extends AbstractForm {
 
 		}
 
-		@Order(975)
+		@Order(3000)
 		public class SubjectField extends AbstractStringField {
 			@Override
 			protected String getConfiguredLabel() {
@@ -289,28 +337,351 @@ public class EventForm extends AbstractForm {
 			}
 		}
 
-		@Order(1000)
-		public class EmailField extends AbstractProposalField<String> {
-			@Override
-			protected String getConfiguredLabel() {
-				return TEXTS.get("zc.meeting.attendeeEmail");
+		@Order(4000)
+		public class EmailChooserBox extends AbstractTabBox {
+
+			@Order(1000)
+			public class OneEmailBox extends AbstractGroupBox {
+				@Override
+				protected String getConfiguredLabel() {
+					return TEXTS.get("zc.meeting.OneEmail");
+				}
+
+				@Override
+				protected boolean getConfiguredBorderVisible() {
+					return Boolean.TRUE;
+				}
+
+				@Override
+				protected String getConfiguredBorderDecoration() {
+					return BORDER_DECORATION_LINE;
+				}
+
+				@Override
+				protected boolean getConfiguredExpandable() {
+					return Boolean.TRUE;
+				}
+
+				@Order(1000)
+				public class EmailField extends AbstractProposalField<String> {
+					@Override
+					protected String getConfiguredLabel() {
+						return TEXTS.get("zc.meeting.attendeeEmail");
+					}
+
+					@Override
+					protected boolean getConfiguredMandatory() {
+						return Boolean.TRUE;
+					}
+
+					@Override
+					protected Class<? extends ILookupCall<String>> getConfiguredLookupCall() {
+						return KnowEmailLookupCall.class;
+					}
+
+					@Override
+					protected void execChangedValue() {
+						// clear the attendee "list"
+						EventForm.this.getEmailsField().getTable().deleteAllRows();
+						EventForm.this.updateNbEmail();
+					}
+
+					// some validation logic done on save due to limitation in
+					// proposalField (No maxLeng, execvalidate final
+				}
 			}
 
-			@Override
-			protected boolean getConfiguredMandatory() {
-				return Boolean.TRUE;
-			}
+			@Order(2000)
+			public class MultipleEmailBox extends AbstractGroupBox {
 
-			@Override
-			protected Class<? extends ILookupCall<String>> getConfiguredLookupCall() {
-				return KnowEmailLookupCall.class;
-			}
+				public void updateLabel() {
+					this.setLabel(this.buildLabel());
+				}
 
-			// some validation logic done on save due to limitation in
-			// proposalField (No maxLeng, execvalidate final
+				private String buildLabel() {
+					final Integer nbEmails = EventForm.this.getEmailsField().getTable().getRowCount();
+					return this.buildLabel(nbEmails);
+				}
+
+				private String buildLabel(final Integer nbAttendee) {
+					String text = TEXTS.get("zc.meeting.multipleEmails");
+					if (nbAttendee > 0) {
+						text = TEXTS.get("zc.meeting.multipleEmails") + " (" + nbAttendee + ")";
+					}
+					return text;
+				}
+
+				@Override
+				protected String getConfiguredLabel() {
+					return this.buildLabel(0);
+				}
+
+				@Override
+				protected String getConfiguredBorderDecoration() {
+					return BORDER_DECORATION_LINE;
+				}
+
+				@Override
+				protected boolean getConfiguredBorderVisible() {
+					return Boolean.TRUE;
+				}
+
+				@Override
+				protected boolean getConfiguredExpandable() {
+					return Boolean.TRUE;
+				}
+
+				@Order(1100)
+				public class EmailsField extends AbstractTableField<EmailsField.Table> {
+
+					@Override
+					protected String getConfiguredLabel() {
+						return TEXTS.get("zc.meeting.attendeeEmail");
+					}
+
+					@Override
+					protected boolean getConfiguredLabelVisible() {
+						return Boolean.FALSE;
+					}
+
+					@Override
+					protected int getConfiguredGridH() {
+						return 4;
+					}
+
+					public class Table extends AbstractTable {
+
+						@Override
+						protected boolean getConfiguredTableStatusVisible() {
+							return Boolean.FALSE;
+						}
+
+						@Override
+						protected boolean getConfiguredHeaderEnabled() {
+							return Boolean.FALSE;
+						}
+
+						@Override
+						protected void execRowAction(final ITableRow row) {
+							final EditEmailMenu editEmailMenu = new EditEmailMenu();
+							editEmailMenu.doAction();
+						}
+
+						@Order(1000)
+						public class AddEmailMenu extends AbstractMenu {
+							@Override
+							protected String getConfiguredText() {
+								return TEXTS.get("zc.meeting.attendeeEmail.add");
+							}
+
+							@Override
+							protected String getConfiguredIconId() {
+								return Icons.Plus;
+							}
+
+							@Override
+							protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+								return CollectionUtility.hashSet(TableMenuType.SingleSelection,
+										TableMenuType.EmptySpace);
+							}
+
+							@Override
+							protected String getConfiguredKeyStroke() {
+								return combineKeyStrokes(IKeyStroke.SHIFT, "n");
+							}
+
+							@Override
+							protected void execAction() {
+								final ITableRow row = Table.this.createRow();
+								Table.this.addRow(row);
+								row.getCellForUpdate(Table.this.getEmailColumn()).setEditable(Boolean.TRUE);
+								EmailsField.this.getTable().selectLastRow();
+								EmailsField.this.getTable().scrollToSelection();
+								// clear the "one Email" field
+								EventForm.this.getEmailField().setMandatory(Boolean.FALSE);
+								EventForm.this.getEmailField().resetValue();
+
+							}
+						}
+
+						@Order(1500)
+						public class ImportEmailsMenu extends AbstractMenu {
+							@Override
+							protected String getConfiguredText() {
+								return TEXTS.get("zc.meeting.attendeeEmail.import");
+							}
+
+							@Override
+							protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+								return CollectionUtility.hashSet(TableMenuType.SingleSelection,
+										TableMenuType.EmptySpace);
+							}
+
+							@Override
+							protected String getConfiguredIconId() {
+								return Icons.List;
+							}
+
+							@Override
+							protected String getConfiguredKeyStroke() {
+								return combineKeyStrokes(IKeyStroke.SHIFT, "i");
+							}
+
+							@Override
+							protected void execAction() {
+								final ImportEmailsForm form = new ImportEmailsForm();
+								form.getValueSeparatorField().setValue(",");
+
+								form.startNew();
+
+								form.waitFor();
+
+								if (form.isFormStored()) {
+									if (form.getImportedEmailPreviewField().getTable().getRowCount() > 0) {
+										for (final ITableRow importedRow : form.getImportedEmailPreviewField()
+												.getTable().getRows()) {
+											final String importedEmail = (String) importedRow
+													.getCell(form.getImportedEmailPreviewField().getTable()
+															.getEmailsColumn().getColumnIndex())
+													.getValue();
+											if (!EventForm.this.existEmail(importedEmail)) {
+												final ITableRow newRow = EventForm.this.getEmailsField().getTable()
+														.createRow();
+												final Cell cell = new Cell();
+												cell.setValue(importedEmail);
+												newRow.setCell(Table.this.getEmailColumn().getColumnIndex(), cell);
+												EventForm.this.getEmailsField().getTable().addRow(newRow);
+											}
+										}
+									}
+									// when done in "mass" emailsFiled.execValue
+									// don't count the "current" row
+									EventForm.this.updateNbEmail();
+								}
+							}
+						}
+
+						@Order(2000)
+						public class EditEmailMenu extends AbstractMenu {
+							@Override
+							protected String getConfiguredText() {
+								return TEXTS.get("zc.meeting.attendeeEmail.edit");
+							}
+
+							@Override
+							protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+								return CollectionUtility.hashSet(TableMenuType.SingleSelection);
+							}
+
+							@Override
+							protected String getConfiguredIconId() {
+								return Icons.Pencil;
+							}
+
+							@Override
+							protected String getConfiguredKeyStroke() {
+								return combineKeyStrokes(IKeyStroke.SHIFT, "i");
+							}
+
+							@Override
+							protected void execAction() {
+								EmailsField.this.getTable().getSelectedRow()
+										.getCellForUpdate(Table.this.getEmailColumn()).setEditable(Boolean.TRUE);
+							}
+						}
+
+						@Order(3000)
+						public class RemoveEmailMenu extends AbstractMenu {
+							@Override
+							protected String getConfiguredText() {
+								return TEXTS.get("zc.meeting.attendeeEmail.remove");
+							}
+
+							@Override
+							protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+								return CollectionUtility.hashSet(TableMenuType.SingleSelection,
+										TableMenuType.MultiSelection);
+							}
+
+							@Override
+							protected String getConfiguredIconId() {
+								return Icons.Remove;
+							}
+
+							@Override
+							protected String getConfiguredKeyStroke() {
+								return combineKeyStrokes(IKeyStroke.SHIFT, IKeyStroke.DELETE);
+							}
+
+							@Override
+							protected void execAction() {
+								final List<ITableRow> rows = Table.this.getSelectedRows();
+								for (final ITableRow row : rows) {
+									row.delete();
+								}
+
+								if (Table.this.getRowCount() == 0) {
+									EventForm.this.getEmailField().setMandatory(Boolean.TRUE);
+								}
+								EventForm.this.updateNbEmail();
+							}
+						}
+
+						public EmailColumn getEmailColumn() {
+							return this.getColumnSet().getColumnByClass(EmailColumn.class);
+						}
+
+						@Order(1000)
+						public class EmailColumn extends AbstractProposalColumn<String> {
+							@Override
+							protected String getConfiguredHeaderText() {
+								return TEXTS.get("zc.meeting.attendeeEmail");
+							}
+
+							@Override
+							protected boolean getConfiguredMandatory() {
+								return Boolean.TRUE;
+							}
+
+							@Override
+							protected Class<? extends ILookupCall<String>> getConfiguredLookupCall() {
+								return KnowEmailLookupCall.class;
+							}
+
+							@Override
+							protected String execValidateValue(final ITableRow row, final String rawValue) {
+								String validateRawValue = rawValue;
+								if (null != validateRawValue && !validateRawValue.isEmpty()) {
+									validateRawValue = rawValue.toLowerCase();
+									EventForm.this.checkAttendeeEmail(validateRawValue);
+									this.checkEmailAlreadyAttendee(validateRawValue);
+									// if not veto thrown, continue
+									EventForm.this.updateNbEmail();
+									row.getCellForUpdate(Table.this.getEmailColumn()).setEditable(Boolean.FALSE);
+								} else {
+									row.getCellForUpdate(Table.this.getEmailColumn()).setEditable(Boolean.TRUE);
+								}
+								return validateRawValue;
+							}
+
+							private void checkEmailAlreadyAttendee(final String rawValue) {
+								if (null != rawValue && EventForm.this.existEmail(rawValue.toLowerCase())) {
+									throw new VetoException(
+											TEXTS.get("zc.meeting.attendeeAlreadyInInvitedList", rawValue));
+								}
+							}
+
+							@Override
+							protected int getConfiguredWidth() {
+								return 250;
+							}
+						}
+					}
+				}
+			}
 		}
 
-		@Order(1500)
+		@Order(5000)
 		public class GuestIdField extends AbstractLongField {
 			@Override
 			protected String getConfiguredLabel() {
@@ -323,7 +694,7 @@ public class EventForm extends AbstractForm {
 			}
 		}
 
-		@Order(2000)
+		@Order(6000)
 		public class SlotField extends AbstractSmartField<Integer> {
 			@Override
 			protected String getConfiguredLabel() {
@@ -341,7 +712,7 @@ public class EventForm extends AbstractForm {
 			}
 		}
 
-		@Order(3000)
+		@Order(7000)
 		public class DurationField extends AbstractSmartField<Integer> {
 			@Override
 			protected String getConfiguredLabel() {
@@ -359,7 +730,7 @@ public class EventForm extends AbstractForm {
 			}
 		}
 
-		@Order(3500)
+		@Order(8000)
 		public class VenueField extends AbstractProposalField<String> {
 			@Override
 			protected String getConfiguredLabel() {
@@ -372,7 +743,7 @@ public class EventForm extends AbstractForm {
 			}
 		}
 
-		@Order(4000)
+		@Order(9000)
 		public class StateField extends AbstractSmartField<String> {
 			@Override
 			protected String getConfiguredLabel() {
@@ -390,7 +761,7 @@ public class EventForm extends AbstractForm {
 			}
 		}
 
-		@Order(5000)
+		@Order(10000)
 		public class StartDateField extends AbstractDateField {
 			@Override
 			protected String getConfiguredLabel() {
@@ -403,7 +774,7 @@ public class EventForm extends AbstractForm {
 			}
 		}
 
-		@Order(6000)
+		@Order(11000)
 		public class EndDateField extends AbstractDateField {
 			@Override
 			protected String getConfiguredLabel() {
@@ -416,7 +787,7 @@ public class EventForm extends AbstractForm {
 			}
 		}
 
-		@Order(7000)
+		@Order(12000)
 		public class ReasonField extends AbstractStringField {
 			@Override
 			protected String getConfiguredLabel() {
@@ -434,7 +805,7 @@ public class EventForm extends AbstractForm {
 			}
 		}
 
-		@Order(8000)
+		@Order(13000)
 		public class CreatedDateField extends AbstractDateField {
 			@Override
 			protected String getConfiguredLabel() {
@@ -454,9 +825,19 @@ public class EventForm extends AbstractForm {
 
 		@Order(100000)
 		public class OkButton extends AbstractOkButton {
+
+			public void updateLabel() {
+				final int nbEmail = EventForm.this.getNbEmails();
+				this.setLabel(this.buildLabel(nbEmail));
+			}
+
+			private String buildLabel(final Integer nbAttendee) {
+				return TEXTS.get("zc.meeting.scheduleMeeting", String.valueOf(nbAttendee));
+			}
+
 			@Override
 			public String getLabel() {
-				return TEXTS.get("zc.meeting.scheduleMeeting");
+				return this.buildLabel(0);
 			}
 		}
 
@@ -529,15 +910,34 @@ public class EventForm extends AbstractForm {
 
 		@Override
 		protected void execStore() {
-			final AccessControlService acs = BEANS.get(AccessControlService.class);
-			EventForm.this.checkAttendeeEmail();
+			if (null == EventForm.this.getEmailField().getValue()
+					|| EventForm.this.getEmailField().getValue().isEmpty()) {
+				// mass event creation
+				final List<ITableRow> emails = EventForm.this.getEmailsField().getTable().getRows();
+				for (final ITableRow row : emails) {
+					final String email = row
+							.getCell(EventForm.this.getEmailsField().getTable().getEmailColumn().getColumnIndex())
+							.getText();
+					if (null != email && !email.isEmpty()) {
+						this.createEvent(email);
+					}
+				}
+			} else {
+				this.createEvent(EventForm.this.getEmailField().getValue());
+			}
 
+		}
+
+		private void createEvent(final String eventGuestEmail) {
+			final AccessControlService acs = BEANS.get(AccessControlService.class);
 			final IEventService eventService = BEANS.get(IEventService.class);
 			final IUserService userService = BEANS.get(IUserService.class);
+
 			final EventFormData formData = new EventFormData();
 			EventForm.this.exportFormData(formData);
 
-			final String eventGuestEmail = formData.getEmail().getValue();
+			EventForm.this.checkAttendeeEmail(eventGuestEmail);
+			formData.getEmail().setValue(eventGuestEmail);
 			final String eventHeldEmail = formData.getOrganizerEmail().getValue();
 			final Long eventGuest = userService.getUserIdByEmail(eventGuestEmail);
 			final String meetingSubject = formData.getSubject().getValue();
@@ -548,17 +948,9 @@ public class EventForm extends AbstractForm {
 			// required *before* save (for sending email)
 			formData.setLastModifier(acs.getZeroClickUserIdOfCurrentSubject());
 
-			final Map<String, String> allTranslations = ScoutTexts.getInstance().getTextMap(NlsLocale.get());
-			if (allTranslations.containsValue(venue)) {
-				final Iterator<String> itKeys = allTranslations.keySet().iterator();
-				while (itKeys.hasNext()) {
-					final String key = itKeys.next();
-					final String value = allTranslations.get(key);
-					if (value.equals(venue)) {
-						formData.getVenue().setValue(key);
-						break;
-					}
-				}
+			final String venueKey = TextsHelper.getKeyByText(venue);
+			if (null != venueKey) {
+				formData.getVenue().setValue(venueKey);
 			}
 
 			if (null == eventGuest) {
@@ -592,6 +984,21 @@ public class EventForm extends AbstractForm {
 				throw new VetoException(TEXTS.get("zc.common.cannotSendEmail"));
 			}
 		}
+	}
+
+	private Boolean existEmail(final String checkedEmail) {
+		final List<ITableRow> existingRows = this.getEmailsField().getTable().getRows();
+
+		for (final ITableRow row : existingRows) {
+			final Object rowEmail = row.getCell(this.getEmailsField().getTable().getEmailColumn().getColumnIndex())
+					.getValue();
+			if (null != rowEmail && rowEmail.equals(checkedEmail.toLowerCase())) {
+				// earlyBreak
+				return Boolean.TRUE;
+			}
+		}
+
+		return Boolean.FALSE;
 	}
 
 	public class AcceptHandler extends AbstractFormHandler {
@@ -635,21 +1042,25 @@ public class EventForm extends AbstractForm {
 				this.getEmailField().getValue());
 	}
 
-	protected void checkAttendeeEmail() {
-		final Integer maxCaracters = 128;
+	protected void checkAttendeeEmail(final String email) {
 		// force to lowerCase
-		EventForm.this.getEmailField().setValue(EventForm.this.getEmailField().getValue().toLowerCase());
-		final String rawValue = EventForm.this.getEmailField().getValue();
+		final String rawValue = email.toLowerCase();
 
 		if (rawValue != null) {
-			if (!Pattern.matches(EMAIL_PATTERN, rawValue)) {
-				throw new VetoException(TEXTS.get("zc.common.badEmailAddress"));
-			}
-
 			if (rawValue.equals(EventForm.this.getOrganizerEmailField().getValue())) {
 				throw new VetoException(TEXTS.get("zc.meeting.youCannotInviteYourself"));
 			}
-			if (rawValue.length() > maxCaracters) {
+			this.validateEmail(rawValue);
+		}
+	}
+
+	protected void validateEmail(final String email) {
+		final Integer maxCaracters = 128;
+		if (null != email) {
+			if (!Pattern.matches(EMAIL_PATTERN, email)) {
+				throw new VetoException(TEXTS.get("zc.common.badEmailAddress"));
+			}
+			if (email.length() > maxCaracters) {
 				throw new VetoException(TEXTS.get("zc.common.tooLong", TEXTS.get("zc.meeting.attendeeEmail"),
 						String.valueOf(maxCaracters)));
 			}

@@ -247,6 +247,11 @@ public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.T
 			}
 
 			@Override
+			protected boolean getConfiguredSummary() {
+				return Boolean.TRUE;
+			}
+
+			@Override
 			protected int getConfiguredWidth() {
 				return 150;
 			}
@@ -430,6 +435,11 @@ public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.T
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.dayDuration.userId");
+			}
+
+			@Override
+			protected boolean getConfiguredSummary() {
+				return Boolean.TRUE;
 			}
 
 			@Override

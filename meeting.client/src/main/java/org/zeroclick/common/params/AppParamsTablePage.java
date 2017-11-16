@@ -306,6 +306,11 @@ public class AppParamsTablePage extends AbstractPageWithTable<Table> {
 			}
 
 			@Override
+			protected boolean getConfiguredSummary() {
+				return Boolean.TRUE;
+			}
+
+			@Override
 			protected int getConfiguredWidth() {
 				return 250;
 			}

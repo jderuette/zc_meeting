@@ -1042,6 +1042,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			}
 
 			@Override
+			protected boolean getConfiguredSummary() {
+				return Boolean.TRUE;
+			}
+
+			@Override
 			protected boolean getConfiguredVisible() {
 				return Boolean.FALSE;
 			}
@@ -1057,6 +1062,16 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.createdDate");
+			}
+
+			@Override
+			protected int getConfiguredSortIndex() {
+				return 0;
+			}
+
+			@Override
+			protected boolean getConfiguredSortAscending() {
+				return Boolean.TRUE;
 			}
 
 			@Override
@@ -1096,6 +1111,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			}
 
 			@Override
+			protected boolean getConfiguredSummary() {
+				return Boolean.TRUE;
+			}
+
+			@Override
 			protected boolean getConfiguredVisible() {
 				return Boolean.FALSE;
 			}
@@ -1111,6 +1131,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.event.subject");
+			}
+
+			@Override
+			protected boolean getConfiguredSummary() {
+				return Boolean.TRUE;
 			}
 
 			@Override

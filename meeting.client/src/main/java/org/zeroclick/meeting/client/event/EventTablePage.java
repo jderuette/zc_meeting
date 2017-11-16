@@ -603,8 +603,9 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			final Event newEvent = new Event();
 			newEvent.setStart(googleHelper.toEventDateTime(startDate));
 			newEvent.setEnd(googleHelper.toEventDateTime(endDate));
-			newEvent.setSummary(EnvDisplay + " " + subject + TEXTS.get("zc.common.email.subject.suffix"));
-			newEvent.setLocation(location);
+			newEvent.setSummary(
+					EnvDisplay + " " + subject + TextsHelper.get(forUserId, "zc.common.email.subject.suffix"));
+			newEvent.setLocation(TextsHelper.get(forUserId, location));
 			newEvent.setDescription(subject);
 
 			final EventAttendee[] attendees = new EventAttendee[] { new EventAttendee().setEmail(withEmail) };
@@ -659,6 +660,11 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			@Override
 			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
 				return CollectionUtility.hashSet(TableMenuType.SingleSelection, TableMenuType.EmptySpace);
+			}
+
+			@Override
+			protected String getConfiguredIconId() {
+				return Icons.Plus;
 			}
 
 			@Override

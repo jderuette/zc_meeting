@@ -4,8 +4,10 @@ import java.util.Date;
 
 import javax.annotation.Generated;
 
+import org.eclipse.scout.rt.shared.data.basic.table.AbstractTableRowData;
 import org.eclipse.scout.rt.shared.data.form.AbstractFormData;
 import org.eclipse.scout.rt.shared.data.form.fields.AbstractValueFieldData;
+import org.eclipse.scout.rt.shared.data.form.fields.tablefield.AbstractTableFieldBeanData;
 import org.eclipse.scout.rt.shared.data.form.properties.AbstractPropertyData;
 
 /**
@@ -28,6 +30,10 @@ public class EventFormData extends AbstractFormData {
 
 	public Email getEmail() {
 		return getFieldByClass(Email.class);
+	}
+
+	public Emails getEmails() {
+		return getFieldByClass(Emails.class);
 	}
 
 	public EndDate getEndDate() {
@@ -173,6 +179,60 @@ public class EventFormData extends AbstractFormData {
 	public static class Email extends AbstractValueFieldData<String> {
 
 		private static final long serialVersionUID = 1L;
+	}
+
+	public static class Emails extends AbstractTableFieldBeanData {
+
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public EmailsRowData addRow() {
+			return (EmailsRowData) super.addRow();
+		}
+
+		@Override
+		public EmailsRowData addRow(int rowState) {
+			return (EmailsRowData) super.addRow(rowState);
+		}
+
+		@Override
+		public EmailsRowData createRow() {
+			return new EmailsRowData();
+		}
+
+		@Override
+		public Class<? extends AbstractTableRowData> getRowType() {
+			return EmailsRowData.class;
+		}
+
+		@Override
+		public EmailsRowData[] getRows() {
+			return (EmailsRowData[]) super.getRows();
+		}
+
+		@Override
+		public EmailsRowData rowAt(int index) {
+			return (EmailsRowData) super.rowAt(index);
+		}
+
+		public void setRows(EmailsRowData[] rows) {
+			super.setRows(rows);
+		}
+
+		public static class EmailsRowData extends AbstractTableRowData {
+
+			private static final long serialVersionUID = 1L;
+			public static final String email = "email";
+			private String m_email;
+
+			public String getEmail() {
+				return m_email;
+			}
+
+			public void setEmail(String newEmail) {
+				m_email = newEmail;
+			}
+		}
 	}
 
 	public static class EndDate extends AbstractValueFieldData<Date> {
