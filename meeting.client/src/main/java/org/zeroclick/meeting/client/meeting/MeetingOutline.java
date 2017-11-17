@@ -18,6 +18,7 @@ import org.zeroclick.meeting.client.event.EventAskedTablePage;
 import org.zeroclick.meeting.client.event.EventProcessedTablePage;
 import org.zeroclick.meeting.client.event.EventTablePage;
 import org.zeroclick.meeting.shared.Icons;
+import org.zeroclick.meeting.shared.calendar.ReadCalendarConfigurationPermission;
 import org.zeroclick.meeting.shared.event.ReadEventPermission;
 
 /**
@@ -36,6 +37,7 @@ public class MeetingOutline extends AbstractOutline {
 		final Boolean isEventAdmin = currentUserEventLevel == ReadEventPermission.LEVEL_ALL;
 		final Boolean isSlotUser = currentUserSlotLevel >= ReadSlotPermission.LEVEL_OWN;
 		final Boolean isSlotAdmin = currentUserSlotLevel == ReadSlotPermission.LEVEL_ALL;
+		final Boolean iscalednarConfigAdmin = currentUserSlotLevel == ReadCalendarConfigurationPermission.LEVEL_ALL;
 
 		final EventTablePage eventTablePage = new EventTablePage();
 		eventTablePage.setVisibleGranted(isEventUser);
@@ -63,6 +65,7 @@ public class MeetingOutline extends AbstractOutline {
 
 		final CalendarConfigurationTablePage calendarConfigurationTablePage = new CalendarConfigurationTablePage();
 		calendarConfigurationTablePage.setVisibleGranted(Boolean.TRUE);
+		calendarConfigurationTablePage.setVisibleGranted(iscalednarConfigAdmin);
 
 		pageList.add(eventTablePage);
 		pageList.add(eventAskedTablePage);

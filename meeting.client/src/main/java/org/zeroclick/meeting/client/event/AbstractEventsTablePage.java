@@ -507,7 +507,8 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			final String rowState = this.getStateColumn().getValue(row.getRowIndex());
 			return null != row && "ASKED".equals(rowState) && startDateEmpty && endDateEmpty
 					&& BEANS.get(GoogleApiHelper.class).isCalendarConfigured(hostId)
-					&& BEANS.get(GoogleApiHelper.class).isCalendarConfigured(attendeeId)
+					// &&
+					// BEANS.get(GoogleApiHelper.class).isCalendarConfigured(attendeeId)
 					&& this.isTimeZoneValid(attendeeId) && this.isTimeZoneValid(hostId) && this.isGuestCurrentUser(row);
 		}
 
@@ -814,7 +815,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				final ITableRow row = Table.this.getOwnerAsTableRow(newOwnerValue);
 				if (null != row) {
 					this.setVisible(this.isWorkflowVisible(Table.this.getState(row)) && Table.this.userCanReject(row));
-					this.setEnabled(AbstractEventsTablePage.this.isUserCalendarConfigured());
+					// this.setEnabled(AbstractEventsTablePage.this.isUserCalendarConfigured());
 					// TODO Djer13 hide if date.start and date.end are in the
 					// past ?
 				}
@@ -906,7 +907,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				final ITableRow row = Table.this.getOwnerAsTableRow(newOwnerValue);
 				if (null != row) {
 					this.setVisible(this.isWorkflowVisible(Table.this.getState(row)) && Table.this.userCanCancel(row));
-					this.setEnabled(AbstractEventsTablePage.this.isUserCalendarConfigured());
+					// this.setEnabled(AbstractEventsTablePage.this.isUserCalendarConfigured());
 					// TODO Djer13 hide if date.start and date.end are in the
 					// past ?
 				}

@@ -35,9 +35,11 @@ import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
 import org.zeroclick.comon.text.TextsHelper;
 import org.zeroclick.configuration.client.user.ValidateCpsForm;
+import org.zeroclick.configuration.onboarding.OnBoardingUserForm;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper.SubscriptionHelperData;
 import org.zeroclick.configuration.shared.user.IUserService;
+import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationEnvProperty;
 import org.zeroclick.meeting.client.NotificationHelper;
 import org.zeroclick.meeting.client.calendar.GoogleEventStartComparator;
@@ -404,6 +406,12 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
 
+			if (!googleHelper.isCalendarConfigured(userId)) {
+				LOG.info("Cannot check user (Google) clendar because no API configured for user : " + userId);
+				// new recommended Date null, means "available" in user calendar
+				return null; // early break
+			}
+
 			final ZoneId userZoneId = EventTablePage.this.getAppUserHelper().getUserZoneId(userId);
 
 			final List<Event> allConcurentEvent = this.getEvents(startDate, endDate, userId);
@@ -594,7 +602,9 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			try {
 				googleCalendarService = googleHelper.getCalendarService(forUserId);
 			} catch (final UserAccessRequiredException uare) {
-				throw new VetoException(TEXTS.get("zc.meeting.calendarProviderRequired"));
+				// throw new
+				// VetoException(TEXTS.get("zc.meeting.calendarProviderRequired"));
+				return null; // early break;
 			}
 
 			final String EnvDisplay = new ApplicationEnvProperty().displayAsText();
@@ -669,28 +679,44 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			@Override
 			protected void execInitAction() {
-				// final SubscriptionHelper subHelper =
-				// BEANS.get(SubscriptionHelper.class);
-				// final SubscriptionHelperData subscriptionData =
-				// subHelper.canCreateEvent();
-				// this.setEnabledGranted(subscriptionData.isAccessAllowed());
 				this.setVisibleGranted(
 						ACCESS.getLevel(new CreateEventPermission()) >= CreateEventPermission.LEVEL_SUB_FREE);
-
 			}
 
 			@Override
-			protected boolean getConfiguredVisible() {
-				return EventTablePage.this.isUserCalendarConfigured();
+			protected boolean getConfiguredEnabled() {
+				return Boolean.TRUE;
 			}
 
-			@Override
-			protected void execOwnerValueChanged(final Object newOwnerValue) {
-				this.setVisible(EventTablePage.this.isUserCalendarConfigured());
-			}
+			// @Override
+			// protected void execOwnerValueChanged(final Object newOwnerValue)
+			// {
+			// this.setEnabled(EventTablePage.this.isUserCalendarConfigured());
+			// }
 
 			@Override
 			protected void execAction() {
+				if (!EventTablePage.this.isUserCalendarConfigured()) {
+					final int userDecision = MessageBoxes.createYesNo()
+							.withHeader(TEXTS.get("zc.api.calendarRequired.title"))
+							.withBody(TEXTS.get("zc.api.calendarRequired.message"))
+							// .withYesButtonText(TEXTS.get("zc.subscription.notAllowed.yesButton"))
+							.withIconId(Icons.ExclamationMark).withSeverity(IStatus.WARNING).show();
+
+					if (userDecision == IMessageBox.YES_OPTION) {
+						final OnBoardingUserForm form = new OnBoardingUserForm();
+						form.getUserIdField().setValue(Table.this.getCurrentUserId());
+						form.setEnabledPermission(new UpdateUserPermission(Table.this.getCurrentUserId()));
+						form.startModify();
+						form.waitFor();
+					}
+				}
+
+				if (!EventTablePage.this.isUserCalendarConfigured()) {
+					// User won't configure required Data
+					return; // earlyBreak
+				}
+
 				final SubscriptionHelper subHelper = BEANS.get(SubscriptionHelper.class);
 				final SubscriptionHelperData subscriptionData = subHelper.canCreateEvent();
 
@@ -790,7 +816,8 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 							&& Table.this.isGuestCurrentUser(row));
 
 					final Boolean hasStartDate = null != Table.this.getStartDateColumn().getValue(row.getRowIndex());
-					this.setEnabled(hasStartDate && EventTablePage.this.isUserCalendarConfigured());
+					// && EventTablePage.this.isUserCalendarConfigured()
+					this.setEnabled(hasStartDate);
 
 					if (hasStartDate) {
 						this.setTooltipText(null);
@@ -830,8 +857,13 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					// External event for holder
 					final Event externalOrganizerEvent = Table.this.createEvent(start, end, eventHeldBy,
 							eventGuestEmail, subject, venue);
-					Table.this.getExternalIdOrganizerColumn().setValue(Table.this.getSelectedRow(),
-							externalOrganizerEvent.getId());
+					if (null == externalOrganizerEvent) {
+						LOG.warn("Event not created for user : " + eventHeldBy
+								+ " and he is the organizer ! (subject : " + subject + ")");
+					} else {
+						Table.this.getExternalIdOrganizerColumn().setValue(Table.this.getSelectedRow(),
+								externalOrganizerEvent.getId());
+					}
 
 					if (null == eventGuest) {
 						eventGuest = userService.getUserIdByEmail(eventGuestEmail);
@@ -839,8 +871,10 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 					final Event externalGuestEvent = Table.this.acceptCreatedEvent(externalOrganizerEvent,
 							Table.this.getUserCreateEventCalendar(eventHeldBy), eventGuest, eventGuestEmail);
-					Table.this.getExternalIdRecipientColumn().setValue(Table.this.getSelectedRow(),
-							externalGuestEvent.getId());
+					if (null != externalGuestEvent) {
+						Table.this.getExternalIdRecipientColumn().setValue(Table.this.getSelectedRow(),
+								externalGuestEvent.getId());
+					}
 
 					// Save at the end to save external IDs !
 					final EventFormData formData = Table.this.saveEventCurrentRow();
@@ -918,7 +952,8 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				if (null != row) {
 					this.setVisible(Table.this.userCanChooseDate(row)
 							&& this.isWorkflowVisible(Table.this.getState(row)) && Table.this.isGuestCurrentUser(row));
-					this.setEnabled(EventTablePage.this.isUserCalendarConfigured() && Table.this.isUserTimeZoneValid());
+					// EventTablePage.this.isUserCalendarConfigured() &&
+					this.setEnabled(Table.this.isUserTimeZoneValid());
 				}
 			}
 

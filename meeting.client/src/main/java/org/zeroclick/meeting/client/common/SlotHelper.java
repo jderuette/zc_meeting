@@ -203,6 +203,7 @@ public class SlotHelper {
 	public Boolean isInOneOfPeriods(final List<DayDuration> periods, final ZonedDateTime startDate,
 			final ZonedDateTime endDate) {
 		Boolean isInPeriod = Boolean.FALSE;
+		// Convert to UTC dates to compare to the DataBase !!!
 		for (final DayDuration period : periods) {
 			if (null == endDate) {
 				if (period.isInPeriod(startDate)) {

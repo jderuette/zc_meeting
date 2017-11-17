@@ -45,6 +45,7 @@ import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.config.AbstractStringConfigProperty;
 import org.eclipse.scout.rt.platform.config.CONFIG;
 import org.eclipse.scout.rt.platform.exception.VetoException;
+import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
@@ -83,6 +84,8 @@ public class GoogleApiHelper {
 
 	private static final Logger LOG = LoggerFactory.getLogger(GoogleApiHelper.class);
 
+	public static final String ADD_GOOGLE_CALENDAR_URL = "/addGoogleCalendar";
+
 	private CallTrackerService<Long> callTracker;
 	private DataStoreFactory dataStoreFactory;
 
@@ -90,6 +93,14 @@ public class GoogleApiHelper {
 	public void init() {
 		this.callTracker = new CallTrackerService<>(5, Duration.ofMinutes(1), "GoogleApiHelper create API flow");
 		this.dataStoreFactory = new ScoutDataStoreFactory();
+	}
+
+	public String getAddGoogleLink() {
+		final StringBuilder builder = new StringBuilder(64);
+		builder.append("<a href='").append(ADD_GOOGLE_CALENDAR_URL).append("' target='_blank'>")
+				.append(TEXTS.get("zc.meeting.addGoogleCalendar")).append("</a>");
+
+		return builder.toString();
 	}
 
 	private GoogleClientSecrets getClientSecret() throws IOException {
