@@ -30,4 +30,6 @@ public interface IApiService extends IService {
 	boolean isOwn(Long apiCredentialId);
 
 	boolean isRelated(Long apiCredentialId);
+
+	Long getApiIdByAccessToken(Long userId, String accessToken);
 }

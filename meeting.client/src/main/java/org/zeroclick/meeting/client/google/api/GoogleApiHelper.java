@@ -29,8 +29,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -52,6 +52,7 @@ import org.zeroclick.meeting.client.common.CallTrackerService;
 import org.zeroclick.meeting.client.common.UserAccessRequiredException;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationTablePageData.CalendarConfigurationTableRowData;
+import org.zeroclick.meeting.shared.calendar.IApiService;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
 import com.google.api.client.auth.oauth2.AuthorizationCodeFlow;
@@ -67,8 +68,9 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.DateTime;
 import com.google.api.client.util.store.DataStoreFactory;
 import com.google.api.services.calendar.Calendar;
-import com.google.api.services.calendar.Calendar.CalendarList.List;
 import com.google.api.services.calendar.CalendarScopes;
+import com.google.api.services.calendar.model.CalendarList;
+import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
 
@@ -365,17 +367,30 @@ public class GoogleApiHelper {
 
 	}
 
+	public Map<String, AbstractCalendarConfigurationTableRowData> getCalendars() {
+		return this.getCalendars(this.getCurrentUserId());
+	}
+
+	/**
+	 * Retrieve calendar's list in Google account.
+	 *
+	 * @param userId
+	 * @return a map, id is the Google calendar Id, value is a **partial** table
+	 *         Row (some data not exist in, Google configuration)
+	 */
 	public Map<String, AbstractCalendarConfigurationTableRowData> getCalendars(final Long userId) {
+		LOG.info("Retireving all (Google) calendar for user : " + userId);
 		final Map<String, AbstractCalendarConfigurationTableRowData> calendars = new HashMap<>();
 		try {
 			final Calendar calendarService = this.getCalendarService(userId);
-			final List calendarsList = calendarService.calendarList().list();
-			final Set<String> calendarsKeys = calendarsList.keySet();
+			final CalendarList calendarsList = calendarService.calendarList().list().execute();
 
-			for (final String calendarKey : calendarsKeys) {
-				final com.google.api.services.calendar.model.Calendar cal = calendarService.calendars().get(calendarKey)
-						.execute();
-				calendars.put(calendarKey, this.toCalendarConfig(cal));
+			final List<CalendarListEntry> calendarItems = calendarsList.getItems();
+			for (final CalendarListEntry calendarItem : calendarItems) {
+				// final com.google.api.services.calendar.model.Calendar cal =
+				// calendarService.calendars().get(calendarKey)
+				// .execute();
+				calendars.put(calendarItem.getId(), this.toCalendarConfig(calendarItem, userId));
 			}
 		} catch (final IOException e) {
 			LOG.warn("Cannot get (Google) calendar Service for user : " + userId, e);
@@ -384,11 +399,30 @@ public class GoogleApiHelper {
 		return calendars;
 	}
 
-	private AbstractCalendarConfigurationTableRowData toCalendarConfig(
-			final com.google.api.services.calendar.model.Calendar cal) {
+	private AbstractCalendarConfigurationTableRowData toCalendarConfig(final CalendarListEntry cal, final Long userId)
+			throws IOException {
+		LOG.debug("Creating model data for (Google) calendar data : " + cal);
 		final CalendarConfigurationTableRowData calendarConfigData = new CalendarConfigurationTableRowData();
 		calendarConfigData.setExternalId(cal.getId());
+		calendarConfigData.setUserId(userId);
+		calendarConfigData.setOAuthCredentialId(this.getOAuthCredentialId(userId));
+		LOG.debug("Calendar Config modele created with externalId : " + calendarConfigData.getExternalId()
+				+ ", UserId : " + calendarConfigData.getUserId() + ", OAuthCredentialId : "
+				+ calendarConfigData.getOAuthCredentialId());
 		return calendarConfigData;
+	}
+
+	private Long getOAuthCredentialId() throws IOException {
+		return this.getOAuthCredentialId(this.getCurrentUserId());
+	}
+
+	private Long getOAuthCredentialId(final Long userId) throws IOException {
+		final Credential credential = this.getCredential(userId);
+
+		final IApiService apiService = BEANS.get(IApiService.class);
+		final Long oAuthCredentialId = apiService.getApiIdByAccessToken(userId, credential.getAccessToken());
+
+		return oAuthCredentialId;
 	}
 
 	/**

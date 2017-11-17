@@ -21,8 +21,22 @@ public abstract class AbstractCalendarConfigurationTablePage<T extends AbstractC
 
 	public class Table extends AbstractTable {
 
+		@Override
+		protected boolean getConfiguredAutoResizeColumns() {
+			return Boolean.TRUE;
+		}
+
+		@Override
+		protected boolean getConfiguredMultilineText() {
+			return Boolean.TRUE;
+		}
+
 		public AbstractCalendarConfigurationTablePage<?>.Table.ProcessNotRegistredOnEventColumn getProcessNotRegistredOnEventColumn() {
 			return this.getColumnSet().getColumnByClass(ProcessNotRegistredOnEventColumn.class);
+		}
+
+		public AbstractCalendarConfigurationTablePage<?>.Table.UserIdColumn getUserIdColumn() {
+			return this.getColumnSet().getColumnByClass(UserIdColumn.class);
 		}
 
 		public AbstractCalendarConfigurationTablePage<?>.Table.OAuthCredentialIdColumn getOAuthCredentialIdColumn() {
@@ -115,6 +129,24 @@ public abstract class AbstractCalendarConfigurationTablePage<T extends AbstractC
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.calendar.OAuthCredentialId");
+			}
+
+			@Override
+			protected int getConfiguredWidth() {
+				return 100;
+			}
+		}
+
+		@Order(7000)
+		public class UserIdColumn extends AbstractLongColumn {
+			@Override
+			protected String getConfiguredHeaderText() {
+				return TEXTS.get("zc.meeting.calendar.userId");
+			}
+
+			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.FALSE;
 			}
 
 			@Override

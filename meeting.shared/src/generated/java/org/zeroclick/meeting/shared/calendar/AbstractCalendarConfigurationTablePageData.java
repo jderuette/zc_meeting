@@ -56,12 +56,14 @@ public abstract class AbstractCalendarConfigurationTablePageData extends Abstrac
 		public static final String processFreeEvent = "processFreeEvent";
 		public static final String processNotRegistredOnEvent = "processNotRegistredOnEvent";
 		public static final String oAuthCredentialId = "oAuthCredentialId";
+		public static final String userId = "userId";
 		private Long m_calendarConfigurationId;
 		private String m_externalId;
 		private Boolean m_processFullDayEvent;
 		private Boolean m_processFreeEvent;
 		private Boolean m_processNotRegistredOnEvent;
 		private Long m_oAuthCredentialId;
+		private Long m_userId;
 
 		public Long getCalendarConfigurationId() {
 			return m_calendarConfigurationId;
@@ -109,6 +111,14 @@ public abstract class AbstractCalendarConfigurationTablePageData extends Abstrac
 
 		public void setOAuthCredentialId(Long newOAuthCredentialId) {
 			m_oAuthCredentialId = newOAuthCredentialId;
+		}
+
+		public Long getUserId() {
+			return m_userId;
+		}
+
+		public void setUserId(Long newUserId) {
+			m_userId = newUserId;
 		}
 	}
 }

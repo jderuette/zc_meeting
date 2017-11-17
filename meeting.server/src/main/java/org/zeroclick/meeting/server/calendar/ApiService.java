@@ -94,7 +94,6 @@ public class ApiService extends CommonService implements IApiService {
 		}
 
 		return apiFormCreated;
-
 	}
 
 	private void sendCreatedNotifications(final ApiFormData formData) {
@@ -118,8 +117,15 @@ public class ApiService extends CommonService implements IApiService {
 	public ApiFormData load(final ApiFormData formData) {
 		final Long userId = formData.getUserIdProperty().getValue();
 		Long oAuthId = formData.getApiCredentialIdProperty().getValue();
+		final String accesToken = formData.getAccessToken().getValue();
 
-		LOG.debug("Loading credential by ID : " + oAuthId + ", and UserId : " + userId);
+		LOG.debug("Loading credential by ID : " + oAuthId + ", and UserId : " + userId + " and accesToken : "
+				+ accesToken);
+
+		if (null == oAuthId && null != accesToken && !accesToken.isEmpty()) {
+			LOG.debug("No API ID but an accessTOken, using accessToken to load api Data");
+			oAuthId = this.getApiIdByAccessToken(userId, accesToken);
+		}
 
 		if (null == oAuthId) {
 			oAuthId = this.getApiId(userId);
@@ -198,6 +204,28 @@ public class ApiService extends CommonService implements IApiService {
 		if (null != formData.getApiCredentialId()
 				&& !ACCESS.check(new ReadApiPermission(formData.getApiCredentialId()))) {
 			super.throwAuthorizationFailed();
+		}
+		return formData.getApiCredentialId();
+	}
+
+	@Override
+	public Long getApiIdByAccessToken(final Long userId, final String accessToken) {
+		LOG.debug("Searching API Id  : " + userId + " with Acces Token : " + accessToken);
+		final ApiFormData formData = new ApiFormData();
+		formData.setUserId(userId);
+		formData.getAccessToken().setValue(accessToken);
+		SQL.selectInto(SQLs.OAUHTCREDENTIAL_SELECT_API_ID + SQLs.OAUHTCREDENTIAL_FILTER_USER_ID
+				+ SQLs.OAUHTCREDENTIAL_FILTER_ACESS_TOKEN + SQLs.OAUHTCREDENTIAL_SELECT_INTO_API_ID, formData);
+
+		if (null != formData.getApiCredentialId()
+				&& !ACCESS.check(new ReadApiPermission(formData.getApiCredentialId()))) {
+			super.throwAuthorizationFailed();
+		}
+		if (null == formData.getApiCredentialId()) {
+			LOG.warn("No API Id in DataBase for user :" + userId + " and accesToken : " + accessToken);
+		} else {
+			LOG.debug("API id : " + formData.getApiCredentialId() + " for user :" + userId + " and accesToken : "
+					+ accessToken);
 		}
 		return formData.getApiCredentialId();
 	}
