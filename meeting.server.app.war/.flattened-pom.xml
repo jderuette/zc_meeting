@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.zeroclick</groupId>
   <artifactId>meeting.server.app.war</artifactId>
-  <version>1.1.8</version>
+  <version>1.1.9</version>
   <packaging>war</packaging>
   <name>0Click Meeting Server WAR</name>
   <description>Maven Master hosted at Eclipse Scout</description>
@@ -71,7 +71,7 @@
     <dependency>
       <groupId>org.zeroclick</groupId>
       <artifactId>meeting.server</artifactId>
-      <version>1.1.8</version>
+      <version>1.1.9</version>
       <scope>compile</scope>
     </dependency>
   </dependencies>
