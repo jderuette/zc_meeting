@@ -5,6 +5,7 @@ import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.data.page.AbstractTablePageData;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
+import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.event.AbstractEventNotification;
 import org.zeroclick.meeting.shared.event.EventAskedTablePageData;
 import org.zeroclick.meeting.shared.event.EventFormData;
@@ -35,6 +36,11 @@ public class EventAskedTablePage extends EventTablePage {
 	protected String buildTitle() {
 		return TEXTS.get("zc.meeting.eventsAsked",
 				null == this.getNbEventToProcess() ? "0" : this.getNbEventToProcess().toString());
+	}
+
+	@Override
+	protected String getConfiguredIconId() {
+		return Icons.LongArrowLeft;
 	}
 
 	@Override

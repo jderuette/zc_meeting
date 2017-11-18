@@ -5,6 +5,7 @@ import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.zeroclick.meeting.client.event.EventProcessedTablePage.Table;
+import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.event.AbstractEventNotification;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.IEventService;
@@ -21,6 +22,11 @@ public class EventProcessedTablePage extends AbstractEventsTablePage<Table> {
 	@Override
 	protected String getConfiguredTitle() {
 		return TEXTS.get("zc.meeting.eventsProccessed");
+	}
+
+	@Override
+	protected String getConfiguredIconId() {
+		return Icons.Checked;
 	}
 
 	@Override

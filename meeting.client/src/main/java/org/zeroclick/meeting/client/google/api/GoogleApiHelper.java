@@ -40,17 +40,23 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.eclipse.scout.rt.client.ui.messagebox.IMessageBox;
+import org.eclipse.scout.rt.client.ui.messagebox.MessageBoxes;
 import org.eclipse.scout.rt.platform.ApplicationScoped;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.config.AbstractStringConfigProperty;
 import org.eclipse.scout.rt.platform.config.CONFIG;
 import org.eclipse.scout.rt.platform.exception.VetoException;
+import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.configuration.onboarding.OnBoardingUserForm;
+import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
 import org.zeroclick.meeting.client.common.CallTrackerService;
 import org.zeroclick.meeting.client.common.UserAccessRequiredException;
+import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationTablePageData.CalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.IApiService;
@@ -444,6 +450,21 @@ public class GoogleApiHelper {
 	public Boolean isCalendarConfigured() {
 		final AccessControlService acs = BEANS.get(AccessControlService.class);
 		return this.isCalendarConfigured(acs.getZeroClickUserIdOfCurrentSubject());
+	}
+
+	public void askToAddApi(final Long userId) {
+		final int userDecision = MessageBoxes.createYesNo().withHeader(TEXTS.get("zc.api.calendarRequired.title"))
+				.withBody(TEXTS.get("zc.api.calendarRequired.message"))
+				// .withYesButtonText(TEXTS.get("zc.subscription.notAllowed.yesButton"))
+				.withIconId(Icons.ExclamationMark).withSeverity(IStatus.WARNING).show();
+
+		if (userDecision == IMessageBox.YES_OPTION) {
+			final OnBoardingUserForm form = new OnBoardingUserForm();
+			form.getUserIdField().setValue(userId);
+			form.setEnabledPermission(new UpdateUserPermission(userId));
+			form.startModify();
+			form.waitFor();
+		}
 	}
 
 	public String aslog(final Event event) {

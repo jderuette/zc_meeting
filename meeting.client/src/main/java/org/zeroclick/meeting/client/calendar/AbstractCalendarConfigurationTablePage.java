@@ -8,6 +8,7 @@ import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractStringColumn;
 import org.eclipse.scout.rt.client.ui.desktop.outline.pages.AbstractPageWithTable;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
+import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData;
 
 @Data(AbstractCalendarConfigurationTablePageData.class)
@@ -17,6 +18,16 @@ public abstract class AbstractCalendarConfigurationTablePage<T extends AbstractC
 	@Override
 	protected String getConfiguredTitle() {
 		return TEXTS.get("zc.meeting.calendar.configuration");
+	}
+
+	@Override
+	protected boolean getConfiguredLeaf() {
+		return Boolean.TRUE;
+	}
+
+	@Override
+	protected String getConfiguredIconId() {
+		return Icons.Gear;
 	}
 
 	public class Table extends AbstractTable {
@@ -64,6 +75,11 @@ public abstract class AbstractCalendarConfigurationTablePage<T extends AbstractC
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.calendar.id");
+			}
+
+			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.FALSE;
 			}
 
 			@Override
@@ -129,6 +145,11 @@ public abstract class AbstractCalendarConfigurationTablePage<T extends AbstractC
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.calendar.OAuthCredentialId");
+			}
+
+			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.FALSE;
 			}
 
 			@Override

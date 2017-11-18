@@ -7,6 +7,7 @@ import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.zeroclick.configuration.client.slot.SlotAdminTablePage.Table;
 import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.configuration.shared.slot.SlotAdminTablePageData;
+import org.zeroclick.meeting.shared.Icons;
 
 @Data(SlotAdminTablePageData.class)
 public class SlotAdminTablePage extends AbstractSlotTablePage<Table> {
@@ -14,6 +15,11 @@ public class SlotAdminTablePage extends AbstractSlotTablePage<Table> {
 	@Override
 	protected String getConfiguredTitle() {
 		return TEXTS.get("zc.meeting.slot.admin");
+	}
+
+	@Override
+	protected String getConfiguredIconId() {
+		return Icons.ExclamationMark;
 	}
 
 	@Override

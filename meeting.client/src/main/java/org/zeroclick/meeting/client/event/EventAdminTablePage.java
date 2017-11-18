@@ -34,6 +34,11 @@ public class EventAdminTablePage extends AbstractEventsTablePage<Table> {
 	}
 
 	@Override
+	protected String getConfiguredIconId() {
+		return Icons.ExclamationMark;
+	}
+
+	@Override
 	protected Boolean canHandleNew(final AbstractEventNotification notification) {
 		return Boolean.FALSE;
 	}

@@ -418,12 +418,21 @@ public class RejectEventForm extends AbstractForm {
 				break;
 			}
 
-			this.attendeeGCalSrv = this.getCalendarService(formData.getGuestId());
-			this.hostGCalSrv = this.getCalendarService(formData.getOrganizer());
+			try {
+				this.attendeeGCalSrv = this.getCalendarService(formData.getGuestId());
+			} catch (final IOException e) {
+				LOG.debug("No calendar service configured for user Id : " + formData.getGuestId(), e);
+			}
+			try {
+				this.hostGCalSrv = this.getCalendarService(formData.getOrganizer());
+			} catch (final IOException e) {
+				LOG.error("No calendar service configured for (organizer) user Id : " + formData.getOrganizer(), e);
+				throw new VetoException(TEXTS.get("ErrorAndRetryTextDefault"));
+			}
 
 		}
 
-		private Calendar getCalendarService(final Long userId) {
+		private Calendar getCalendarService(final Long userId) throws IOException {
 			Calendar gCalendarSrv = null;
 			final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
 			try {
@@ -432,8 +441,6 @@ public class RejectEventForm extends AbstractForm {
 				}
 			} catch (final UserAccessRequiredException uare) {
 				LOG.debug("No calendar provider for user " + userId);
-			} catch (final IOException e) {
-				throw new VetoException(TEXTS.get("ErrorAndRetryTextDefault"));
 			}
 
 			return gCalendarSrv;

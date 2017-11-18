@@ -677,9 +677,9 @@ public interface SQLs {
 			+ "_OAUHTCREDENTIAL_FK FOREIGN KEY (oAuth_credential_id) REFERENCES OAUHTCREDENTIAL(api_credential_id))";
 	String CALENDAR_CONFIG_JOIN_OAUTH = " INNER JOIN OAUHTCREDENTIAL ON oAuth_credential_id=api_credential_id";
 
-	String CALENDAR_CONFIG_PAGE_SELECT = "select agenda_config_id, external_id, process_full_day_event, process_busy_event, process_not_registred_on_event, oAuth_credential_id FROM "
+	String CALENDAR_CONFIG_PAGE_SELECT = "select agenda_config_id, external_id, process_full_day_event, process_busy_event, process_not_registred_on_event, oAuth_credential_id, user_id FROM "
 			+ PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME + CALENDAR_CONFIG_JOIN_OAUTH + " WHERE 1=1";
-	String CALENDAR_CONFIG_PAGE_SELECT_INTO = " INTO :{page.calendarConfigurationId}, :{page.externalId}, :{page.processFullDayEvent}, :{page.ProcessFreeEvent}, :{page.processNotRegistredOnEvent}, :{page.OAuthCredentialId}";
+	String CALENDAR_CONFIG_PAGE_SELECT_INTO = " INTO :{page.calendarConfigurationId}, :{page.externalId}, :{page.processFullDayEvent}, :{page.ProcessFreeEvent}, :{page.processNotRegistredOnEvent}, :{page.OAuthCredentialId}, :{page.userId}";
 
 	String CALENDAR_CONFIG_FILTER_CURRENT_USER = " AND user_id = :currentUser";
 	String CALENDAR_CONFIG_FILTER_USER_ID = " AND user_id = :userId";
@@ -700,5 +700,7 @@ public interface SQLs {
 			+ " (agenda_config_id, external_id, oAuth_credential_id) VALUES(:calendarConfigurationId, :externalId, :OAuthCredentialId)";
 	String CALENDAR_CONFIG_UPDATE = "UPDATE " + PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME
 			+ " SET process_full_day_event=:processFullDayEvent, process_busy_event=:ProcessFreeEvent, process_not_registred_on_event=:processNotRegistredOnEvent WHERE 1=1 ";
+	String CALENDAR_CONFIG_DELETE_BY_API_ID = "DELETE FROM " + PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME
+			+ " WHERE oAuth_credential_id=:oAuthCredentialId";
 
 }

@@ -35,6 +35,11 @@ public class SlotTablePage extends AbstractSlotTablePage<Table> {
 	}
 
 	@Override
+	protected String getConfiguredIconId() {
+		return Icons.Gear;
+	}
+
+	@Override
 	protected void execLoadData(final SearchFilter filter) {
 		this.importPageData(BEANS.get(ISlotService.class).getDayDurationTableData(filter));
 		this.getTable().sort();

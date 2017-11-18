@@ -14,12 +14,19 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.zeroclick.meeting.client.calendar.CalendarConfigurationTablePage.Table;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
+import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationTablePageData;
 import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
+import org.zeroclick.meeting.shared.security.AccessControlService;
 
 @Data(CalendarConfigurationTablePageData.class)
 public class CalendarConfigurationTablePage extends AbstractCalendarConfigurationTablePage<Table> {
+
+	@Override
+	protected String getConfiguredIconId() {
+		return Icons.Gear;
+	}
 
 	@Override
 	protected void execLoadData(final SearchFilter filter) {
@@ -43,6 +50,14 @@ public class CalendarConfigurationTablePage extends AbstractCalendarConfiguratio
 		@Override
 		protected void execAction() {
 			final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+
+			if (!googleHelper.isCalendarConfigured()) {
+				googleHelper.askToAddApi(BEANS.get(AccessControlService.class).getZeroClickUserIdOfCurrentSubject());
+			}
+			if (!googleHelper.isCalendarConfigured()) {
+				// User really won't provide required data
+				return; // early Break
+			}
 			final Map<String, AbstractCalendarConfigurationTableRowData> calendars = googleHelper.getCalendars();
 
 			final ICalendarConfigurationService calendarConfigurationService = BEANS

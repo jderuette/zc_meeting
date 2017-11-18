@@ -26,6 +26,7 @@ import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CreateApiPermission;
 import org.zeroclick.meeting.shared.calendar.DeleteApiPermission;
 import org.zeroclick.meeting.shared.calendar.IApiService;
+import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.calendar.ReadApiPermission;
 import org.zeroclick.meeting.shared.calendar.UpdateApiPermission;
 import org.zeroclick.meeting.shared.event.IEventService;
@@ -184,6 +185,11 @@ public class ApiService extends CommonService implements IApiService {
 
 		LOG.debug("Deleting API in DB for api_id : " + formData.getApiCredentialId() + "(user : "
 				+ formData.getUserIdProperty().getValue() + ") for provider : " + formData.getProvider().getValue());
+
+		// delete related table data to maintain FK constraints
+		final ICalendarConfigurationService calendarConfigurationService = BEANS
+				.get(ICalendarConfigurationService.class);
+		calendarConfigurationService.deleteByApiId(formData.getApiCredentialId());
 
 		SQL.delete(SQLs.OAUHTCREDENTIAL_DELETE, dataBeforeDeletion);
 

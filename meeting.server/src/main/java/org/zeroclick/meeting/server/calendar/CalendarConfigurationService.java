@@ -15,6 +15,7 @@ import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTableP
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationTablePageData;
 import org.zeroclick.meeting.shared.calendar.CreateCalendarConfigurationPermission;
+import org.zeroclick.meeting.shared.calendar.DeleteApiPermission;
 import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.calendar.ReadCalendarConfigurationPermission;
 import org.zeroclick.meeting.shared.calendar.UpdateCalendarConfigurationPermission;
@@ -119,6 +120,17 @@ public class CalendarConfigurationService extends CommonService implements ICale
 	}
 
 	@Override
+	public void deleteByApiId(final Long apiCredentialId) {
+		// permission based on API permissions (not calendar permissions)
+		if (!ACCESS.check(new DeleteApiPermission(apiCredentialId))) {
+			super.throwAuthorizationFailed();
+		}
+
+		SQL.delete(SQLs.CALENDAR_CONFIG_DELETE_BY_API_ID, new NVPair("oAuthCredentialId", apiCredentialId));
+
+	}
+
+	@Override
 	public void autoConfigure(final Map<String, AbstractCalendarConfigurationTableRowData> calendars) {
 		LOG.info("Auto importing calendars for User");
 		for (final String calendarKey : calendars.keySet()) {
@@ -180,4 +192,5 @@ public class CalendarConfigurationService extends CommonService implements ICale
 
 		return false;
 	}
+
 }

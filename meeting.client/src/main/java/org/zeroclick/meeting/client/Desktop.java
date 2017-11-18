@@ -180,7 +180,6 @@ public class Desktop extends AbstractDesktop {
 	}
 
 	private void addNotification(final IStatus status, final Long duration, final Boolean closable) {
-
 		Jobs.schedule(new IRunnable() {
 
 			@Override
@@ -191,7 +190,6 @@ public class Desktop extends AbstractDesktop {
 				ClientSession.get().getDesktop().addNotification(desktopNotification);
 			}
 		}, ModelJobs.newInput(ClientRunContexts.copyCurrent()).withName("adding desktop notification (in ModelJob)"));
-
 	}
 
 	private INotificationListener<ApiCreatedNotification> createApiCreatedListener() {
@@ -203,6 +201,7 @@ public class Desktop extends AbstractDesktop {
 					LOG.debug("Created Api prepare to modify desktop menus (" + this.getClass().getName() + ") : "
 							+ eventForm.getUserId());
 					Desktop.this.getMenu(AddGoogleCalendarMenu.class).setVisible(Boolean.FALSE);
+
 				} catch (final RuntimeException e) {
 					LOG.error("Could not handle new api. (" + this.getClass().getName() + ")", e);
 				}
@@ -221,6 +220,7 @@ public class Desktop extends AbstractDesktop {
 					LOG.debug("Deleted Api prepare to modify desktop menus (" + this.getClass().getName() + ") : "
 							+ eventForm.getUserId());
 					Desktop.this.getMenu(AddGoogleCalendarMenu.class).setVisible(Boolean.TRUE);
+
 				} catch (final RuntimeException e) {
 					LOG.error("Could not handle new api. (" + this.getClass().getName() + ")", e);
 				}

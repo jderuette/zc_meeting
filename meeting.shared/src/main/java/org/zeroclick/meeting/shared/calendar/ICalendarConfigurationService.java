@@ -26,4 +26,6 @@ public interface ICalendarConfigurationService extends IService {
 	CalendarConfigurationFormData createWithDefault(CalendarConfigurationFormData formData);
 
 	boolean isOwn(Long calendarConfigurationId);
+
+	void deleteByApiId(Long apiCredentialId);
 }

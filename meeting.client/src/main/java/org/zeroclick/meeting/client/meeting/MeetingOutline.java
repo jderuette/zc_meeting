@@ -29,15 +29,22 @@ import org.zeroclick.meeting.shared.event.ReadEventPermission;
 @Order(1000)
 public class MeetingOutline extends AbstractOutline {
 
+	// private static final Logger LOG =
+	// LoggerFactory.getLogger(MeetingOutline.class);
+
 	@Override
 	protected void execCreateChildPages(final List<IPage<?>> pageList) {
 		final int currentUserEventLevel = ACCESS.getLevel(new ReadEventPermission((Long) null));
-		final int currentUserSlotLevel = ACCESS.getLevel(new ReadSlotPermission((Long) null));
 		final Boolean isEventUser = currentUserEventLevel >= ReadEventPermission.LEVEL_OWN;
 		final Boolean isEventAdmin = currentUserEventLevel == ReadEventPermission.LEVEL_ALL;
+
+		final int currentUserSlotLevel = ACCESS.getLevel(new ReadSlotPermission((Long) null));
 		final Boolean isSlotUser = currentUserSlotLevel >= ReadSlotPermission.LEVEL_OWN;
 		final Boolean isSlotAdmin = currentUserSlotLevel == ReadSlotPermission.LEVEL_ALL;
-		final Boolean iscalednarConfigAdmin = currentUserSlotLevel == ReadCalendarConfigurationPermission.LEVEL_ALL;
+
+		final int currentUserCalendarConfigLevel = ACCESS
+				.getLevel(new ReadCalendarConfigurationPermission((Long) null));
+		final Boolean iscalendarConfigAdmin = currentUserCalendarConfigLevel == ReadCalendarConfigurationPermission.LEVEL_ALL;
 
 		final EventTablePage eventTablePage = new EventTablePage();
 		eventTablePage.setVisibleGranted(isEventUser);
@@ -65,7 +72,7 @@ public class MeetingOutline extends AbstractOutline {
 
 		final CalendarConfigurationTablePage calendarConfigurationTablePage = new CalendarConfigurationTablePage();
 		calendarConfigurationTablePage.setVisibleGranted(Boolean.TRUE);
-		calendarConfigurationTablePage.setVisibleGranted(iscalednarConfigAdmin);
+		calendarConfigurationTablePage.setVisibleGranted(iscalendarConfigAdmin);
 
 		pageList.add(eventTablePage);
 		pageList.add(eventAskedTablePage);
