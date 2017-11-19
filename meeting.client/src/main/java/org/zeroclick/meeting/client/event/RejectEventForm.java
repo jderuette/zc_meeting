@@ -3,6 +3,7 @@ package org.zeroclick.meeting.client.event;
 import java.io.IOException;
 import java.time.ZonedDateTime;
 
+import org.eclipse.scout.rt.client.context.ClientRunContexts;
 import org.eclipse.scout.rt.client.dto.FormData;
 import org.eclipse.scout.rt.client.ui.IDisplayParent;
 import org.eclipse.scout.rt.client.ui.form.AbstractForm;
@@ -14,6 +15,8 @@ import org.eclipse.scout.rt.client.ui.form.fields.stringfield.AbstractStringFiel
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.exception.VetoException;
+import org.eclipse.scout.rt.platform.job.Jobs;
+import org.eclipse.scout.rt.platform.util.concurrent.IRunnable;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -429,7 +432,6 @@ public class RejectEventForm extends AbstractForm {
 				LOG.error("No calendar service configured for (organizer) user Id : " + formData.getOrganizer(), e);
 				throw new VetoException(TEXTS.get("ErrorAndRetryTextDefault"));
 			}
-
 		}
 
 		private Calendar getCalendarService(final Long userId) throws IOException {
@@ -452,39 +454,47 @@ public class RejectEventForm extends AbstractForm {
 			final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 			notificationHelper.addProcessingNotification("zc.meeting.notification.rejectingEvent");
 
-			final RejectEventFormData formData = new RejectEventFormData();
-			RejectEventForm.this.exportFormData(formData);
+			Jobs.schedule(new IRunnable() {
+				@Override
+				public void run() {
+					final RejectEventFormData formData = new RejectEventFormData();
+					RejectEventForm.this.exportFormData(formData);
 
-			if (null != RejectEventForm.this.getExternalIdOrganizer() && null != this.hostGCalSrv) {
-				try {
-					LOG.info(this.buildRejectLog("Deleting", RejectEventForm.this.getEventId(),
-							RejectEventForm.this.getExternalIdOrganizer(), RejectEventForm.this.getOrganizer()));
-					this.hostGCalSrv.events().delete("primary", RejectEventForm.this.getExternalIdOrganizer())
-							.execute();
-				} catch (final IOException e) {
-					LOG.error(
-							this.buildRejectLog("Error while deleting", RejectEventForm.this.getEventId(),
+					if (null != RejectEventForm.this.getExternalIdOrganizer()
+							&& null != ModifyHandler.this.hostGCalSrv) {
+						try {
+							LOG.info(this.buildRejectLog("Deleting", RejectEventForm.this.getEventId(),
+									RejectEventForm.this.getExternalIdOrganizer(),
+									RejectEventForm.this.getOrganizer()));
+							ModifyHandler.this.hostGCalSrv.events()
+									.delete("primary", RejectEventForm.this.getExternalIdOrganizer()).execute();
+						} catch (final IOException e) {
+							LOG.error(this.buildRejectLog("Error while deleting", RejectEventForm.this.getEventId(),
 									RejectEventForm.this.getExternalIdOrganizer(), RejectEventForm.this.getOrganizer()),
-							e);
-					throw new VetoException(TEXTS.get("zc.meeting.error.deletingEvent"));
+									e);
+							throw new VetoException(TEXTS.get("zc.meeting.error.deletingEvent"));
+						}
+					}
+
+					final IEventService service = BEANS.get(IEventService.class);
+
+					formData.setState("REFUSED");
+					final EventFormData fullEventFormData = service.storeNewState(formData);
+
+					RejectEventForm.this.sendEmail(fullEventFormData);
 				}
-			}
 
-			final IEventService service = BEANS.get(IEventService.class);
-
-			formData.setState("REFUSED");
-			final EventFormData fullEventFormData = service.storeNewState(formData);
-
-			RejectEventForm.this.sendEmail(fullEventFormData);
+				private String buildRejectLog(final String prefix, final Long eventId, final String externalId,
+						final Long userId) {
+					final StringBuilder builder = new StringBuilder(75);
+					builder.append(prefix).append(" (Google) event : Id ").append(eventId).append(", external ID : ")
+							.append(externalId).append("for user : ").append(userId);
+					return builder.toString();
+				}
+			}, Jobs.newInput().withName("Refusing event {0}", RejectEventForm.this.getEventId())
+					.withRunContext(ClientRunContexts.copyCurrent()).withThreadName("Refusing event"));
 		}
 
-		private String buildRejectLog(final String prefix, final Long eventId, final String externalId,
-				final Long userId) {
-			final StringBuilder builder = new StringBuilder(75);
-			builder.append(prefix).append(" (Google) event : Id ").append(eventId).append(", external ID : ")
-					.append(externalId).append("for user : ").append(userId);
-			return builder.toString();
-		}
 	}
 
 	private void sendEmail(final EventFormData formData) {

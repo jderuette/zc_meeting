@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.eclipse.scout.rt.client.context.ClientRunContexts;
 import org.eclipse.scout.rt.client.dto.FormData;
 import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
 import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
@@ -29,8 +30,10 @@ import org.eclipse.scout.rt.client.ui.form.fields.tablefield.AbstractTableField;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.exception.VetoException;
+import org.eclipse.scout.rt.platform.job.Jobs;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.platform.util.StringUtility;
+import org.eclipse.scout.rt.platform.util.concurrent.IRunnable;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.zeroclick.common.email.IMailSender;
@@ -902,14 +905,9 @@ public class EventForm extends AbstractForm {
 		}
 
 		@Override
-		protected boolean execValidate() {
+		protected void execStore() {
 			final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 			notificationHelper.addProcessingNotification("zc.meeting.notification.creatingEvent");
-			return Boolean.TRUE;
-		}
-
-		@Override
-		protected void execStore() {
 			if (null == EventForm.this.getEmailField().getValue()
 					|| EventForm.this.getEmailField().getValue().isEmpty()) {
 				// mass event creation
@@ -929,40 +927,50 @@ public class EventForm extends AbstractForm {
 		}
 
 		private void createEvent(final String eventGuestEmail) {
-			final AccessControlService acs = BEANS.get(AccessControlService.class);
-			final IEventService eventService = BEANS.get(IEventService.class);
-			final IUserService userService = BEANS.get(IUserService.class);
+			Jobs.schedule(new IRunnable() {
 
-			final EventFormData formData = new EventFormData();
-			EventForm.this.exportFormData(formData);
+				@Override
+				public void run() {
+					final AccessControlService acs = BEANS.get(AccessControlService.class);
+					final IEventService eventService = BEANS.get(IEventService.class);
+					final IUserService userService = BEANS.get(IUserService.class);
 
-			EventForm.this.checkAttendeeEmail(eventGuestEmail);
-			formData.getEmail().setValue(eventGuestEmail);
-			final String eventHeldEmail = formData.getOrganizerEmail().getValue();
-			final Long eventGuest = userService.getUserIdByEmail(eventGuestEmail);
-			final String meetingSubject = formData.getSubject().getValue();
-			final String venue = formData.getVenue().getValue();
+					final EventFormData formData = new EventFormData();
+					EventForm.this.exportFormData(formData);
 
-			formData.getGuestId().setValue(eventGuest);
+					EventForm.this.checkAttendeeEmail(eventGuestEmail);
+					formData.getEmail().setValue(eventGuestEmail);
+					final String eventHeldEmail = formData.getOrganizerEmail().getValue();
+					final Long eventGuest = userService.getUserIdByEmail(eventGuestEmail);
+					final String meetingSubject = formData.getSubject().getValue();
+					final String venue = formData.getVenue().getValue();
 
-			// required *before* save (for sending email)
-			formData.setLastModifier(acs.getZeroClickUserIdOfCurrentSubject());
+					formData.getGuestId().setValue(eventGuest);
 
-			final String venueKey = TextsHelper.getKeyByText(venue);
-			if (null != venueKey) {
-				formData.getVenue().setValue(venueKey);
-			}
+					// required *before* save (for sending email)
+					formData.setLastModifier(acs.getZeroClickUserIdOfCurrentSubject());
 
-			if (null == eventGuest) {
-				final UserForm userForm = new UserForm();
-				userForm.autoFillInviteUser(eventGuestEmail, eventHeldEmail, meetingSubject);
-				// eventGuest = form.getUserIdField().getValue();
-				formData.getGuestId().setValue(userForm.getUserIdField().getValue());
-			} else {
-				this.sendNewEventEmail(formData);
-			}
+					final String venueKey = TextsHelper.getKeyByText(venue);
+					if (null != venueKey) {
+						formData.getVenue().setValue(venueKey);
+					}
 
-			eventService.create(formData);
+					if (null == eventGuest) {
+						final UserForm userForm = new UserForm();
+						userForm.autoFillInviteUser(eventGuestEmail, eventHeldEmail, meetingSubject);
+						// eventGuest = form.getUserIdField().getValue();
+						formData.getGuestId().setValue(userForm.getUserIdField().getValue());
+					} else {
+						NewHandler.this.sendNewEventEmail(formData);
+					}
+
+					eventService.create(formData);
+				}
+			}, Jobs.newInput()
+					.withName("Creating event for {0} By {1}", eventGuestEmail,
+							EventForm.this.getOrganizerEmailField().getValue())
+					.withRunContext(ClientRunContexts.copyCurrent()).withThreadName("Creating event"));
+
 		}
 
 		private void sendNewEventEmail(final EventFormData formData) {

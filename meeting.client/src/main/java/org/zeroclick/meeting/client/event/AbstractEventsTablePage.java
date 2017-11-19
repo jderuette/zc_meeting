@@ -823,6 +823,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 			@Override
 			protected void execAction() {
+
 				final RejectEventForm form = new RejectEventForm();
 				final Long currentEventId = Table.this.getEventIdColumn().getSelectedValue();
 				final ZonedDateTime start = Table.this.getStartDateColumn().getSelectedZonedValue();
@@ -835,6 +836,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 						org.zeroclick.meeting.client.event.AbstractEventsTablePage.Table.this.refuseCancelFormListener);
 				// start the form using its modify handler
 				form.startReject(Table.this.isHeldByCurrentUser(Table.this.getSelectedRow()));
+
 			}
 
 			@Override

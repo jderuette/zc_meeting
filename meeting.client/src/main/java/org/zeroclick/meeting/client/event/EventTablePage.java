@@ -973,6 +973,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 				final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 				notificationHelper.addProcessingNotification("zc.meeting.notification.searchingNextEvent");
+
 				try {
 					Table.this.changeDatesNext();
 					Table.this.reloadMenus(Table.this.getSelectedRow());
@@ -1075,6 +1076,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				protected void execAction() {
 					final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 					notificationHelper.addProcessingNotification("zc.meeting.notification.searchingNextEvent");
+
 					try {
 						final ITableRow row = Table.this.getSelectedRow();
 						final Long guestId = Table.this.getGuestIdColumn().getValue(row.getRowIndex());

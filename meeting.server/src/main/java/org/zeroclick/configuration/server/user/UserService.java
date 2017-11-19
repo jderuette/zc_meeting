@@ -159,7 +159,12 @@ public class UserService extends CommonService implements IUserService {
 
 	@Override
 	public UserFormData load(final UserFormData formData) {
-		return this.getDataCache().get(formData.getUserId().getValue());
+		UserFormData cachedData = this.getDataCache().get(formData.getUserId().getValue());
+		if (null == cachedData) {
+			// avoid NPE
+			cachedData = formData;
+		}
+		return cachedData;
 	}
 
 	private UserFormData loadForCache(final UserFormData formData) {
