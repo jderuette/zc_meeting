@@ -14,10 +14,12 @@ import org.eclipse.scout.rt.platform.holders.NVPair;
 import org.eclipse.scout.rt.server.clientnotification.ClientNotificationRegistry;
 import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.eclipse.scout.rt.shared.TEXTS;
+import org.eclipse.scout.rt.shared.cache.ICache;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.common.AbstractDataCache;
 import org.zeroclick.common.CommonService;
 import org.zeroclick.common.document.DocumentFormData;
 import org.zeroclick.common.document.DocumentFormData.LinkedRole.LinkedRoleRowData;
@@ -49,7 +51,20 @@ public class UserService extends CommonService implements IUserService {
 
 	public static final Long[] DEFAULT_ROLES_VALUES = new Long[] { 2l };
 	public static final Set<Long> DEFAULT_ROLES = new HashSet<>(Arrays.asList(DEFAULT_ROLES_VALUES));
-	public static final Long DEFAULT_SUBSCRIPTION = 3l;;
+	public static final Long DEFAULT_SUBSCRIPTION = 3l;
+
+	private final AbstractDataCache<Long, UserFormData> dataCache = new AbstractDataCache<Long, UserFormData>() {
+		@Override
+		public UserFormData loadForCache(final Long key) {
+			final UserFormData formData = new UserFormData();
+			formData.getUserId().setValue(key);
+			return UserService.this.loadForCache(formData);
+		}
+	};
+
+	private ICache<Long, UserFormData> getDataCache() {
+		return this.dataCache.getCache();
+	}
 
 	@Override
 	public UserTablePageData getUserTableData(final SearchFilter filter) {
@@ -144,6 +159,10 @@ public class UserService extends CommonService implements IUserService {
 
 	@Override
 	public UserFormData load(final UserFormData formData) {
+		return this.getDataCache().get(formData.getUserId().getValue());
+	}
+
+	private UserFormData loadForCache(final UserFormData formData) {
 		if (!ACCESS.check(new ReadUserPermission(formData.getUserId().getValue()))) {
 			super.throwAuthorizationFailed();
 		}
@@ -372,13 +391,14 @@ public class UserService extends CommonService implements IUserService {
 		}
 
 		this.updatesRoles(formData, !formData.getAutofilled());
-		// Usefull only for admin, dor other user store(ValidateCpsForm) already
+		// Usefull only for admin, for other user store(ValidateCpsForm) already
 		// do the update
 		this.updateSubscriptions(formData, !formData.getAutofilled());
 
 		// reset permission cache
-
 		this.sendModifiedNotifications(formData);
+		// reset local user cache
+		this.dataCache.clearCache(formData.getUserId().getValue());
 
 		return formData;
 	}
@@ -506,6 +526,9 @@ public class UserService extends CommonService implements IUserService {
 		this.changeInvitedByByUserId(formData);
 		SQL.insert(SQLs.USER_DELETE, formData);
 
+		// reset local user cache
+		this.dataCache.clearCache(formData.getUserId().getValue());
+
 	}
 
 	private void deleteUserRoleByUser(final UserFormData formData) {
@@ -524,6 +547,9 @@ public class UserService extends CommonService implements IUserService {
 		LOG.info("Changing 'invited_by' for user : " + formData.getUserId().getValue() + " to the new User : "
 				+ defaultInvitedBy);
 		SQL.insert(SQLs.USER_UPDATE_INVITED_BY_BY_USER, formData, new NVPair("invitedBy", defaultInvitedBy));
+		// reset local user cache for all User as many user may be affected by
+		// operation
+		this.dataCache.clearCache();
 	}
 
 	@Override
@@ -546,6 +572,8 @@ public class UserService extends CommonService implements IUserService {
 		SQL.update(SQLs.USER_UPDATE_ONBOARDING, formData);
 
 		this.sendModifiedNotifications(userFormForNotifications);
+
+		this.dataCache.clearCache(formData.getUserId().getValue());
 
 		return formData;
 	}
@@ -583,6 +611,8 @@ public class UserService extends CommonService implements IUserService {
 		acs.clearUserCache(this.buildNotifiedUsers(formData));
 
 		this.sendModifiedNotifications(formData);
+
+		this.dataCache.clearCache(formData.getUserId().getValue());
 
 		return formData;
 	}
@@ -644,11 +674,10 @@ public class UserService extends CommonService implements IUserService {
 	@Override
 	public String getUserTimeZone(final Long userId) {
 		// No permission check to allow guest get timeZone of hosts
-		final UserFormData formData = new UserFormData();
+		UserFormData formData = new UserFormData();
 		formData.getUserId().setValue(userId);
 
-		SQL.selectInto(SQLs.USER_SELECT_TIME_ZONE + SQLs.USER_SELECT_FILTER_ID + SQLs.USER_SELECT_INTO_TIME_ZONE,
-				formData, new NVPair("currentUser", userId));
+		formData = this.load(formData);
 
 		return formData.getTimeZone().getValue();
 	}
@@ -657,11 +686,10 @@ public class UserService extends CommonService implements IUserService {
 	public String getUserLanguage(final Long userId) {
 		// No permission check to allow organizer get language of guest (for
 		// email)
-		final UserFormData formData = new UserFormData();
+		UserFormData formData = new UserFormData();
 		formData.getUserId().setValue(userId);
 
-		SQL.selectInto(SQLs.USER_SELECT_LANGUAGE + SQLs.USER_SELECT_FILTER_ID + SQLs.USER_SELECT_INTO_LANGUAGE,
-				formData, new NVPair("currentUser", userId));
+		formData = this.load(formData);
 
 		return formData.getLanguage().getValue();
 	}
@@ -669,16 +697,17 @@ public class UserService extends CommonService implements IUserService {
 	@Override
 	public Set<String> getUserNotificationIds(final Long userId) {
 		final Set<String> notificationsIds = new HashSet<>();
+		UserFormData formData = new UserFormData();
+		formData.getUserId().setValue(userId);
 
-		final Object[][] datas = SQL.select(SQLs.USER_SELECT_NOTIFICATION_IDS + SQLs.USER_SELECT_FILTER_ID,
-				new NVPair("currentUser", userId));
+		formData = this.load(formData);
 
-		for (int row = 0; row < datas.length; row++) {
-			for (int col = 0; col < datas[row].length; col++) {
-				notificationsIds.add((String) datas[row][col]);
-			}
+		if (null != formData.getLogin().getValue() && !formData.getLogin().getValue().isEmpty()) {
+			notificationsIds.add(formData.getLogin().getValue());
 		}
-
+		if (null != formData.getEmail().getValue() && !formData.getEmail().getValue().isEmpty()) {
+			notificationsIds.add(formData.getEmail().getValue());
+		}
 		return notificationsIds;
 	}
 
@@ -780,9 +809,12 @@ public class UserService extends CommonService implements IUserService {
 	@Override
 	public UserFormData loggedIn(final UserFormData userData) {
 		// No permision check, because used during login
+		final Date now = new Date();
 		LOG.info("User " + userData.getEmail() + " (login : " + userData.getLogin()
 				+ ") juste logged in, updating stats data");
-		SQL.insert(SQLs.USER_UPDATE_LATS_LOGIN, userData);
+		SQL.insert(SQLs.USER_UPDATE_LATS_LOGIN, userData, new NVPair("currentDate", now));
+
+		this.dataCache.clearCache(userData.getUserId().getValue());
 		return userData;
 	}
 
@@ -798,6 +830,7 @@ public class UserService extends CommonService implements IUserService {
 				final Long userId = itUsers.next();
 				try {
 					this.addSubscriptionAsynch(userId, 3l);
+					this.dataCache.clearCache(userId);
 				} catch (final Exception ex) {
 					LOG.warn("Error while trying to insert Role " + roleId + " to User :" + userId
 							+ " continuing to next User", ex);

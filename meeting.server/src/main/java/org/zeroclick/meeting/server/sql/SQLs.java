@@ -409,14 +409,6 @@ public interface SQLs {
 	String USER_SELECT_INTO = " INTO :userId, :login, :email, :hashedPassword, :timeZone, :invitedBy, :language";
 	String USER_SELECT_INTO_ID_ONLY = " INTO :userId";
 
-	String USER_SELECT_TIME_ZONE = "SELECT time_zone FROM APP_USER WHERE 1=1";
-	String USER_SELECT_INTO_TIME_ZONE = " INTO :timeZone";
-
-	String USER_SELECT_LANGUAGE = "SELECT language FROM APP_USER WHERE 1=1";
-	String USER_SELECT_INTO_LANGUAGE = " INTO :language";
-
-	String USER_SELECT_NOTIFICATION_IDS = "SELECT login, email FROM APP_USER WHERE 1=1";
-
 	String USER_SELECT_INTO_ROLES = " INTO :{rolesBox}";
 	String USER_SELECT_INTO_SUBSCRIPTION = " INTO :subscriptionBox";
 
@@ -426,7 +418,7 @@ public interface SQLs {
 	String USER_INSERT = "INSERT INTO APP_USER (user_id) VALUES (:userId)";
 
 	String USER_UPDATE_LATS_LOGIN = "UPDATE APP_USER set " + PatchAddLastLogin.PATCHED_ADDED_COLUMN
-			+ "=now() WHERE user_id=:userId";
+			+ "=:currentDate WHERE user_id=:userId";
 
 	String USER_ALTER_TABLE_INVITED_BY = "ALTER TABLE APP_USER ADD COLUMN invited_by INTEGER";
 	String USER_ALTER_TABLE_INVITED_BY_CONSTRAINT = "ALTER TABLE APP_USER ADD CONSTRAINT FK_INVITED_BY FOREIGN KEY (invited_by) REFERENCES APP_USER(user_id)";

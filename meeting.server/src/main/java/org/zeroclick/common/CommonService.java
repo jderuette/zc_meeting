@@ -80,4 +80,5 @@ public class CommonService {
 	private RunContext buildNewTransactionRunContext() {
 		return new ServerRunContextProducer().produce(this.userHelper.getCurrentUserSubject());
 	}
+
 }
