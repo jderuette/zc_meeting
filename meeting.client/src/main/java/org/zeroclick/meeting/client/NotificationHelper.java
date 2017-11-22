@@ -31,6 +31,7 @@ public class NotificationHelper {
 
 	private static final Long DURATION_SHORT = 5000L;
 	private static final Long DURATION_MEDIUM = 10000L;
+	private static final Long DURATION_LONG = 15000L;
 
 	public void addProcessingNotification(final String messageKey) {
 		this.addDesktopNotification(IStatus.INFO, DURATION_SHORT, messageKey);
@@ -46,6 +47,22 @@ public class NotificationHelper {
 
 	public void addProccessedNotification(final String messageKey, final String... messageArguments) {
 		this.addDesktopNotification(IStatus.OK, DURATION_MEDIUM, messageKey, messageArguments);
+	}
+
+	public void addWarningNotification(final String messageKey) {
+		this.addDesktopNotification(IStatus.WARNING, DURATION_MEDIUM, messageKey);
+	}
+
+	public void addWarningNotification(final String messageKey, final String... messageArguments) {
+		this.addDesktopNotification(IStatus.WARNING, DURATION_MEDIUM, messageKey, messageArguments);
+	}
+
+	public void addErrorNotification(final String messageKey) {
+		this.addDesktopNotification(IStatus.ERROR, DURATION_LONG, messageKey);
+	}
+
+	public void addErrorNotification(final String messageKey, final String... messageArguments) {
+		this.addDesktopNotification(IStatus.ERROR, DURATION_LONG, messageKey, messageArguments);
 	}
 
 	private void addDesktopNotification(final Integer severity, final Long duration, final String messageKey) {

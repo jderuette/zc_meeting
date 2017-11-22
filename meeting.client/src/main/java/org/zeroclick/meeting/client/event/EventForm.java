@@ -1,5 +1,6 @@
 package org.zeroclick.meeting.client.event;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -17,11 +18,13 @@ import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractProposalColumn
 import org.eclipse.scout.rt.client.ui.form.AbstractForm;
 import org.eclipse.scout.rt.client.ui.form.AbstractFormHandler;
 import org.eclipse.scout.rt.client.ui.form.IForm;
+import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractButton;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractCancelButton;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractOkButton;
 import org.eclipse.scout.rt.client.ui.form.fields.datefield.AbstractDateField;
 import org.eclipse.scout.rt.client.ui.form.fields.groupbox.AbstractGroupBox;
 import org.eclipse.scout.rt.client.ui.form.fields.longfield.AbstractLongField;
+import org.eclipse.scout.rt.client.ui.form.fields.sequencebox.AbstractSequenceBox;
 import org.eclipse.scout.rt.client.ui.form.fields.smartfield.AbstractProposalField;
 import org.eclipse.scout.rt.client.ui.form.fields.smartfield.AbstractSmartField;
 import org.eclipse.scout.rt.client.ui.form.fields.stringfield.AbstractStringField;
@@ -39,6 +42,7 @@ import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
 import org.zeroclick.comon.text.TextsHelper;
+import org.zeroclick.comon.user.AppUserHelper;
 import org.zeroclick.configuration.client.user.UserForm;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper.SubscriptionHelperData;
@@ -48,6 +52,7 @@ import org.zeroclick.configuration.shared.venue.VenueLookupCall;
 import org.zeroclick.meeting.client.NotificationHelper;
 import org.zeroclick.meeting.client.common.DurationLookupCall;
 import org.zeroclick.meeting.client.common.EventStateLookupCall;
+import org.zeroclick.meeting.client.common.SlotHelper;
 import org.zeroclick.meeting.client.common.SlotLookupCall;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.CancelButton;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.CreatedDateField;
@@ -62,8 +67,13 @@ import org.zeroclick.meeting.client.event.EventForm.MainBox.GuestIdField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.OkButton;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.OrganizerEmailField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.OrganizerField;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.PeriodeBox;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.PeriodeBox.MaximalStartDateField;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.PeriodeBox.MinimalStartDateField;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.PeriodeBox.SlotSequenceBox;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.PeriodeBox.SlotSequenceBox.AdvancePeriodButton;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.PeriodeBox.SlotSequenceBox.SlotField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.ReasonField;
-import org.zeroclick.meeting.client.event.EventForm.MainBox.SlotField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.StartDateField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.StateField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.SubjectField;
@@ -268,6 +278,26 @@ public class EventForm extends AbstractForm {
 
 	public MultipleEmailBox getMultipleEmailBox() {
 		return this.getFieldByClass(MultipleEmailBox.class);
+	}
+
+	public PeriodeBox getPeriodeBox() {
+		return this.getFieldByClass(PeriodeBox.class);
+	}
+
+	public SlotSequenceBox getSlotBox() {
+		return this.getFieldByClass(SlotSequenceBox.class);
+	}
+
+	public AdvancePeriodButton getAdvancePeriodButton() {
+		return this.getFieldByClass(AdvancePeriodButton.class);
+	}
+
+	public MinimalStartDateField getMinimalStartDateField() {
+		return this.getFieldByClass(MinimalStartDateField.class);
+	}
+
+	public MaximalStartDateField getMaximalStartDateField() {
+		return this.getFieldByClass(MaximalStartDateField.class);
 	}
 
 	public OkButton getOkButton() {
@@ -698,20 +728,183 @@ public class EventForm extends AbstractForm {
 		}
 
 		@Order(6000)
-		public class SlotField extends AbstractSmartField<Integer> {
+		public class PeriodeBox extends AbstractGroupBox {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("zc.meeting.slot");
+				return null;
 			}
 
 			@Override
-			protected boolean getConfiguredMandatory() {
-				return Boolean.TRUE;
+			protected boolean getConfiguredLabelVisible() {
+				return Boolean.FALSE;
 			}
 
-			@Override
-			protected Class<? extends ILookupCall<Integer>> getConfiguredLookupCall() {
-				return SlotLookupCall.class;
+			@Order(1000)
+			public class SlotSequenceBox extends AbstractSequenceBox {
+				@Override
+				protected String getConfiguredLabel() {
+					return null;
+				}
+
+				@Override
+				protected boolean getConfiguredLabelVisible() {
+					return Boolean.FALSE;
+				}
+
+				@Override
+				protected boolean getConfiguredAutoCheckFromTo() {
+					return false;
+				}
+
+				@Order(1000)
+				public class AdvancePeriodButton extends AbstractButton {
+					private static final String ICON_DISABLE = Icons.CaretRight;
+					private static final String ICON_ENABLED = Icons.CaretDown;
+
+					@Override
+					protected String getConfiguredLabel() {
+						return null;
+					}
+
+					@Override
+					protected int getConfiguredDisplayStyle() {
+						return DISPLAY_STYLE_TOGGLE;
+					}
+
+					@Override
+					protected boolean getConfiguredLabelVisible() {
+						return Boolean.FALSE;
+					}
+
+					@Override
+					protected String getConfiguredIconId() {
+						return ICON_DISABLE;
+					}
+
+					@Override
+					protected boolean getConfiguredProcessButton() {
+						return Boolean.FALSE;
+					}
+
+					@Override
+					protected void execSelectionChanged(final boolean selection) {
+						if (this.isSelected()) {
+							this.show();
+						} else {
+							this.hide();
+						}
+					}
+
+					// @Override
+					// protected void execClickAction() {
+					// if (this.isSelected()) {
+					// this.show();
+					// } else {
+					// this.hide();
+					// }
+					// }
+
+					private void show() {
+						this.setIconId(ICON_ENABLED);
+						EventForm.this.getMinimalStartDateField().setVisible(Boolean.TRUE);
+						EventForm.this.getMaximalStartDateField().setVisible(Boolean.TRUE);
+					}
+
+					private void hide() {
+						this.setIconId(ICON_DISABLE);
+						EventForm.this.getMinimalStartDateField().setVisible(Boolean.FALSE);
+						EventForm.this.getMinimalStartDateField().setValue(null);
+						EventForm.this.getMaximalStartDateField().setVisible(Boolean.FALSE);
+						EventForm.this.getMaximalStartDateField().setValue(null);
+					}
+				}
+
+				@Order(2000)
+				public class SlotField extends AbstractSmartField<Integer> {
+					@Override
+					protected String getConfiguredLabel() {
+						return TEXTS.get("zc.meeting.slot");
+					}
+
+					@Override
+					protected boolean getConfiguredMandatory() {
+						return Boolean.TRUE;
+					}
+
+					@Override
+					protected Class<? extends ILookupCall<Integer>> getConfiguredLookupCall() {
+						return SlotLookupCall.class;
+					}
+
+					@Override
+					protected void execChangedValue() {
+						// TODO Djer is their a better way to validate days
+						// available in range and display errors on min/max date
+						// ?
+						EventForm.this.getMinimalStartDateField()
+								.execValidateValue(EventForm.this.getMinimalStartDateField().getValue());
+						EventForm.this.getMaximalStartDateField()
+								.execValidateValue(EventForm.this.getMaximalStartDateField().getValue());
+					}
+				}
+			}
+
+			@Order(3000)
+			public class MinimalStartDateField extends AbstractDateField {
+				@Override
+				protected String getConfiguredLabel() {
+					return TEXTS.get("zc.meeting.minimalStartDate");
+				}
+
+				@Override
+				protected boolean getConfiguredVisible() {
+					return Boolean.FALSE;
+				}
+
+				@Override
+				protected Date execValidateValue(final Date rawValue) {
+					if (null != rawValue && null != EventForm.this.getMaximalStartDateField().getValue()
+							&& rawValue.after(EventForm.this.getMaximalStartDateField().getValue())) {
+						throw new VetoException(TEXTS.get("zc.meeting.minimalStartDate.afterMaximalDate"));
+					}
+					PeriodeBox.this.checkAvailableDaysInSlot(rawValue,
+							EventForm.this.getMaximalStartDateField().getValue());
+					return super.execValidateValue(rawValue);
+				}
+			}
+
+			@Order(4000)
+			public class MaximalStartDateField extends AbstractDateField {
+				@Override
+				protected String getConfiguredLabel() {
+					return TEXTS.get("zc.meeting.maximalStartDate");
+				}
+
+				@Override
+				protected Date execValidateValue(final Date rawValue) {
+					if (null != rawValue && null != EventForm.this.getMinimalStartDateField().getValue()
+							&& rawValue.before(EventForm.this.getMinimalStartDateField().getValue())) {
+						throw new VetoException(TEXTS.get("zc.meeting.maximalStartDate.afterMinimalDate"));
+					}
+					PeriodeBox.this.checkAvailableDaysInSlot(EventForm.this.getMinimalStartDateField().getValue(),
+							rawValue);
+					return super.execValidateValue(rawValue);
+				}
+
+				@Override
+				protected boolean getConfiguredVisible() {
+					return Boolean.FALSE;
+				}
+			}
+
+			private void checkAvailableDaysInSlot(final Date minimalDate, final Date maximalDate) {
+				final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
+				final Integer slot = EventForm.this.getSlotField().getValue();
+
+				if (null != minimalDate && null != maximalDate && !SlotHelper.get().hasMatchingDays(minimalDate,
+						maximalDate, slot, appUserHelper.getCurrentUserId())) {
+					throw new VetoException(TEXTS.get("zc.meeting.slot.noSlotWithMinimalAndMaximalDates"));
+				}
 			}
 		}
 

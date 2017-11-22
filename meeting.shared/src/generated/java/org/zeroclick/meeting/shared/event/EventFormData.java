@@ -116,6 +116,14 @@ public class EventFormData extends AbstractFormData {
 		return getPropertyByClass(LastModifierProperty.class);
 	}
 
+	public MaximalStartDate getMaximalStartDate() {
+		return getFieldByClass(MaximalStartDate.class);
+	}
+
+	public MinimalStartDate getMinimalStartDate() {
+		return getFieldByClass(MinimalStartDate.class);
+	}
+
 	public Organizer getOrganizer() {
 		return getFieldByClass(Organizer.class);
 	}
@@ -261,6 +269,16 @@ public class EventFormData extends AbstractFormData {
 	}
 
 	public static class LastModifierProperty extends AbstractPropertyData<Long> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class MaximalStartDate extends AbstractValueFieldData<Date> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class MinimalStartDate extends AbstractValueFieldData<Date> {
 
 		private static final long serialVersionUID = 1L;
 	}

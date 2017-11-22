@@ -11,6 +11,7 @@
 package org.zeroclick.meeting.server.sql;
 
 import org.zeroclick.configuration.shared.role.IRoleTypeLookupService;
+import org.zeroclick.meeting.server.sql.migrate.data.PatchAddEventMinAndMaxDate;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchAddLastLogin;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchAddSlotCode;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchConfigureCalendar;
@@ -53,7 +54,8 @@ public interface SQLs {
 	String AND_LIKE_CAUSE = "AND LOWER(%s) LIKE LOWER(:%s || '%%') ";
 
 	String EVENT_PAGE_SELECT = "SELECT event_id, organizer, organizer_email, duration, slot, email, guest_id, state, reason, subject, venue, startDate, endDate, externalIdRecipient, externalIdOrganizer, "
-			+ PatchEventAddCreatedDate.PATCHED_COLUMN + "  FROM EVENT WHERE 1=1";
+			+ PatchEventAddCreatedDate.PATCHED_COLUMN + ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MIN_DATE_COLUMN
+			+ ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MAX_DATE_COLUMN + " FROM EVENT WHERE 1=1";
 	// + "CASE WHEN organizer = :currentUser THEN 1 ELSE 0 END AS held"
 	// + "CASE WHEN email = :currentUserEmail THEN 1 ELSE 0 END AS guest FROM
 	// EVENT WHERE 1=1";
@@ -71,7 +73,7 @@ public interface SQLs {
 	String EVENT_PAGE_SELECT_FILTER_RECIPIENT = " OR email = :currentUserEmail";
 	String EVENT_PAGE_SELECT_FILTER_USER_OR_RECIPIENT = " AND (organizer = :currentUser OR guest_id = :currentUser)";
 
-	String EVENT_PAGE_DATA_SELECT_INTO = " INTO :{page.eventId}, :{page.organizer}, :{page.organizerEmail}, :{page.duration}, :{page.slot}, :{page.email}, :{page.guestId}, :{page.state}, :{page.reason}, :{page.subject}, :{page.venue}, :{page.startDate}, :{page.endDate}, :{page.externalIdRecipient}, :{page.externalIdOrganizer}, :{page.createdDate}";
+	String EVENT_PAGE_DATA_SELECT_INTO = " INTO :{page.eventId}, :{page.organizer}, :{page.organizerEmail}, :{page.duration}, :{page.slot}, :{page.email}, :{page.guestId}, :{page.state}, :{page.reason}, :{page.subject}, :{page.venue}, :{page.startDate}, :{page.endDate}, :{page.externalIdRecipient}, :{page.externalIdOrganizer}, :{page.createdDate}, :{page.minimalStartDate}, :{page.maximalStartDate}";
 
 	String EVENT_SELECT_USERS_EVENT_GUEST = "SELECT event_id, organizer FROM EVENT WHERE guest_id=:currentUser";
 	String EVENT_SELECT_USERS_EVENT_HOST = "SELECT event_id, guest_id FROM EVENT WHERE organizer=:currentUser";
@@ -80,12 +82,15 @@ public interface SQLs {
 	String EVENT_INSERT = "INSERT INTO EVENT (event_id, organizer) " + "VALUES (:eventId, :organizer)";
 
 	String EVENT_UPDATE = "UPDATE EVENT SET organizer_email=:organizerEmail, duration=:duration, slot=:slot, email=:email, guest_id=:guestId, state=:state, subject=:subject, venue=:venue, startDate=:startDate, endDate=:endDate, externalIdRecipient=:externalIdRecipient, externalIdOrganizer=:externalIdOrganizer, "
-			+ PatchEventAddCreatedDate.PATCHED_COLUMN + "=:createdDate WHERE event_id=:eventId";
+			+ PatchEventAddCreatedDate.PATCHED_COLUMN + "=:createdDate, "
+			+ PatchAddEventMinAndMaxDate.PATCHED_ADDED_MIN_DATE_COLUMN + "=:minimalStartDate, "
+			+ PatchAddEventMinAndMaxDate.PATCHED_ADDED_MAX_DATE_COLUMN + "=:maximalStartDate WHERE event_id=:eventId";
 	String EVENT_UPDATE_STATE = "UPDATE EVENT SET state=:state, reason=:reason WHERE event_id=:eventId";
 
 	String EVENT_SELECT = "SELECT duration, slot, email, guest_id, state, reason, subject, venue, startDate, endDate, externalIdRecipient, externalIdOrganizer, organizer, organizer_email, "
-			+ PatchEventAddCreatedDate.PATCHED_COLUMN + " FROM EVENT" + " WHERE event_id=:eventId"
-			+ " INTO :duration, :slot, :email, :guestId, :state, :reason, :subject, :venue, :startDate, :endDate, :externalIdRecipient, :externalIdOrganizer, :organizer, :organizerEmail, :createdDate";
+			+ PatchEventAddCreatedDate.PATCHED_COLUMN + ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MIN_DATE_COLUMN
+			+ ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MAX_DATE_COLUMN + " FROM EVENT WHERE event_id=:eventId"
+			+ " INTO :duration, :slot, :email, :guestId, :state, :reason, :subject, :venue, :startDate, :endDate, :externalIdRecipient, :externalIdOrganizer, :organizer, :organizerEmail, :createdDate, :minimalStartDate, :maximalStartDate";
 
 	String EVENT_SELECT_REJECT = "SELECT organizer_email, email, subject, venue, organizer, guest_id, externalIdOrganizer, externalIdRecipient FROM EVENT WHERE event_id=:eventId INTO :organizerEmail, :email, :subject, :venue, :organizer, :guestId, :externalIdOrganizer, :externalIdRecipient";
 
@@ -118,6 +123,11 @@ public interface SQLs {
 
 	String EVENT_ALTER_TABLE_ADD_CREATED_DATE = "ALTER TABLE EVENT ADD COLUMN "
 			+ PatchEventAddCreatedDate.PATCHED_COLUMN + " TIMESTAMP";
+
+	String EVENT_ALTER_TABLE_ADD_MINIMAL_DATE = "ALTER TABLE EVENT ADD COLUMN "
+			+ PatchAddEventMinAndMaxDate.PATCHED_ADDED_MIN_DATE_COLUMN + " TIMESTAMP";
+	String EVENT_ALTER_TABLE_ADD_MAXIMAL_DATE = "ALTER TABLE EVENT ADD COLUMN "
+			+ PatchAddEventMinAndMaxDate.PATCHED_ADDED_MAX_DATE_COLUMN + " TIMESTAMP";
 
 	/**
 	 * OAuth credential

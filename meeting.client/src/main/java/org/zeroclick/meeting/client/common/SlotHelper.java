@@ -21,17 +21,22 @@ import java.time.LocalDateTime;
 import java.time.OffsetTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.scout.rt.platform.BEANS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.comon.date.DateHelper;
+import org.zeroclick.comon.user.AppUserHelper;
 import org.zeroclick.configuration.shared.slot.ISlotService;
 
 /**
@@ -357,6 +362,54 @@ public class SlotHelper {
 		return period.getValidDayOfWeek().get(0);
 	}
 
+	public boolean hasMatchingDays(final Date minimalDate, final Date maximalDate, final Integer slotId,
+			final Long userId) {
+		Boolean hasMatchingDay = Boolean.FALSE;
+
+		final DateHelper dateHelper = BEANS.get(DateHelper.class);
+		final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
+		final ZonedDateTime zonedStart = dateHelper.getZonedValue(appUserHelper.getCurrentUserTimeZone(), minimalDate);
+		final ZonedDateTime zonedEnd = dateHelper.getZonedValue(appUserHelper.getCurrentUserTimeZone(), maximalDate);
+
+		final long nbDayDiff = dateHelper.getRelativeTimeShift(zonedStart, zonedEnd, Boolean.TRUE, ChronoUnit.DAYS);
+
+		if (nbDayDiff >= 7) {
+			hasMatchingDay = Boolean.TRUE;
+		} else {
+			final Set<DayOfWeek> avialableDaysInSlot = this.getDays(slotId, userId);
+			if (avialableDaysInSlot.contains(zonedStart.getDayOfWeek())
+					|| avialableDaysInSlot.contains(zonedEnd.getDayOfWeek())) {
+				hasMatchingDay = Boolean.TRUE;
+			} else if (nbDayDiff > 1) {
+				// min and max are not the same day
+				ZonedDateTime nextDayBetweenMinAndMax = zonedStart.plus(1, ChronoUnit.DAYS);
+				while (!nextDayBetweenMinAndMax.isAfter(zonedEnd)) {
+					if (avialableDaysInSlot.contains(nextDayBetweenMinAndMax.getDayOfWeek())) {
+						hasMatchingDay = Boolean.TRUE;
+						break;
+					}
+					nextDayBetweenMinAndMax = nextDayBetweenMinAndMax.plus(1, ChronoUnit.DAYS);
+				}
+			}
+		}
+
+		return hasMatchingDay;
+	}
+
+	private Set<DayOfWeek> getDays(final Integer slotId, final Long userId) {
+		final List<DayDuration> periods = this.getUserPeriods(slotId, userId);
+		final Set<DayOfWeek> unicDaysInPeriod = new HashSet<>();
+
+		for (final DayDuration period : periods) {
+			for (final DayOfWeek day : period.getValidDayOfWeek()) {
+				unicDaysInPeriod.add(day);
+			}
+		}
+
+		return unicDaysInPeriod;
+
+	}
+
 	public static class DayOfWeekLists {
 		public static final List<DayOfWeek> ALL_DAYS = new ArrayList<>(
 				Arrays.asList(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY,
@@ -367,4 +420,5 @@ public class SlotHelper {
 		public static final List<DayOfWeek> STANDARD_WEEKEND_DAYS = new ArrayList<>(
 				Arrays.asList(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY));
 	}
+
 }

@@ -570,20 +570,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		}
 
 		private List<Object> getListFromForm(final EventFormData formData) {
-			// EventIdColumn[Id],
-			// OrganizerColumn[Host],
-			// OrganizerEmailColumn[Host],
-			// SubjectField [Subject ]
-			// GuestIdColumn[AttendeeId],
-			// EmailColumn[Attendee],
-			// DurationColumn[Duration],
-			// StateColumn[State],
-			// StartDateColumn[Start],
-			// EndDateColumn[End],
-			// SlotColumn[Slot],
-			// ExternalIdOrganizerColumn[External Id],
-			// ExternalIdRecipientColumn[External Id]
-			// reasonColumn [reason]
 			final List<Object> datas = new ArrayList<>();
 			datas.add(formData.getEventId());
 			datas.add(formData.getOrganizer().getValue());
@@ -593,6 +579,8 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			datas.add(formData.getEmail().getValue());
 			datas.add(formData.getSubject().getValue());
 			datas.add(formData.getSlot().getValue());
+			datas.add(formData.getMinimalStartDate().getValue());
+			datas.add(formData.getMaximalStartDate().getValue());
 			datas.add(formData.getDuration().getValue());
 			datas.add(formData.getVenue().getValue());
 			datas.add(formData.getState().getValue());
@@ -984,6 +972,14 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			return this.getColumnSet().getColumnByClass(CreatedDateColumn.class);
 		}
 
+		public AbstractEventsTablePage<?>.Table.MinimalStartDateColumn getMinimalStartDateColumn() {
+			return this.getColumnSet().getColumnByClass(MinimalStartDateColumn.class);
+		}
+
+		public AbstractEventsTablePage<?>.Table.MaximalStartDateColumn getMaximalStartDateColumn() {
+			return this.getColumnSet().getColumnByClass(MaximalStartDateColumn.class);
+		}
+
 		public AbstractEventsTablePage<?>.Table.OrganizerColumn getOrganizerColumn() {
 			return this.getColumnSet().getColumnByClass(OrganizerColumn.class);
 		}
@@ -1162,6 +1158,42 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			@Override
 			protected Class<? extends ILookupCall<Integer>> getConfiguredLookupCall() {
 				return SlotLookupCall.class;
+			}
+		}
+
+		@Order(150)
+		public class MinimalStartDateColumn extends AbstractZonedDateColumn {
+			@Override
+			protected String getConfiguredHeaderText() {
+				return TEXTS.get("zc.meeting.minimalStartDate");
+			}
+
+			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.FALSE;
+			}
+
+			@Override
+			protected int getConfiguredWidth() {
+				return 100;
+			}
+		}
+
+		@Order(175)
+		public class MaximalStartDateColumn extends AbstractZonedDateColumn {
+			@Override
+			protected String getConfiguredHeaderText() {
+				return TEXTS.get("zc.meeting.maximalStartDate");
+			}
+
+			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.FALSE;
+			}
+
+			@Override
+			protected int getConfiguredWidth() {
+				return 100;
 			}
 		}
 

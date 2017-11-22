@@ -36,6 +36,7 @@ import org.eclipse.scout.rt.platform.util.date.DateFormatProvider;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.comon.user.AppUserHelper;
 
 /**
  * @author djer
@@ -222,7 +223,7 @@ public class DateHelper {
 	}
 
 	/**
-	 * unit of time between now and end date. /!\ <ith byFullTimeSlot, if now is
+	 * unit of time between now and end date. /!\ with byFullTimeSlot, if now is
 	 * in the "current" slot 0 is return else the number of slot between now and
 	 * end date (java API differ, for "day" if there is less than 24hours, day
 	 * diff will return 0)
@@ -234,6 +235,22 @@ public class DateHelper {
 	 */
 	public long getRelativeTimeShift(final ZonedDateTime end, final Boolean byFullTimeSlot, final ChronoUnit unit) {
 		final ZonedDateTime start = this.getStartPoint(end, byFullTimeSlot, unit);
+		return this.getRelativeTimeShift(start, end, byFullTimeSlot, unit);
+	}
+
+	/**
+	 * unit of time between now and end date. /!\ with byFullTimeSlot, if now is
+	 * in the "current" slot 0 is return else the number of slot between now and
+	 * end date (java API differ, for "day" if there is less than 24hours, day
+	 * diff will return 0)
+	 *
+	 * @param end
+	 * @param byFullTimeSlot
+	 * @param unit
+	 * @return
+	 */
+	public long getRelativeTimeShift(final ZonedDateTime start, final ZonedDateTime end, final Boolean byFullTimeSlot,
+			final ChronoUnit unit) {
 		final long secondesShift = start.until(end, ChronoUnit.SECONDS);
 		BigDecimal unitShift;
 		switch (unit) {
@@ -261,6 +278,26 @@ public class DateHelper {
 			break;
 		}
 		return unitShift.longValue();
+	}
+
+	/**
+	 * unit of time between now and end date. /!\ with byFullTimeSlot, if now is
+	 * in the "current" slot 0 is return else the number of slot between now and
+	 * end date (java API differ, for "day" if there is less than 24hours, day
+	 * diff will return 0)
+	 *
+	 * @param end
+	 * @param byFullTimeSlot
+	 * @param unit
+	 * @return
+	 */
+	public long getRelativeTimeShift(final Date start, final Date end, final Boolean byFullTimeSlot,
+			final ChronoUnit unit) {
+		final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
+		final ZonedDateTime zonedStart = this.getZonedValue(appUserHelper.getCurrentUserTimeZone(), start);
+		final ZonedDateTime zonedEnd = this.getZonedValue(appUserHelper.getCurrentUserTimeZone(), end);
+
+		return this.getRelativeTimeShift(zonedStart, zonedEnd, byFullTimeSlot, unit);
 	}
 
 	public ZonedDateTime getStartPoint(final ZonedDateTime zonedDateTime, final Boolean byFullTimeSlot,

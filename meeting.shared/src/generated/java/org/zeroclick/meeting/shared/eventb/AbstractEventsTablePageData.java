@@ -60,6 +60,8 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 		public static final String email = "email";
 		public static final String subject = "subject";
 		public static final String slot = "slot";
+		public static final String minimalStartDate = "minimalStartDate";
+		public static final String maximalStartDate = "maximalStartDate";
 		public static final String duration = "duration";
 		public static final String venue = "venue";
 		public static final String state = "state";
@@ -76,6 +78,8 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 		private String m_email;
 		private String m_subject;
 		private Integer m_slot;
+		private Date m_minimalStartDate;
+		private Date m_maximalStartDate;
 		private Integer m_duration;
 		private String m_venue;
 		private String m_state;
@@ -147,6 +151,22 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 
 		public void setSlot(Integer newSlot) {
 			m_slot = newSlot;
+		}
+
+		public Date getMinimalStartDate() {
+			return m_minimalStartDate;
+		}
+
+		public void setMinimalStartDate(Date newMinimalStartDate) {
+			m_minimalStartDate = newMinimalStartDate;
+		}
+
+		public Date getMaximalStartDate() {
+			return m_maximalStartDate;
+		}
+
+		public void setMaximalStartDate(Date newMaximalStartDate) {
+			m_maximalStartDate = newMaximalStartDate;
 		}
 
 		public Integer getDuration() {
