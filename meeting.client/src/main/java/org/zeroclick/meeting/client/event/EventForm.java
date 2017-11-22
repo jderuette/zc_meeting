@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.eclipse.scout.rt.client.IFieldStatus;
 import org.eclipse.scout.rt.client.context.ClientRunContexts;
 import org.eclipse.scout.rt.client.dto.FormData;
 import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
@@ -18,6 +19,7 @@ import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractProposalColumn
 import org.eclipse.scout.rt.client.ui.form.AbstractForm;
 import org.eclipse.scout.rt.client.ui.form.AbstractFormHandler;
 import org.eclipse.scout.rt.client.ui.form.IForm;
+import org.eclipse.scout.rt.client.ui.form.fields.DefaultFieldStatus;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractButton;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractCancelButton;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractOkButton;
@@ -838,13 +840,10 @@ public class EventForm extends AbstractForm {
 
 					@Override
 					protected void execChangedValue() {
-						// TODO Djer is their a better way to validate days
-						// available in range and display errors on min/max date
-						// ?
-						EventForm.this.getMinimalStartDateField()
-								.execValidateValue(EventForm.this.getMinimalStartDateField().getValue());
-						EventForm.this.getMaximalStartDateField()
-								.execValidateValue(EventForm.this.getMaximalStartDateField().getValue());
+						EventForm.this.getMinimalStartDateField().validateCurrentValue();
+						EventForm.this.getMaximalStartDateField().validateCurrentValue();
+						PeriodeBox.this.checkAvailableDaysInSlot(EventForm.this.getMinimalStartDateField().getValue(),
+								EventForm.this.getMaximalStartDateField().getValue());
 					}
 				}
 			}
@@ -857,37 +856,97 @@ public class EventForm extends AbstractForm {
 				}
 
 				@Override
+				protected boolean getConfiguredHasTime() {
+					return Boolean.TRUE;
+				}
+
+				@Override
 				protected boolean getConfiguredVisible() {
 					return Boolean.FALSE;
 				}
 
 				@Override
-				protected Date execValidateValue(final Date rawValue) {
+				protected Date getConfiguredAutoDate() {
+					final Date now = new Date();
+					now.setHours(0);
+					now.setMinutes(0);
+					now.setSeconds(0);
+					return now;
+				}
+
+				protected void validateCurrentValue() {
+					this.validateValue(this.getValue());
+				}
+
+				private void validateValue(final Date rawValue) {
 					if (null != rawValue && null != EventForm.this.getMaximalStartDateField().getValue()
 							&& rawValue.after(EventForm.this.getMaximalStartDateField().getValue())) {
 						throw new VetoException(TEXTS.get("zc.meeting.minimalStartDate.afterMaximalDate"));
 					}
+					this.clearErrorStatus();
+				}
+
+				@Override
+				protected Date execValidateValue(final Date rawValue) {
+					this.validateValue(rawValue);
 					PeriodeBox.this.checkAvailableDaysInSlot(rawValue,
 							EventForm.this.getMaximalStartDateField().getValue());
+					EventForm.this.getMaximalStartDateField().validateCurrentValue();
 					return super.execValidateValue(rawValue);
 				}
 			}
 
 			@Order(4000)
 			public class MaximalStartDateField extends AbstractDateField {
+
 				@Override
 				protected String getConfiguredLabel() {
 					return TEXTS.get("zc.meeting.maximalStartDate");
 				}
 
 				@Override
-				protected Date execValidateValue(final Date rawValue) {
+				protected boolean getConfiguredHasTime() {
+					return Boolean.TRUE;
+				}
+
+				@Override
+				protected Date getConfiguredAutoDate() {
+					final Date now = new Date();
+					now.setHours(23);
+					now.setMinutes(59);
+					now.setSeconds(59);
+					return now;
+				}
+
+				protected void validateCurrentValue() {
+					this.validateValue(this.getValue());
+				}
+
+				private void validateValue(final Date rawValue) {
 					if (null != rawValue && null != EventForm.this.getMinimalStartDateField().getValue()
 							&& rawValue.before(EventForm.this.getMinimalStartDateField().getValue())) {
 						throw new VetoException(TEXTS.get("zc.meeting.maximalStartDate.afterMinimalDate"));
 					}
+					this.clearErrorStatus();
+				}
+
+				// @Override
+				// protected void execInitField() {
+				// final Date now = new Date();
+				// now.setHours(23);
+				// now.setMinutes(59);
+				// now.setSeconds(59);
+				// this.setValue(now);
+				// super.execInitField();
+				// }
+
+				@Override
+				protected Date execValidateValue(final Date rawValue) {
+
+					this.validateValue(rawValue);
 					PeriodeBox.this.checkAvailableDaysInSlot(EventForm.this.getMinimalStartDateField().getValue(),
 							rawValue);
+					EventForm.this.getMinimalStartDateField().validateCurrentValue();
 					return super.execValidateValue(rawValue);
 				}
 
@@ -901,9 +960,14 @@ public class EventForm extends AbstractForm {
 				final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
 				final Integer slot = EventForm.this.getSlotField().getValue();
 
-				if (null != minimalDate && null != maximalDate && !SlotHelper.get().hasMatchingDays(minimalDate,
-						maximalDate, slot, appUserHelper.getCurrentUserId())) {
-					throw new VetoException(TEXTS.get("zc.meeting.slot.noSlotWithMinimalAndMaximalDates"));
+				if (null != minimalDate && null != maximalDate && null != slot && !SlotHelper.get()
+						.hasMatchingDays(minimalDate, maximalDate, slot, appUserHelper.getCurrentUserId())) {
+					EventForm.this.getSlotField()
+							.addErrorStatus(new DefaultFieldStatus(
+									TEXTS.get("zc.meeting.slot.noSlotWithMinimalAndMaximalDates"),
+									Icons.ExclamationMark, IFieldStatus.ERROR));
+				} else {
+					EventForm.this.getSlotField().clearErrorStatus();
 				}
 			}
 		}

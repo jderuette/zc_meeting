@@ -8,6 +8,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -138,6 +139,16 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 	public class Table extends AbstractEventsTablePage<Table>.Table {
 
 		@Override
+		protected boolean getConfiguredRowIconVisible() {
+			return true;
+		}
+
+		@Override
+		protected String getConfiguredDefaultIconId() {
+			return Icons.Null;
+		}
+
+		@Override
 		protected void execInitTable() {
 			// this.importFromTableRowBeanData(rowDatas, rowType);
 			// this.importPageData(BEANS.get(IEventService.class).getEventTableData(null));
@@ -189,6 +200,12 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				LOG.info("Calculating new Date (autofill) for row : " + row);
 				try {
 					this.changeDatesNext(row);
+					final Date calculatedStartDate = this.getStartDateColumn().getValue(row.getRowIndex());
+					if (null == calculatedStartDate) {
+						final Long eventId = this.getEventIdColumn().getValue(row.getRowIndex());
+						LOG.debug("No auto-filled dates for event ID : " + eventId + " Adding to processedList");
+						EventTablePage.this.addEventProcessedWithoutDates(eventId);
+					}
 				} catch (final IOException e) {
 					LOG.warn("Canno't auto calculate start/end meeting for row " + row, e);
 				}
@@ -309,6 +326,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 		protected void changeDatesNext(final ITableRow row, final ZonedDateTime newStartDate) throws IOException {
 			final Long eventId = this.getEventIdColumn().getValue(row.getRowIndex());
+			Boolean hasLooped = Boolean.FALSE;
 
 			final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 			LOG.debug("Changing Next date for Event ID : " + eventId + " with start Date : " + newStartDate);
@@ -329,9 +347,13 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 						// displayed, so now over date are available
 
 						notificationHelper.addErrorNotification("zc.meeting.notification.NoAvailableNextDate");
+						row.setIconId(Icons.ExclamationMark);
 						return;// break new Date search
 					}
 					newPossibleDate = this.tryChangeDatesNext(newPossibleDate.getStart(), row);
+					if (!hasLooped && newPossibleDate.isLoopInDates()) {
+						hasLooped = Boolean.TRUE;
+					}
 				} else {
 					throw new VetoException(TEXTS.get("zc.meeting.googleTooManyCall"));
 				}
@@ -347,11 +369,12 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 						EventTablePage.this.getDateHelper().toDate(newPossibleDate.getEnd()));
 				this.getEndDateColumn().updateDisplayTexts(CollectionUtility.arrayList(row));
 
-				if (newPossibleDate.isLoopInDates()) {
+				if (hasLooped) {
 					notificationHelper.addWarningNotification("zc.meeting.notification.newMeetingDateFoundFromBegin");
 				} else {
 					notificationHelper.addProccessedNotification("zc.meeting.notification.newMeetingDateFound");
 				}
+				row.setIconId(null);
 			}
 		}
 
@@ -447,8 +470,11 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			Boolean loopInDates = Boolean.FALSE;
 
 			if (null != minimalStartDate && startDate.isBefore(minimalStartDate)) {
+				LOG.info("startDate is before the mnimal : " + minimalStartDate);
 				startDate = minimalStartDate;
 			} else if (null != maximalStartDate && startDate.isAfter(maximalStartDate)) {
+				LOG.info("startDate is after the maximal : " + maximalStartDate + " Loop back to the minimal : "
+						+ minimalStartDate);
 				loopInDates = Boolean.TRUE;
 				startDate = minimalStartDate;
 			}

@@ -5,6 +5,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -78,6 +79,13 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	final private Integer maxTry = 20;
 	final protected CallTrackerService<Long> callTracker = new CallTrackerService<>(this.maxTry, Duration.ofMinutes(3),
 			"Get calendar Events");
+
+	/**
+	 * To avoid event processed twice, when no date available
+	 */
+	private final Set<Long> processedEventWithoutPossibleDates = new HashSet<>(3);
+	private Date processedEventLastModification;
+	private final Long processedEventTtl = 20000L; // millisecondes
 
 	private DateHelper dateHelper;
 	private AppUserHelper appUserHelper;
@@ -194,6 +202,23 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		}
 
 		return builder.toString();
+	}
+
+	protected void addEventProcessedWithoutDates(final Long eventId) {
+		this.processedEventWithoutPossibleDates.add(eventId);
+		this.processedEventLastModification = new Date();
+	}
+
+	private Boolean isEventProcessed(final Long eventId) {
+		// if (null != this.processedEventLastModification) {
+		// final Date oudatedDataTime = new Date(
+		// this.processedEventLastModification.getTime() +
+		// this.processedEventTtl);
+		// if (new Date().after(oudatedDataTime)) {
+		// this.processedEventWithoutPossibleDates.clear();
+		// }
+		// }
+		return this.processedEventWithoutPossibleDates.contains(eventId);
 	}
 
 	public class Table extends AbstractTable {
@@ -500,12 +525,15 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		}
 
 		protected Boolean canAutofillDates(final ITableRow row) {
+
+			final Long eventId = this.getEventIdColumn().getValue(row.getRowIndex());
 			final Long hostId = this.getOrganizerColumn().getValue(row.getRowIndex());
 			final Long attendeeId = this.getGuestIdColumn().getValue(row.getRowIndex());
 			final Boolean startDateEmpty = null == this.getStartDateColumn().getValue(row.getRowIndex());
 			final Boolean endDateEmpty = null == this.getEndDateColumn().getValue(row.getRowIndex());
 			final String rowState = this.getStateColumn().getValue(row.getRowIndex());
-			return null != row && "ASKED".equals(rowState) && startDateEmpty && endDateEmpty
+			final Boolean alreadyProcessed = AbstractEventsTablePage.this.isEventProcessed(eventId);
+			return null != row && !alreadyProcessed && "ASKED".equals(rowState) && startDateEmpty && endDateEmpty
 					&& BEANS.get(GoogleApiHelper.class).isCalendarConfigured(hostId)
 					// &&
 					// BEANS.get(GoogleApiHelper.class).isCalendarConfigured(attendeeId)
@@ -1174,6 +1202,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			}
 
 			@Override
+			protected boolean getConfiguredHasTime() {
+				return Boolean.TRUE;
+			}
+
+			@Override
 			protected int getConfiguredWidth() {
 				return 100;
 			}
@@ -1189,6 +1222,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			@Override
 			protected boolean getConfiguredVisible() {
 				return Boolean.FALSE;
+			}
+
+			@Override
+			protected boolean getConfiguredHasTime() {
+				return Boolean.TRUE;
 			}
 
 			@Override
