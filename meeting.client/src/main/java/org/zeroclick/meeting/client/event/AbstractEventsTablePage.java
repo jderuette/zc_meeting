@@ -15,8 +15,6 @@ import org.eclipse.scout.rt.client.ui.MouseButton;
 import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
 import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
 import org.eclipse.scout.rt.client.ui.action.menu.IMenu;
-import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
-import org.eclipse.scout.rt.client.ui.action.menu.TableMenuType;
 import org.eclipse.scout.rt.client.ui.basic.cell.Cell;
 import org.eclipse.scout.rt.client.ui.basic.cell.ICell;
 import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
@@ -30,7 +28,6 @@ import org.eclipse.scout.rt.client.ui.form.FormEvent;
 import org.eclipse.scout.rt.client.ui.form.FormListener;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
-import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.notification.INotificationListener;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
@@ -55,9 +52,8 @@ import org.zeroclick.meeting.client.common.CallTrackerService;
 import org.zeroclick.meeting.client.common.DurationLookupCall;
 import org.zeroclick.meeting.client.common.EventStateLookupCall;
 import org.zeroclick.meeting.client.common.SlotLookupCall;
-import org.zeroclick.meeting.client.event.EventTablePage.Table.NewMenu;
+import org.zeroclick.meeting.client.event.EventTablePage.Table.NewEventMenu;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
-import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.event.AbstractEventNotification;
 import org.zeroclick.meeting.shared.event.EventCreatedNotification;
@@ -68,6 +64,7 @@ import org.zeroclick.meeting.shared.event.ReadEventExtendedPropsPermission;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
 import org.zeroclick.meeting.shared.eventb.AbstractEventsTablePageData;
 import org.zeroclick.meeting.shared.security.AccessControlService;
+import org.zeroclick.ui.action.menu.AbstractCancelMenu;
 import org.zeroclick.ui.form.columns.zoneddatecolumn.AbstractZonedDateColumn;
 
 @Data(AbstractEventsTablePageData.class)
@@ -751,7 +748,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			if (null != currentRow) {
 				this.reloadMenus(currentRow);
 			} else {
-				final IMenu newEventMenu = this.getMenuByClass(NewMenu.class);
+				final IMenu newEventMenu = this.getMenuByClass(NewEventMenu.class);
 				if (null != newEventMenu) {
 					newEventMenu.setVisible(Boolean.TRUE);
 				}
@@ -794,20 +791,10 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		}
 
 		@Order(3000)
-		public class RefuseMenu extends AbstractMenu {
+		public class RefuseMenu extends AbstractCancelMenu {
 			@Override
 			protected String getConfiguredText() {
 				return TEXTS.get("zc.meeting.refuse");
-			}
-
-			@Override
-			protected String getConfiguredIconId() {
-				return Icons.ExclamationMark;
-			}
-
-			@Override
-			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-				return CollectionUtility.hashSet(TableMenuType.SingleSelection);
 			}
 
 			@Override
@@ -859,7 +846,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			protected String getConfiguredKeyStroke() {
 				return combineKeyStrokes(IKeyStroke.SHIFT, "r");
 			}
-
 		}
 
 		public FormListener refuseCancelFormListener = new FormListener() {
@@ -890,26 +876,16 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		};
 
 		@Order(4000)
-		public class CancelMenu extends AbstractMenu {
+		public class CancelEventMenu extends AbstractCancelMenu {
 			@Override
 			protected String getConfiguredText() {
 				return TEXTS.get("Cancel");
 			}
 
 			@Override
-			protected String getConfiguredIconId() {
-				return Icons.ExclamationMark;
-			}
-
-			@Override
 			protected boolean getConfiguredVisible() {
 				// to avoid button blink
 				return Boolean.FALSE;
-			}
-
-			@Override
-			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-				return CollectionUtility.hashSet(TableMenuType.SingleSelection);
 			}
 
 			private Boolean isWorkflowVisible(final String currentState) {
@@ -940,11 +916,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				// form.addFormListener(
 				// org.zeroclick.meeting.client.event.AbstractEventsTablePage.Table.this.refuseCancelFormListener);
 				form.startCancel(Table.this.isHeldByCurrentUser(Table.this.getSelectedRow()));
-			}
-
-			@Override
-			protected String getConfiguredKeyStroke() {
-				return combineKeyStrokes(IKeyStroke.SHIFT, "c");
 			}
 		}
 

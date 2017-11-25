@@ -4,7 +4,6 @@ import java.util.Set;
 
 import org.eclipse.scout.rt.client.dto.Data;
 import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
-import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
 import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.action.menu.TableMenuType;
 import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
@@ -29,6 +28,8 @@ import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.DeleteApiPermission;
 import org.zeroclick.meeting.shared.calendar.IApiService;
 import org.zeroclick.meeting.shared.calendar.UpdateApiPermission;
+import org.zeroclick.ui.action.menu.AbstractDeleteMenu;
+import org.zeroclick.ui.action.menu.AbstractEditMenu;
 
 @Data(ApiTablePageData.class)
 public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
@@ -51,17 +52,7 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 	public class ApisTable extends AbstractTable {
 
 		@Order(1000)
-		public class EditMenu extends AbstractMenu {
-			@Override
-			protected String getConfiguredText() {
-				return TEXTS.get("zc.common.edit");
-			}
-
-			@Override
-			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-				return CollectionUtility.hashSet(TableMenuType.SingleSelection);
-			}
-
+		public class EditApiMenu extends AbstractEditMenu {
 			@Override
 			protected boolean getConfiguredEnabled() {
 				return ACCESS.getLevel(new UpdateApiPermission((Long) null)) > UpdateApiPermission.LEVEL_OWN;
@@ -79,17 +70,7 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 		}
 
 		@Order(2000)
-		public class DeleteMenu extends AbstractMenu {
-			@Override
-			protected String getConfiguredText() {
-				return TEXTS.get("DeleteMenu");
-			}
-
-			@Override
-			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-				return CollectionUtility.hashSet(TableMenuType.SingleSelection);
-			}
-
+		public class DeleteApiMenu extends AbstractDeleteMenu {
 			@Override
 			protected boolean getConfiguredEnabled() {
 				return ACCESS.getLevel(new DeleteApiPermission((Long) null)) > DeleteApiPermission.LEVEL_OWN;
@@ -103,16 +84,6 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 				form.addFormListener(new ApiFormListener());
 				// start the form using its modify handler
 				form.startDelete();
-			}
-
-			@Override
-			protected String getConfiguredKeyStroke() {
-				return combineKeyStrokes(IKeyStroke.SHIFT, IKeyStroke.DELETE);
-			}
-
-			@Override
-			public String getConfiguredIconId() {
-				return Icons.ExclamationMark;
 			}
 		}
 

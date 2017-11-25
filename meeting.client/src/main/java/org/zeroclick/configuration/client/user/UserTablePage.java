@@ -1,12 +1,6 @@
 package org.zeroclick.configuration.client.user;
 
-import java.util.Set;
-
 import org.eclipse.scout.rt.client.dto.Data;
-import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
-import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
-import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
-import org.eclipse.scout.rt.client.ui.action.menu.TableMenuType;
 import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractIntegerColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractLongColumn;
@@ -17,7 +11,6 @@ import org.eclipse.scout.rt.client.ui.form.FormEvent;
 import org.eclipse.scout.rt.client.ui.form.FormListener;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
-import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
@@ -28,6 +21,8 @@ import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.LanguageLookupCall;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.configuration.shared.user.UserTablePageData;
+import org.zeroclick.ui.action.menu.AbstractEditMenu;
+import org.zeroclick.ui.action.menu.AbstractNewMenu;
 import org.zeroclick.ui.form.columns.zoneddatecolumn.AbstractZonedDateColumn;
 
 @Data(UserTablePageData.class)
@@ -54,18 +49,7 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 	public class Table extends AbstractTable {
 
 		@Order(1000)
-		public class NewMenu extends AbstractMenu {
-			@Override
-			protected String getConfiguredText() {
-				return TEXTS.get("New");
-			}
-
-			@Override
-			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-				return CollectionUtility.hashSet(TableMenuType.EmptySpace, TableMenuType.SingleSelection,
-						TableMenuType.MultiSelection);
-			}
-
+		public class NewUserMenu extends AbstractNewMenu {
 			@Override
 			protected void execOwnerValueChanged(final Object newOwnerValue) {
 				final Boolean isUserAllowed = ACCESS.check(new CreateUserPermission());
@@ -80,25 +64,10 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 				form.setEnabledPermission(new CreateUserPermission());
 				form.startNew();
 			}
-
-			@Override
-			protected String getConfiguredKeyStroke() {
-				return combineKeyStrokes(IKeyStroke.SHIFT, "n");
-			}
 		}
 
 		@Order(2000)
-		public class EditMenu extends AbstractMenu {
-			@Override
-			protected String getConfiguredText() {
-				return TEXTS.get("zc.common.edit");
-			}
-
-			@Override
-			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-				return CollectionUtility.hashSet(TableMenuType.SingleSelection);
-			}
-
+		public class EditUserMenu extends AbstractEditMenu {
 			@Override
 			protected void execOwnerValueChanged(final Object newOwnerValue) {
 				final Long currentUserId = Table.this.getUserIdColumn().getSelectedValue();
@@ -115,11 +84,6 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 				form.addFormListener(new UserFormListener());
 				form.setEnabledPermission(new UpdateUserPermission(currentUserId));
 				form.startModify();
-			}
-
-			@Override
-			protected String getConfiguredKeyStroke() {
-				return combineKeyStrokes(IKeyStroke.SHIFT, "e");
 			}
 		}
 

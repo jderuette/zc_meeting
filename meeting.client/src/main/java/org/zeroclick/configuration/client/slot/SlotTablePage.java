@@ -5,7 +5,6 @@ import java.util.Set;
 
 import org.eclipse.scout.rt.client.dto.Data;
 import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
-import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
 import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.action.menu.TreeMenuType;
 import org.eclipse.scout.rt.client.ui.basic.table.ITableRow;
@@ -23,6 +22,7 @@ import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.configuration.shared.slot.SlotTablePageData;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.security.AccessControlService;
+import org.zeroclick.ui.action.menu.AbstractEditMenu;
 
 @Data(SlotTablePageData.class)
 public class SlotTablePage extends AbstractSlotTablePage<Table> {
@@ -54,7 +54,7 @@ public class SlotTablePage extends AbstractSlotTablePage<Table> {
 	}
 
 	@Order(1000)
-	public class EditMenu extends AbstractMenu {
+	public class EditDayDurationMenu extends AbstractEditMenu {
 		@Override
 		protected String getConfiguredText() {
 			return TEXTS.get("zc.meeting.dayDuration.edit");
@@ -63,16 +63,6 @@ public class SlotTablePage extends AbstractSlotTablePage<Table> {
 		@Override
 		protected Set<? extends IMenuType> getConfiguredMenuTypes() {
 			return CollectionUtility.hashSet(TreeMenuType.SingleSelection, TreeMenuType.MultiSelection);
-		}
-
-		@Override
-		protected String getConfiguredIconId() {
-			return Icons.Pencil;
-		}
-
-		@Override
-		protected String getConfiguredKeyStroke() {
-			return combineKeyStrokes(IKeyStroke.SHIFT, "e");
 		}
 
 		@Override

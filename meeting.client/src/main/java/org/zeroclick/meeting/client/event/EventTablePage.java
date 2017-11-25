@@ -53,6 +53,8 @@ import org.zeroclick.meeting.shared.event.CreateEventPermission;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.EventTablePageData;
 import org.zeroclick.meeting.shared.event.IEventService;
+import org.zeroclick.ui.action.menu.AbstractNewMenu;
+import org.zeroclick.ui.action.menu.AbstractValidateMenu;
 
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;
@@ -812,20 +814,10 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		}
 
 		@Order(2000)
-		public class NewMenu extends AbstractMenu {
+		public class NewEventMenu extends AbstractNewMenu {
 			@Override
 			protected String getConfiguredText() {
 				return TEXTS.get("zc.meeting.addEvent");
-			}
-
-			@Override
-			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-				return CollectionUtility.hashSet(TableMenuType.SingleSelection, TableMenuType.EmptySpace);
-			}
-
-			@Override
-			protected String getConfiguredIconId() {
-				return Icons.Plus;
 			}
 
 			@Override
@@ -838,12 +830,6 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			protected boolean getConfiguredEnabled() {
 				return Boolean.TRUE;
 			}
-
-			// @Override
-			// protected void execOwnerValueChanged(final Object newOwnerValue)
-			// {
-			// this.setEnabled(EventTablePage.this.isUserCalendarConfigured());
-			// }
 
 			@Override
 			protected void execAction() {
@@ -893,11 +879,6 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 						ACCESS.getLevel(new CreateEventPermission()) >= CreateEventPermission.LEVEL_SUB_FREE);
 				form.startNew();
 			}
-
-			@Override
-			protected String getConfiguredKeyStroke() {
-				return combineKeyStrokes(IKeyStroke.SHIFT, "n");
-			}
 		}
 
 		@Order(2100)
@@ -919,20 +900,10 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		}
 
 		@Order(2500)
-		public class AcceptMenu extends AbstractMenu {
+		public class AcceptEventMenu extends AbstractValidateMenu {
 			@Override
 			protected String getConfiguredText() {
 				return TEXTS.get("zc.meeting.Accept");
-			}
-
-			@Override
-			protected String getConfiguredIconId() {
-				return Icons.Checked;
-			}
-
-			@Override
-			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-				return CollectionUtility.hashSet(TableMenuType.SingleSelection);
 			}
 
 			@Override
@@ -1049,11 +1020,6 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				} catch (final MailException e) {
 					throw new VetoException(TEXTS.get("zc.common.cannotSendEmail"));
 				}
-			}
-
-			@Override
-			protected String getConfiguredKeyStroke() {
-				return combineKeyStrokes(IKeyStroke.SHIFT, "v");
 			}
 		}
 

@@ -6,7 +6,6 @@ import java.util.Set;
 
 import org.eclipse.scout.rt.client.dto.Data;
 import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
-import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
 import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.action.menu.TableMenuType;
 import org.eclipse.scout.rt.client.ui.basic.cell.ICell;
@@ -32,6 +31,8 @@ import org.zeroclick.configuration.shared.params.ParamCreatedNotification;
 import org.zeroclick.configuration.shared.params.ParamModifiedNotification;
 import org.zeroclick.meeting.client.NotificationHelper;
 import org.zeroclick.meeting.shared.Icons;
+import org.zeroclick.ui.action.menu.AbstractEditMenu;
+import org.zeroclick.ui.action.menu.AbstractNewMenu;
 
 @Data(AppParamsTablePageData.class)
 public class AppParamsTablePage extends AbstractPageWithTable<Table> {
@@ -183,25 +184,10 @@ public class AppParamsTablePage extends AbstractPageWithTable<Table> {
 		}
 
 		@Order(1000)
-		public class EditMenu extends AbstractMenu {
+		public class EditParamMenu extends AbstractEditMenu {
 			@Override
 			protected String getConfiguredText() {
 				return TEXTS.get("zc.params.edit");
-			}
-
-			@Override
-			protected String getConfiguredIconId() {
-				return Icons.Pencil;
-			}
-
-			@Override
-			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-				return CollectionUtility.hashSet(TableMenuType.SingleSelection);
-			}
-
-			@Override
-			protected String getConfiguredKeyStroke() {
-				return combineKeyStrokes(IKeyStroke.SHIFT, "e");
 			}
 
 			@Override
@@ -211,25 +197,15 @@ public class AppParamsTablePage extends AbstractPageWithTable<Table> {
 		}
 
 		@Order(2000)
-		public class NewMenu extends AbstractMenu {
+		public class NewParamMenu extends AbstractNewMenu {
 			@Override
 			protected String getConfiguredText() {
 				return TEXTS.get("zc.params.new");
 			}
-
-			@Override
-			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-				return CollectionUtility.hashSet(TableMenuType.SingleSelection, TableMenuType.MultiSelection);
-			}
-
+			
 			@Override
 			protected void execAction() {
 				Table.this.loadParamsForm();
-			}
-
-			@Override
-			protected String getConfiguredKeyStroke() {
-				return combineKeyStrokes(IKeyStroke.SHIFT, "n");
 			}
 		}
 

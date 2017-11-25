@@ -86,6 +86,7 @@ import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.KnowEmailLookupCall;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
 import org.zeroclick.meeting.shared.security.AccessControlService;
+import org.zeroclick.ui.action.menu.AbstractAddMenu;
 
 @FormData(value = EventFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class EventForm extends AbstractForm {
@@ -503,26 +504,10 @@ public class EventForm extends AbstractForm {
 						}
 
 						@Order(1000)
-						public class AddEmailMenu extends AbstractMenu {
+						public class AddEmailMenu extends AbstractAddMenu {
 							@Override
 							protected String getConfiguredText() {
 								return TEXTS.get("zc.meeting.attendeeEmail.add");
-							}
-
-							@Override
-							protected String getConfiguredIconId() {
-								return Icons.Plus;
-							}
-
-							@Override
-							protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-								return CollectionUtility.hashSet(TableMenuType.SingleSelection,
-										TableMenuType.EmptySpace);
-							}
-
-							@Override
-							protected String getConfiguredKeyStroke() {
-								return combineKeyStrokes(IKeyStroke.SHIFT, "n");
 							}
 
 							@Override

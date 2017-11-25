@@ -3,8 +3,6 @@ package org.zeroclick.configuration.client.role;
 import java.util.Set;
 
 import org.eclipse.scout.rt.client.dto.Data;
-import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
-import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
 import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.action.menu.TableMenuType;
 import org.eclipse.scout.rt.client.ui.basic.cell.Cell;
@@ -29,7 +27,9 @@ import org.zeroclick.configuration.shared.role.IRoleService;
 import org.zeroclick.configuration.shared.role.RoleTablePageData;
 import org.zeroclick.configuration.shared.role.RoleTypeLookupCall;
 import org.zeroclick.configuration.shared.role.UpdateRolePermission;
-import org.zeroclick.meeting.shared.Icons;
+import org.zeroclick.ui.action.menu.AbstractDeleteMenu;
+import org.zeroclick.ui.action.menu.AbstractEditMenu;
+import org.zeroclick.ui.action.menu.AbstractNewMenu;
 
 @Data(RoleTablePageData.class)
 public class RoleTablePage extends AbstractPageWithTable<Table> {
@@ -55,16 +55,10 @@ public class RoleTablePage extends AbstractPageWithTable<Table> {
 	public class Table extends AbstractTable {
 
 		@Order(1000)
-		public class NewMenu extends AbstractMenu {
+		public class NewRoleMenu extends AbstractNewMenu {
 			@Override
 			protected String getConfiguredText() {
 				return TEXTS.get("zc.user.role.new");
-			}
-
-			@Override
-			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-				return CollectionUtility.hashSet(TableMenuType.SingleSelection, TableMenuType.MultiSelection,
-						TableMenuType.EmptySpace);
 			}
 
 			@Override
@@ -73,23 +67,13 @@ public class RoleTablePage extends AbstractPageWithTable<Table> {
 				form.addFormListener(new RoleFormListener());
 				form.startNew();
 			}
-
-			@Override
-			protected String getConfiguredKeyStroke() {
-				return combineKeyStrokes(IKeyStroke.SHIFT, "n");
-			}
 		}
 
 		@Order(2000)
-		public class EditMenu extends AbstractMenu {
+		public class EditRoleMenu extends AbstractEditMenu {
 			@Override
 			protected String getConfiguredText() {
 				return TEXTS.get("zc.user.role.edit");
-			}
-
-			@Override
-			protected String getConfiguredIconId() {
-				return Icons.Pencil;
 			}
 
 			@Override
@@ -104,38 +88,18 @@ public class RoleTablePage extends AbstractPageWithTable<Table> {
 				form.addFormListener(new RoleFormListener());
 				form.startModify();
 			}
-
-			@Override
-			protected String getConfiguredKeyStroke() {
-				return combineKeyStrokes(IKeyStroke.SHIFT, "e");
-			}
 		}
 
 		@Order(3000)
-		public class DeleteMenu extends AbstractMenu {
+		public class DeleteMenu extends AbstractDeleteMenu {
 			@Override
 			protected String getConfiguredText() {
 				return TEXTS.get("zc.user.role.delete");
 			}
 
 			@Override
-			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-				return CollectionUtility.hashSet(TableMenuType.SingleSelection);
-			}
-
-			@Override
 			protected boolean getConfiguredEnabled() {
 				return ACCESS.check(new UpdateRolePermission());
-			}
-
-			@Override
-			public String getConfiguredIconId() {
-				return Icons.ExclamationMark;
-			}
-
-			@Override
-			protected String getConfiguredKeyStroke() {
-				return combineKeyStrokes(IKeyStroke.SHIFT, IKeyStroke.DELETE);
 			}
 
 			@Override

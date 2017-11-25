@@ -179,7 +179,7 @@ public class ImportEmailsForm extends AbstractForm {
 				}
 
 				@Order(1000)
-				public class CLearMenu extends AbstractMenu {
+				public class ClearMenu extends AbstractMenu {
 					@Override
 					protected String getConfiguredText() {
 						return TEXTS.get("zc.meeting.event.importEmails.clear");
