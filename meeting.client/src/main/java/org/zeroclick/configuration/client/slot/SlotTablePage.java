@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.scout.rt.client.dto.Data;
-import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
 import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.action.menu.TreeMenuType;
 import org.eclipse.scout.rt.client.ui.basic.table.ITableRow;
@@ -81,7 +80,7 @@ public class SlotTablePage extends AbstractSlotTablePage<Table> {
 	}
 
 	protected void loadDayDurationForm(final ITableRow row) {
-		final Integer slotCode = this.getTable().getSlotColumn().getValue(row.getRowIndex());
+		final Long slotCode = this.getTable().getSlotColumn().getValue(row.getRowIndex());
 		final String dayDurationName = this.getTable().getNameColumn().buildDisplayValue(row);
 
 		final List<IForm> forms = IDesktop.CURRENT.get().getForms(IDesktop.CURRENT.get().getOutline());

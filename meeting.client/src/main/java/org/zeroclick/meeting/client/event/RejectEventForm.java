@@ -41,6 +41,7 @@ import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.RejectEventFormData;
+import org.zeroclick.meeting.shared.event.StateCodeType;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
 
 import com.google.api.services.calendar.Calendar;
@@ -478,7 +479,7 @@ public class RejectEventForm extends AbstractForm {
 
 					final IEventService service = BEANS.get(IEventService.class);
 
-					formData.setState("REFUSED");
+					formData.setState(StateCodeType.RefusededCode.ID);
 					final EventFormData fullEventFormData = service.storeNewState(formData);
 
 					RejectEventForm.this.sendEmail(fullEventFormData);

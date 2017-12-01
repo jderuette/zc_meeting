@@ -77,10 +77,10 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 		private Long m_guestId;
 		private String m_email;
 		private String m_subject;
-		private Integer m_slot;
+		private Long m_slot;
 		private Date m_minimalStartDate;
 		private Date m_maximalStartDate;
-		private Integer m_duration;
+		private Long m_duration;
 		private String m_venue;
 		private String m_state;
 		private Date m_startDate;
@@ -145,11 +145,11 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 			m_subject = newSubject;
 		}
 
-		public Integer getSlot() {
+		public Long getSlot() {
 			return m_slot;
 		}
 
-		public void setSlot(Integer newSlot) {
+		public void setSlot(Long newSlot) {
 			m_slot = newSlot;
 		}
 
@@ -169,11 +169,11 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 			m_maximalStartDate = newMaximalStartDate;
 		}
 
-		public Integer getDuration() {
+		public Long getDuration() {
 			return m_duration;
 		}
 
-		public void setDuration(Integer newDuration) {
+		public void setDuration(Long newDuration) {
 			m_duration = newDuration;
 		}
 

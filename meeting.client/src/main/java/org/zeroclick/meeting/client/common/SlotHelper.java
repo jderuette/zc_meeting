@@ -83,7 +83,7 @@ public class SlotHelper {
 			new DayDuration(OffsetTime.of(14, 0, 0, 0, ZoneOffset.UTC), OffsetTime.of(18, 0, 0, 0, ZoneOffset.UTC),
 					DayOfWeekLists.STANDARD_WEEKEND_DAYS, Boolean.TRUE, Boolean.TRUE)));
 
-	private List<DayDuration> getPeriods(final Integer durationId) {
+	private List<DayDuration> getPeriods(final Long durationId) {
 		if (durationId == 1) {
 			// 8-12 and 14-18
 			return this.PERIODE_WORK;
@@ -101,7 +101,7 @@ public class SlotHelper {
 		return new ArrayList<>(1);
 	}
 
-	private List<DayDuration> getUserPeriods(final Integer slotId, final Long userId) {
+	private List<DayDuration> getUserPeriods(final Long slotId, final Long userId) {
 		List<DayDuration> daysDurations = new ArrayList<>();
 
 		final String slotName = "zc.meeting.slot." + slotId;
@@ -176,7 +176,7 @@ public class SlotHelper {
 	 * @param checkedDate
 	 * @return
 	 */
-	public Boolean isInOneOfPeriods(final Integer slotId, final ZonedDateTime checkedDate, final Long userId) {
+	public Boolean isInOneOfPeriods(final Long slotId, final ZonedDateTime checkedDate, final Long userId) {
 		final List<DayDuration> periods = this.getUserPeriods(slotId, userId);
 
 		return this.isInOneOfPeriods(periods, checkedDate, null);
@@ -191,7 +191,7 @@ public class SlotHelper {
 	 * @param endDate
 	 * @return
 	 */
-	public Boolean isInOneOfPeriods(final Integer slotId, final ZonedDateTime startDate, final ZonedDateTime endDate,
+	public Boolean isInOneOfPeriods(final Long slotId, final ZonedDateTime startDate, final ZonedDateTime endDate,
 			final Long userId) {
 		final List<DayDuration> periods = this.getUserPeriods(slotId, userId);
 
@@ -229,14 +229,13 @@ public class SlotHelper {
 		return isInPeriod;
 	}
 
-	public ZonedDateTime getNextValidDateTime(final Integer slotId, final ZonedDateTime checkedDate,
-			final Long userId) {
+	public ZonedDateTime getNextValidDateTime(final Long slotId, final ZonedDateTime checkedDate, final Long userId) {
 		final List<DayDuration> periods = this.getUserPeriods(slotId, userId);
 
 		return this.getNextValidDateTime(periods, checkedDate, null);
 	}
 
-	public ZonedDateTime getNextValidDateTime(final Integer slotId, final ZonedDateTime checkedDate,
+	public ZonedDateTime getNextValidDateTime(final Long slotId, final ZonedDateTime checkedDate,
 			final ZonedDateTime endDate, final Long userId) {
 		final List<DayDuration> periods = this.getUserPeriods(slotId, userId);
 
@@ -362,7 +361,7 @@ public class SlotHelper {
 		return period.getValidDayOfWeek().get(0);
 	}
 
-	public boolean hasMatchingDays(final Date minimalDate, final Date maximalDate, final Integer slotId,
+	public boolean hasMatchingDays(final Date minimalDate, final Date maximalDate, final Long slotId,
 			final Long userId) {
 		Boolean hasMatchingDay = Boolean.FALSE;
 
@@ -396,7 +395,7 @@ public class SlotHelper {
 		return hasMatchingDay;
 	}
 
-	private Set<DayOfWeek> getDays(final Integer slotId, final Long userId) {
+	private Set<DayOfWeek> getDays(final Long slotId, final Long userId) {
 		final List<DayDuration> periods = this.getUserPeriods(slotId, userId);
 		final Set<DayOfWeek> unicDaysInPeriod = new HashSet<>();
 

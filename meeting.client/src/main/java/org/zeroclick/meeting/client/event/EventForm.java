@@ -40,22 +40,22 @@ import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.platform.util.StringUtility;
 import org.eclipse.scout.rt.platform.util.concurrent.IRunnable;
 import org.eclipse.scout.rt.shared.TEXTS;
+import org.eclipse.scout.rt.shared.services.common.code.ICodeType;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
 import org.zeroclick.comon.text.TextsHelper;
 import org.zeroclick.comon.user.AppUserHelper;
 import org.zeroclick.configuration.client.user.UserForm;
+import org.zeroclick.configuration.shared.duration.DurationCodeType;
+import org.zeroclick.configuration.shared.slot.SlotCodeType;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper.SubscriptionHelperData;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.configuration.shared.venue.VenueLookupCall;
 import org.zeroclick.meeting.client.NotificationHelper;
-import org.zeroclick.meeting.client.common.DurationLookupCall;
-import org.zeroclick.meeting.client.common.EventStateLookupCall;
 import org.zeroclick.meeting.client.common.SlotHelper;
-import org.zeroclick.meeting.client.common.SlotLookupCall;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.CancelButton;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.CreatedDateField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.DurationField;
@@ -84,6 +84,7 @@ import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.KnowEmailLookupCall;
+import org.zeroclick.meeting.shared.event.StateCodeType;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 import org.zeroclick.ui.action.menu.AbstractAddMenu;
@@ -807,7 +808,7 @@ public class EventForm extends AbstractForm {
 				}
 
 				@Order(2000)
-				public class SlotField extends AbstractSmartField<Integer> {
+				public class SlotField extends AbstractSmartField<Long> {
 					@Override
 					protected String getConfiguredLabel() {
 						return TEXTS.get("zc.meeting.slot");
@@ -819,8 +820,8 @@ public class EventForm extends AbstractForm {
 					}
 
 					@Override
-					protected Class<? extends ILookupCall<Integer>> getConfiguredLookupCall() {
-						return SlotLookupCall.class;
+					protected Class<? extends ICodeType<Long, Long>> getConfiguredCodeType() {
+						return SlotCodeType.class;
 					}
 
 					@Override
@@ -943,7 +944,7 @@ public class EventForm extends AbstractForm {
 
 			private void checkAvailableDaysInSlot(final Date minimalDate, final Date maximalDate) {
 				final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
-				final Integer slot = EventForm.this.getSlotField().getValue();
+				final Long slot = EventForm.this.getSlotField().getValue();
 
 				if (null != minimalDate && null != maximalDate && null != slot && !SlotHelper.get()
 						.hasMatchingDays(minimalDate, maximalDate, slot, appUserHelper.getCurrentUserId())) {
@@ -958,7 +959,7 @@ public class EventForm extends AbstractForm {
 		}
 
 		@Order(7000)
-		public class DurationField extends AbstractSmartField<Integer> {
+		public class DurationField extends AbstractSmartField<Long> {
 			@Override
 			protected String getConfiguredLabel() {
 				return TEXTS.get("zc.meeting.duration");
@@ -970,8 +971,8 @@ public class EventForm extends AbstractForm {
 			}
 
 			@Override
-			protected Class<? extends ILookupCall<Integer>> getConfiguredLookupCall() {
-				return DurationLookupCall.class;
+			protected Class<? extends ICodeType<Long, Long>> getConfiguredCodeType() {
+				return SlotCodeType.class;
 			}
 		}
 
@@ -996,8 +997,8 @@ public class EventForm extends AbstractForm {
 			}
 
 			@Override
-			protected Class<? extends ILookupCall<String>> getConfiguredLookupCall() {
-				return EventStateLookupCall.class;
+			protected Class<? extends ICodeType<Long, String>> getConfiguredCodeType() {
+				return StateCodeType.class;
 			}
 
 			@Override
@@ -1276,17 +1277,17 @@ public class EventForm extends AbstractForm {
 			final IEventService service = BEANS.get(IEventService.class);
 			final EventFormData formData = new EventFormData();
 			EventForm.this.exportFormData(formData);
-			formData.getState().setValue("ACCEPTED");
+			formData.getState().setValue(StateCodeType.AcceptedCode.ID);
 			service.store(formData);
 		}
 	}
 
 	private String calculateSubTitle() {
-		final DurationLookupCall durationLookupCall = BEANS.get(DurationLookupCall.class);
-		final SlotLookupCall slotLookupCall = BEANS.get(SlotLookupCall.class);
+		final DurationCodeType durationCodes = BEANS.get(DurationCodeType.class);
+		final SlotCodeType slotCodes = BEANS.get(SlotCodeType.class);
 
-		final String durationText = durationLookupCall.getText(this.getDurationField().getValue());
-		final String slotText = slotLookupCall.getText(this.getSlotField().getValue());
+		final String durationText = durationCodes.getCode(this.getDurationField().getValue()).getText();
+		final String slotText = slotCodes.getCode(this.getSlotField().getValue()).getText();
 
 		return StringUtility.join(" ", durationText, slotText, "\r\n", TEXTS.get("zc.common.with"),
 				this.getEmailField().getValue());

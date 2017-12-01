@@ -15,8 +15,8 @@ import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.util.ToStringBuilder;
 import org.eclipse.scout.rt.shared.TEXTS;
+import org.eclipse.scout.rt.shared.services.common.code.ICodeType;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
-import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.client.api.ApiForm.MainBox.AccessTokenField;
@@ -25,7 +25,7 @@ import org.zeroclick.configuration.client.api.ApiForm.MainBox.ExpirationTimeMill
 import org.zeroclick.configuration.client.api.ApiForm.MainBox.OkButton;
 import org.zeroclick.configuration.client.api.ApiForm.MainBox.ProviderField;
 import org.zeroclick.configuration.client.api.ApiForm.MainBox.RefreshTokenField;
-import org.zeroclick.meeting.client.common.ProviderLookupCall;
+import org.zeroclick.configuration.shared.provider.ProviderCodeType;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CreateApiPermission;
@@ -201,7 +201,7 @@ public class ApiForm extends AbstractForm {
 		}
 
 		@Order(4000)
-		public class ProviderField extends AbstractSmartField<Integer> {
+		public class ProviderField extends AbstractSmartField<Long> {
 			@Override
 			protected String getConfiguredLabel() {
 				return TEXTS.get("zc.api.provider");
@@ -213,8 +213,8 @@ public class ApiForm extends AbstractForm {
 			}
 
 			@Override
-			protected Class<? extends ILookupCall<Integer>> getConfiguredLookupCall() {
-				return ProviderLookupCall.class;
+			protected Class<? extends ICodeType<Long, Long>> getConfiguredCodeType() {
+				return ProviderCodeType.class;
 			}
 
 			@Override

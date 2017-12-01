@@ -59,7 +59,7 @@ public class ApiTablePageData extends AbstractTablePageData {
 		public static final String refreshToken = "refreshToken";
 		public static final String userId = "userId";
 		private Long m_apiCredentialId;
-		private Integer m_provider;
+		private Long m_provider;
 		private String m_accessToken;
 		private Long m_expirationTimeMilliseconds;
 		private String m_refreshToken;
@@ -73,11 +73,11 @@ public class ApiTablePageData extends AbstractTablePageData {
 			m_apiCredentialId = newApiCredentialId;
 		}
 
-		public Integer getProvider() {
+		public Long getProvider() {
 			return m_provider;
 		}
 
-		public void setProvider(Integer newProvider) {
+		public void setProvider(Long newProvider) {
 			m_provider = newProvider;
 		}
 

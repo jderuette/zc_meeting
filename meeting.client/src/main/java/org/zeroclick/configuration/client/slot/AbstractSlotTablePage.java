@@ -20,9 +20,9 @@ import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.notification.INotificationListener;
+import org.eclipse.scout.rt.shared.services.common.code.ICodeType;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
-import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.shared.slot.AbstractSlotTablePageData;
@@ -30,7 +30,7 @@ import org.zeroclick.configuration.shared.slot.DayDurationFormData;
 import org.zeroclick.configuration.shared.slot.DayDurationModifiedNotification;
 import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.configuration.shared.slot.ReadSlotPermission;
-import org.zeroclick.meeting.client.common.SlotLookupCall;
+import org.zeroclick.configuration.shared.slot.SlotCodeType;
 
 @Data(AbstractSlotTablePageData.class)
 public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.Table> extends AbstractPageWithTable<T> {
@@ -341,7 +341,7 @@ public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.T
 		}
 
 		@Order(4000)
-		public class SlotColumn extends AbstractSmartColumn<Integer> {
+		public class SlotColumn extends AbstractSmartColumn<Long> {
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.dayDuration.code");
@@ -353,8 +353,8 @@ public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.T
 			}
 
 			@Override
-			protected Class<? extends ILookupCall<Integer>> getConfiguredLookupCall() {
-				return SlotLookupCall.class;
+			protected Class<? extends ICodeType<Long, Long>> getConfiguredCodeType() {
+				return SlotCodeType.class;
 			}
 
 			@Override

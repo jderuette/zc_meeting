@@ -179,7 +179,7 @@ public class EventFormData extends AbstractFormData {
 		private static final long serialVersionUID = 1L;
 	}
 
-	public static class Duration extends AbstractValueFieldData<Integer> {
+	public static class Duration extends AbstractValueFieldData<Long> {
 
 		private static final long serialVersionUID = 1L;
 	}
@@ -303,7 +303,7 @@ public class EventFormData extends AbstractFormData {
 		private static final long serialVersionUID = 1L;
 	}
 
-	public static class Slot extends AbstractValueFieldData<Integer> {
+	public static class Slot extends AbstractValueFieldData<Long> {
 
 		private static final long serialVersionUID = 1L;
 	}

@@ -28,11 +28,13 @@ import org.eclipse.scout.rt.client.ui.form.FormEvent;
 import org.eclipse.scout.rt.client.ui.form.FormListener;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
+import org.eclipse.scout.rt.platform.util.CompareUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.notification.INotificationListener;
+import org.eclipse.scout.rt.shared.services.common.code.ICode;
+import org.eclipse.scout.rt.shared.services.common.code.ICodeType;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
-import org.eclipse.scout.rt.shared.services.lookup.ILookupRow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.comon.date.DateHelper;
@@ -41,17 +43,16 @@ import org.zeroclick.configuration.client.api.ApiCreatedNotificationHandler;
 import org.zeroclick.configuration.client.slot.DayDurationModifiedNotificationHandler;
 import org.zeroclick.configuration.client.user.UserModifiedNotificationHandler;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
+import org.zeroclick.configuration.shared.duration.DurationCodeType;
 import org.zeroclick.configuration.shared.slot.DayDurationFormData;
 import org.zeroclick.configuration.shared.slot.DayDurationModifiedNotification;
+import org.zeroclick.configuration.shared.slot.SlotCodeType;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.configuration.shared.user.UserModifiedNotification;
 import org.zeroclick.configuration.shared.venue.VenueLookupCall;
 import org.zeroclick.meeting.client.NotificationHelper;
 import org.zeroclick.meeting.client.common.CallTrackerService;
-import org.zeroclick.meeting.client.common.DurationLookupCall;
-import org.zeroclick.meeting.client.common.EventStateLookupCall;
-import org.zeroclick.meeting.client.common.SlotLookupCall;
 import org.zeroclick.meeting.client.event.EventTablePage.Table.NewEventMenu;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
@@ -61,6 +62,7 @@ import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.EventModifiedNotification;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.ReadEventExtendedPropsPermission;
+import org.zeroclick.meeting.shared.event.StateCodeType;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
 import org.zeroclick.meeting.shared.eventb.AbstractEventsTablePageData;
 import org.zeroclick.meeting.shared.security.AccessControlService;
@@ -482,7 +484,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		}
 
 		private void invalidateIfSlotMatch(final ITableRow row, final String slotCode) {
-			final Integer rowSlotCode = this.getSlotColumn().getValue(row.getRowIndex());
+			final Long rowSlotCode = this.getSlotColumn().getValue(row.getRowIndex());
 
 			if (null != rowSlotCode) {
 				if (rowSlotCode.equals(Integer.valueOf(slotCode))) {
@@ -530,8 +532,8 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			final Boolean endDateEmpty = null == this.getEndDateColumn().getValue(row.getRowIndex());
 			final String rowState = this.getStateColumn().getValue(row.getRowIndex());
 			final Boolean alreadyProcessed = AbstractEventsTablePage.this.isEventProcessed(eventId);
-			return null != row && !alreadyProcessed && "ASKED".equals(rowState) && startDateEmpty && endDateEmpty
-					&& BEANS.get(GoogleApiHelper.class).isCalendarConfigured(hostId)
+			return null != row && !alreadyProcessed && CompareUtility.equals(StateCodeType.AskedCode.ID, rowState)
+					&& startDateEmpty && endDateEmpty && BEANS.get(GoogleApiHelper.class).isCalendarConfigured(hostId)
 					// &&
 					// BEANS.get(GoogleApiHelper.class).isCalendarConfigured(attendeeId)
 					&& this.isTimeZoneValid(attendeeId) && this.isTimeZoneValid(hostId) && this.isGuestCurrentUser(row);
@@ -805,9 +807,10 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			private Boolean isWorkflowVisible(final String currentState) {
 
 				Boolean isVisible = Boolean.FALSE;
-				if ("ASKED".equals(currentState) && Table.this.isGuestCurrentUser(Table.this.getSelectedRow())) {
+				if (CompareUtility.equals(StateCodeType.AskedCode.ID, currentState)
+						&& Table.this.isGuestCurrentUser(Table.this.getSelectedRow())) {
 					isVisible = Boolean.TRUE;
-				} else if ("ACCEPTED".equals(currentState)) {
+				} else if (CompareUtility.equals(StateCodeType.AcceptedCode.ID, currentState)) {
 					isVisible = Boolean.TRUE;
 				}
 				return isVisible;
@@ -890,7 +893,8 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 			private Boolean isWorkflowVisible(final String currentState) {
 				Boolean isVisible = Boolean.FALSE;
-				if ("ASKED".equals(currentState) && Table.this.isHeldByCurrentUser(Table.this.getSelectedRow())) {
+				if (CompareUtility.equals(StateCodeType.AskedCode.ID, currentState)
+						&& Table.this.isHeldByCurrentUser(Table.this.getSelectedRow())) {
 					isVisible = Boolean.TRUE;
 				}
 				return isVisible;
@@ -1143,7 +1147,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		}
 
 		@Order(100)
-		public class SlotColumn extends AbstractSmartColumn<Integer> {
+		public class SlotColumn extends AbstractSmartColumn<Long> {
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.slot");
@@ -1155,8 +1159,8 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			}
 
 			@Override
-			protected Class<? extends ILookupCall<Integer>> getConfiguredLookupCall() {
-				return SlotLookupCall.class;
+			protected Class<? extends ICodeType<Long, Long>> getConfiguredCodeType() {
+				return SlotCodeType.class;
 			}
 		}
 
@@ -1207,7 +1211,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		}
 
 		@Order(200)
-		public class DurationColumn extends AbstractSmartColumn<Integer> {
+		public class DurationColumn extends AbstractSmartColumn<Long> {
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.duration");
@@ -1219,8 +1223,8 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			}
 
 			@Override
-			protected Class<? extends ILookupCall<Integer>> getConfiguredLookupCall() {
-				return DurationLookupCall.class;
+			protected Class<? extends ICodeType<Long, Long>> getConfiguredCodeType() {
+				return DurationCodeType.class;
 			}
 		}
 
@@ -1244,6 +1248,9 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 		@Order(1100)
 		public class StateColumn extends AbstractSmartColumn<String> {
+			// In User context, so texts are translated
+			final StateCodeType eventStateCodes = new StateCodeType();
+
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.state");
@@ -1265,20 +1272,16 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 				final String stateColumnValue = (String) cell.getValue();
 
-				// TODO Djer13 optimization, useful to create a new lookup for
-				// each cell ?
-				final EventStateLookupCall stateLookUpCall = new EventStateLookupCall();
-				final ILookupRow<String> stateLookupValue = stateLookUpCall.getDataById(stateColumnValue);
-
-				cell.setIconId(stateLookupValue.getIconId());
-				cell.setBackgroundColor(stateLookupValue.getBackgroundColor());
-				cell.setForegroundColor(stateLookupValue.getForegroundColor());
-
+				final ICode<String> currentStateCode = this.eventStateCodes.getCode(stateColumnValue);
+				cell.setIconId(currentStateCode.getIconId());
+				cell.setBackgroundColor(currentStateCode.getBackgroundColor());
+				cell.setForegroundColor(currentStateCode.getForegroundColor());
+				cell.setText(currentStateCode.getText());
 			}
 
 			@Override
-			protected Class<? extends ILookupCall<String>> getConfiguredLookupCall() {
-				return EventStateLookupCall.class;
+			protected Class<? extends ICodeType<Long, String>> getConfiguredCodeType() {
+				return StateCodeType.class;
 			}
 		}
 

@@ -12,13 +12,13 @@ import org.eclipse.scout.rt.client.ui.form.FormListener;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
+import org.eclipse.scout.rt.shared.services.common.code.ICodeType;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
-import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.zeroclick.configuration.client.user.UserTablePage.Table;
 import org.zeroclick.configuration.shared.user.CreateUserPermission;
 import org.zeroclick.configuration.shared.user.IUserService;
-import org.zeroclick.configuration.shared.user.LanguageLookupCall;
+import org.zeroclick.configuration.shared.user.LanguageCodeType;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.configuration.shared.user.UserTablePageData;
 import org.zeroclick.ui.action.menu.AbstractEditMenu;
@@ -220,8 +220,8 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 			}
 
 			@Override
-			protected Class<? extends ILookupCall<String>> getConfiguredLookupCall() {
-				return LanguageLookupCall.class;
+			protected Class<? extends ICodeType<?, String>> getConfiguredCodeType() {
+				return LanguageCodeType.class;
 			}
 
 			@Override

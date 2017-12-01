@@ -21,6 +21,7 @@ import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateVenue;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchEventAddCreatedDate;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchEventRejectReason;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchSlotTable;
+import org.zeroclick.meeting.shared.event.StateCodeType;
 
 @SuppressWarnings("PMD.LongVariable")
 public interface SQLs {
@@ -404,8 +405,10 @@ public interface SQLs {
 	String USER_PAGE_DATA_SELECT_INTO = " INTO :{page.userId}, :{page.login}, :{page.email}, :{page.timeZone}, :{page.invitedBy}, :{page.language},  :{page.lastLogin}";
 
 	String USER_PAGE_ADD_STATS_SELECT = ", nbOrganizedWaitingEvent, nbInvetedWaitingEvent";
-	String USER_PAGE_ADD_STATS = " left outer join (select organizer, count(event_id) as nbOrganizedWaitingEvent FROM EVENT WHERE state='ASKED' GROUP BY organizer) as stat2 ON stat2.organizer=user_id"
-			+ " left outer join (select guest_id, count(event_id) as nbInvetedWaitingEvent FROM EVENT WHERE state='ASKED' GROUP BY guest_id) as stat3 ON stat3.guest_id=user_id";
+	String USER_PAGE_ADD_STATS = " left outer join (select organizer, count(event_id) as nbOrganizedWaitingEvent FROM EVENT WHERE state='"
+			+ StateCodeType.AskedCode.ID + "' GROUP BY organizer) as stat2 ON stat2.organizer=user_id"
+			+ " left outer join (select guest_id, count(event_id) as nbInvetedWaitingEvent FROM EVENT WHERE state='"
+			+ StateCodeType.AskedCode.ID + "' GROUP BY guest_id) as stat3 ON stat3.guest_id=user_id";
 	String USER_PAGE_ADD_STATS_INTO = ", :{page.NbOrganizedEventWaiting}, :{page.NbInvitedEventWaiting}";
 
 	String USER_STATS_NB_PROCESSED_EVENT = "select count(event_id) FROM EVENT WHERE organizer=:userId OR guest_id=:userId INTO :{nbProcessedEvent}";

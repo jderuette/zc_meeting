@@ -2,6 +2,7 @@ package org.zeroclick.meeting.client.event;
 
 import org.eclipse.scout.rt.client.dto.Data;
 import org.eclipse.scout.rt.platform.BEANS;
+import org.eclipse.scout.rt.platform.util.CompareUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.data.page.AbstractTablePageData;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
@@ -10,6 +11,7 @@ import org.zeroclick.meeting.shared.event.AbstractEventNotification;
 import org.zeroclick.meeting.shared.event.EventAskedTablePageData;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.IEventService;
+import org.zeroclick.meeting.shared.event.StateCodeType;
 
 @Data(EventAskedTablePageData.class)
 public class EventAskedTablePage extends EventTablePage {
@@ -47,14 +49,14 @@ public class EventAskedTablePage extends EventTablePage {
 	protected Boolean canHandleNew(final AbstractEventNotification notification) {
 		final EventFormData formData = notification.getEventForm();
 		return super.getEventMessageHelper().isHeldByCurrentUser(formData)
-				&& "ASKED".equals(formData.getState().getValue());
+				&& CompareUtility.equals(StateCodeType.AskedCode.ID, formData.getState().getValue());
 	}
 
 	@Override
 	protected Boolean canHandleModified(final AbstractEventNotification notification) {
 		final EventFormData formData = notification.getEventForm();
 		return super.getEventMessageHelper().isHeldByCurrentUser(formData)
-				&& "ASKED".equals(formData.getState().getValue());
+				&& CompareUtility.equals(StateCodeType.AskedCode.ID, formData.getState().getValue());
 	}
 
 	public class Table extends EventTablePage.Table {

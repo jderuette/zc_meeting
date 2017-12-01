@@ -26,6 +26,7 @@ import java.util.Set;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.configuration.shared.provider.ProviderCodeType;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.IApiService;
 
@@ -129,12 +130,12 @@ public class ScoutDataStoreFactory extends AbstractDataStoreFactory {
 
 			final ApiFormData input = new ApiFormData();
 			input.setUserId(Long.valueOf(key));
-			input.getProvider().setValue(1);
+			input.getProvider().setValue(ProviderCodeType.GoogleCode.ID);
 
 			final ApiFormData createdData = apiService.create(input);
 			createdData.setUserId(Long.valueOf(key));
 			createdData.setProviderData(IOUtils.serialize(value));
-			createdData.getProvider().setValue(1);
+			createdData.getProvider().setValue(ProviderCodeType.GoogleCode.ID);
 
 			if (value instanceof StoredCredential) {
 				final StoredCredential credential = (StoredCredential) value;

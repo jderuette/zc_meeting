@@ -20,6 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.CommonService;
 import org.zeroclick.comon.date.DateHelper;
+import org.zeroclick.configuration.shared.duration.DurationCodeType;
+import org.zeroclick.configuration.shared.slot.SlotCodeType;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper.SubscriptionHelperData;
 import org.zeroclick.configuration.shared.user.IUserService;
@@ -32,6 +34,7 @@ import org.zeroclick.meeting.shared.event.EventTablePageData;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.ReadEventPermission;
 import org.zeroclick.meeting.shared.event.RejectEventFormData;
+import org.zeroclick.meeting.shared.event.StateCodeType;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
@@ -62,17 +65,19 @@ public class EventService extends CommonService implements IEventService {
 
 	@Override
 	public EventTablePageData getEventTableData(final SearchFilter filter) {
-		return this.getEvents(filter, " AND state = 'ASKED' AND guest_id=:currentUser", Boolean.FALSE);
+		return this.getEvents(filter, " AND state = '" + StateCodeType.AskedCode.ID + "' AND guest_id=:currentUser",
+				Boolean.FALSE);
 	}
 
 	@Override
 	public AbstractTablePageData getEventAskedTableData(final SearchFilter filter) {
-		return this.getEvents(filter, " AND state = 'ASKED' AND guest_id!=:currentUser", Boolean.FALSE);
+		return this.getEvents(filter, " AND state = '" + StateCodeType.AskedCode.ID + "' AND guest_id!=:currentUser",
+				Boolean.FALSE);
 	}
 
 	@Override
 	public AbstractTablePageData getEventProcessedTableData(final SearchFilter filter) {
-		return this.getEvents(filter, " AND state <> 'ASKED'", Boolean.FALSE);
+		return this.getEvents(filter, " AND state <> '" + StateCodeType.AskedCode.ID + "'", Boolean.FALSE);
 	}
 
 	@Override
@@ -164,12 +169,9 @@ public class EventService extends CommonService implements IEventService {
 		}
 		LOG.debug("PrepareCreate for Event");
 
-		// TODO Djer move EventStateLookupCall to shared part ?
-		formData.getState().setValue("ASKED");
-		// TODO Djer move DurationLookupCall to shared Part ?
-		formData.getDuration().setValue(30);
-		// TODO Djer move SlotLookup to shared Part ?
-		formData.getSlot().setValue(1);
+		formData.getState().setValue(StateCodeType.AskedCode.ID);
+		formData.getDuration().setValue(DurationCodeType.HalfHourCode.ID);
+		formData.getSlot().setValue(SlotCodeType.DayCode.ID);
 
 		final DateHelper dateHelper = BEANS.get(DateHelper.class);
 		formData.getCreatedDate().setValue(dateHelper.nowUtc());

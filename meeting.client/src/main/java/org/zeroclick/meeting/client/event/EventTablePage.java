@@ -27,6 +27,7 @@ import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
+import org.eclipse.scout.rt.platform.util.CompareUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
@@ -36,6 +37,7 @@ import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
 import org.zeroclick.comon.text.TextsHelper;
 import org.zeroclick.configuration.client.user.ValidateCpsForm;
+import org.zeroclick.configuration.shared.duration.DurationCodeType;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper.SubscriptionHelperData;
 import org.zeroclick.configuration.shared.user.IUserService;
@@ -53,6 +55,7 @@ import org.zeroclick.meeting.shared.event.CreateEventPermission;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.EventTablePageData;
 import org.zeroclick.meeting.shared.event.IEventService;
+import org.zeroclick.meeting.shared.event.StateCodeType;
 import org.zeroclick.ui.action.menu.AbstractNewMenu;
 import org.zeroclick.ui.action.menu.AbstractValidateMenu;
 
@@ -128,14 +131,14 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 	protected Boolean canHandleNew(final AbstractEventNotification notification) {
 		final EventFormData formData = notification.getEventForm();
 		return !this.getEventMessageHelper().isHeldByCurrentUser(formData)
-				&& "ASKED".equals(formData.getState().getValue());
+				&& CompareUtility.equals(StateCodeType.AskedCode.ID, formData.getState().getValue());
 	}
 
 	@Override
 	protected Boolean canHandleModified(final AbstractEventNotification notification) {
 		final EventFormData formData = notification.getEventForm();
 		return !this.getEventMessageHelper().isHeldByCurrentUser(formData)
-				&& "ASKED".equals(formData.getState().getValue());
+				&& CompareUtility.equals(StateCodeType.AskedCode.ID, formData.getState().getValue());
 	}
 
 	public class Table extends AbstractEventsTablePage<Table>.Table {
@@ -382,9 +385,12 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 		private DateReturn tryChangeDatesNext(final ZonedDateTime startDate, final ITableRow row) throws IOException {
 			final Integer rowIndex = row.getRowIndex();
-			final DateReturn newPossibleDate = this.tryChangeDatesNext(startDate,
-					this.getDurationColumn().getValue(rowIndex), this.getSlotColumn().getValue(rowIndex),
-					this.getOrganizerColumn().getValue(rowIndex), this.getGuestIdColumn().getValue(rowIndex),
+			final DurationCodeType durationCodes = BEANS.get(DurationCodeType.class);
+			final Integer duration = durationCodes.getCode(this.getSlotColumn().getValue(rowIndex)).getValue()
+					.intValue();
+			final DateReturn newPossibleDate = this.tryChangeDatesNext(startDate, duration,
+					this.getSlotColumn().getValue(rowIndex), this.getOrganizerColumn().getValue(rowIndex),
+					this.getGuestIdColumn().getValue(rowIndex),
 					this.getMinimalStartDateColumn().getZonedValue(rowIndex),
 					this.getMaximalStartDateColumn().getZonedValue(rowIndex),
 					this.getStartDateColumn().getZonedValue(rowIndex));
@@ -464,7 +470,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		 * @throws IOException
 		 */
 		protected DateReturn tryChangeDatesNext(ZonedDateTime startDate, final Integer selectEventDuration,
-				final Integer selectSlotId, final Long organizerUserId, final Long guestUserId,
+				final Long selectSlotId, final Long organizerUserId, final Long guestUserId,
 				final ZonedDateTime minimalStartDate, final ZonedDateTime maximalStartDate,
 				final ZonedDateTime currentStartDate) throws IOException {
 			LOG.info("Checking to create an event starting at " + startDate);
@@ -913,7 +919,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			private Boolean isWorkflowVisible(final String currentState) {
 				Boolean isVisible = Boolean.FALSE;
-				if ("ASKED".equals(currentState)) {
+				if (CompareUtility.equals(StateCodeType.AskedCode.ID, currentState)) {
 					isVisible = Boolean.TRUE;
 				}
 				return isVisible;
@@ -960,7 +966,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 						throw new VetoException(TEXTS.get("zc.meeting.chooseDateFirst"));
 					}
 
-					Table.this.getStateColumn().setValue(Table.this.getSelectedRow(), "ACCEPTED");
+					Table.this.getStateColumn().setValue(Table.this.getSelectedRow(), StateCodeType.AcceptedCode.ID);
 
 					if (null == eventHeldBy) {
 						eventHeldBy = userService.getUserIdByEmail(eventHeldEmail);
@@ -1047,7 +1053,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			private Boolean isWorkflowVisible(final String currentState) {
 				Boolean isVisible = Boolean.FALSE;
-				if ("ASKED".equals(currentState)) {
+				if (CompareUtility.equals(StateCodeType.AskedCode.ID, currentState)) {
 					isVisible = Boolean.TRUE;
 				}
 				return isVisible;
@@ -1105,7 +1111,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			private Boolean isWorkflowVisible(final String currentState) {
 				Boolean isVisible = Boolean.FALSE;
-				if ("ASKED".equals(currentState)) {
+				if (CompareUtility.equals(StateCodeType.AskedCode.ID, currentState)) {
 					isVisible = Boolean.TRUE;
 				}
 				return isVisible;
@@ -1146,7 +1152,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 				private Boolean isWorkflowVisible(final String currentState) {
 					Boolean isVisible = Boolean.FALSE;
-					if ("ASKED".equals(currentState)) {
+					if (CompareUtility.equals(StateCodeType.AskedCode.ID, currentState)) {
 						isVisible = Boolean.TRUE;
 					}
 					return isVisible;
