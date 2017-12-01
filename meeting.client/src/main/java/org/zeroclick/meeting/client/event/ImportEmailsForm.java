@@ -22,8 +22,9 @@ import org.eclipse.scout.rt.client.ui.form.fields.tablefield.AbstractTableField;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
-import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
-import org.zeroclick.meeting.client.common.ValueSeparatorLookupCall;
+import org.eclipse.scout.rt.shared.services.common.code.ICode;
+import org.eclipse.scout.rt.shared.services.common.code.ICodeType;
+import org.zeroclick.configuration.shared.importer.ValueSeparatorCodeType;
 import org.zeroclick.meeting.client.event.ImportEmailsForm.MainBox.AppendToExistingField;
 import org.zeroclick.meeting.client.event.ImportEmailsForm.MainBox.CancelButton;
 import org.zeroclick.meeting.client.event.ImportEmailsForm.MainBox.ImportedEmailPreviewField;
@@ -81,14 +82,20 @@ public class ImportEmailsForm extends AbstractForm {
 	private void fillPreview() {
 		final String rawData = this.getRawDataField().getValue();
 		final String separator = this.getValueSeparatorField().getValue();
-		final ValueSeparatorLookupCall valueSeparatorLookupCall = new ValueSeparatorLookupCall();
-		valueSeparatorLookupCall.setText(separator);
-		final String separatorKey = valueSeparatorLookupCall.getDataByText().get(0).getKey();
+		final ValueSeparatorCodeType valueSeparatorCodes = new ValueSeparatorCodeType();
+		final ICode<String> code = valueSeparatorCodes.getCodeByText(separator);
+		String separatorValue;
+		if (null == code) {
+			separatorValue = separator;
+		} else {
+			separatorValue = code.getId();
+		}
+
 		final Boolean appendToExisting = this.getAppendToExistingField().getValue();
 		List<String> emails = null;
 
 		if (null != rawData && !rawData.isEmpty()) {
-			emails = Arrays.asList(rawData.split("\\s*" + separatorKey + "\\s*"));
+			emails = Arrays.asList(rawData.split("\\s*" + separatorValue + "\\s*"));
 		}
 
 		if (null != emails && !emails.isEmpty()) {
@@ -118,8 +125,8 @@ public class ImportEmailsForm extends AbstractForm {
 			}
 
 			@Override
-			protected Class<? extends ILookupCall<String>> getConfiguredLookupCall() {
-				return ValueSeparatorLookupCall.class;
+			protected Class<? extends ICodeType<?, String>> getConfiguredCodeType() {
+				return ValueSeparatorCodeType.class;
 			}
 
 			@Override

@@ -578,6 +578,9 @@ public class EventForm extends AbstractForm {
 									// when done in "mass" emailsFiled.execValue
 									// don't count the "current" row
 									EventForm.this.updateNbEmail();
+									// clear the "one Email" field
+									EventForm.this.getEmailField().setMandatory(Boolean.FALSE);
+									EventForm.this.getEmailField().resetValue();
 								}
 							}
 						}
