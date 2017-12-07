@@ -19,6 +19,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
@@ -36,7 +37,6 @@ import org.eclipse.scout.rt.platform.BEANS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.comon.date.DateHelper;
-import org.zeroclick.comon.user.AppUserHelper;
 import org.zeroclick.configuration.shared.slot.ISlotService;
 
 /**
@@ -366,9 +366,9 @@ public class SlotHelper {
 		Boolean hasMatchingDay = Boolean.FALSE;
 
 		final DateHelper dateHelper = BEANS.get(DateHelper.class);
-		final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
-		final ZonedDateTime zonedStart = dateHelper.getZonedValue(appUserHelper.getCurrentUserTimeZone(), minimalDate);
-		final ZonedDateTime zonedEnd = dateHelper.getZonedValue(appUserHelper.getCurrentUserTimeZone(), maximalDate);
+		// WARNING we NEED to use UTC
+		final ZonedDateTime zonedStart = dateHelper.getZonedValue(ZoneId.of("UTC"), minimalDate);
+		final ZonedDateTime zonedEnd = dateHelper.getZonedValue(ZoneId.of("UTC"), maximalDate);
 
 		final long nbDayDiff = dateHelper.getRelativeTimeShift(zonedStart, zonedEnd, Boolean.TRUE, ChronoUnit.DAYS);
 
