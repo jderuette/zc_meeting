@@ -27,7 +27,7 @@ public class DurationCodeType extends AbstractCodeType<Long, Long> {
 	}
 
 	protected static String getText(final Double nbMinutes) {
-		return nbMinutes + getTimeUnit(nbMinutes);
+		return nbMinutes.intValue() + " " + getTimeUnit(nbMinutes);
 	}
 
 	@Order(1000)

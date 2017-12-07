@@ -975,7 +975,7 @@ public class EventForm extends AbstractForm {
 
 			@Override
 			protected Class<? extends ICodeType<Long, Long>> getConfiguredCodeType() {
-				return SlotCodeType.class;
+				return DurationCodeType.class;
 			}
 		}
 
