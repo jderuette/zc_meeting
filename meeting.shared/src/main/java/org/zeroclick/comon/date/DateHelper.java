@@ -272,6 +272,10 @@ public class DateHelper {
 						.divide(BigDecimal.valueOf(ChronoUnit.DAYS.getDuration().getSeconds()), 0, roundingMode);
 			}
 			break;
+		case MINUTES:
+			unitShift = BigDecimal.valueOf(secondesShift)
+					.divide(BigDecimal.valueOf(ChronoUnit.MINUTES.getDuration().getSeconds()), 0, RoundingMode.DOWN);
+			break;
 		default:
 			LOG.warn(unit + " not supported");
 			unitShift = BigDecimal.ZERO;

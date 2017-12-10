@@ -949,12 +949,24 @@ public class EventForm extends AbstractForm {
 				final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
 				final Long slot = EventForm.this.getSlotField().getValue();
 
-				if (null != minimalDate && null != maximalDate && null != slot && !SlotHelper.get()
-						.hasMatchingDays(minimalDate, maximalDate, slot, appUserHelper.getCurrentUserId())) {
-					EventForm.this.getSlotField()
-							.addErrorStatus(new DefaultFieldStatus(
-									TEXTS.get("zc.meeting.slot.noSlotWithMinimalAndMaximalDates"),
-									Icons.ExclamationMark, IFieldStatus.ERROR));
+				if (null != minimalDate && null != maximalDate && null != slot) {
+					if (!SlotHelper.get().hasMatchingDays(minimalDate, maximalDate, slot,
+							appUserHelper.getCurrentUserId())) {
+						EventForm.this.getSlotField()
+								.addErrorStatus(new DefaultFieldStatus(
+										TEXTS.get("zc.meeting.slot.noSlotWithMinimalAndMaximalDates"),
+										Icons.ExclamationMark, IFieldStatus.ERROR));
+					}
+
+					// check Hours only if day passed !
+					final Long duration = EventForm.this.getDurationField().getValue();
+					if (!SlotHelper.get().hasMatchingHours(minimalDate, maximalDate, slot,
+							appUserHelper.getCurrentUserId(), duration)) {
+						EventForm.this.getSlotField()
+								.addErrorStatus(new DefaultFieldStatus(
+										TEXTS.get("zc.meeting.slot.noSlotWithMinimalAndMaximalDatesAndHours"),
+										Icons.ExclamationMark, IFieldStatus.ERROR));
+					}
 				} else {
 					EventForm.this.getSlotField().clearErrorStatus();
 				}

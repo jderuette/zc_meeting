@@ -327,8 +327,8 @@ public class SlotHelper {
 		// the closest
 		// FIXME Djer13 the firstOne may not be the good one if event is too
 		// long for this period.
-		// FIXME perpetual should be managed for the LIST, assuming here alla
-		// period as same perpetuality of the first one
+		// FIXME perpetual should be managed for the LIST, assuming here all
+		// periods have same perpetuality of the first one
 		if (periods.get(0).isWeeklyerpetual()) {
 			return periods.get(0);
 		} else {
@@ -361,6 +361,15 @@ public class SlotHelper {
 		return period.getValidDayOfWeek().get(0);
 	}
 
+	/**
+	 * Check if week days allow at least one week day in the selected slot
+	 *
+	 * @param minimalDate
+	 * @param maximalDate
+	 * @param slotId
+	 * @param userId
+	 * @return
+	 */
 	public boolean hasMatchingDays(final Date minimalDate, final Date maximalDate, final Long slotId,
 			final Long userId) {
 		Boolean hasMatchingDay = Boolean.FALSE;
@@ -375,6 +384,7 @@ public class SlotHelper {
 		if (nbDayDiff >= 7) {
 			hasMatchingDay = Boolean.TRUE;
 		} else {
+
 			final Set<DayOfWeek> avialableDaysInSlot = this.getDays(slotId, userId);
 			if (avialableDaysInSlot.contains(zonedStart.getDayOfWeek())
 					|| avialableDaysInSlot.contains(zonedEnd.getDayOfWeek())) {
@@ -391,7 +401,6 @@ public class SlotHelper {
 				}
 			}
 		}
-
 		return hasMatchingDay;
 	}
 
@@ -404,9 +413,35 @@ public class SlotHelper {
 				unicDaysInPeriod.add(day);
 			}
 		}
-
 		return unicDaysInPeriod;
+	}
 
+	/**
+	 * Check if the selected Hours allow some slot in the selected Slot
+	 *
+	 * @param minimalDate
+	 * @param maximalDate
+	 * @param slot
+	 * @param currentUserId
+	 * @return
+	 */
+	public boolean hasMatchingHours(final Date minimalDate, final Date maximalDate, final Long slot,
+			final Long currentUserId, final Long duration) {
+
+		final DateHelper dateHelper = BEANS.get(DateHelper.class);
+		// WARNING we NEED to use UTC
+		final ZonedDateTime zonedStart = dateHelper.getZonedValue(ZoneId.of("UTC"), minimalDate);
+		final ZonedDateTime zonedEnd = dateHelper.getZonedValue(ZoneId.of("UTC"), maximalDate);
+
+		final List<DayDuration> periods = this.getUserPeriods(slot, currentUserId);
+
+		for (final DayDuration period : periods) {
+			if (period.hasTimeOverlap(zonedStart, zonedEnd, duration)) {
+				return Boolean.TRUE; // earlyBreak
+			}
+		}
+
+		return Boolean.FALSE;
 	}
 
 	public static class DayOfWeekLists {
