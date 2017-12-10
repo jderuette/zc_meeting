@@ -919,16 +919,6 @@ public class EventForm extends AbstractForm {
 					this.clearErrorStatus();
 				}
 
-				// @Override
-				// protected void execInitField() {
-				// final Date now = new Date();
-				// now.setHours(23);
-				// now.setMinutes(59);
-				// now.setSeconds(59);
-				// this.setValue(now);
-				// super.execInitField();
-				// }
-
 				@Override
 				protected Date execValidateValue(final Date rawValue) {
 
@@ -949,6 +939,7 @@ public class EventForm extends AbstractForm {
 				final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
 				final Long slot = EventForm.this.getSlotField().getValue();
 
+				EventForm.this.getSlotField().clearErrorStatus();
 				if (null != minimalDate && null != maximalDate && null != slot) {
 					if (!SlotHelper.get().hasMatchingDays(minimalDate, maximalDate, slot,
 							appUserHelper.getCurrentUserId())) {
@@ -956,16 +947,18 @@ public class EventForm extends AbstractForm {
 								.addErrorStatus(new DefaultFieldStatus(
 										TEXTS.get("zc.meeting.slot.noSlotWithMinimalAndMaximalDates"),
 										Icons.ExclamationMark, IFieldStatus.ERROR));
-					}
-
-					// check Hours only if day passed !
-					final Long duration = EventForm.this.getDurationField().getValue();
-					if (!SlotHelper.get().hasMatchingHours(minimalDate, maximalDate, slot,
-							appUserHelper.getCurrentUserId(), duration)) {
-						EventForm.this.getSlotField()
-								.addErrorStatus(new DefaultFieldStatus(
-										TEXTS.get("zc.meeting.slot.noSlotWithMinimalAndMaximalDatesAndHours"),
-										Icons.ExclamationMark, IFieldStatus.ERROR));
+					} else {
+						// check Hours only if day passed !
+						final Long durationId = EventForm.this.getDurationField().getValue();
+						final Double durationinMinutes = DurationCodeType.getValue(durationId);
+						if (!SlotHelper.get().hasMatchingHours(minimalDate, maximalDate, slot,
+								appUserHelper.getCurrentUserId(), durationinMinutes)) {
+							EventForm.this.getSlotField()
+									.addErrorStatus(new DefaultFieldStatus(
+											TEXTS.get("zc.meeting.slot.noSlotWithMinimalAndMaximalDatesAndHours",
+													DurationCodeType.getText(durationinMinutes)),
+											Icons.ExclamationMark, IFieldStatus.ERROR));
+						}
 					}
 				} else {
 					EventForm.this.getSlotField().clearErrorStatus();
@@ -983,6 +976,15 @@ public class EventForm extends AbstractForm {
 			@Override
 			protected boolean getConfiguredMandatory() {
 				return Boolean.TRUE;
+			}
+
+			@Override
+			protected void execChangedValue() {
+				EventForm.this.getPeriodeBox().checkAvailableDaysInSlot(
+						EventForm.this.getMinimalStartDateField().getValue(),
+						EventForm.this.getMaximalStartDateField().getValue());
+				EventForm.this.getMinimalStartDateField().validateCurrentValue();
+				EventForm.this.getMaximalStartDateField().validateCurrentValue();
 			}
 
 			@Override

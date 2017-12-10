@@ -193,7 +193,7 @@ public class DayDuration {
 	}
 
 	public Boolean isPeriodPossible(final ZonedDateTime startDate, final ZonedDateTime endDate,
-			final Long durationInMinutes) {
+			final Double durationInMinutes) {
 		Boolean isPeriodPossible = Boolean.FALSE;
 
 		final DateHelper dateHelper = BEANS.get(DateHelper.class);
@@ -236,12 +236,12 @@ public class DayDuration {
 	}
 
 	public Boolean hasTimeOverlap(final LocalDateTime startDate, final LocalDateTime endDate,
-			final Long durationinMinutes) {
+			final Double durationinMinutes) {
 		return this.hasTimeOverlap(startDate.atZone(ZoneOffset.UTC), endDate.atZone(ZoneOffset.UTC), durationinMinutes);
 	}
 
 	public Boolean hasTimeOverlap(final ZonedDateTime startDate, final ZonedDateTime endDate,
-			final Long durationinMinutes) {
+			final Double durationinMinutes) {
 		final Long amountOfTimeOverlap = this.getTimeOverlap(startDate, endDate, durationinMinutes, Boolean.TRUE);
 		return amountOfTimeOverlap != 0L;
 	}
@@ -250,13 +250,13 @@ public class DayDuration {
 		return this.getTimeOverlap(startDate.atZone(ZoneOffset.UTC), endDate.atZone(ZoneOffset.UTC), null);
 	}
 
-	public Long getTimeOverlap(final LocalDateTime startDate, final LocalDateTime endDate, final Long duration,
+	public Long getTimeOverlap(final LocalDateTime startDate, final LocalDateTime endDate, final Double duration,
 			final Boolean stopWhenMeetingPossible) {
 		return this.getTimeOverlap(startDate.atZone(ZoneOffset.UTC), endDate.atZone(ZoneOffset.UTC), duration,
 				stopWhenMeetingPossible);
 	}
 
-	public Long getTimeOverlap(final LocalDateTime startDate, final LocalDateTime endDate, final Long duration) {
+	public Long getTimeOverlap(final LocalDateTime startDate, final LocalDateTime endDate, final Double duration) {
 		return this.getTimeOverlap(startDate.atZone(ZoneOffset.UTC), endDate.atZone(ZoneOffset.UTC), duration);
 	}
 
@@ -264,11 +264,11 @@ public class DayDuration {
 		return this.getTimeOverlap(startDate, endDate, null);
 	}
 
-	public Long getTimeOverlap(final ZonedDateTime startDate, final ZonedDateTime endDate, final Long duration) {
+	public Long getTimeOverlap(final ZonedDateTime startDate, final ZonedDateTime endDate, final Double duration) {
 		return this.getTimeOverlap(startDate, endDate, duration, Boolean.FALSE);
 	}
 
-	public Long getTimeOverlap(final ZonedDateTime startDate, final ZonedDateTime endDate, final Long duration,
+	public Long getTimeOverlap(final ZonedDateTime startDate, final ZonedDateTime endDate, final Double duration,
 			final Boolean stopWhenMeetingPossible) {
 		final ChronoUnit unit = ChronoUnit.MINUTES;
 
@@ -317,20 +317,18 @@ public class DayDuration {
 		} else {
 			// (partial) First Day + All days between Begin and End + (partial)
 			// LastDay
-			Long maxPartialFirstDay = 0L;
-			Long maxPartialLastDay = 0L;
 			Long partialFirstDay = 0L;
-			Long partialLastDay = 0L;
 			if (this.validDayOfWeek.contains(localStartDateTime.getDayOfWeek())) {
-				maxPartialFirstDay = startPartialPeriod.until(this.getEnd().toLocalTime(), unit);
+				final long maxPartialFirstDay = startPartialPeriod.until(this.getEnd().toLocalTime(), unit);
 				partialFirstDay = this.getAvailableHours(maxPartialFirstDay, duration);
 				if (stopWhenMeetingPossible && partialFirstDay >= duration) {
 					LOG.info("Multiple days TimeFrame found avaible time in first (partial) day, stoping search");
 					return partialFirstDay; // early Break
 				}
 			}
+			Long partialLastDay = 0L;
 			if (this.validDayOfWeek.contains(localEndDateTime.getDayOfWeek())) {
-				maxPartialLastDay = this.getStart().toLocalTime().until(endPartialPeriod, unit);
+				final long maxPartialLastDay = this.getStart().toLocalTime().until(endPartialPeriod, unit);
 				partialLastDay = this.getAvailableHours(maxPartialLastDay, duration);
 				if (stopWhenMeetingPossible && partialLastDay >= duration) {
 					LOG.info("Multiple days TimeFrame found avaible time in last (partial) day, stoping search");
@@ -360,14 +358,14 @@ public class DayDuration {
 
 	}
 
-	private Long getAvailableHours(final Long amountOfMinutes, final Long durationInMinutes) {
+	private Long getAvailableHours(final Long amountOfMinutes, final Double durationInMinutes) {
 		Long timeOverlap = 0L;
 		if (null == durationInMinutes) {
 			timeOverlap = amountOfMinutes;
 		} else if (amountOfMinutes >= durationInMinutes) {
 			timeOverlap = amountOfMinutes;
-			final long nbPossibleMeeting = Math.floorDiv(amountOfMinutes, durationInMinutes);
-			timeOverlap = nbPossibleMeeting * durationInMinutes;
+			final long nbPossibleMeeting = Math.floorDiv(amountOfMinutes, durationInMinutes.longValue());
+			timeOverlap = nbPossibleMeeting * durationInMinutes.longValue();
 
 			final StringBuilder builder = new StringBuilder();
 			builder.append(nbPossibleMeeting).append(" meeting of ").append(durationInMinutes)

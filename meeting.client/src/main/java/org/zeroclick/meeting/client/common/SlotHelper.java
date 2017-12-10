@@ -426,7 +426,7 @@ public class SlotHelper {
 	 * @return
 	 */
 	public boolean hasMatchingHours(final Date minimalDate, final Date maximalDate, final Long slot,
-			final Long currentUserId, final Long duration) {
+			final Long currentUserId, final Double durationinMinutes) {
 
 		final DateHelper dateHelper = BEANS.get(DateHelper.class);
 		// WARNING we NEED to use UTC
@@ -436,7 +436,7 @@ public class SlotHelper {
 		final List<DayDuration> periods = this.getUserPeriods(slot, currentUserId);
 
 		for (final DayDuration period : periods) {
-			if (period.hasTimeOverlap(zonedStart, zonedEnd, duration)) {
+			if (period.hasTimeOverlap(zonedStart, zonedEnd, durationinMinutes)) {
 				return Boolean.TRUE; // earlyBreak
 			}
 		}

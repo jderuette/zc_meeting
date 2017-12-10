@@ -4,6 +4,7 @@ import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.code.AbstractCode;
 import org.eclipse.scout.rt.shared.services.common.code.AbstractCodeType;
+import org.eclipse.scout.rt.shared.services.common.code.ICode;
 
 public class DurationCodeType extends AbstractCodeType<Long, Long> {
 
@@ -26,8 +27,36 @@ public class DurationCodeType extends AbstractCodeType<Long, Long> {
 		return unit;
 	}
 
-	protected static String getText(final Double nbMinutes) {
-		return nbMinutes.intValue() + " " + getTimeUnit(nbMinutes);
+	public static String getText(final Long durationCodeTypeId) {
+		String text = null;
+		final ICode<Long> durationCode = new DurationCodeType().getCode(durationCodeTypeId);
+		if (null != durationCode) {
+			text = durationCode.getText();
+		}
+		return text;
+	}
+
+	public static String getText(final Double nbMinutes) {
+		final StringBuilder builder = new StringBuilder();
+		builder.append(convertMinuteToHours(nbMinutes)).append(" ").append(getTimeUnit(nbMinutes));
+		return builder.toString();
+	}
+
+	private static Integer convertMinuteToHours(final Double nbMinutes) {
+		int minutesToHours = nbMinutes.intValue();
+		if (minutesToHours >= 60) {
+			minutesToHours = minutesToHours / 60;
+		}
+		return minutesToHours;
+	}
+
+	public static Double getValue(final Long durationId) {
+		Double value = null;
+		final ICode<Long> durationCode = new DurationCodeType().getCode(durationId);
+		if (null != durationCode) {
+			value = durationCode.getValue().doubleValue();
+		}
+		return value;
 	}
 
 	@Order(1000)
@@ -134,5 +163,4 @@ public class DurationCodeType extends AbstractCodeType<Long, Long> {
 			return ID;
 		}
 	}
-
 }

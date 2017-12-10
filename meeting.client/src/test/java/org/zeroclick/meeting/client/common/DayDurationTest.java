@@ -254,7 +254,7 @@ public class DayDurationTest {
 		final LocalDateTime start = LocalDateTime.of(2017, 12, 4, 10, 0, 0);
 		final LocalDateTime end = LocalDateTime.of(2018, 1, 3, 9, 0, 0);
 
-		final Long overlapTime = this.morningWorkDay.getTimeOverlap(start, end, 120L);
+		final Long overlapTime = this.morningWorkDay.getTimeOverlap(start, end, 120D);
 		Assert.assertEquals(
 				"Invalid timeOverlap (2 Hours firstDay + 4*4 (first partial Week) + (5*4*3) (3 Full weeks) + 2*4 (partial LastWeek) + 1 hour Lats Day Ignored (to short) = 86 hours avialable)",
 				hoursToMins(2 + 4 * 4 + 5 * 4 * 3 + 2 * 4), overlapTime.longValue());
@@ -265,7 +265,7 @@ public class DayDurationTest {
 		final LocalDateTime start = LocalDateTime.of(2017, 12, 4, 10, 0, 0);
 		final LocalDateTime end = LocalDateTime.of(2018, 1, 3, 9, 0, 0);
 
-		final Long overlapTime = this.morningWorkDay.getTimeOverlap(start, end, 240L);
+		final Long overlapTime = this.morningWorkDay.getTimeOverlap(start, end, 240D);
 		Assert.assertEquals(
 				"Invalid timeOverlap (2 Hours firstDay Ignored + 4*4 (first partial Week) + (5*4*3) (3 Full weeks) + 2*4 (partial LastWeek) + 1 hour Lats Day Ignored (to short) = 84 hours avialable)",
 				hoursToMins(4 * 4 + 5 * 4 * 3 + 2 * 4), overlapTime.longValue());
@@ -276,7 +276,7 @@ public class DayDurationTest {
 		final LocalDateTime start = LocalDateTime.of(2017, 12, 4, 7, 0, 0);
 		final LocalDateTime end = LocalDateTime.of(2017, 12, 6, 14, 0, 0);
 
-		final Long overlapTime = this.morningWorkDay.getTimeOverlap(start, end, 360L);
+		final Long overlapTime = this.morningWorkDay.getTimeOverlap(start, end, 360D);
 		Assert.assertEquals(
 				"Invalid timeOverlap (ALl should be ignored because meeting duration longer than pariod Duration)",
 				hoursToMins(0), overlapTime.longValue());
@@ -287,7 +287,7 @@ public class DayDurationTest {
 		final LocalDateTime start = LocalDateTime.of(2017, 12, 4, 9, 0, 0);
 		final LocalDateTime end = LocalDateTime.of(2017, 12, 6, 14, 0, 0);
 
-		final Boolean hasOverlapTime = this.morningWorkDay.hasTimeOverlap(start, end, 120L);
+		final Boolean hasOverlapTime = this.morningWorkDay.hasTimeOverlap(start, end, 120D);
 		Assert.assertTrue("Invalid hasTimeOverlap (first (partial) day should be available)", hasOverlapTime);
 	}
 
@@ -296,7 +296,7 @@ public class DayDurationTest {
 		final LocalDateTime start = LocalDateTime.of(2017, 12, 4, 11, 0, 0);
 		final LocalDateTime end = LocalDateTime.of(2017, 12, 6, 11, 30, 0);
 
-		final Boolean hasOverlapTime = this.morningWorkDay.hasTimeOverlap(start, end, 120L);
+		final Boolean hasOverlapTime = this.morningWorkDay.hasTimeOverlap(start, end, 120D);
 		Assert.assertTrue("Invalid hasTimeOverlap (last (partial) day should be available)", hasOverlapTime);
 	}
 
@@ -305,7 +305,7 @@ public class DayDurationTest {
 		final LocalDateTime start = LocalDateTime.of(2017, 12, 4, 11, 0, 0);
 		final LocalDateTime end = LocalDateTime.of(2017, 12, 6, 10, 0, 0);
 
-		final Boolean hasOverlapTime = this.morningWorkDay.hasTimeOverlap(start, end, 120L);
+		final Boolean hasOverlapTime = this.morningWorkDay.hasTimeOverlap(start, end, 120D);
 		Assert.assertTrue("Invalid hasTimeOverlap (One of FUll day should be available)", hasOverlapTime);
 	}
 
