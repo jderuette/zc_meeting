@@ -37,6 +37,9 @@ import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.common.params.AppParamsFormData;
+import org.zeroclick.common.params.ParamCreatedNotificationHandler;
+import org.zeroclick.common.params.ParamModifiedNotificationHandler;
 import org.zeroclick.comon.date.DateHelper;
 import org.zeroclick.comon.user.AppUserHelper;
 import org.zeroclick.configuration.client.api.ApiCreatedNotificationHandler;
@@ -44,6 +47,9 @@ import org.zeroclick.configuration.client.slot.DayDurationModifiedNotificationHa
 import org.zeroclick.configuration.client.user.UserModifiedNotificationHandler;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
 import org.zeroclick.configuration.shared.duration.DurationCodeType;
+import org.zeroclick.configuration.shared.params.IAppParamsService;
+import org.zeroclick.configuration.shared.params.ParamCreatedNotification;
+import org.zeroclick.configuration.shared.params.ParamModifiedNotification;
 import org.zeroclick.configuration.shared.slot.DayDurationFormData;
 import org.zeroclick.configuration.shared.slot.DayDurationModifiedNotification;
 import org.zeroclick.configuration.shared.slot.SlotCodeType;
@@ -75,9 +81,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 	private static final Logger LOG = LoggerFactory.getLogger(AbstractEventsTablePage.class);
 
-	final private Integer maxTry = 20;
-	final protected CallTrackerService<Long> callTracker = new CallTrackerService<>(this.maxTry, Duration.ofMinutes(3),
-			"Get calendar Events");
+	protected CallTrackerService<Long> callTracker;
 
 	/**
 	 * To avoid event processed twice, when no date available
@@ -92,6 +96,9 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 	// TODO Djer13 is caching here smart ?
 	private final Map<Long, String> cachedUserTimeZone = new HashMap<>();
+
+	protected INotificationListener<ParamCreatedNotification> paramCreatedListener;
+	protected INotificationListener<ParamModifiedNotification> paramModifiedListener;
 
 	protected boolean isUserCalendarConfigured() {
 		return BEANS.get(GoogleApiHelper.class).isCalendarConfigured();
@@ -110,6 +117,58 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	@Override
 	protected boolean getConfiguredTableStatusVisible() {
 		return Boolean.FALSE;
+	}
+
+	@Override
+	protected void execInitPage() {
+		final IAppParamsService appParamService = BEANS.get(IAppParamsService.class);
+		Integer maxNbCall = 20;
+		Integer maxDuration = 3;
+
+		final String maxNbCallParam = appParamService.getValue(IAppParamsService.APP_PARAM_KEY_EVENT_CALL_TRACKER_MAX);
+		final String maxDurationParam = appParamService
+				.getValue(IAppParamsService.APP_PARAM_KEY_EVENT_CALL_TRACKER_DURATION);
+
+		try {
+			if (null != maxNbCallParam) {
+				maxNbCall = Integer.valueOf(maxNbCallParam);
+			}
+		} catch (final NumberFormatException nfe) {
+			LOG.warn("No params aviable for Calltracker event max ("
+					+ IAppParamsService.APP_PARAM_KEY_EVENT_CALL_TRACKER_MAX + ") FallBack to default value");
+		}
+
+		try {
+			maxDuration = Integer.valueOf(maxDurationParam);
+		} catch (final NumberFormatException nfe) {
+			LOG.warn("No params aviable for Calltracker event Duration ("
+					+ IAppParamsService.APP_PARAM_KEY_EVENT_CALL_TRACKER_DURATION + ") FallBack to default value");
+		}
+
+		this.callTracker = new CallTrackerService<>(maxNbCall, Duration.ofMinutes(maxDuration), "Get calendar Events");
+
+		final ParamCreatedNotificationHandler paramCreatedNotificationHandler = BEANS
+				.get(ParamCreatedNotificationHandler.class);
+		paramCreatedNotificationHandler.addListener(this.createParamCreatedListener());
+
+		final ParamModifiedNotificationHandler paramModifiedNotificationHandler = BEANS
+				.get(ParamModifiedNotificationHandler.class);
+		paramModifiedNotificationHandler.addListener(this.createParamModifiedListener());
+
+		super.execInitPage();
+	}
+
+	@Override
+	protected void execDisposePage() {
+		final ParamCreatedNotificationHandler paramCreatedNotificationHandler = BEANS
+				.get(ParamCreatedNotificationHandler.class);
+		paramCreatedNotificationHandler.removeListener(this.paramCreatedListener);
+
+		final ParamModifiedNotificationHandler paramModifiedNotificationHandler = BEANS
+				.get(ParamModifiedNotificationHandler.class);
+		paramModifiedNotificationHandler.removeListener(this.paramModifiedListener);
+
+		super.execDisposePage();
 	}
 
 	/**
@@ -218,6 +277,69 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		// }
 		// }
 		return this.processedEventWithoutPossibleDates.contains(eventId);
+	}
+
+	protected INotificationListener<ParamCreatedNotification> createParamCreatedListener() {
+		this.paramCreatedListener = new INotificationListener<ParamCreatedNotification>() {
+			@Override
+			public void handleNotification(final ParamCreatedNotification notification) {
+
+				final AppParamsFormData paramForm = notification.getParamForm();
+				AbstractEventsTablePage.this.updateEventCallTracker(paramForm);
+			}
+		};
+		return this.paramCreatedListener;
+	}
+
+	protected INotificationListener<ParamModifiedNotification> createParamModifiedListener() {
+		this.paramModifiedListener = new INotificationListener<ParamModifiedNotification>() {
+			@Override
+			public void handleNotification(final ParamModifiedNotification notification) {
+
+				final AppParamsFormData paramForm = notification.getParamForm();
+				AbstractEventsTablePage.this.updateEventCallTracker(paramForm);
+			}
+		};
+		return this.paramModifiedListener;
+	}
+
+	private void updateEventCallTracker(final AppParamsFormData paramForm) {
+		final String appParamKey = paramForm.getKey().getValue();
+		final String appParamValue = paramForm.getValue().getValue();
+		LOG.debug("New Param prepare to update Event Configuration (in "
+				+ AbstractEventsTablePage.this.getConfiguredTitle() + ") for param Id : " + paramForm.getParamId()
+				+ " with key : " + appParamKey);
+		try {
+
+			if (null != appParamKey) {
+				if (appParamKey.equals(IAppParamsService.APP_PARAM_KEY_EVENT_CALL_TRACKER_MAX)) {
+					LOG.info("Updatding Events CallTracker max try with value : " + appParamValue);
+					Integer maxSuccesivCall = null;
+					try {
+						maxSuccesivCall = Integer.valueOf(appParamValue);
+						AbstractEventsTablePage.this.callTracker.setMaxSuccessiveCall(maxSuccesivCall);
+					} catch (final NumberFormatException nfe) {
+						LOG.warn("Cannot update Event Call Tracker max successive Call with invalid value : "
+								+ appParamValue, nfe);
+					}
+
+				} else if (appParamKey.equals(IAppParamsService.APP_PARAM_KEY_EVENT_CALL_TRACKER_DURATION)) {
+					LOG.info("Updatding Events CallTracker duration try with value : " + appParamValue);
+
+					Integer ttl = null;
+					try {
+						ttl = Integer.valueOf(appParamValue);
+						AbstractEventsTablePage.this.callTracker.setTimeToLive(Duration.ofMinutes(ttl));
+					} catch (final NumberFormatException nfe) {
+						LOG.warn("Cannot update Event Call Tracker ttl with invalid value : " + appParamValue, nfe);
+					}
+				}
+			}
+
+		} catch (final RuntimeException e) {
+			LOG.error("Could not update Event configuration (new AppPAram). ("
+					+ AbstractEventsTablePage.this.getConfiguredTitle() + ")", e);
+		}
 	}
 
 	public class Table extends AbstractTable {

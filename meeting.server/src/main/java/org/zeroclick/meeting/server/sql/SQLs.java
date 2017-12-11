@@ -482,7 +482,7 @@ public interface SQLs {
 
 	String PARAMS_INSERT = "INSERT INTO APP_PARAMS (param_id) VALUES (:paramId)";
 
-	String PARAMS_UPDATE = "UPDATE APP_PARAMS SET key=:key value=:value WHERE key=:key";
+	String PARAMS_UPDATE = "UPDATE APP_PARAMS SET key=:key, value=:value WHERE param_id=:paramId";
 	String PARAMS_UPDATE_WITH_CATEGORY = "UPDATE APP_PARAMS SET key=:key, category=:category, value=:value WHERE param_id=:paramId";
 
 	String PARAMS_INSERT_SAMPLE = "INSERT INTO APP_PARAMS (param_id, key, value)";

@@ -13,6 +13,7 @@ import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.server.clientnotification.ClientNotificationRegistry;
 import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.eclipse.scout.rt.shared.data.page.AbstractTablePageData;
+import org.eclipse.scout.rt.shared.services.common.code.ICode;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
@@ -373,5 +374,18 @@ public class EventService extends CommonService implements IEventService {
 		final UserFormData userDetails = userService.getCurrentUserDetails();
 
 		return userDetails.getEmail().getValue();
+	}
+
+	@Override
+	public void migrateDurationlookupToCodeType() {
+		LOG.info("Updating Event duration from minutes to IDs");
+		final DurationCodeType durationCodeType = new DurationCodeType();
+		final List<? extends ICode<Long>> existingCodes = durationCodeType.getCodes(Boolean.FALSE);
+
+		for (final ICode<Long> code : existingCodes) {
+			LOG.debug("Updating event with durantion : " + code.getValue() + " with id : " + code.getId());
+			final String sql = "UPDATE event set duration=:durationId where duration=:durationminutes";
+			SQL.update(sql, new NVPair("durationId", code.getId()), new NVPair("durationminutes", code.getValue()));
+		}
 	}
 }

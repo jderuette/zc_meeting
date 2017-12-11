@@ -88,6 +88,8 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		this.setNbEventToProcess(pageData.getRowCount());
 
 		this.refreshTitle();
+
+		super.getTable().autoFillDates();
 	}
 
 	@Override
@@ -187,11 +189,11 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			return EventTablePage.this.buildTitle();
 		}
 
-		@Override
-		protected void execContentChanged() {
-			this.autoFillDates();
-			super.execContentChanged();
-		}
+		// @Override
+		// protected void execContentChanged() {
+		// this.autoFillDates();
+		// super.execContentChanged();
+		// }
 
 		@Override
 		protected void execDecorateRow(final ITableRow row) {
@@ -204,7 +206,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			if (this.canAutofillDates(row)) {
 				LOG.info("Calculating new Date (autofill) for row : " + row);
 				try {
-					this.changeDatesNext(row);
+					this.changeDatesNext(row, Boolean.FALSE);
 					final Date calculatedStartDate = this.getStartDateColumn().getValue(row.getRowIndex());
 					if (null == calculatedStartDate) {
 						final Long eventId = this.getEventIdColumn().getValue(row.getRowIndex());
@@ -218,11 +220,11 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		}
 
 		private void changeDatesNext(final ZonedDateTime newStart) throws IOException {
-			this.changeDatesNext(Table.this.getSelectedRow(), newStart);
+			this.changeDatesNext(Table.this.getSelectedRow(), newStart, Boolean.TRUE);
 		}
 
 		private void changeDatesNext() throws IOException {
-			this.changeDatesNext(Table.this.getSelectedRow());
+			this.changeDatesNext(Table.this.getSelectedRow(), Boolean.TRUE);
 		}
 
 		class DateReturn {
@@ -312,7 +314,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			}
 		}
 
-		protected void changeDatesNext(final ITableRow row) throws IOException {
+		protected void changeDatesNext(final ITableRow row, final Boolean askedByUser) throws IOException {
 			final ZonedDateTime startDate;
 			final Long guestId = this.getGuestIdColumn().getValue(row.getRowIndex());
 			final ZonedDateTime currentStartDate = EventTablePage.this.getDateHelper().getZonedValue(
@@ -325,11 +327,12 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				startDate = EventTablePage.this.getAppUserHelper().getUserNow(guestId);
 			}
 
-			this.changeDatesNext(row, startDate);
+			this.changeDatesNext(row, startDate, askedByUser);
 
 		}
 
-		protected void changeDatesNext(final ITableRow row, final ZonedDateTime newStartDate) throws IOException {
+		protected void changeDatesNext(final ITableRow row, final ZonedDateTime newStartDate, final Boolean askedByUser)
+				throws IOException {
 			final Long eventId = this.getEventIdColumn().getValue(row.getRowIndex());
 			Boolean hasLooped = Boolean.FALSE;
 
@@ -360,7 +363,24 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 						hasLooped = Boolean.TRUE;
 					}
 				} else {
-					throw new VetoException(TEXTS.get("zc.meeting.googleTooManyCall"));
+					if (askedByUser) {
+						final int continueSearch = MessageBoxes.createYesNo()
+								.withHeader(TEXTS.get("zc.meeting.event.maxSearchReached.title"))
+								.withBody(TEXTS.get("zc.meeting.event.maxSearchReached.message",
+										EventTablePage.this.getDateHelper().format(newPossibleDate.getStart())))
+								.withYesButtonText(TEXTS.get("YesButton")).withIconId(Icons.ExclamationMark)
+								.withSeverity(IStatus.INFO).show();
+						if (continueSearch == IMessageBox.YES_OPTION) {
+							EventTablePage.this.callTracker.resetNbCall(eventId);
+						} else {
+							break; // stop search
+						}
+					} else {
+						// throw new
+						// VetoException(TEXTS.get("zc.meeting.googleTooManyCall"));
+						break; // stop search without prompt, because not a user
+								// action
+					}
 				}
 			}
 			EventTablePage.this.callTracker.resetNbCall(eventId);
@@ -490,7 +510,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			final ZonedDateTime nextEndDate = startDate.plus(Duration.ofMinutes(selectEventDuration));
 
 			DateReturn proposedDate = null;
-			// Check gust slot configuration
+			// Check guest slot configuration
 			if (!SlotHelper.get().isInOneOfPeriods(selectSlotId, startDate, nextEndDate, guestUserId)) {
 				proposedDate = new DateReturn(
 						SlotHelper.get().getNextValidDateTime(selectSlotId, startDate, nextEndDate, guestUserId),
@@ -526,7 +546,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			if (null != proposedDate && loopInDates
 					&& (null == currentStartDate || proposedDate.getStart().isAfter(currentStartDate))) {
 				// Loop and proposed date is after the current, so out of range,
-				// and now available date)
+				// and no available date)
 				proposedDate.setNoAvailableDate(Boolean.TRUE);
 				proposedDate.setStart(currentStartDate);
 			} else if (null == proposedDate) {

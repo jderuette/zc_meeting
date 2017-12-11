@@ -1,8 +1,5 @@
 package org.zeroclick.common.params;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.holders.NVPair;
 import org.eclipse.scout.rt.server.clientnotification.ClientNotificationRegistry;
@@ -20,7 +17,6 @@ import org.zeroclick.configuration.shared.params.ReadAppParamsPermission;
 import org.zeroclick.configuration.shared.params.UpdateAppParamsPermission;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateParamsTable;
-import org.zeroclick.meeting.shared.security.AccessControlService;
 
 public class AppParamsService extends CommonService implements IAppParamsService {
 
@@ -129,9 +125,12 @@ public class AppParamsService extends CommonService implements IAppParamsService
 		SQL.insert(SQLs.PARAMS_INSERT, formData);
 		final AppParamsFormData storedData = this.store(formData, Boolean.TRUE);
 
-		final Set<String> notifiedUsers = this.buildNotifiedUsers(storedData);
-		BEANS.get(ClientNotificationRegistry.class).putForUsers(notifiedUsers,
-				new ParamCreatedNotification(storedData));
+		// final Set<String> notifiedUsers =
+		// this.buildNotifiedUsers(storedData);
+		// BEANS.get(ClientNotificationRegistry.class).putForUsers(notifiedUsers,
+		// new ParamCreatedNotification(storedData));
+
+		BEANS.get(ClientNotificationRegistry.class).putForAllNodes(new ParamCreatedNotification(storedData));
 
 		return storedData;
 	}
@@ -169,20 +168,24 @@ public class AppParamsService extends CommonService implements IAppParamsService
 
 	}
 
-	private Set<String> buildNotifiedUsers(final AppParamsFormData formData) {
-		// Notify Users for EventTable update
-		// TODO Djer13 notify ALL Users ? (as this modified/created param may
-		// impact them)
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-
-		final Set<String> notifiedUsers = new HashSet<>();
-		notifiedUsers.addAll(acs.getUserNotificationIds(acs.getZeroClickUserIdOfCurrentSubject()));
-		return notifiedUsers;
-	}
+	// private Set<String> buildNotifiedUsers(final AppParamsFormData formData)
+	// {
+	// // Notify Users for EventTable update
+	// // TODO Djer13 notify ALL Users ? (as this modified/created param may
+	// // impact them)
+	// final AccessControlService acs = BEANS.get(AccessControlService.class);
+	//
+	// final Set<String> notifiedUsers = new HashSet<>();
+	// notifiedUsers.addAll(acs.getUserNotificationIds(acs.getZeroClickUserIdOfCurrentSubject()));
+	// return notifiedUsers;
+	// }
 
 	private void sendModifiedNotifications(final AppParamsFormData formData) {
-		final Set<String> notifiedUsers = this.buildNotifiedUsers(formData);
-		BEANS.get(ClientNotificationRegistry.class).putForUsers(notifiedUsers, new ParamModifiedNotification(formData));
+		// final Set<String> notifiedUsers = this.buildNotifiedUsers(formData);
+		// BEANS.get(ClientNotificationRegistry.class).putForUsers(notifiedUsers,
+		// new ParamModifiedNotification(formData));
+
+		BEANS.get(ClientNotificationRegistry.class).putForAllSessions(new ParamModifiedNotification(formData));
 	}
 
 }
