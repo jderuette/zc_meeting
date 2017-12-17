@@ -7,7 +7,6 @@ import org.eclipse.scout.rt.client.ui.form.fields.IFormField;
 import org.eclipse.scout.rt.client.ui.form.fields.booleanfield.AbstractBooleanField;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractCancelButton;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractOkButton;
-import org.eclipse.scout.rt.client.ui.form.fields.datefield.AbstractDateField;
 import org.eclipse.scout.rt.client.ui.form.fields.groupbox.AbstractGroupBox;
 import org.eclipse.scout.rt.client.ui.form.fields.longfield.AbstractLongField;
 import org.eclipse.scout.rt.client.ui.form.fields.sequencebox.AbstractSequenceBox;
@@ -22,6 +21,7 @@ import org.zeroclick.configuration.shared.slot.DayDurationFormData;
 import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.configuration.shared.slot.UpdateSlotPermission;
 import org.zeroclick.meeting.client.NotificationHelper;
+import org.zeroclick.ui.form.fields.datefield.AbstractZonedTimeField;
 
 @FormData(value = DayDurationFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class DayDurationForm extends AbstractForm {
@@ -120,8 +120,17 @@ public class DayDurationForm extends AbstractForm {
 		return this.getFieldByClass(OkButton.class);
 	}
 
+	protected void preapreStore() {
+		this.getMainBox().getHoursBox().getSlotStartField().prepapreStore();
+		this.getMainBox().getHoursBox().getSlotEndField().prepapreStore();
+	}
+
 	@Order(1000)
 	public class MainBox extends AbstractGroupBox {
+
+		public HoursBox getHoursBox() {
+			return this.getFieldByClass(HoursBox.class);
+		}
 
 		@Order(1500)
 		public class HoursBox extends AbstractSequenceBox {
@@ -140,8 +149,16 @@ public class DayDurationForm extends AbstractForm {
 				return false;
 			}
 
+			public SlotStartField getSlotStartField() {
+				return this.getFieldByClass(SlotStartField.class);
+			}
+
+			public SlotEndField getSlotEndField() {
+				return this.getFieldByClass(SlotEndField.class);
+			}
+
 			@Order(2000)
-			public class SlotStartField extends AbstractDateField {
+			public class SlotStartField extends AbstractZonedTimeField {
 				@Override
 				protected String getConfiguredLabel() {
 					return TEXTS.get("zc.meeting.dayDuration.hour.start");
@@ -151,20 +168,10 @@ public class DayDurationForm extends AbstractForm {
 				protected int getConfiguredLabelPosition() {
 					return IFormField.LABEL_POSITION_ON_FIELD;
 				}
-
-				@Override
-				protected boolean getConfiguredHasDate() {
-					return Boolean.FALSE;
-				}
-
-				@Override
-				protected boolean getConfiguredHasTime() {
-					return Boolean.TRUE;
-				}
 			}
 
 			@Order(3000)
-			public class SlotEndField extends AbstractDateField {
+			public class SlotEndField extends AbstractZonedTimeField {
 				@Override
 				protected String getConfiguredLabel() {
 					return TEXTS.get("zc.meeting.dayDuration.hour.end");
@@ -173,16 +180,6 @@ public class DayDurationForm extends AbstractForm {
 				@Override
 				protected int getConfiguredLabelPosition() {
 					return IFormField.LABEL_POSITION_ON_FIELD;
-				}
-
-				@Override
-				protected boolean getConfiguredHasDate() {
-					return Boolean.FALSE;
-				}
-
-				@Override
-				protected boolean getConfiguredHasTime() {
-					return Boolean.TRUE;
 				}
 			}
 		}
@@ -329,6 +326,7 @@ public class DayDurationForm extends AbstractForm {
 
 			final ISlotService service = BEANS.get(ISlotService.class);
 			final DayDurationFormData formData = new DayDurationFormData();
+			DayDurationForm.this.preapreStore();
 			DayDurationForm.this.exportFormData(formData);
 			service.store(formData);
 

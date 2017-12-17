@@ -9,7 +9,6 @@ import org.eclipse.scout.rt.client.ui.basic.cell.ICell;
 import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
 import org.eclipse.scout.rt.client.ui.basic.table.ITableRow;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractBooleanColumn;
-import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractDateColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractIntegerColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractLongColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractSmartColumn;
@@ -31,6 +30,7 @@ import org.zeroclick.configuration.shared.slot.DayDurationModifiedNotification;
 import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.configuration.shared.slot.ReadSlotPermission;
 import org.zeroclick.configuration.shared.slot.SlotCodeType;
+import org.zeroclick.ui.form.columns.zoneddatecolumn.AbstractZonedTimeColumn;
 
 @Data(AbstractSlotTablePageData.class)
 public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.Table> extends AbstractPageWithTable<T> {
@@ -295,20 +295,10 @@ public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.T
 		}
 
 		@Order(2000)
-		public class StartColumn extends AbstractDateColumn {
+		public class StartColumn extends AbstractZonedTimeColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.dayDuration.hour.start");
-			}
-
-			@Override
-			protected boolean getConfiguredHasDate() {
-				return Boolean.FALSE;
-			}
-
-			@Override
-			protected boolean getConfiguredHasTime() {
-				return Boolean.TRUE;
 			}
 
 			@Override
@@ -318,20 +308,10 @@ public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.T
 		}
 
 		@Order(3000)
-		public class EndColumn extends AbstractDateColumn {
+		public class EndColumn extends AbstractZonedTimeColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.dayDuration.hour.end");
-			}
-
-			@Override
-			protected boolean getConfiguredHasDate() {
-				return Boolean.FALSE;
-			}
-
-			@Override
-			protected boolean getConfiguredHasTime() {
-				return Boolean.TRUE;
 			}
 
 			@Override

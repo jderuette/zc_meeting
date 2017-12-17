@@ -4,7 +4,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -14,6 +13,7 @@ import java.util.Set;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.holders.NVPair;
+import org.eclipse.scout.rt.platform.util.date.UTCDate;
 import org.eclipse.scout.rt.server.clientnotification.ClientNotificationRegistry;
 import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.eclipse.scout.rt.shared.TEXTS;
@@ -401,10 +401,10 @@ public class SlotService extends CommonService implements ISlotService {
 		if (null != evenningDayDuration && evenningDayDuration.size() > 0) {
 			final Iterator<DayDurationFormData> itWorkDays = evenningDayDuration.iterator();
 
-			final Date newValidStartEvenning = dateHelper
-					.toDate(ZonedDateTime.parse(newStart, DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)));
-			final Date newValidEndEvenning = dateHelper
-					.toDate(ZonedDateTime.parse(newEnd, DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)));
+			final UTCDate newValidStartEvenning = dateHelper.toScoutUTCDate(
+					ZonedDateTime.parse(newStart, DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)));
+			final UTCDate newValidEndEvenning = dateHelper
+					.toScoutUTCDate(ZonedDateTime.parse(newEnd, DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)));
 
 			while (itWorkDays.hasNext()) {
 				final DayDurationFormData anEveningDayDuration = itWorkDays.next();

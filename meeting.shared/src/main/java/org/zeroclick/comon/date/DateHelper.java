@@ -32,7 +32,9 @@ import java.util.Map;
 import org.eclipse.scout.rt.platform.ApplicationScoped;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.nls.NlsLocale;
+import org.eclipse.scout.rt.platform.util.TypeCastUtility;
 import org.eclipse.scout.rt.platform.util.date.DateFormatProvider;
+import org.eclipse.scout.rt.platform.util.date.UTCDate;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,10 +91,10 @@ public class DateHelper {
 		return date;
 	}
 
-	public Date toUtcDate(final ZonedDateTime zonedDateTime) {
-		Date date = null;
+	public UTCDate toScoutUTCDate(final ZonedDateTime zonedDateTime) {
+		UTCDate date = null;
 		if (null != zonedDateTime) {
-			date = Date.from(zonedDateTime.toInstant());
+			date = TypeCastUtility.castValue(Date.from(zonedDateTime.toInstant()), UTCDate.class);
 		}
 		return date;
 	}
@@ -110,11 +112,35 @@ public class DateHelper {
 		return utcDate;
 	}
 
+	/**
+	 * Convert a localized userDate time to is equivalent UTC time. <br/>
+	 * <b>WARNING</b> the returned date as a different representation
+	 *
+	 * @param dateFromUser
+	 * @param zoneId
+	 * @return the dateFromUser transformed to UTC date (same instant in time,
+	 *         but different time).
+	 */
+	public Date toUtcDate(final Date dateFromUser, final ZoneId zoneId) {
+		final ZonedDateTime userZonedDateTime = this.getZonedValue(ZoneOffset.UTC, dateFromUser);
+		final ZonedDateTime userZonedDateTime2 = userZonedDateTime.withZoneSameLocal(zoneId);
+		final Date utcDate = this.toDate(userZonedDateTime2);
+		return utcDate;
+	}
+
 	public Date nowUtc() {
 		final Instant instant = Instant.now();
 		final OffsetDateTime odt = instant.atOffset(ZoneOffset.UTC);
 		final Date nowUtc = Date.from(odt.toInstant());
 		return nowUtc;
+	}
+
+	public Date convertToUtcDate(final ZonedDateTime zonedDateTime) {
+		Date date = null;
+		if (null != zonedDateTime) {
+			date = Date.from(zonedDateTime.minusSeconds(zonedDateTime.getOffset().getTotalSeconds()).toInstant());
+		}
+		return date;
 	}
 
 	public Date toUserDate(final ZonedDateTime zonedDateTime) {
@@ -153,7 +179,7 @@ public class DateHelper {
 		return this.formatHours(this.getZonedValue(userZoneId, date));
 	}
 
-	private String formatHours(final ZonedDateTime zonedDateTime) {
+	public String formatHours(final ZonedDateTime zonedDateTime) {
 		final DateFormat dateFormat = BEANS.get(DateFormatProvider.class).getTimeInstance(DateFormat.SHORT,
 				NlsLocale.get());
 
