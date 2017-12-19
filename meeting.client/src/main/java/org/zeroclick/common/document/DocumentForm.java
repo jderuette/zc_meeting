@@ -189,6 +189,11 @@ public class DocumentForm extends AbstractForm {
 			}
 
 			@Override
+			protected int getConfiguredMaxLength() {
+				return 50000;
+			}
+
+			@Override
 			protected int getConfiguredGridH() {
 				return 10;
 			}
