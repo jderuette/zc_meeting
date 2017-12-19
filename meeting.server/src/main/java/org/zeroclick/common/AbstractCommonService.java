@@ -15,6 +15,8 @@ limitations under the License.
  */
 package org.zeroclick.common;
 
+import java.security.Permission;
+
 import javax.annotation.PostConstruct;
 
 import org.eclipse.scout.rt.platform.ApplicationScoped;
@@ -26,6 +28,9 @@ import org.eclipse.scout.rt.platform.util.concurrent.IRunnable;
 import org.eclipse.scout.rt.server.context.ServerRunContextProducer;
 import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.eclipse.scout.rt.shared.TEXTS;
+import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
+import org.eclipse.scout.rt.shared.services.common.security.IAccessControlService;
+import org.slf4j.Logger;
 import org.zeroclick.comon.text.UserHelper;
 
 /**
@@ -33,7 +38,7 @@ import org.zeroclick.comon.text.UserHelper;
  *
  */
 @ApplicationScoped
-public class CommonService {
+public abstract class AbstractCommonService {
 
 	protected UserHelper userHelper;
 
@@ -43,8 +48,25 @@ public class CommonService {
 		this.userHelper = userHelper;
 	}
 
+	protected abstract Logger getLog();
+
 	public void throwAuthorizationFailed() throws VetoException {
 		throw new VetoException(TEXTS.get("AuthorizationFailed"));
+	}
+
+	public void throwAuthorizationFailed(final Permission p) throws VetoException {
+		this.getLog().warn("Permission denied, requested permisison : " + p.getName() + " ("
+				+ p.getClass().toGenericString() + ")");
+		if (this.getLog().isDebugEnabled()) {
+			this.getLog().debug("Current users roles : " + BEANS.get(IAccessControlService.class).getPermissions());
+		}
+		this.throwAuthorizationFailed();
+	}
+
+	public void checkPermission(final Permission p) throws VetoException {
+		if (!ACCESS.check(p)) {
+			this.throwAuthorizationFailed(p);
+		}
 	}
 
 	protected void insertInsideNewTransaction(final String sql, final Object... bindBases) {
@@ -80,5 +102,4 @@ public class CommonService {
 	private RunContext buildNewTransactionRunContext() {
 		return new ServerRunContextProducer().produce(this.userHelper.getCurrentUserSubject());
 	}
-
 }

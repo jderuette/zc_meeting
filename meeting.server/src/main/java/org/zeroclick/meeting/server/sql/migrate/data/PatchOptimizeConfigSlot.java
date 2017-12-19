@@ -83,8 +83,10 @@ public class PatchOptimizeConfigSlot extends AbstractDataPatcher {
 		LOG.info("Optmimize Slot upgraing default data");
 
 		final ISlotService slotService = BEANS.get(ISlotService.class);
-		slotService.updateDayDurationsByTemplate("zc.meeting.slot.3", "20:00:00", "23:30:00", "19:00:00", "21:00:00");
-		slotService.updateDayDurationsByTemplate("zc.meeting.slot.4", "10:00:00", "23:00:00", "08:00:00", "18:00:00");
+		slotService.updateDayDurationsByTemplate("zc.meeting.slot.3", "20:00:00Z", "23:30:00Z", "19:00:00Z",
+				"21:00:00Z");
+		slotService.updateDayDurationsByTemplate("zc.meeting.slot.4", "10:00:00Z", "23:00:00Z", "08:00:00Z",
+				"18:00:00Z");
 	}
 
 	@Override

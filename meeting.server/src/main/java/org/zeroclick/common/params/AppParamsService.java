@@ -8,7 +8,7 @@ import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeroclick.common.CommonService;
+import org.zeroclick.common.AbstractCommonService;
 import org.zeroclick.configuration.shared.params.CreateAppParamsPermission;
 import org.zeroclick.configuration.shared.params.IAppParamsService;
 import org.zeroclick.configuration.shared.params.ParamCreatedNotification;
@@ -18,9 +18,14 @@ import org.zeroclick.configuration.shared.params.UpdateAppParamsPermission;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateParamsTable;
 
-public class AppParamsService extends CommonService implements IAppParamsService {
+public class AppParamsService extends AbstractCommonService implements IAppParamsService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(AppParamsService.class);
+
+	@Override
+	protected Logger getLog() {
+		return LOG;
+	}
 
 	@Override
 	public AppParamsTablePageData getAppParamsTableData(final SearchFilter filter) {
@@ -64,6 +69,14 @@ public class AppParamsService extends CommonService implements IAppParamsService
 	}
 
 	@Override
+	public Boolean isKeyExists(final String key) {
+		final Object[][] datas = this.getAppParamsData(key);
+		final boolean found = null != datas && datas.length > 1;
+		LOG.debug("App_params : " + key + " found ? " + found);
+		return found;
+	}
+
+	@Override
 	public void store(final String key, final String value) {
 		LOG.debug("Storing app_params with key : " + key + " and value : " + value);
 
@@ -76,10 +89,15 @@ public class AppParamsService extends CommonService implements IAppParamsService
 		}
 	}
 
+	protected Object[][] getAppParamsData(final String key) {
+		LOG.debug("Searching app_params for key : " + key);
+		return SQL.select(SQLs.PARAMS_SELECT + SQLs.PARAMS_SELECT_FILTER_KEY, new NVPair("key", key));
+	}
+
 	protected Object getData(final String key, final Integer columnNumber) {
 		LOG.debug("Searching app_params for key : " + key);
 		Object paramValue = null;
-		final Object[][] datas = SQL.select(SQLs.PARAMS_SELECT + SQLs.PARAMS_SELECT_FILTER_KEY, new NVPair("key", key));
+		final Object[][] datas = this.getAppParamsData(key);
 
 		if (null != datas && datas.length == 1) {
 			paramValue = datas[0][columnNumber];

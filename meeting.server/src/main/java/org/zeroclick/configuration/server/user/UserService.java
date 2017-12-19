@@ -19,8 +19,8 @@ import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.common.AbstractCommonService;
 import org.zeroclick.common.AbstractDataCache;
-import org.zeroclick.common.CommonService;
 import org.zeroclick.common.document.DocumentFormData;
 import org.zeroclick.common.document.DocumentFormData.LinkedRole.LinkedRoleRowData;
 import org.zeroclick.configuration.shared.onboarding.OnBoardingUserFormData;
@@ -43,7 +43,7 @@ import org.zeroclick.configuration.shared.user.ValidateCpsFormData;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
-public class UserService extends CommonService implements IUserService {
+public class UserService extends AbstractCommonService implements IUserService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(UserService.class);
 
@@ -52,6 +52,11 @@ public class UserService extends CommonService implements IUserService {
 	public static final Long[] DEFAULT_ROLES_VALUES = new Long[] { 2l };
 	public static final Set<Long> DEFAULT_ROLES = new HashSet<>(Arrays.asList(DEFAULT_ROLES_VALUES));
 	public static final Long DEFAULT_SUBSCRIPTION = 3l;
+
+	@Override
+	protected Logger getLog() {
+		return LOG;
+	}
 
 	private final AbstractDataCache<Long, UserFormData> dataCache = new AbstractDataCache<Long, UserFormData>() {
 		@Override
@@ -379,6 +384,9 @@ public class UserService extends CommonService implements IUserService {
 		LOG.debug("Searching userId with login : " + formData.getLogin().getValue());
 		SQL.selectInto(SQLs.USER_SELECT_ID_ONLY + SQLs.USER_SELECT_FILTER_LOGIN + SQLs.USER_SELECT_INTO_ID_ONLY,
 				formData);
+		if (null == formData.getUserId().getValue()) {
+			LOG.warn("No User ID for user with login : " + formData.getLogin().getValue());
+		}
 		return formData;
 	}
 
@@ -509,6 +517,7 @@ public class UserService extends CommonService implements IUserService {
 
 	@Override
 	public void delete(final UserFormData formData) {
+		final IRoleService roleService = BEANS.get(IRoleService.class);
 		Long userId = null;
 		if (null == formData.getUserId().getValue() && null != formData.getLogin().getValue()) {
 			userId = this.getUserId(formData.getLogin().getValue());
@@ -527,6 +536,7 @@ public class UserService extends CommonService implements IUserService {
 		LOG.info("Deleting User by Id : " + userId + " (asked email : " + formData.getEmail().getValue() + ", login : "
 				+ formData.getLogin().getValue() + ")");
 
+		roleService.deleteSubscriptionMetaDataByUser(userId);
 		this.deleteUserRoleByUser(formData);
 		this.changeInvitedByByUserId(formData);
 		SQL.insert(SQLs.USER_DELETE, formData);
@@ -817,7 +827,7 @@ public class UserService extends CommonService implements IUserService {
 		final Date now = new Date();
 		LOG.info("User " + userData.getEmail() + " (login : " + userData.getLogin()
 				+ ") juste logged in, updating stats data");
-		SQL.insert(SQLs.USER_UPDATE_LATS_LOGIN, userData, new NVPair("currentDate", now));
+		SQL.insert(SQLs.USER_UPDATE_LAST_LOGIN, userData, new NVPair("currentDate", now));
 
 		this.dataCache.clearCache(userData.getUserId().getValue());
 		return userData;

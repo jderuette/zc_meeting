@@ -17,7 +17,7 @@ import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeroclick.common.CommonService;
+import org.zeroclick.common.AbstractCommonService;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
 import org.zeroclick.configuration.shared.api.ApiDeletedNotification;
 import org.zeroclick.configuration.shared.api.ApiTablePageData;
@@ -33,9 +33,14 @@ import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.ReadEventPermission;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
-public class ApiService extends CommonService implements IApiService {
+public class ApiService extends AbstractCommonService implements IApiService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ApiService.class);
+
+	@Override
+	protected Logger getLog() {
+		return LOG;
+	}
 
 	@Override
 	public ApiTablePageData getApiTableData(final SearchFilter filter) {

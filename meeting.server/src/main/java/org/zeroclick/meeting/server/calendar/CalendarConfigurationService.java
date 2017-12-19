@@ -9,7 +9,7 @@ import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeroclick.common.CommonService;
+import org.zeroclick.common.AbstractCommonService;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
@@ -20,9 +20,14 @@ import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.calendar.ReadCalendarConfigurationPermission;
 import org.zeroclick.meeting.shared.calendar.UpdateCalendarConfigurationPermission;
 
-public class CalendarConfigurationService extends CommonService implements ICalendarConfigurationService {
+public class CalendarConfigurationService extends AbstractCommonService implements ICalendarConfigurationService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(CalendarConfigurationService.class);
+
+	@Override
+	protected Logger getLog() {
+		return LOG;
+	}
 
 	@Override
 	public CalendarConfigurationTablePageData getCalendarConfigurationTableData(final SearchFilter filter,

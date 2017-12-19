@@ -21,6 +21,8 @@ public interface IAppParamsService extends IService {
 
 	String getValue(String key);
 
+	Boolean isKeyExists(String key);
+
 	void store(String key, String value);
 
 	void delete(String key);

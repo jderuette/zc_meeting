@@ -16,9 +16,11 @@ limitations under the License.
 package org.zeroclick.meeting.server.sql.migrate.data;
 
 import org.eclipse.scout.rt.platform.BEANS;
+import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.shared.params.IAppParamsService;
+import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher;
 import org.zeroclick.meeting.shared.event.IEventService;
 
@@ -69,7 +71,14 @@ public class PatchLookupToCodeType extends AbstractDataPatcher {
 	private Boolean migrateStrucutre() {
 		LOG.info(
 				"Patch refactor LookupCall to CodeType (and default values) upgrading data strcuture (no modifications)");
-		return Boolean.TRUE;
+		Boolean structurMigrated = Boolean.FALSE;
+		// No structure migration, but return false if (data) migration already
+		// applied to mimic other Patcher
+		final IAppParamsService paramService = BEANS.get(IAppParamsService.class);
+		if (!paramService.isKeyExists(IAppParamsService.APP_PARAM_KEY_EVENT_CALL_TRACKER_MAX)) {
+			structurMigrated = Boolean.TRUE;
+		}
+		return structurMigrated;
 	}
 
 	private void migrateData() {
@@ -89,6 +98,20 @@ public class PatchLookupToCodeType extends AbstractDataPatcher {
 			paramService.create(IAppParamsService.APP_PARAM_KEY_EVENT_CALL_TRACKER_DURATION, String.valueOf(3),
 					"CallTracker");
 		}
+
+		LOG.info("Migrate the default slot hours, from 'user timezone' to UTC");
+		final ISlotService slotService = BEANS.get(ISlotService.class);
+		slotService.migrateDayDurationTimeToUtc("zc.meeting.slot.1");
+		slotService.migrateDayDurationTimeToUtc("zc.meeting.slot.2");
+		slotService.migrateDayDurationTimeToUtc("zc.meeting.slot.3");
+		slotService.migrateDayDurationTimeToUtc("zc.meeting.slot.4");
+
+		LOG.info("update superUser to store login to lowercase");
+		final String currentSuperUser = this.getSuperUserPrincipal();
+		final String lowercaseSuperUser = currentSuperUser.toLowerCase();
+
+		SQL.update("UPDATE APP_USER set login='" + lowercaseSuperUser + "' WHERE login='" + currentSuperUser + "'");
+
 	}
 
 	@Override

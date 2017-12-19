@@ -24,8 +24,10 @@ import org.eclipse.scout.rt.platform.config.CONFIG;
 import org.eclipse.scout.rt.platform.context.RunContext;
 import org.eclipse.scout.rt.platform.exception.ExceptionHandler;
 import org.eclipse.scout.rt.platform.holders.NVPair;
+import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.platform.util.concurrent.IRunnable;
 import org.eclipse.scout.rt.server.jdbc.SQL;
+import org.eclipse.scout.rt.shared.services.common.security.IAccessControlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.VersionHelper;
@@ -34,6 +36,7 @@ import org.zeroclick.configuration.shared.role.AssignToRoleFormData;
 import org.zeroclick.configuration.shared.role.IAppPermissionService;
 import org.zeroclick.configuration.shared.role.IRoleService;
 import org.zeroclick.configuration.shared.role.RoleFormData;
+import org.zeroclick.meeting.server.security.ServerAccessControlService;
 import org.zeroclick.meeting.server.sql.DatabaseHelper;
 import org.zeroclick.meeting.server.sql.DatabaseProperties.SuperUserSubjectProperty;
 import org.zeroclick.meeting.server.sql.SQLs;
@@ -175,11 +178,14 @@ public abstract class AbstractDataPatcher implements IDataPatcher {
 		final Version sourceCodeVersion = this.getSourceCodeVersion();
 
 		if (sourceCodeVersion.greaterThan(Version.valueOf("1.1.5"))) {
-
 			final RoleFormData roleformData = this.getSuperUserRole();
 			if (null != roleformData.getRoleId()) {
 				try {
 					this.addAllPermissions(roleformData.getRoleId());
+					if (LOG.isDebugEnabled()) {
+						LOG.debug(
+								"SuperUser refreshed with " + BEANS.get(IAccessControlService.class).getPermissions());
+					}
 				} catch (final Exception e) {
 					LOG.warn("Cannot refresh superUser permisisons : " + e);
 				}
@@ -208,14 +214,20 @@ public abstract class AbstractDataPatcher implements IDataPatcher {
 	protected void addAllPermissions(final Long roleId) {
 		// add "ALL" permission to superUser Role
 		final AssignToRoleFormData permissionFormData = new AssignToRoleFormData();
-		this.clearAndAddAllPermissions(permissionFormData);
+		this.getAllExisitingPermissions(permissionFormData);
 		permissionFormData.getRoleId().setValue(roleId);
 		permissionFormData.getLevel().setValue(100L);
 		SQL.insert(SQLs.ROLE_PERMISSION_DELETE_BY_ROLE, new NVPair("roleId", roleId));
 		SQL.insert(SQLs.ROLE_PERMISSION_INSERT, permissionFormData);
+
+		// Clear user Cache
+		BEANS.get(ServerAccessControlService.class)
+				.clearCacheOfUsersIds(CollectionUtility.arrayList(this.getSuperUserPrincipal()));
+		// clear permission cache
+		BEANS.get(IAccessControlService.class).clearCache();
 	}
 
-	private void clearAndAddAllPermissions(final AssignToRoleFormData permissionFormData) {
+	private void getAllExisitingPermissions(final AssignToRoleFormData permissionFormData) {
 		final IAppPermissionService appPermissionService = BEANS.get(IAppPermissionService.class);
 
 		final Object[][] allPermissions = appPermissionService.getpermissions();
@@ -235,7 +247,7 @@ public abstract class AbstractDataPatcher implements IDataPatcher {
 		String firstSuperUserPrincipal = null;
 		for (final Principal principal : superUserPrincipals) {
 			if (null == firstSuperUserPrincipal || "".equals(firstSuperUserPrincipal)) {
-				firstSuperUserPrincipal = principal.getName();
+				firstSuperUserPrincipal = principal.getName().toLowerCase();
 			}
 		}
 

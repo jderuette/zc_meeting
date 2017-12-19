@@ -19,7 +19,7 @@ import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeroclick.common.CommonService;
+import org.zeroclick.common.AbstractCommonService;
 import org.zeroclick.comon.date.DateHelper;
 import org.zeroclick.configuration.shared.duration.DurationCodeType;
 import org.zeroclick.configuration.shared.slot.SlotCodeType;
@@ -39,9 +39,14 @@ import org.zeroclick.meeting.shared.event.StateCodeType;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
-public class EventService extends CommonService implements IEventService {
+public class EventService extends AbstractCommonService implements IEventService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(EventService.class);
+
+	@Override
+	protected Logger getLog() {
+		return LOG;
+	}
 
 	private EventTablePageData getEvents(final SearchFilter filter, final String eventStatusCriteria,
 			final Boolean displayAllForAdmin) {

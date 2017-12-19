@@ -24,6 +24,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashMap;
@@ -83,6 +84,10 @@ public class DateHelper {
 		return zdt;
 	}
 
+	public Date hoursToDate(final Date date) {
+		return new Date(date.getTime());
+	}
+
 	public Date toDate(final ZonedDateTime zonedDateTime) {
 		Date date = null;
 		if (null != zonedDateTime) {
@@ -122,10 +127,26 @@ public class DateHelper {
 	 *         but different time).
 	 */
 	public Date toUtcDate(final Date dateFromUser, final ZoneId zoneId) {
-		final ZonedDateTime userZonedDateTime = this.getZonedValue(ZoneOffset.UTC, dateFromUser);
-		final ZonedDateTime userZonedDateTime2 = userZonedDateTime.withZoneSameLocal(zoneId);
-		final Date utcDate = this.toDate(userZonedDateTime2);
+		final ZonedDateTime utcZonedDateTime = this.getZonedValue(ZoneOffset.UTC, dateFromUser);
+		final ZonedDateTime userZonedDateTime = utcZonedDateTime.withZoneSameLocal(zoneId);
+		final Date utcDate = this.toDate(userZonedDateTime);
 		return utcDate;
+	}
+
+	/**
+	 * Convert a UTC time to is equivalent User localized time. <br/>
+	 * <b>WARNING</b> the returned date as a different representation
+	 *
+	 * @param utcDate
+	 * @param zoneId
+	 * @return the dateFromUser transformed to UTC date (same instant in time,
+	 *         but different time).
+	 */
+	public Date fromUtcDate(final Date utcDate, final ZoneId zoneId) {
+		final ZonedDateTime userZonedDateTime = this.getZonedValue(ZoneOffset.UTC, utcDate);
+		final ZonedDateTime utcZonedDateTime = userZonedDateTime.withZoneSameLocal(zoneId);
+		final Date userDateTime = this.toDate(utcZonedDateTime);
+		return userDateTime;
 	}
 
 	public Date nowUtc() {
@@ -149,6 +170,10 @@ public class DateHelper {
 			date = Date.from(zonedDateTime.plusSeconds(zonedDateTime.getOffset().getTotalSeconds()).toInstant());
 		}
 		return date;
+	}
+
+	public ZonedDateTime dateTimeFromHour(final String localizedHour) {
+		return ZonedDateTime.from(DateTimeFormatter.ISO_DATE_TIME.parse("1970-01-01T" + localizedHour));
 	}
 
 	public String format(final Date date, final ZoneId userZoneId, final Boolean ignoreHours) {

@@ -12,7 +12,9 @@ import org.eclipse.scout.rt.server.clientnotification.ClientNotificationRegistry
 import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
-import org.zeroclick.common.CommonService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.zeroclick.common.AbstractCommonService;
 import org.zeroclick.common.shared.document.CreateDocumentPermission;
 import org.zeroclick.common.shared.document.DocumentCreatedNotification;
 import org.zeroclick.common.shared.document.DocumentModifiedNotification;
@@ -23,7 +25,14 @@ import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateSubscription;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
-public class DocumentService extends CommonService implements IDocumentService {
+public class DocumentService extends AbstractCommonService implements IDocumentService {
+
+	private static final Logger LOG = LoggerFactory.getLogger(DocumentService.class);
+
+	@Override
+	protected Logger getLog() {
+		return LOG;
+	}
 
 	@Override
 	public DocumentTablePageData getDocumentTableData(final SearchFilter filter) {

@@ -185,7 +185,9 @@ public interface SQLs {
 	String ROLE_UPDATE_WITHOUT_TYPE = "UPDATE ROLE SET name=:roleName WHERE role_id=:roleId";
 
 	String ROLE_SELECT = "SELECT role_id, name, type FROM ROLE WHERE 1=1 AND role_id = :roleId";
+	String ROLE_SELECT_BY_NAME_WITHOUT_TYPE = "SELECT role_id, name FROM ROLE WHERE 1=1 AND name = :roleName";
 	String ROLE_SELECT_BY_NAME = "SELECT role_id, name, type FROM ROLE WHERE 1=1 AND name = :roleName";
+	String ROLE_SELECT_INTO_WITHOUT_TYPE = " INTO :roleId, :roleName";
 	String ROLE_SELECT_INTO = " INTO :roleId, :roleName, :type";
 
 	String ROLE_LOOKUP = "SELECT role_id, name FROM ROLE WHERE 1=1 <key>   AND role_id = :key </key>"
@@ -387,7 +389,8 @@ public interface SQLs {
 	/**
 	 * Users permissions
 	 */
-	String USER_PERMISSIONS_SELECT_STANDARD_ROLE = "SELECT P.permission, MAX(P.level) FROM ROLE_PERMISSION P INNER JOIN USER_ROLE UR ON P.role_id = UR.role_id INNER JOIN ROLE R on UR.role_id = R.role_id WHERE ("
+	String USER_PERMISSIONS_SELECT_ACTIVE_ROLE_BEFORE_SUB_PATCH = "SELECT P.permission, MAX(P.level) FROM ROLE_PERMISSION P INNER JOIN USER_ROLE UR ON P.role_id = UR.role_id INNER JOIN ROLE R on UR.role_id = R.role_id WHERE 1=1";
+	String USER_PERMISSIONS_SELECT_ACTIVE_ROLE = "SELECT P.permission, MAX(P.level) FROM ROLE_PERMISSION P INNER JOIN USER_ROLE UR ON P.role_id = UR.role_id INNER JOIN ROLE R on UR.role_id = R.role_id WHERE ("
 			+ PatchCreateSubscription.ADDED_ROLE_COLUMN + "!='" + IRoleTypeLookupService.TYPE_SUBSCRIPTION + "'"
 			+ " OR UR.role_id IN (" + USER_ROLE_SELECT_ACTIVE_SUBSCRIPTION + "))";
 	String USER_PERMISSIONS_SELECT_FILTER_USER_ID = " AND UR.user_id = :userId";
@@ -425,12 +428,12 @@ public interface SQLs {
 	String USER_SELECT_INTO_ROLES = " INTO :{rolesBox}";
 	String USER_SELECT_INTO_SUBSCRIPTION = " INTO :subscriptionBox";
 
-	String USER_SELECT_PASSWORD_FILTER_LOGIN = "select user_id, password FROM APP_USER where login=:login INTO :userId,  :password";
+	String USER_SELECT_PASSWORD_FILTER_LOGIN = "select user_id, password FROM APP_USER where login=:login INTO :userId, :password";
 	String USER_SELECT_PASSWORD_FILTER_EMAIL = "select user_id, password FROM APP_USER where email=:email INTO :userId, :password";
 
 	String USER_INSERT = "INSERT INTO APP_USER (user_id) VALUES (:userId)";
 
-	String USER_UPDATE_LATS_LOGIN = "UPDATE APP_USER set " + PatchAddLastLogin.PATCHED_ADDED_COLUMN
+	String USER_UPDATE_LAST_LOGIN = "UPDATE APP_USER set " + PatchAddLastLogin.PATCHED_ADDED_COLUMN
 			+ "=:currentDate WHERE user_id=:userId";
 
 	String USER_ALTER_TABLE_INVITED_BY = "ALTER TABLE APP_USER ADD COLUMN invited_by INTEGER";
@@ -548,12 +551,14 @@ public interface SQLs {
 	String DAY_DURATION_SELECT = "SELECT DAY_DURATION.day_duration_id, DAY_DURATION.name, slot_start, slot_end, "
 			+ "monday, tuesday, wednesday, thursday, friday, saturday, sunday, weekly_perpetual, order_in_slot, DAY_DURATION.slot_id, SLOT.slot_code";
 	String DAY_DURATION_SELECT_LIGHT = "SELECT day_duration_id, name, slot_id FROM DAY_DURATION WHERE 1=1";
+	String DAY_DURATION_SELECT_SLOT_USER_ID = "SLOT.user_id";
 	String DAY_DURATION_SELECT_FILTER_SLOT_ID = " AND slot_id=:slotId";
 	String DAY_DURATION_SELECT_FILTER_SLOT_NAME = " AND SLOT.name=:slotName";
 	String DAY_DURATION_SELECT_FILTER_SLOT_USER_ID = " AND SLOT.user_id=:userId";
 	String DAY_DURATION_SELECT_FILTER_DAY_DURATION_ID = " AND day_duration_id=:dayDurationId";
 	String DAY_DURATION_SELECT_ORDER = " ORDER BY order_in_slot";
-	String DAY_DURATION_SELECT_INTO = " INTO :{dayDurationId}, :{name}, :{slotStart}, :{slotEnd}, :{monday}, :{tuesday}, :{wednesday}, :{thursday}, :{friday}, :{saturday}, :{sunday}, :{weeklyPerpetual}, :{orderInSlot}, :{slotId}, :{slotCode}";
+	String DAY_DURATION_SELECT_INTO = " INTO :{results.dayDurationId}, :{results.name}, :{results.slotStart}, :{results.slotEnd}, :{results.monday}, :{results.tuesday}, :{results.wednesday}, :{results.thursday}, :{results.friday}, :{results.saturday}, :{results.sunday}, :{results.weeklyPerpetual}, :{results.orderInSlot}, :{results.slotId}, :{results.slotCode}";
+	String DAY_DURATION_SELECT_INTO_SLOT_USER_ID = ", :{results.userId}";
 	String DAY_DURATION_SELECT_FROM = " FROM DAY_DURATION";
 	String DAY_DURATION_SELECT_FROM_PLUS_GENERIC_WHERE = " FROM DAY_DURATION" + GENERIC_WHERE_FOR_SECURE_AND;
 
@@ -621,6 +626,11 @@ public interface SQLs {
 
 	String SUBSCRIPTION_INSERT = "INSERT INTO " + PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME
 			+ " (user_id, role_id, start_date) VALUES (:userId, :subscriptionId, :startDate)";
+
+	String SUBSCRIPTION_DELETE_BY_ROLE = "DELETE FROM " + PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME
+			+ " WHERE role_id=:roleId";
+	String SUBSCRIPTION_DELETE_BY_USER_ID = "DELETE FROM " + PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME
+			+ " WHERE user_id=:userId";
 
 	/**
 	 * Documents table

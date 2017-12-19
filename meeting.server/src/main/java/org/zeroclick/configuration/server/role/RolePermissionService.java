@@ -25,7 +25,7 @@ import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeroclick.common.CommonService;
+import org.zeroclick.common.AbstractCommonService;
 import org.zeroclick.configuration.shared.role.AssignToRoleFormData;
 import org.zeroclick.configuration.shared.role.CreateAssignToRolePermission;
 import org.zeroclick.configuration.shared.role.IRolePermissionService;
@@ -37,9 +37,14 @@ import org.zeroclick.meeting.server.sql.SQLs;
  * @author djer
  *
  */
-public class RolePermissionService extends CommonService implements IRolePermissionService {
+public class RolePermissionService extends AbstractCommonService implements IRolePermissionService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(RolePermissionService.class);
+
+	@Override
+	protected Logger getLog() {
+		return LOG;
+	}
 
 	/*
 	 * (non-Javadoc)
