@@ -60,7 +60,7 @@ public abstract class AbstractZonedDateField extends AbstractDateField {
 
 	public void prepapreStore() {
 		final Date usertDate = this.getValue();
-		if (null != usertDate) {
+		if (null != usertDate && this.isSaveNeeded()) {
 			this.setValue(this.getDateHelper().toUtcDate(usertDate, this.getAppUserHelper().getCurrentUserTimeZone()));
 		}
 	}

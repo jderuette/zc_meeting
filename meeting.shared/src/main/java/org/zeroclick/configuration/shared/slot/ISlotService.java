@@ -1,5 +1,7 @@
 package org.zeroclick.configuration.shared.slot;
 
+import java.util.List;
+
 import org.eclipse.scout.rt.platform.service.IService;
 import org.eclipse.scout.rt.shared.TunnelToServer;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
@@ -31,15 +33,15 @@ public interface ISlotService extends IService {
 
 	Object[][] getDayDurationsLight(Long slotId);
 
-	/**
-	 * retrieve CURRENT USER list of daySuration for the Slot name
-	 *
-	 * @param slotName
-	 * @return
-	 */
-	Object[][] getDayDurations(String slotName);
+	// /**
+	// * retrieve CURRENT USER list of daySuration for the Slot name
+	// *
+	// * @param slotName
+	// * @return
+	// */
+	// Object[][] getDayDurations(String slotName);
 
-	Object[][] getDayDurations(String slotName, Long userId);
+	List<DayDurationFormData> getDayDurations(String slotName, Long userId);
 
 	boolean isOwn(Long slotId);
 

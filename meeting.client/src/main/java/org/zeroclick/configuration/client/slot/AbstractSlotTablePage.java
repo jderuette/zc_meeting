@@ -13,6 +13,7 @@ import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractIntegerColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractLongColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractSmartColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractStringColumn;
+import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractTimeColumn;
 import org.eclipse.scout.rt.client.ui.desktop.outline.pages.AbstractPageWithTable;
 import org.eclipse.scout.rt.client.ui.desktop.outline.pages.IPage;
 import org.eclipse.scout.rt.platform.BEANS;
@@ -30,7 +31,6 @@ import org.zeroclick.configuration.shared.slot.DayDurationModifiedNotification;
 import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.configuration.shared.slot.ReadSlotPermission;
 import org.zeroclick.configuration.shared.slot.SlotCodeType;
-import org.zeroclick.ui.form.columns.zoneddatecolumn.AbstractZonedTimeColumn;
 
 @Data(AbstractSlotTablePageData.class)
 public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.Table> extends AbstractPageWithTable<T> {
@@ -295,7 +295,7 @@ public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.T
 		}
 
 		@Order(2000)
-		public class StartColumn extends AbstractZonedTimeColumn {
+		public class StartColumn extends AbstractTimeColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.dayDuration.hour.start");
@@ -308,7 +308,7 @@ public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.T
 		}
 
 		@Order(3000)
-		public class EndColumn extends AbstractZonedTimeColumn {
+		public class EndColumn extends AbstractTimeColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.dayDuration.hour.end");

@@ -557,8 +557,8 @@ public interface SQLs {
 	String DAY_DURATION_SELECT_FILTER_SLOT_USER_ID = " AND SLOT.user_id=:userId";
 	String DAY_DURATION_SELECT_FILTER_DAY_DURATION_ID = " AND day_duration_id=:dayDurationId";
 	String DAY_DURATION_SELECT_ORDER = " ORDER BY order_in_slot";
-	String DAY_DURATION_SELECT_INTO = " INTO :{results.dayDurationId}, :{results.name}, :{results.slotStart}, :{results.slotEnd}, :{results.monday}, :{results.tuesday}, :{results.wednesday}, :{results.thursday}, :{results.friday}, :{results.saturday}, :{results.sunday}, :{results.weeklyPerpetual}, :{results.orderInSlot}, :{results.slotId}, :{results.slotCode}";
-	String DAY_DURATION_SELECT_INTO_SLOT_USER_ID = ", :{results.userId}";
+	String DAY_DURATION_SELECT_INTO = " INTO :{dayDurationId}, :{name}, :{slotStart}, :{slotEnd}, :{monday}, :{tuesday}, :{wednesday}, :{thursday}, :{friday}, :{saturday}, :{sunday}, :{weeklyPerpetual}, :{orderInSlot}, :{slotId}, :{slotCode}";
+	String DAY_DURATION_SELECT_INTO_SLOT_USER_ID = ", :{userId}";
 	String DAY_DURATION_SELECT_FROM = " FROM DAY_DURATION";
 	String DAY_DURATION_SELECT_FROM_PLUS_GENERIC_WHERE = " FROM DAY_DURATION" + GENERIC_WHERE_FOR_SECURE_AND;
 

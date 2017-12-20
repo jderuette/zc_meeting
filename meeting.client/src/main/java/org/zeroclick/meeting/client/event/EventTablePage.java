@@ -406,7 +406,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		private DateReturn tryChangeDatesNext(final ZonedDateTime startDate, final ITableRow row) throws IOException {
 			final Integer rowIndex = row.getRowIndex();
 			final DurationCodeType durationCodes = BEANS.get(DurationCodeType.class);
-			final Integer duration = durationCodes.getCode(this.getSlotColumn().getValue(rowIndex)).getValue()
+			final Integer duration = durationCodes.getCode(this.getDurationColumn().getValue(rowIndex)).getValue()
 					.intValue();
 			final DateReturn newPossibleDate = this.tryChangeDatesNext(startDate, duration,
 					this.getSlotColumn().getValue(rowIndex), this.getOrganizerColumn().getValue(rowIndex),
@@ -509,8 +509,12 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			final ZonedDateTime nextEndDate = startDate.plus(Duration.ofMinutes(selectEventDuration));
 
+			// Localized Start and Stop for oragnizer
+			final ZonedDateTime organizerStartDate = this.atZone(startDate, organizerUserId);
+			final ZonedDateTime organizerEndDate = this.atZone(nextEndDate, organizerUserId);
+
 			DateReturn proposedDate = null;
-			// Check guest slot configuration
+			// Check guest (current connected user) slot configuration
 			if (!SlotHelper.get().isInOneOfPeriods(selectSlotId, startDate, nextEndDate, guestUserId)) {
 				proposedDate = new DateReturn(
 						SlotHelper.get().getNextValidDateTime(selectSlotId, startDate, nextEndDate, guestUserId),
@@ -519,9 +523,10 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			if (null == proposedDate) {
 				// check Organizer Slot configuration
-				if (!SlotHelper.get().isInOneOfPeriods(selectSlotId, startDate, nextEndDate, organizerUserId)) {
-					proposedDate = new DateReturn(SlotHelper.get().getNextValidDateTime(selectSlotId, startDate,
-							nextEndDate, organizerUserId), loopInDates);
+				if (!SlotHelper.get().isInOneOfPeriods(selectSlotId, organizerStartDate, organizerEndDate,
+						organizerUserId)) {
+					proposedDate = new DateReturn(this.atZone(SlotHelper.get().getNextValidDateTime(selectSlotId,
+							organizerStartDate, organizerEndDate, organizerUserId), guestUserId), loopInDates);
 				}
 			}
 
@@ -536,10 +541,12 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			if (null == proposedDate) {
 				// Check organizer calendars
-				final ZonedDateTime organizerCalendareRecommendedDate = this.tryCreateEvent(startDate, nextEndDate,
-						Duration.ofMinutes(selectEventDuration), organizerUserId);
+				final ZonedDateTime organizerCalendareRecommendedDate = this.tryCreateEvent(organizerStartDate,
+						organizerEndDate, Duration.ofMinutes(selectEventDuration), organizerUserId);
 				if (organizerCalendareRecommendedDate != null) {
-					return new DateReturn(this.addReactionTime(organizerCalendareRecommendedDate), loopInDates);
+					return new DateReturn(
+							this.addReactionTime(this.atZone(organizerCalendareRecommendedDate, guestUserId)),
+							loopInDates);
 				}
 			}
 
@@ -554,6 +561,10 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			}
 
 			return proposedDate;
+		}
+
+		private ZonedDateTime atZone(final ZonedDateTime date, final Long userId) {
+			return date.withZoneSameInstant(EventTablePage.this.getAppUserHelper().getUserZoneId(userId));
 		}
 
 		/**

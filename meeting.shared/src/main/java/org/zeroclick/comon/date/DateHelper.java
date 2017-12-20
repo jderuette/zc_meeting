@@ -84,10 +84,6 @@ public class DateHelper {
 		return zdt;
 	}
 
-	public Date hoursToDate(final Date date) {
-		return new Date(date.getTime());
-	}
-
 	public Date toDate(final ZonedDateTime zonedDateTime) {
 		Date date = null;
 		if (null != zonedDateTime) {
@@ -170,6 +166,27 @@ public class DateHelper {
 			date = Date.from(zonedDateTime.plusSeconds(zonedDateTime.getOffset().getTotalSeconds()).toInstant());
 		}
 		return date;
+	}
+
+	/**
+	 * return a user localized Date from an UTC Date
+	 * 
+	 * @param utcDateTime
+	 * @param zoneId
+	 *            current user zoneId
+	 * @return
+	 */
+	public Date toUserDate(final Date utcDateTime, final ZoneId zoneId) {
+		Date date = null;
+		if (null != utcDateTime) {
+			final ZonedDateTime zdt = this.getZonedValue(zoneId, utcDateTime);
+			date = this.toUserDate(zdt);
+		}
+		return date;
+	}
+
+	public Date hoursToDate(final Date date) {
+		return new Date(date.getTime());
 	}
 
 	public ZonedDateTime dateTimeFromHour(final String localizedHour) {

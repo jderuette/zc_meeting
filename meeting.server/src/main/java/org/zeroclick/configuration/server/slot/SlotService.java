@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
 
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.exception.VetoException;
@@ -278,31 +279,56 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 		return slotId;
 	}
 
-	@Override
-	public Object[][] getDayDurations(final String slotName) {
-		return this.getDayDurations(slotName, super.userHelper.getCurrentUserId());
-	}
+	// @Override
+	// public Object[][] getDayDurations(final String slotName) {
+	// return this.getDayDurations(slotName,
+	// super.userHelper.getCurrentUserId());
+	// }
 
-	@Override
-	public Object[][] getDayDurations(final String slotName, final Long userId) {
-		// get Slot Id (if user has a specific configuration)
-		final Long slotId = this.getSlotId(slotName, userId);
-		if (null == slotId) {
-			return null; // early Break, Default Slot config should be return
-		}
-
-		if (ACCESS.getLevel(new ReadSlotPermission(slotId)) < ReadSlotPermission.LEVEL_INVOLVED) {
-			super.throwAuthorizationFailed();
-		}
-
-		final String sql = this.buildDayDurationsSelect(userId, Boolean.FALSE);
-
-		final Object[][] results = SQL.select(sql, new NVPair("slotName", slotName), new NVPair("userId", userId));
-
-		return results;
-	}
+	// @Override
+	// public Object[][] getDayDurations(final String slotName, final Long
+	// userId) {
+	// // get Slot Id (if user has a specific configuration)
+	// final Long slotId = this.getSlotId(slotName, userId);
+	// if (null == slotId) {
+	// return null; // early Break, Default Slot config should be return
+	// }
+	//
+	// if (ACCESS.getLevel(new ReadSlotPermission(slotId)) <
+	// ReadSlotPermission.LEVEL_INVOLVED) {
+	// super.throwAuthorizationFailed();
+	// }
+	//
+	// final String sql = this.buildDayDurationsSelect(userId, Boolean.FALSE);
+	//
+	// final Object[][] results = SQL.select(sql, new NVPair("slotName",
+	// slotName), new NVPair("userId", userId));
+	//
+	// if (null != results) {
+	// final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
+	// final DateHelper dateHelper = BEANS.get(DateHelper.class);
+	// final ZoneId userZoneId = appUserHelper.getUserZoneId(userId);
+	//
+	// for (final Object[] row : results) {
+	// final Date utcStartTime = (Date) row[2];
+	// final Date utcEndTime = (Date) row[3];
+	// final Date userStartDate =
+	// dateHelper.toUserDate(dateHelper.hoursToDate(utcStartTime), userZoneId);
+	// final Date userEndDate =
+	// dateHelper.toUserDate(dateHelper.hoursToDate(utcEndTime), userZoneId);
+	// row[2] = userStartDate;
+	// row[3] = userEndDate;
+	// }
+	// }
+	//
+	// return results;
+	// }
 
 	private String buildDayDurationsSelect(final Long userId, final Boolean addInto) {
+		return this.buildDayDurationsSelect(userId, addInto, null);
+	}
+
+	private String buildDayDurationsSelect(final Long userId, final Boolean addInto, final String intoPrefix) {
 		final StringBuilder sql = new StringBuilder(128);
 		sql.append(SQLs.DAY_DURATION_SELECT).append(", ").append(SQLs.DAY_DURATION_SELECT_SLOT_USER_ID)
 				.append(SQLs.DAY_DURATION_SELECT_FROM).append(SQLs.DAY_DURATION_JOIN_SLOT)
@@ -313,21 +339,42 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 		sql.append(SQLs.DAY_DURATION_SELECT_ORDER);
 
 		if (addInto) {
-			sql.append(SQLs.DAY_DURATION_SELECT_INTO).append(SQLs.DAY_DURATION_SELECT_INTO_SLOT_USER_ID);
+			if (null == intoPrefix) {
+				sql.append(SQLs.DAY_DURATION_SELECT_INTO).append(SQLs.DAY_DURATION_SELECT_INTO_SLOT_USER_ID);
+			} else {
+				sql.append(this.addResultPrefix(SQLs.DAY_DURATION_SELECT_INTO, intoPrefix))
+						.append(this.addResultPrefix(SQLs.DAY_DURATION_SELECT_INTO_SLOT_USER_ID, intoPrefix));
+			}
 		}
 
 		return sql.toString();
 	}
 
-	private List<DayDurationFormData> getDayDurationsForAllUsers(final String slotName) {
-		if (ACCESS.getLevel(new ReadSlotPermission((Long) null)) != ReadSlotPermission.LEVEL_ALL) {
+	private String addResultPrefix(final String sql, final String prefix) {
+		return sql.replaceAll("\\:\\{", Matcher.quoteReplacement(":{" + prefix + "."));
+	}
+
+	@Override
+	public List<DayDurationFormData> getDayDurations(final String slotName, final Long userId) {
+		final Long slotId = this.getSlotId(slotName, userId);
+		if (null == slotId) {
+			return null; // early Break, Default Slot config should be return
+		}
+
+		if (ACCESS.getLevel(new ReadSlotPermission(slotId)) < ReadSlotPermission.LEVEL_INVOLVED) {
 			super.throwAuthorizationFailed();
 		}
+
 		final IBeanArrayHolder<DayDurationFormData> results = new BeanArrayHolder<>(DayDurationFormData.class);
 
-		final String sql = this.buildDayDurationsSelect(null, Boolean.TRUE);
-		SQL.selectInto(sql, new NVPair("slotName", slotName), new NVPair("results", results));
+		final String sql = this.buildDayDurationsSelect(userId, Boolean.TRUE, "results");
+		SQL.selectInto(sql, new NVPair("userId", userId), new NVPair("slotName", slotName),
+				new NVPair("results", results));
 		return null == results ? null : CollectionUtility.arrayList(results.getBeans((BeanArrayHolder.State[]) null));
+	}
+
+	private List<DayDurationFormData> getDayDurationsForAllUsers(final String slotName) {
+		return this.getDayDurations(slotName, null);
 	}
 
 	private Long getOwner(final Long slotId) {

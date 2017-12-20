@@ -37,6 +37,8 @@ import org.eclipse.scout.rt.platform.BEANS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.comon.date.DateHelper;
+import org.zeroclick.comon.user.AppUserHelper;
+import org.zeroclick.configuration.shared.slot.DayDurationFormData;
 import org.zeroclick.configuration.shared.slot.ISlotService;
 
 /**
@@ -101,32 +103,51 @@ public class SlotHelper {
 		return new ArrayList<>(1);
 	}
 
+	/**
+	 * Avoid using this method, a date (instant) is required to get actual user
+	 * periods.
+	 *
+	 * @see getUserPeriods(final Long slotId, final Long userId, ZonedDateTime
+	 *      forDate)
+	 * @param slotId
+	 * @param userId
+	 * @return
+	 */
 	private List<DayDuration> getUserPeriods(final Long slotId, final Long userId) {
+		final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
+		final ZoneId userZoneId = appUserHelper.getUserZoneId(userId);
+		return this.getUserPeriods(slotId, userId, ZonedDateTime.now(userZoneId));
+	}
+
+	private List<DayDuration> getUserPeriods(final Long slotId, final Long userId, final ZonedDateTime forDate) {
 		List<DayDuration> daysDurations = new ArrayList<>();
 
 		final String slotName = "zc.meeting.slot." + slotId;
 
-		final Object[][] daysDurationsData = slotService.getDayDurations(slotName, userId);
+		final List<DayDurationFormData> daysDurationsData = slotService.getDayDurations(slotName, userId);
 
-		if (null == daysDurationsData || daysDurationsData.length == 0) {
+		if (null == daysDurationsData || daysDurationsData.isEmpty()) {
 			// return default slots Data
 			daysDurations = this.getPeriods(slotId);
 		} else {
 			final Calendar startCal = new GregorianCalendar();
 			final Calendar endCal = new GregorianCalendar();
 
-			for (final Object[] dayDurationData : daysDurationsData) {
-				final Date startTime = (Date) dayDurationData[2];
-				final Date endTime = (Date) dayDurationData[3];
+			final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
+			final ZoneId userZoneId = appUserHelper.getUserZoneId(userId);
+
+			for (final DayDurationFormData dayDurationData : daysDurationsData) {
+				final Date startTime = dayDurationData.getSlotStart().getValue();
+				final Date endTime = dayDurationData.getSlotEnd().getValue();
 
 				startCal.setTime(startTime);
 				endCal.setTime(endTime);
 
 				daysDurations.add(new DayDuration(
 						OffsetTime.of(startCal.get(Calendar.HOUR_OF_DAY), startCal.get(Calendar.MINUTE), 0, 0,
-								ZoneOffset.UTC),
+								userZoneId.getRules().getOffset(forDate.toInstant())),
 						OffsetTime.of(endCal.get(Calendar.HOUR_OF_DAY), endCal.get(Calendar.MINUTE), 0, 0,
-								ZoneOffset.UTC),
+								userZoneId.getRules().getOffset(forDate.toInstant())),
 						this.buildListOfWeekDay(dayDurationData)));
 			}
 		}
@@ -134,36 +155,28 @@ public class SlotHelper {
 		return daysDurations;
 	}
 
-	private List<DayOfWeek> buildListOfWeekDay(final Object[] dayDurationData) {
+	private List<DayOfWeek> buildListOfWeekDay(final DayDurationFormData dayDurationData) {
 		final List<DayOfWeek> validDays = new ArrayList<>();
 
-		final Boolean monday = (Boolean) dayDurationData[4];
-		final Boolean tuesday = (Boolean) dayDurationData[5];
-		final Boolean wednesday = (Boolean) dayDurationData[6];
-		final Boolean thursday = (Boolean) dayDurationData[7];
-		final Boolean friday = (Boolean) dayDurationData[8];
-		final Boolean saturday = (Boolean) dayDurationData[9];
-		final Boolean sunday = (Boolean) dayDurationData[10];
-
-		if (monday) {
+		if (dayDurationData.getMonday().getValue()) {
 			validDays.add(DayOfWeek.MONDAY);
 		}
-		if (tuesday) {
+		if (dayDurationData.getTuesday().getValue()) {
 			validDays.add(DayOfWeek.TUESDAY);
 		}
-		if (wednesday) {
+		if (dayDurationData.getWednesday().getValue()) {
 			validDays.add(DayOfWeek.WEDNESDAY);
 		}
-		if (thursday) {
+		if (dayDurationData.getThursday().getValue()) {
 			validDays.add(DayOfWeek.THURSDAY);
 		}
-		if (friday) {
+		if (dayDurationData.getFriday().getValue()) {
 			validDays.add(DayOfWeek.FRIDAY);
 		}
-		if (saturday) {
+		if (dayDurationData.getSaturday().getValue()) {
 			validDays.add(DayOfWeek.SATURDAY);
 		}
-		if (sunday) {
+		if (dayDurationData.getSunday().getValue()) {
 			validDays.add(DayOfWeek.SUNDAY);
 		}
 		return validDays;
@@ -177,7 +190,7 @@ public class SlotHelper {
 	 * @return
 	 */
 	public Boolean isInOneOfPeriods(final Long slotId, final ZonedDateTime checkedDate, final Long userId) {
-		final List<DayDuration> periods = this.getUserPeriods(slotId, userId);
+		final List<DayDuration> periods = this.getUserPeriods(slotId, userId, checkedDate);
 
 		return this.isInOneOfPeriods(periods, checkedDate, null);
 	}
@@ -193,7 +206,7 @@ public class SlotHelper {
 	 */
 	public Boolean isInOneOfPeriods(final Long slotId, final ZonedDateTime startDate, final ZonedDateTime endDate,
 			final Long userId) {
-		final List<DayDuration> periods = this.getUserPeriods(slotId, userId);
+		final List<DayDuration> periods = this.getUserPeriods(slotId, userId, startDate);
 
 		return this.isInOneOfPeriods(periods, startDate, endDate);
 	}
@@ -230,14 +243,14 @@ public class SlotHelper {
 	}
 
 	public ZonedDateTime getNextValidDateTime(final Long slotId, final ZonedDateTime checkedDate, final Long userId) {
-		final List<DayDuration> periods = this.getUserPeriods(slotId, userId);
+		final List<DayDuration> periods = this.getUserPeriods(slotId, userId, checkedDate);
 
 		return this.getNextValidDateTime(periods, checkedDate, null);
 	}
 
 	public ZonedDateTime getNextValidDateTime(final Long slotId, final ZonedDateTime checkedDate,
 			final ZonedDateTime endDate, final Long userId) {
-		final List<DayDuration> periods = this.getUserPeriods(slotId, userId);
+		final List<DayDuration> periods = this.getUserPeriods(slotId, userId, checkedDate);
 
 		return this.getNextValidDateTime(periods, checkedDate, endDate);
 	}
@@ -375,9 +388,12 @@ public class SlotHelper {
 		Boolean hasMatchingDay = Boolean.FALSE;
 
 		final DateHelper dateHelper = BEANS.get(DateHelper.class);
+		final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
+		// TODO Djer hour are checked using 'locaDateTime" so we Should use
+		// localized DateTime. Double check the Waring bellow ! 
 		// WARNING we NEED to use UTC
-		final ZonedDateTime zonedStart = dateHelper.getZonedValue(ZoneId.of("UTC"), minimalDate);
-		final ZonedDateTime zonedEnd = dateHelper.getZonedValue(ZoneId.of("UTC"), maximalDate);
+		final ZonedDateTime zonedStart = dateHelper.getZonedValue(appUserHelper.getUserZoneId(userId), minimalDate);
+		final ZonedDateTime zonedEnd = dateHelper.getZonedValue(appUserHelper.getUserZoneId(userId), maximalDate);
 
 		final long nbDayDiff = dateHelper.getRelativeTimeShift(zonedStart, zonedEnd, Boolean.TRUE, ChronoUnit.DAYS);
 
@@ -385,7 +401,7 @@ public class SlotHelper {
 			hasMatchingDay = Boolean.TRUE;
 		} else {
 
-			final Set<DayOfWeek> avialableDaysInSlot = this.getDays(slotId, userId);
+			final Set<DayOfWeek> avialableDaysInSlot = this.getDays(slotId, userId, zonedStart);
 			if (avialableDaysInSlot.contains(zonedStart.getDayOfWeek())
 					|| avialableDaysInSlot.contains(zonedEnd.getDayOfWeek())) {
 				hasMatchingDay = Boolean.TRUE;
@@ -404,8 +420,8 @@ public class SlotHelper {
 		return hasMatchingDay;
 	}
 
-	private Set<DayOfWeek> getDays(final Long slotId, final Long userId) {
-		final List<DayDuration> periods = this.getUserPeriods(slotId, userId);
+	private Set<DayOfWeek> getDays(final Long slotId, final Long userId, final ZonedDateTime checkedDate) {
+		final List<DayDuration> periods = this.getUserPeriods(slotId, userId, checkedDate);
 		final Set<DayOfWeek> unicDaysInPeriod = new HashSet<>();
 
 		for (final DayDuration period : periods) {
@@ -433,7 +449,7 @@ public class SlotHelper {
 		final ZonedDateTime zonedStart = dateHelper.getZonedValue(ZoneId.of("UTC"), minimalDate);
 		final ZonedDateTime zonedEnd = dateHelper.getZonedValue(ZoneId.of("UTC"), maximalDate);
 
-		final List<DayDuration> periods = this.getUserPeriods(slot, currentUserId);
+		final List<DayDuration> periods = this.getUserPeriods(slot, currentUserId, zonedStart);
 
 		for (final DayDuration period : periods) {
 			if (period.hasTimeOverlap(zonedStart, zonedEnd, durationinMinutes)) {

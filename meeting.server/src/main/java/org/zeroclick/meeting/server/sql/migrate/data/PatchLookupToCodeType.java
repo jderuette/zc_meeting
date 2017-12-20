@@ -20,7 +20,6 @@ import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.shared.params.IAppParamsService;
-import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher;
 import org.zeroclick.meeting.shared.event.IEventService;
 
@@ -99,12 +98,13 @@ public class PatchLookupToCodeType extends AbstractDataPatcher {
 					"CallTracker");
 		}
 
-		LOG.info("Migrate the default slot hours, from 'user timezone' to UTC");
-		final ISlotService slotService = BEANS.get(ISlotService.class);
-		slotService.migrateDayDurationTimeToUtc("zc.meeting.slot.1");
-		slotService.migrateDayDurationTimeToUtc("zc.meeting.slot.2");
-		slotService.migrateDayDurationTimeToUtc("zc.meeting.slot.3");
-		slotService.migrateDayDurationTimeToUtc("zc.meeting.slot.4");
+		// LOG.info("Migrate the default slot hours, from 'user timezone' to
+		// UTC");
+		// final ISlotService slotService = BEANS.get(ISlotService.class);
+		// slotService.migrateDayDurationTimeToUtc("zc.meeting.slot.1");
+		// slotService.migrateDayDurationTimeToUtc("zc.meeting.slot.2");
+		// slotService.migrateDayDurationTimeToUtc("zc.meeting.slot.3");
+		// slotService.migrateDayDurationTimeToUtc("zc.meeting.slot.4");
 
 		LOG.info("update superUser to store login to lowercase");
 		final String currentSuperUser = this.getSuperUserPrincipal();
