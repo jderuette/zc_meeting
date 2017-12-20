@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.zeroclick.comon.date.DateHelper;
 import org.zeroclick.comon.text.TextsHelper;
 import org.zeroclick.comon.user.AppUserHelper;
+import org.zeroclick.configuration.shared.duration.DurationCodeType;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
 import org.zeroclick.meeting.shared.event.EventFormData;
 
@@ -70,10 +71,11 @@ public class EventMessageHelper {
 		final String slotText = TextsHelper.get(receiverId, "zc.meeting.slot." + formData.getSlot().getValue());
 		values.add(slotText.toLowerCase());// 3
 
-		final String durationText = TextsHelper.get(receiverId,
-				"zc.meeting.duration." + formData.getDuration().getValue());
-		values.add(durationText.toLowerCase());// 4
+		// final String durationText = TextsHelper.get(receiverId,
+		// "zc.meeting.duration." + formData.getDuration().getValue());
+		final String durationText = DurationCodeType.getText(formData.getDuration().getValue());
 
+		values.add(durationText.toLowerCase());// 4
 		String startDate = null;
 		if (null != formData.getStartDate().getValue()) {
 			startDate = this.getDateHelper().format(formData.getStartDate().getValue(), userZoneId, Boolean.TRUE);
