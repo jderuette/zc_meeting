@@ -241,16 +241,33 @@ public class DateHelper {
 	}
 
 	public String getRelativeDay(final ZonedDateTime zonedValue, final Locale userLcoale) {
+		return this.getRelativeDay(zonedValue, userLcoale, Boolean.FALSE, Boolean.FALSE);
+	}
+
+	public String getRelativeDay(final ZonedDateTime zonedValue, final Locale userLcoale,
+			final Boolean emptyForAbsolute, final Boolean addParenthesis) {
 		final String key = this.getRelativeDateKey(zonedValue, Boolean.TRUE);
 		// the current date is required only when fallback to absolute happen
 		// (aka: nb day shift is not a "named" day).
-		String value = null;
-		if (null == userLcoale) {
-			value = TEXTS.get(key, this.format(zonedValue, Boolean.TRUE));
+		final StringBuilder builder = new StringBuilder();
+
+		if (emptyForAbsolute && key.contains(".absolute.")) {
+			// let the empty StringBuilder
 		} else {
-			value = TEXTS.get(userLcoale, key, this.format(zonedValue, Boolean.TRUE));
+			if (addParenthesis) {
+				builder.append('(');
+			}
+			if (null == userLcoale) {
+				builder.append(TEXTS.get(key, this.format(zonedValue, Boolean.TRUE)));
+			} else {
+
+				builder.append(TEXTS.get(userLcoale, key, this.format(zonedValue, Boolean.TRUE)));
+			}
+			if (addParenthesis) {
+				builder.append(')');
+			}
 		}
-		return value;
+		return builder.toString();
 	}
 
 	public String getRelativeDay(final ZonedDateTime zonedValue) {
@@ -304,7 +321,6 @@ public class DateHelper {
 		}
 
 		return builder.toString();
-
 	}
 
 	/**

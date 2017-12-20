@@ -217,9 +217,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	 *
 	 * @param formData
 	 *            event Data to search for the key (mostly "state" is used)
-	 * @param isSender
-	 *            does this message for user who modify the event (sender) or
-	 *            the other (receiver) ?
 	 * @return the key to use {@link TEXTS.get()}. <br />
 	 *         Samples : <br/>
 	 *         zc.meeting.notification.modifiedEvent.send (default for user who
@@ -419,11 +416,12 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 					LOG.debug("New event prepare to add to table (in " + Table.this.getTitle() + ") for event Id : "
 							+ eventForm.getEventId());
 					try {
-						AbstractEventsTablePage.this.getTable()
+						final ITableRow newRow = AbstractEventsTablePage.this.getTable()
 								.addRow(AbstractEventsTablePage.this.getTable().createTableRowFromForm(eventForm));
 						AbstractEventsTablePage.this.getTable().applyRowFilters();
 
 						AbstractEventsTablePage.this.onNewEvent(eventForm);
+						Table.this.autoFillDates(newRow);
 
 						final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 						notificationHelper.addProccessedNotification(

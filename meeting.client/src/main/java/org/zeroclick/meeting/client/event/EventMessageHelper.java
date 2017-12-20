@@ -114,7 +114,8 @@ public class EventMessageHelper {
 		String relativeStartDateDay = null;
 		String startDateHours = null;
 		if (null != zonedStartRecipient) {
-			relativeStartDateDay = this.getDateHelper().getRelativeDay(zonedStartRecipient, userLocal);
+			relativeStartDateDay = this.getDateHelper().getRelativeDay(zonedStartRecipient, userLocal, Boolean.TRUE,
+					Boolean.TRUE);
 			startDateHours = this.getDateHelper().formatHours(zonedStartRecipient, userLocal);
 		}
 		values.add(relativeStartDateDay);// 9
