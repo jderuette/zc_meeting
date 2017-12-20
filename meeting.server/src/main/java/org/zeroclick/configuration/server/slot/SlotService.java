@@ -1,6 +1,5 @@
 package org.zeroclick.configuration.server.slot;
 
-import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -25,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.AbstractCommonService;
 import org.zeroclick.comon.date.DateHelper;
-import org.zeroclick.comon.user.AppUserHelper;
 import org.zeroclick.configuration.shared.slot.CreateSlotPermission;
 import org.zeroclick.configuration.shared.slot.DayDurationFormData;
 import org.zeroclick.configuration.shared.slot.DayDurationModifiedNotification;
@@ -279,55 +277,6 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 		return slotId;
 	}
 
-	// @Override
-	// public Object[][] getDayDurations(final String slotName) {
-	// return this.getDayDurations(slotName,
-	// super.userHelper.getCurrentUserId());
-	// }
-
-	// @Override
-	// public Object[][] getDayDurations(final String slotName, final Long
-	// userId) {
-	// // get Slot Id (if user has a specific configuration)
-	// final Long slotId = this.getSlotId(slotName, userId);
-	// if (null == slotId) {
-	// return null; // early Break, Default Slot config should be return
-	// }
-	//
-	// if (ACCESS.getLevel(new ReadSlotPermission(slotId)) <
-	// ReadSlotPermission.LEVEL_INVOLVED) {
-	// super.throwAuthorizationFailed();
-	// }
-	//
-	// final String sql = this.buildDayDurationsSelect(userId, Boolean.FALSE);
-	//
-	// final Object[][] results = SQL.select(sql, new NVPair("slotName",
-	// slotName), new NVPair("userId", userId));
-	//
-	// if (null != results) {
-	// final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
-	// final DateHelper dateHelper = BEANS.get(DateHelper.class);
-	// final ZoneId userZoneId = appUserHelper.getUserZoneId(userId);
-	//
-	// for (final Object[] row : results) {
-	// final Date utcStartTime = (Date) row[2];
-	// final Date utcEndTime = (Date) row[3];
-	// final Date userStartDate =
-	// dateHelper.toUserDate(dateHelper.hoursToDate(utcStartTime), userZoneId);
-	// final Date userEndDate =
-	// dateHelper.toUserDate(dateHelper.hoursToDate(utcEndTime), userZoneId);
-	// row[2] = userStartDate;
-	// row[3] = userEndDate;
-	// }
-	// }
-	//
-	// return results;
-	// }
-
-	private String buildDayDurationsSelect(final Long userId, final Boolean addInto) {
-		return this.buildDayDurationsSelect(userId, addInto, null);
-	}
-
 	private String buildDayDurationsSelect(final Long userId, final Boolean addInto, final String intoPrefix) {
 		final StringBuilder sql = new StringBuilder(128);
 		sql.append(SQLs.DAY_DURATION_SELECT).append(", ").append(SQLs.DAY_DURATION_SELECT_SLOT_USER_ID)
@@ -510,35 +459,42 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 		}
 	}
 
-	@Override
-	public void migrateDayDurationTimeToUtc(final String slotName) {
-		final DateHelper dateHelper = BEANS.get(DateHelper.class);
-		final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
-		final List<DayDurationFormData> dayDurations = this.getDayDurationsForAllUsers(slotName);
-
-		if (null != dayDurations && dayDurations.size() > 0) {
-			final Iterator<DayDurationFormData> itDayDurations = dayDurations.iterator();
-
-			while (itDayDurations.hasNext()) {
-				final DayDurationFormData aDayDuration = itDayDurations.next();
-
-				final Date curentStart = aDayDuration.getSlotStart().getValue();
-				final Date curentEnd = aDayDuration.getSlotEnd().getValue();
-
-				final ZoneId userZoneId = appUserHelper.getUserZoneId(aDayDuration.getUserId());
-
-				final Date utcStartDate = dateHelper.fromUtcDate(dateHelper.hoursToDate(curentStart), userZoneId);
-				final Date utcEndDate = dateHelper.fromUtcDate(dateHelper.hoursToDate(curentEnd), userZoneId);
-
-				LOG.info("Migrating DayDuration Time to UTC for User : " + aDayDuration.getUserId() + ". Start from "
-						+ curentStart + "(" + userZoneId + " ?) to " + utcStartDate + ", End from " + curentEnd + "("
-						+ userZoneId + " ?) to " + utcEndDate);
-
-				aDayDuration.getSlotStart().setValue(utcStartDate);
-				aDayDuration.getSlotEnd().setValue(utcEndDate);
-				this.store(aDayDuration);
-			}
-		}
-	}
+	// @Override
+	// public void migrateDayDurationTimeToUtc(final String slotName) {
+	// final DateHelper dateHelper = BEANS.get(DateHelper.class);
+	// final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
+	// final List<DayDurationFormData> dayDurations =
+	// this.getDayDurationsForAllUsers(slotName);
+	//
+	// if (null != dayDurations && dayDurations.size() > 0) {
+	// final Iterator<DayDurationFormData> itDayDurations =
+	// dayDurations.iterator();
+	//
+	// while (itDayDurations.hasNext()) {
+	// final DayDurationFormData aDayDuration = itDayDurations.next();
+	//
+	// final Date curentStart = aDayDuration.getSlotStart().getValue();
+	// final Date curentEnd = aDayDuration.getSlotEnd().getValue();
+	//
+	// final ZoneId userZoneId =
+	// appUserHelper.getUserZoneId(aDayDuration.getUserId());
+	//
+	// final Date utcStartDate =
+	// dateHelper.fromUtcDate(dateHelper.hoursToDate(curentStart), userZoneId);
+	// final Date utcEndDate =
+	// dateHelper.fromUtcDate(dateHelper.hoursToDate(curentEnd), userZoneId);
+	//
+	// LOG.info("Migrating DayDuration Time to UTC for User : " +
+	// aDayDuration.getUserId() + ". Start from "
+	// + curentStart + "(" + userZoneId + " ?) to " + utcStartDate + ", End from
+	// " + curentEnd + "("
+	// + userZoneId + " ?) to " + utcEndDate);
+	//
+	// aDayDuration.getSlotStart().setValue(utcStartDate);
+	// aDayDuration.getSlotEnd().setValue(utcEndDate);
+	// this.store(aDayDuration);
+	// }
+	// }
+	// }
 
 }
