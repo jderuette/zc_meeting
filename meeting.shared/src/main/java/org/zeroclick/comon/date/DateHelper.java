@@ -28,6 +28,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.eclipse.scout.rt.platform.ApplicationScoped;
@@ -170,7 +171,7 @@ public class DateHelper {
 
 	/**
 	 * return a user localized Date from an UTC Date
-	 * 
+	 *
 	 * @param utcDateTime
 	 * @param zoneId
 	 *            current user zoneId
@@ -221,23 +222,39 @@ public class DateHelper {
 		return this.formatHours(this.getZonedValue(userZoneId, date));
 	}
 
-	public String formatHours(final ZonedDateTime zonedDateTime) {
-		final DateFormat dateFormat = BEANS.get(DateFormatProvider.class).getTimeInstance(DateFormat.SHORT,
-				NlsLocale.get());
+	public String formatHours(final ZonedDateTime zonedDateTime, final Locale userlocale) {
+		final DateFormat dateFormat = BEANS.get(DateFormatProvider.class).getTimeInstance(DateFormat.SHORT, userlocale);
 
 		return dateFormat.format(this.toUserDate(zonedDateTime));
+	}
+
+	public String formatHours(final ZonedDateTime zonedDateTime) {
+		return this.formatHours(zonedDateTime, NlsLocale.get());
+	}
+
+	public ZonedDateTime atZone(final ZonedDateTime date, final ZoneId zoneId) {
+		return date.withZoneSameInstant(zoneId);
 	}
 
 	public String getRelativeDay(final Date value, final ZoneId zoneId) {
 		return this.getRelativeDay(this.getZonedValue(zoneId, value));
 	}
 
-	public String getRelativeDay(final ZonedDateTime zonedValue) {
+	public String getRelativeDay(final ZonedDateTime zonedValue, final Locale userLcoale) {
 		final String key = this.getRelativeDateKey(zonedValue, Boolean.TRUE);
 		// the current date is required only when fallback to absolute happen
 		// (aka: nb day shift is not a "named" day).
-		final String value = TEXTS.get(key, this.format(zonedValue, Boolean.TRUE));
+		String value = null;
+		if (null == userLcoale) {
+			value = TEXTS.get(key, this.format(zonedValue, Boolean.TRUE));
+		} else {
+			value = TEXTS.get(userLcoale, key, this.format(zonedValue, Boolean.TRUE));
+		}
 		return value;
+	}
+
+	public String getRelativeDay(final ZonedDateTime zonedValue) {
+		return this.getRelativeDay(zonedValue, null);
 	}
 
 	/**

@@ -564,7 +564,8 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		}
 
 		private ZonedDateTime atZone(final ZonedDateTime date, final Long userId) {
-			return date.withZoneSameInstant(EventTablePage.this.getAppUserHelper().getUserZoneId(userId));
+			return EventTablePage.this.getDateHelper().atZone(date,
+					EventTablePage.this.getAppUserHelper().getUserZoneId(userId));
 		}
 
 		/**

@@ -16,8 +16,10 @@ limitations under the License.
 package org.zeroclick.meeting.client.event;
 
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import javax.annotation.PostConstruct;
 
@@ -55,11 +57,14 @@ public class EventMessageHelper {
 
 	public String[] buildValuesForLocaleMessages(final EventFormData formData, final Long recipientUserId) {
 		final List<String> values = new ArrayList<>();
-		final ZoneId userZoneId = this.getAppUserHelper().getCurrentUserTimeZone();
+		final ZoneId userZoneId = this.getAppUserHelper().getUserZoneId(recipientUserId);
+		final Locale userLocal = TextsHelper.getUserLocal(recipientUserId);
 
 		final String actor = this.getActorEmail(formData);
 		final String receiver = this.getReceiverEmail(formData);
 		final Long receiverId = recipientUserId;
+		ZonedDateTime zonedStartRecipient = null;
+		ZonedDateTime zonedEndRecipient = null;
 
 		values.add(actor); // 0
 		final String stateText = TextsHelper.get(receiverId,
@@ -76,15 +81,31 @@ public class EventMessageHelper {
 		final String durationText = DurationCodeType.getText(formData.getDuration().getValue());
 
 		values.add(durationText.toLowerCase());// 4
+
 		String startDate = null;
 		if (null != formData.getStartDate().getValue()) {
-			startDate = this.getDateHelper().format(formData.getStartDate().getValue(), userZoneId, Boolean.TRUE);
+			// WARNING use the CURRENT USER ZONE, Then translate to "recipient"
+			// user Zone
+			final ZonedDateTime zonedStart = this.getDateHelper().getZonedValue(
+					this.getAppUserHelper().getCurrentUserTimeZone(), formData.getStartDate().getValue());
+			zonedStartRecipient = this.getDateHelper().atZone(zonedStart, userZoneId);
+		}
+
+		if (null != zonedStartRecipient) {
+			startDate = this.getDateHelper().format(zonedStartRecipient, Boolean.TRUE);
 		}
 		values.add(startDate);// 5
 
 		String endDate = null;
 		if (null != formData.getEndDate().getValue()) {
-			endDate = this.getDateHelper().format(formData.getEndDate().getValue(), userZoneId, Boolean.TRUE);
+			// WARNING use the CURRENT USER ZONE, Then translate to "recipient"
+			// user Zone
+			final ZonedDateTime zonedEnd = this.getDateHelper()
+					.getZonedValue(this.getAppUserHelper().getCurrentUserTimeZone(), formData.getEndDate().getValue());
+			zonedEndRecipient = this.getDateHelper().atZone(zonedEnd, userZoneId);
+		}
+		if (null != zonedEndRecipient) {
+			endDate = this.getDateHelper().format(zonedEndRecipient, Boolean.TRUE);
 		}
 		values.add(endDate);// 6
 		values.add(formData.getReason().getValue());// 7
@@ -92,16 +113,16 @@ public class EventMessageHelper {
 
 		String relativeStartDateDay = null;
 		String startDateHours = null;
-		if (null != formData.getStartDate().getValue()) {
-			relativeStartDateDay = this.getDateHelper().getRelativeDay(formData.getStartDate().getValue(), userZoneId);
-			startDateHours = this.getDateHelper().formatHours(formData.getStartDate().getValue(), userZoneId);
+		if (null != zonedStartRecipient) {
+			relativeStartDateDay = this.getDateHelper().getRelativeDay(zonedStartRecipient, userLocal);
+			startDateHours = this.getDateHelper().formatHours(zonedStartRecipient, userLocal);
 		}
 		values.add(relativeStartDateDay);// 9
 		values.add(startDateHours);// 10
 
 		String endDateHours = null;
-		if (null != formData.getEndDate().getValue()) {
-			endDateHours = this.getDateHelper().formatHours(formData.getEndDate().getValue(), userZoneId);
+		if (null != zonedEndRecipient) {
+			endDateHours = this.getDateHelper().formatHours(zonedEndRecipient, userLocal);
 		}
 		values.add(endDateHours);// 11
 
