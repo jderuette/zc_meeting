@@ -48,6 +48,8 @@ public class UserService extends AbstractCommonService implements IUserService {
 
 	protected static final Charset CHARSET = StandardCharsets.UTF_16;
 
+	private static final String NOTIFICATION_USER = "notification-authenticator";
+
 	public static final Long[] DEFAULT_ROLES_VALUES = new Long[] { 2l };
 	public static final Set<Long> DEFAULT_ROLES = new HashSet<>(Arrays.asList(DEFAULT_ROLES_VALUES));
 	public static final Long DEFAULT_SUBSCRIPTION = 3l;
@@ -124,8 +126,8 @@ public class UserService extends AbstractCommonService implements IUserService {
 			formData.getEmail().setValue(formData.getEmail().getValue().toLowerCase());
 		}
 
-		LOG.info("Create User with Id :" + formData.getUserId() + ", Login : " + formData.getLogin().getValue()
-				+ " and email : " + formData.getEmail());
+		LOG.info("Create User with Id :" + formData.getUserId().getValue() + ", Login : "
+				+ formData.getLogin().getValue() + " and email : " + formData.getEmail().getValue());
 
 		if (null != formData.getLogin().getValue() && this.userAlreadyExists(formData.getLogin().getValue())) {
 			LOG.error("Trying to create User with an existing login (lowercase match) : "
@@ -149,7 +151,7 @@ public class UserService extends AbstractCommonService implements IUserService {
 	}
 
 	private boolean userAlreadyExists(final String userLogin) {
-		LOG.info("Checking it login : " + userLogin + " already Exists");
+		LOG.info("Checking if login : " + userLogin + " already Exists");
 		final UserFormData input = new UserFormData();
 		input.getLogin().setValue(userLogin.toLowerCase());
 
@@ -159,6 +161,7 @@ public class UserService extends AbstractCommonService implements IUserService {
 
 	@Override
 	public UserFormData load(final UserFormData formData) {
+		super.checkPermission(new ReadUserPermission(formData.getUserId().getValue()));
 		UserFormData cachedData = this.getDataCache().get(formData.getUserId().getValue());
 		if (null == cachedData) {
 			// avoid NPE
@@ -168,23 +171,12 @@ public class UserService extends AbstractCommonService implements IUserService {
 	}
 
 	private UserFormData loadForCache(final UserFormData formData) {
-		super.checkPermission(new ReadUserPermission(formData.getUserId().getValue()));
+		// Permission must be checked outside cache loading !
 		LOG.debug("Load User with Id :" + formData.getUserId().getValue() + " and email : "
 				+ formData.getEmail().getValue() + " (login : " + formData.getLogin().getValue() + ")");
 
-		Long currentSelectedUserId = formData.getUserId().getValue();
-		if (ACCESS.getLevel(new ReadUserPermission((Long) null)) != ReadUserPermission.LEVEL_ALL) {
-			// if not allowed to read ALL User, force currentUser only
+		final Long currentSelectedUserId = formData.getUserId().getValue();
 
-			final Long currenUserId = super.userHelper.getCurrentUserId();
-
-			if (!currenUserId.equals(currentSelectedUserId)) {
-				LOG.warn("User : " + currentSelectedUserId + " not allowed to view : " + currentSelectedUserId
-						+ " forcing to userId to " + currenUserId);
-				currentSelectedUserId = currenUserId;
-				formData.getUserId().setValue(currentSelectedUserId);
-			}
-		}
 		SQL.selectInto(SQLs.USER_SELECT + SQLs.USER_SELECT_FILTER_ID + SQLs.USER_SELECT_INTO, formData,
 				new NVPair("currentUser", currentSelectedUserId));
 
@@ -371,6 +363,13 @@ public class UserService extends AbstractCommonService implements IUserService {
 		// No permission check right now, will be done by standard "load" method
 		// when the userId of this email will be retrieved
 		LOG.debug("Searching userId with login : " + formData.getLogin().getValue());
+
+		if (NOTIFICATION_USER.equals(formData.getLogin().getValue())) {
+			// default notification user dosen't exist, because it don't need
+			// specific permissions.
+			return formData; // early Break
+		}
+
 		SQL.selectInto(SQLs.USER_SELECT_ID_ONLY + SQLs.USER_SELECT_FILTER_LOGIN + SQLs.USER_SELECT_INTO_ID_ONLY,
 				formData);
 		if (null == formData.getUserId().getValue()) {
@@ -740,7 +739,7 @@ public class UserService extends AbstractCommonService implements IUserService {
 	private UserFormData loadPasswordByEmail(final String email) {
 		LOG.debug("Retriving password with email " + email);
 		final UserFormData formData = new UserFormData();
-		formData.getEmail().setValue(email);
+		formData.getEmail().setValue(email.toLowerCase());
 		SQL.select(SQLs.USER_SELECT_PASSWORD_FILTER_EMAIL, formData);
 
 		if (null == formData.getPassword().getValue()) {

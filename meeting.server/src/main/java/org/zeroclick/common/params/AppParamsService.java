@@ -12,7 +12,6 @@ import org.zeroclick.configuration.shared.params.CreateAppParamsPermission;
 import org.zeroclick.configuration.shared.params.IAppParamsService;
 import org.zeroclick.configuration.shared.params.ParamCreatedNotification;
 import org.zeroclick.configuration.shared.params.ParamModifiedNotification;
-import org.zeroclick.configuration.shared.params.ReadAppParamsPermission;
 import org.zeroclick.configuration.shared.params.UpdateAppParamsPermission;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateParamsTable;
@@ -60,7 +59,7 @@ public class AppParamsService extends AbstractCommonService implements IAppParam
 
 	@Override
 	public String getValue(final String key) {
-		super.checkPermission(new ReadAppParamsPermission());
+		// No permission check, public Data
 		final Object value = this.getData(key, 2);
 		return null == value ? null : (String) value;
 	}
@@ -93,13 +92,13 @@ public class AppParamsService extends AbstractCommonService implements IAppParam
 	}
 
 	protected Object[][] getAppParamsData(final String key) {
-		super.checkPermission(new ReadAppParamsPermission());
+		// No permission check, public Data
 		LOG.debug("Searching app_params for key : " + key);
 		return SQL.select(SQLs.PARAMS_SELECT + SQLs.PARAMS_SELECT_FILTER_KEY, new NVPair("key", key));
 	}
 
 	protected Object getData(final String key, final Integer columnNumber) {
-		super.checkPermission(new ReadAppParamsPermission());
+		// No permission check, public Data
 		LOG.debug("Searching app_params for key : " + key);
 		Object paramValue = null;
 		final Object[][] datas = this.getAppParamsData(key);
@@ -157,7 +156,7 @@ public class AppParamsService extends AbstractCommonService implements IAppParam
 
 	@Override
 	public AppParamsFormData load(final AppParamsFormData formData) {
-		super.checkPermission(new ReadAppParamsPermission());
+		// No permission check, public Data
 		SQL.selectInto(SQLs.PARAMS_SELECT_WITH_CATEGORY + SQLs.PARAMS_SELECT_FILTER_ID + SQLs.PARAMS_SELECT_INTO,
 				formData);
 		return formData;

@@ -92,7 +92,7 @@ public class AppPermissionService extends AbstractCommonService implements IAppP
 
 	@Override
 	public Object[][] getPermissionsByUser(final Long userId) {
-		super.checkPermission(new ReadPermissionPermission());
+		// No permission check to allow init of permissions
 		final StringBuilder sql = new StringBuilder();
 
 		if (DatabaseHelper.get().isColumnExists(PatchCreateSubscription.PATCHED_TABLE_ROLE,
