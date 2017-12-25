@@ -39,6 +39,7 @@ import org.zeroclick.configuration.shared.user.UserModifiedNotification;
 import org.zeroclick.configuration.shared.user.UserTablePageData;
 import org.zeroclick.configuration.shared.user.UserTablePageData.UserTableRowData;
 import org.zeroclick.configuration.shared.user.ValidateCpsFormData;
+import org.zeroclick.meeting.server.security.ServerAccessControlService;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
@@ -812,6 +813,16 @@ public class UserService extends AbstractCommonService implements IUserService {
 
 		this.dataCache.clearCache(userData.getUserId().getValue());
 		return userData;
+	}
+
+	@Override
+	public void clearCache(final Long userId) {
+		LOG.info("Clear cache (and server/UI permisison cache) for user ID : " + userId);
+		this.dataCache.clearCache(userId);
+
+		final Set<String> userCacheKey = this.getUserNotificationIds(userId);
+		BEANS.get(ServerAccessControlService.class).clearCacheOfUsersIds(userCacheKey);
+		// BEANS.get(AccessControlService.class).clearUserCache(userCacheKey);
 	}
 
 	@Override

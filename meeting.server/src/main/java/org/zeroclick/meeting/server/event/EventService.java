@@ -359,7 +359,7 @@ public class EventService extends AbstractCommonService implements IEventService
 		if (null == eventRecipient || "".equals(eventRecipient)) {
 			LOG.error("Event " + eventId + " as NO recipient (email)");
 			isRecipient = Boolean.FALSE;
-		} else if (eventRecipient.equals(this.getCurrentUserEmail())) {
+		} else if (eventRecipient.equalsIgnoreCase(this.getCurrentUserEmail())) {
 			isRecipient = Boolean.TRUE;
 		}
 		return isRecipient;

@@ -361,6 +361,7 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 
 	@Override
 	public void createDefaultSlot(final Long userId) {
+		LOG.info("Creating default Slot and DayDuration configuration for user ID : " + userId);
 		Long slotId = this.createSlot("zc.meeting.slot.1", userId, 1);
 		SQL.insert(SQLs.DAY_DURATION_INSERT_SAMPLE + this.forSlot(SQLs.DAY_DURATION_VALUES_MORNING, slotId));
 		SQL.insert(SQLs.DAY_DURATION_INSERT_SAMPLE + this.forSlot(SQLs.DAY_DURATION_VALUES_AFTERNOON, slotId));
@@ -413,9 +414,15 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 		// TODO Djer permission check ? (should be against permissions on (new)
 		// userId
 		final Long slotId = DatabaseHelper.get().getNextVal(PatchSlotTable.SLOT_ID_SEQ);
-		SQL.insert(SQLs.SLOT_INSERT_SAMPLE
-				+ this.forSlot(SQLs.SLOT_VALUES_GENERIC, slotId).replace("__slotCode__", String.valueOf(slotCode))
-						.replace("__slotName__", slotName).replace("__userId__", String.valueOf(userId)));
+
+		if (DatabaseHelper.get().isColumnExists("SLOT", "slot_code")) {
+			SQL.insert(SQLs.SLOT_INSERT_SAMPLE_WITH_CODE + this.forSlot(SQLs.SLOT_VALUES_GENERIC_WITH_CODE, slotId)
+					.replace("__slotCode__", String.valueOf(slotCode)).replace("__slotName__", slotName)
+					.replace("__userId__", String.valueOf(userId)));
+		} else {
+			SQL.insert(SQLs.SLOT_INSERT_SAMPLE + this.forSlot(SQLs.SLOT_VALUES_GENERIC, slotId)
+					.replace("__slotName__", slotName).replace("__userId__", String.valueOf(userId)));
+		}
 		return slotId;
 	}
 
@@ -425,20 +432,26 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 
 	@Override
 	public void addDefaultCodeToExistingSlot() {
-		final String sql = SQLs.SLOT_PAGE_SELECT;
+		if (ACCESS.getLevel(new ReadSlotPermission((Long) null)) == ReadSlotPermission.LEVEL_ALL) {
 
-		final Object[][] slots = SQL.select(sql);
+			final String sql = SQLs.SLOT_PAGE_SELECT;
 
-		if (null != slots && slots.length > 0) {
-			for (int row = 0; row < slots.length; row++) {
-				LOG.info("Adding default Slot code for slot");
-				final Object[] slot = slots[row];
-				final String slotName = (String) slot[1];
-				final Long slotId = (Long) slot[0];
-				final String slotCodeExtracted = slotName.substring(slotName.lastIndexOf('.') + 1, slotName.length());
-				final Integer slotCode = Integer.valueOf(slotCodeExtracted);
-				SQL.update(SQLs.SLOT_UPDATE_CODE, new NVPair("slotCode", slotCode), new NVPair("slotId", slotId));
+			final Object[][] slots = SQL.select(sql);
+
+			if (null != slots && slots.length > 0) {
+				for (int row = 0; row < slots.length; row++) {
+					LOG.info("Adding default Slot code for slot");
+					final Object[] slot = slots[row];
+					final String slotName = (String) slot[1];
+					final Long slotId = (Long) slot[0];
+					final String slotCodeExtracted = slotName.substring(slotName.lastIndexOf('.') + 1,
+							slotName.length());
+					final Integer slotCode = Integer.valueOf(slotCodeExtracted);
+					SQL.update(SQLs.SLOT_UPDATE_CODE, new NVPair("slotCode", slotCode), new NVPair("slotId", slotId));
+				}
 			}
+		} else {
+			LOG.error("A Non Slot admin user try to update all Slot Codes ! ");
 		}
 	}
 

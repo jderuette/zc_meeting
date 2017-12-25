@@ -789,7 +789,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		protected Boolean isGuestCurrentUser(final ITableRow row) {
 			final String rowEmail = this.getEmailColumn().getValue(row.getRowIndex());
 
-			return this.isGuest(rowEmail);
+			return this.isGuest(rowEmail.toLowerCase());
 		}
 
 		protected Boolean isGuest(final String email) {
@@ -808,6 +808,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		protected Boolean userCanUpdate(final ITableRow row) {
 			final Long currentEventId = Table.this.getEventIdColumn().getValue(row.getRowIndex());
 
+			// BEANS.get(AccessControlService.class).clearCacheOfCurrentUser();
 			return ACCESS.check(new UpdateEventPermission(currentEventId));
 		}
 

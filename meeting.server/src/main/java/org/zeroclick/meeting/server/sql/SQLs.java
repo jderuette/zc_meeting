@@ -533,8 +533,11 @@ public interface SQLs {
 	String SLOT_SELECT_OWNER = "SELECT user_id FROM SLOT WHERE slot_id=:slotId";
 	String SLOT_SELECT_ID_BY_NAME = "SELECT SLOT.slot_id FROM SLOT WHERE SLOT.name=:slotName AND SLOT.user_id=:userId";
 
-	String SLOT_INSERT_SAMPLE = "INSERT INTO SLOT (slot_id, name, user_id)";
-	String SLOT_VALUES_GENERIC = " VALUES (__slotId__, '__slotName__', __userId__)";
+	String SLOT_INSERT_SAMPLE = "INSERT INTO SLOT (slot_id, name,  user_id)";
+	String SLOT_VALUES_GENERIC = " VALUES (__slotId__, '__slotName__',  __userId__)";
+
+	String SLOT_INSERT_SAMPLE_WITH_CODE = "INSERT INTO SLOT (slot_id, name, slot_code, user_id)";
+	String SLOT_VALUES_GENERIC_WITH_CODE = " VALUES (__slotId__, '__slotName__', __slotCode__, __userId__)";
 	// String SLOT_VALUES_DAY = " VALUES (nextval('" +
 	// PatchSlotTable.SLOT_ID_SEQ + "'), 'zc.meeting.slot.1', 1)";
 	// String SLOT_VALUES_LUNCH = " VALUES (nextval('" +

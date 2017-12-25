@@ -1,6 +1,11 @@
 package org.zeroclick.configuration.client.user;
 
+import java.util.Set;
+
 import org.eclipse.scout.rt.client.dto.Data;
+import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
+import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
+import org.eclipse.scout.rt.client.ui.action.menu.TableMenuType;
 import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractIntegerColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractLongColumn;
@@ -11,6 +16,7 @@ import org.eclipse.scout.rt.client.ui.form.FormEvent;
 import org.eclipse.scout.rt.client.ui.form.FormListener;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
+import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.code.ICodeType;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
@@ -84,6 +90,33 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 				form.addFormListener(new UserFormListener());
 				form.setEnabledPermission(new UpdateUserPermission(currentUserId));
 				form.startModify();
+			}
+		}
+
+		@Order(3000)
+		public class ClearUserCacheMenu extends AbstractMenu {
+			@Override
+			protected String getConfiguredText() {
+				return TEXTS.get("zc.user.clearCache");
+			}
+
+			@Override
+			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+				return CollectionUtility.hashSet(TableMenuType.SingleSelection);
+			}
+
+			@Override
+			protected void execOwnerValueChanged(final Object newOwnerValue) {
+				final Long currentUserId = Table.this.getUserIdColumn().getSelectedValue();
+				final Boolean isUserAllowed = ACCESS.check(new UpdateUserPermission(currentUserId));
+				this.setVisibleGranted(isUserAllowed);
+				super.execOwnerValueChanged(newOwnerValue);
+			}
+
+			@Override
+			protected void execAction() {
+				final IUserService userService = BEANS.get(IUserService.class);
+				userService.clearCache(Table.this.getUserIdColumn().getValue(Table.this.getSelectedRow()));
 			}
 		}
 
