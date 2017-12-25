@@ -28,7 +28,6 @@ import org.zeroclick.configuration.shared.role.CpsAcceptedNotification;
 import org.zeroclick.configuration.shared.role.CreateAssignSubscriptionToUserPermission;
 import org.zeroclick.configuration.shared.role.IRoleService;
 import org.zeroclick.configuration.shared.role.ReadAssignSubscriptionToUserPermission;
-import org.zeroclick.configuration.shared.role.UpdateAssignSubscriptionToUserPermission;
 import org.zeroclick.configuration.shared.role.UpdateAssignToRolePermission;
 import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.configuration.shared.user.CreateUserPermission;
@@ -94,9 +93,7 @@ public class UserService extends AbstractCommonService implements IUserService {
 
 	@Override
 	public UserFormData prepareCreate(final UserFormData formData) {
-		if (!ACCESS.check(new CreateUserPermission())) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new CreateUserPermission());
 		LOG.debug("PrepareCreate for User");
 		return formData;
 	}
@@ -113,9 +110,7 @@ public class UserService extends AbstractCommonService implements IUserService {
 
 			formData.setInvitedBy(super.userHelper.getCurrentUserId());
 		} else {
-			if (!ACCESS.check(new CreateUserPermission())) {
-				super.throwAuthorizationFailed();
-			}
+			super.checkPermission(new CreateUserPermission());
 		}
 
 		if (null == formData.getUserId().getValue()) {
@@ -173,9 +168,7 @@ public class UserService extends AbstractCommonService implements IUserService {
 	}
 
 	private UserFormData loadForCache(final UserFormData formData) {
-		if (!ACCESS.check(new ReadUserPermission(formData.getUserId().getValue()))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new ReadUserPermission(formData.getUserId().getValue()));
 		LOG.debug("Load User with Id :" + formData.getUserId().getValue() + " and email : "
 				+ formData.getEmail().getValue() + " (login : " + formData.getLogin().getValue() + ")");
 
@@ -206,9 +199,7 @@ public class UserService extends AbstractCommonService implements IUserService {
 
 	@Override
 	public ValidateCpsFormData load(final ValidateCpsFormData formData) {
-		if (!ACCESS.check(new ReadAssignSubscriptionToUserPermission(formData.getUserId().getValue()))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new ReadAssignSubscriptionToUserPermission(formData.getUserId().getValue()));
 
 		// get THIS subscription details
 		SQL.selectInto(SQLs.USER_ROLE_SELECT_SUBSCRIPTIONS_DETAILS + SQLs.USER_ROLE_FILTER_USER_ID
@@ -241,7 +232,6 @@ public class UserService extends AbstractCommonService implements IUserService {
 	}
 
 	private void addNbProcessedEventStat(final UserTablePageData pageData) {
-
 		if (pageData.getRowCount() > 0) {
 			for (final UserTableRowData row : pageData.getRows()) {
 				final Long userId = row.getUserId();
@@ -250,7 +240,6 @@ public class UserService extends AbstractCommonService implements IUserService {
 				}
 			}
 		}
-
 	}
 
 	/**
@@ -517,6 +506,7 @@ public class UserService extends AbstractCommonService implements IUserService {
 
 	@Override
 	public void delete(final UserFormData formData) {
+		super.checkPermission(new UpdateUserPermission(formData.getUserId().getValue()));
 		final IRoleService roleService = BEANS.get(IRoleService.class);
 		Long userId = null;
 		if (null == formData.getUserId().getValue() && null != formData.getLogin().getValue()) {
@@ -547,9 +537,7 @@ public class UserService extends AbstractCommonService implements IUserService {
 	}
 
 	private void deleteUserRoleByUser(final UserFormData formData) {
-		if (!ACCESS.check(new UpdateAssignToRolePermission())) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new UpdateAssignToRolePermission());
 		LOG.info("Deleting Link between Role and User by user Id : " + formData.getUserId().getValue());
 		SQL.insert(SQLs.USER_ROLE_REMOVE_BY_USER, formData);
 	}
@@ -569,9 +557,7 @@ public class UserService extends AbstractCommonService implements IUserService {
 
 	@Override
 	public OnBoardingUserFormData store(final OnBoardingUserFormData formData) {
-		if (!ACCESS.check(new UpdateUserPermission(formData.getUserId().getValue()))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new UpdateUserPermission(formData.getUserId().getValue()));
 		LOG.debug("Store OnBoarding User datas with Id :" + formData.getUserId().getValue() + " (Login : "
 				+ formData.getLogin().getValue() + ")");
 
@@ -595,9 +581,7 @@ public class UserService extends AbstractCommonService implements IUserService {
 
 	@Override
 	public ValidateCpsFormData create(final ValidateCpsFormData formData) {
-		if (!ACCESS.check(new CreateAssignSubscriptionToUserPermission(formData.getUserId().getValue()))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new CreateAssignSubscriptionToUserPermission(formData.getUserId().getValue()));
 
 		SQL.update(SQLs.USER_ROLE_INSERT_WITH_START_DATE, new NVPair("userId", formData.getUserId().getValue()),
 				new NVPair("rolesBox", formData.getSubscriptionId().getValue()),
@@ -612,9 +596,7 @@ public class UserService extends AbstractCommonService implements IUserService {
 
 	@Override
 	public ValidateCpsFormData store(final ValidateCpsFormData formData) {
-		if (!ACCESS.check(new UpdateAssignSubscriptionToUserPermission(formData.getUserId().getValue()))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new CreateAssignSubscriptionToUserPermission(formData.getUserId().getValue()));
 		final AccessControlService acs = BEANS.get(AccessControlService.class);
 
 		LOG.debug("Store CPS User datas for user Id :" + formData.getUserId().getValue()
@@ -823,7 +805,7 @@ public class UserService extends AbstractCommonService implements IUserService {
 
 	@Override
 	public UserFormData loggedIn(final UserFormData userData) {
-		// No permision check, because used during login
+		// No permission check, because used during login
 		final Date now = new Date();
 		LOG.info("User " + userData.getEmail() + " (login : " + userData.getLogin()
 				+ ") juste logged in, updating stats data");

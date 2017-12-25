@@ -8,11 +8,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.scout.rt.platform.BEANS;
-import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.holders.NVPair;
 import org.eclipse.scout.rt.server.clientnotification.ClientNotificationRegistry;
 import org.eclipse.scout.rt.server.jdbc.SQL;
-import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
@@ -63,18 +61,14 @@ public class ApiService extends AbstractCommonService implements IApiService {
 
 	@Override
 	public ApiFormData prepareCreate(final ApiFormData formData) {
-		if (!ACCESS.check(new CreateApiPermission())) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new CreateApiPermission());
 		LOG.warn("PrepareCreate for Api");
 		return this.store(formData);
 	}
 
 	@Override
 	public ApiFormData create(final ApiFormData formData) {
-		if (!ACCESS.check(new CreateApiPermission())) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new CreateApiPermission());
 
 		Boolean isNew = Boolean.FALSE;
 
@@ -148,7 +142,8 @@ public class ApiService extends AbstractCommonService implements IApiService {
 			LOG.error("User :" + currentUserId + " (id : " + currentUserId + " try to load Api Data with Id : "
 					+ oAuthId + " (user : " + userId + ") wich belong to User " + userId
 					+ " But haven't 'ALL'/'RELATED' read permission");
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+
+			super.throwAuthorizationFailed();
 		}
 
 		SQL.selectInto(
@@ -170,9 +165,7 @@ public class ApiService extends AbstractCommonService implements IApiService {
 
 	@Override
 	public ApiFormData store(final ApiFormData formData) {
-		if (!ACCESS.check(new UpdateApiPermission(formData.getApiCredentialId()))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new UpdateApiPermission(formData.getApiCredentialId()));
 
 		LOG.debug("Storing API in DB for user : " + formData.getUserIdProperty().getValue() + " for provider : "
 				+ formData.getProvider().getValue());
@@ -182,9 +175,7 @@ public class ApiService extends AbstractCommonService implements IApiService {
 
 	@Override
 	public void delete(final ApiFormData formData) {
-		if (!ACCESS.check(new DeleteApiPermission(formData.getApiCredentialId()))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new DeleteApiPermission(formData.getApiCredentialId()));
 
 		final ApiFormData dataBeforeDeletion = this.load(formData);
 

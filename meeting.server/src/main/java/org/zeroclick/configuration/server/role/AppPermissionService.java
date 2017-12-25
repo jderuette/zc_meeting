@@ -11,7 +11,6 @@ import org.eclipse.scout.rt.platform.holders.NVPair;
 import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
-import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.eclipse.scout.rt.shared.services.common.security.IAccessControlService;
 import org.eclipse.scout.rt.shared.services.common.security.IPermissionService;
 import org.slf4j.Logger;
@@ -40,18 +39,15 @@ public class AppPermissionService extends AbstractCommonService implements IAppP
 
 	@Override
 	public PermissionFormData prepareCreate(final PermissionFormData formData) {
-		if (!ACCESS.check(new CreatePermissionPermission())) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new CreatePermissionPermission());
 		// TODO Djer13 something to prepare ?
 		return formData;
 	}
 
 	@Override
 	public PermissionFormData create(final PermissionFormData formData) {
-		if (!ACCESS.check(new CreatePermissionPermission())) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new CreatePermissionPermission());
+
 		SQL.insert(SQLs.ROLE_PERMISSION_INSERT, formData);
 		BEANS.get(IAccessControlService.class).clearCache();
 		return formData;
@@ -59,24 +55,21 @@ public class AppPermissionService extends AbstractCommonService implements IAppP
 
 	@Override
 	public PermissionFormData load(final PermissionFormData formData) {
-		if (!ACCESS.check(new ReadPermissionPermission())) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new ReadPermissionPermission());
 		SQL.selectInto(SQLs.ROLE_SELECT, formData);
 		return formData;
 	}
 
 	@Override
 	public PermissionFormData store(final PermissionFormData formData) {
-		if (!ACCESS.check(new UpdatePermissionPermission())) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new UpdatePermissionPermission());
 		throw new VetoException(TEXTS.get("zc.user.permissionStoreNotAllowed"));
 		// return formData;
 	}
 
 	@Override
 	public PermissionTablePageData getPermissionTableData(final SearchFilter filter) {
+		super.checkPermission(new ReadPermissionPermission());
 		final PermissionTablePageData pageData = new PermissionTablePageData();
 		final String sql = SQLs.ROLE_PERMISSION_PAGE_SELECT + SQLs.ROLE_PERMISSION_PAGE_DATA_SELECT_INTO;
 		SQL.selectInto(sql, new NVPair("rolePermission", pageData));
@@ -85,6 +78,7 @@ public class AppPermissionService extends AbstractCommonService implements IAppP
 
 	@Override
 	public PermissionTablePageData getpermissionsByRole(final Long roleId) {
+		super.checkPermission(new ReadPermissionPermission());
 		final PermissionTablePageData pageData = new PermissionTablePageData();
 
 		final RoleFormData roleFormData = new RoleFormData();
@@ -98,7 +92,7 @@ public class AppPermissionService extends AbstractCommonService implements IAppP
 
 	@Override
 	public Object[][] getPermissionsByUser(final Long userId) {
-
+		super.checkPermission(new ReadPermissionPermission());
 		final StringBuilder sql = new StringBuilder();
 
 		if (DatabaseHelper.get().isColumnExists(PatchCreateSubscription.PATCHED_TABLE_ROLE,
@@ -124,6 +118,7 @@ public class AppPermissionService extends AbstractCommonService implements IAppP
 
 	@Override
 	public Object[][] getPermissionsByUser(final String userLoginOrEmail) {
+		// permission check done later by getPermissionsByUser(Long userId)
 		final IUserService userService = BEANS.get(IUserService.class);
 		Object[][] permissions = null;
 
@@ -143,6 +138,7 @@ public class AppPermissionService extends AbstractCommonService implements IAppP
 	}
 
 	private Object[][] getPermission(final String filter) {
+		super.checkPermission(new ReadPermissionPermission());
 		final ArrayList<String> rows = new ArrayList<>(30);
 		final Set<Class<? extends Permission>> permissions = BEANS.get(IPermissionService.class)
 				.getAllPermissionClasses();

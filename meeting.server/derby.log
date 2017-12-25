@@ -1,4 +1,4 @@
-Wed Nov 22 22:34:53 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
+Thu Dec 21 00:42:07 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -27,7 +27,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.isSequenceExists(DatabaseHelper.java:91)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.dropSequence(DatabaseHelper.java:80)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchCreateParamsTable.undo(PatchCreateParamsTable.java:94)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -43,7 +43,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -99,7 +99,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.isSequenceExists(DatabaseHelper.java:91)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.dropSequence(DatabaseHelper.java:80)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchCreateParamsTable.undo(PatchCreateParamsTable.java:94)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -115,7 +115,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -138,7 +138,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Wed Nov 22 22:34:53 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
+Thu Dec 21 00:42:07 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -167,7 +167,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.isColumnExists(DatabaseHelper.java:149)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.removeColumn(DatabaseHelper.java:164)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchEventRejectReason.undo(PatchEventRejectReason.java:70)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -183,7 +183,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -239,7 +239,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.isColumnExists(DatabaseHelper.java:149)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.removeColumn(DatabaseHelper.java:164)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchEventRejectReason.undo(PatchEventRejectReason.java:70)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -255,7 +255,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -278,7 +278,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Wed Nov 22 22:34:53 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
+Thu Dec 21 00:42:07 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -307,7 +307,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.isColumnExists(DatabaseHelper.java:149)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.removeColumn(DatabaseHelper.java:164)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchInvitedBy.undo(PatchInvitedBy.java:86)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -323,7 +323,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -379,7 +379,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.isColumnExists(DatabaseHelper.java:149)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.removeColumn(DatabaseHelper.java:164)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchInvitedBy.undo(PatchInvitedBy.java:86)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -395,7 +395,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -418,7 +418,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Wed Nov 22 22:34:53 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
+Thu Dec 21 00:42:07 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -447,7 +447,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.isSequenceExists(DatabaseHelper.java:91)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.dropSequence(DatabaseHelper.java:80)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchSlotTable.undo(PatchSlotTable.java:159)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -463,7 +463,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -519,7 +519,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.isSequenceExists(DatabaseHelper.java:91)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.dropSequence(DatabaseHelper.java:80)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchSlotTable.undo(PatchSlotTable.java:159)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -535,7 +535,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -558,7 +558,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Wed Nov 22 22:34:53 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
+Thu Dec 21 00:42:07 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -587,7 +587,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.isColumnExists(DatabaseHelper.java:149)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.removeColumn(DatabaseHelper.java:164)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchUserLanguage.undo(PatchUserLanguage.java:87)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -603,7 +603,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -659,7 +659,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.isColumnExists(DatabaseHelper.java:149)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.removeColumn(DatabaseHelper.java:164)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchUserLanguage.undo(PatchUserLanguage.java:87)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -675,7 +675,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -698,7 +698,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Wed Nov 22 22:34:53 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
+Thu Dec 21 00:42:07 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -727,7 +727,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.isColumnExists(DatabaseHelper.java:149)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.removeColumn(DatabaseHelper.java:164)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchAddSlotCode.undo(PatchAddSlotCode.java:91)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -743,7 +743,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -799,7 +799,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.isColumnExists(DatabaseHelper.java:149)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.removeColumn(DatabaseHelper.java:164)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchAddSlotCode.undo(PatchAddSlotCode.java:91)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -815,7 +815,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -838,7 +838,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Wed Nov 22 22:34:53 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
+Thu Dec 21 00:42:07 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -866,8 +866,8 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.server.jdbc.SQL.select(SQL.java:94)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.isSequenceExists(DatabaseHelper.java:91)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.dropSequence(DatabaseHelper.java:80)
-	at org.zeroclick.meeting.server.sql.migrate.data.PatchCreateSuperUser.undo(PatchCreateSuperUser.java:171)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.data.PatchCreateSuperUser.undo(PatchCreateSuperUser.java:172)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -883,7 +883,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -938,8 +938,8 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.server.jdbc.SQL.select(SQL.java:94)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.isSequenceExists(DatabaseHelper.java:91)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.dropSequence(DatabaseHelper.java:80)
-	at org.zeroclick.meeting.server.sql.migrate.data.PatchCreateSuperUser.undo(PatchCreateSuperUser.java:171)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.data.PatchCreateSuperUser.undo(PatchCreateSuperUser.java:172)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -955,7 +955,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -978,7 +978,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Wed Nov 22 22:34:53 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
+Thu Dec 21 00:42:07 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -1007,7 +1007,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.isColumnExists(DatabaseHelper.java:149)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.removeColumn(DatabaseHelper.java:164)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchCreateVenue.undo(PatchCreateVenue.java:95)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -1023,7 +1023,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -1079,7 +1079,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.isColumnExists(DatabaseHelper.java:149)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.removeColumn(DatabaseHelper.java:164)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchCreateVenue.undo(PatchCreateVenue.java:95)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -1095,7 +1095,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -1118,7 +1118,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Wed Nov 22 22:34:53 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
+Thu Dec 21 00:42:07 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -1149,7 +1149,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.getExistingTables(DatabaseHelper.java:129)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.existTable(DatabaseHelper.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchCreateSubscription.undo(PatchCreateSubscription.java:222)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -1165,7 +1165,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -1223,7 +1223,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.getExistingTables(DatabaseHelper.java:129)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.existTable(DatabaseHelper.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchCreateSubscription.undo(PatchCreateSubscription.java:222)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -1239,7 +1239,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -1262,7 +1262,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Wed Nov 22 22:34:53 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
+Thu Dec 21 00:42:08 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -1291,7 +1291,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.isColumnExists(DatabaseHelper.java:149)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.removeColumn(DatabaseHelper.java:164)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchEventAddCreatedDate.undo(PatchEventAddCreatedDate.java:70)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -1307,7 +1307,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -1363,7 +1363,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.isColumnExists(DatabaseHelper.java:149)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.removeColumn(DatabaseHelper.java:164)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchEventAddCreatedDate.undo(PatchEventAddCreatedDate.java:70)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -1379,7 +1379,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -1402,7 +1402,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Wed Nov 22 22:34:53 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
+Thu Dec 21 00:42:08 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -1434,7 +1434,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.deleteConstraints(DatabaseHelper.java:266)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.deletePrimaryKey(DatabaseHelper.java:262)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchSubscriptionRoleDocumentLink.undo(PatchSubscriptionRoleDocumentLink.java:126)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -1450,7 +1450,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -1509,7 +1509,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.deleteConstraints(DatabaseHelper.java:266)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.deletePrimaryKey(DatabaseHelper.java:262)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchSubscriptionRoleDocumentLink.undo(PatchSubscriptionRoleDocumentLink.java:126)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -1525,7 +1525,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -1548,7 +1548,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Wed Nov 22 22:34:53 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
+Thu Dec 21 00:42:08 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -1579,7 +1579,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.getExistingTables(DatabaseHelper.java:129)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.existTable(DatabaseHelper.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchAddLastLogin.undo(PatchAddLastLogin.java:92)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -1595,7 +1595,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -1653,7 +1653,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.getExistingTables(DatabaseHelper.java:129)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.existTable(DatabaseHelper.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchAddLastLogin.undo(PatchAddLastLogin.java:92)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -1669,7 +1669,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -1692,7 +1692,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Wed Nov 22 22:34:53 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
+Thu Dec 21 00:42:08 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -1724,7 +1724,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.dropTable(DatabaseHelper.java:58)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.dropTable(DatabaseHelper.java:54)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchConfigureCalendar.undo(PatchConfigureCalendar.java:123)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -1740,7 +1740,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -1799,7 +1799,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.dropTable(DatabaseHelper.java:58)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.dropTable(DatabaseHelper.java:54)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchConfigureCalendar.undo(PatchConfigureCalendar.java:123)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -1815,7 +1815,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -1838,7 +1838,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Wed Nov 22 22:34:53 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
+Thu Dec 21 00:42:08 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -1869,7 +1869,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.getExistingTables(DatabaseHelper.java:129)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.existTable(DatabaseHelper.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchAddEventMinAndMaxDate.undo(PatchAddEventMinAndMaxDate.java:97)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -1885,7 +1885,7 @@ java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -1943,7 +1943,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.getExistingTables(DatabaseHelper.java:129)
 	at org.zeroclick.meeting.server.sql.DatabaseHelper.existTable(DatabaseHelper.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.data.PatchAddEventMinAndMaxDate.undo(PatchAddEventMinAndMaxDate.java:97)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:122)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
 	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
 	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
@@ -1959,7 +1959,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
 	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
 	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
-	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:130)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
 	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
 	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
@@ -1982,7 +1982,151 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Wed Nov 22 22:34:54 CET 2017 Thread[scout-thread-24,5,main] Cleanup action starting
+Thu Dec 21 00:42:08 CET 2017 Thread[Thread-1,5,main] Cleanup action starting
+java.sql.SQLException: Database 'memory:zeroclick-database' not found.
+	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
+	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
+	at org.apache.derby.impl.jdbc.Util.generateCsSQLException(Unknown Source)
+	at org.apache.derby.impl.jdbc.Util.generateCsSQLException(Unknown Source)
+	at org.apache.derby.impl.jdbc.EmbedConnection.newSQLException(Unknown Source)
+	at org.apache.derby.impl.jdbc.EmbedConnection.handleDBNotFound(Unknown Source)
+	at org.apache.derby.impl.jdbc.EmbedConnection.<init>(Unknown Source)
+	at org.apache.derby.jdbc.InternalDriver$1.run(Unknown Source)
+	at org.apache.derby.jdbc.InternalDriver$1.run(Unknown Source)
+	at java.security.AccessController.doPrivileged(Native Method)
+	at org.apache.derby.jdbc.InternalDriver.getNewEmbedConnection(Unknown Source)
+	at org.apache.derby.jdbc.InternalDriver.connect(Unknown Source)
+	at org.apache.derby.jdbc.InternalDriver.connect(Unknown Source)
+	at org.apache.derby.jdbc.AutoloadedDriver.connect(Unknown Source)
+	at java.sql.DriverManager.getConnection(DriverManager.java:664)
+	at java.sql.DriverManager.getConnection(DriverManager.java:270)
+	at org.eclipse.scout.rt.server.jdbc.internal.pool.SqlConnectionBuilder.createJdbcConnection(SqlConnectionBuilder.java:63)
+	at org.eclipse.scout.rt.server.jdbc.internal.pool.SqlConnectionPool.leaseConnection(SqlConnectionPool.java:103)
+	at org.eclipse.scout.rt.server.jdbc.AbstractSqlService.leaseConnectionInternal(AbstractSqlService.java:550)
+	at org.eclipse.scout.rt.server.jdbc.AbstractSqlService.execCreateConnection(AbstractSqlService.java:321)
+	at org.eclipse.scout.rt.server.jdbc.AbstractSqlService.leaseConnection(AbstractSqlService.java:542)
+	at org.eclipse.scout.rt.server.jdbc.AbstractSqlService.getTransaction(AbstractSqlService.java:621)
+	at org.eclipse.scout.rt.server.jdbc.AbstractSqlService.selectInto(AbstractSqlService.java:659)
+	at org.eclipse.scout.rt.server.jdbc.SQL.selectInto(SQL.java:110)
+	at org.zeroclick.meeting.server.sql.DatabaseHelper.retrieveExistingTables(DatabaseHelper.java:112)
+	at org.zeroclick.meeting.server.sql.DatabaseHelper.getExistingTables(DatabaseHelper.java:186)
+	at org.zeroclick.meeting.server.sql.DatabaseHelper.getExistingTables(DatabaseHelper.java:129)
+	at org.zeroclick.meeting.server.sql.DatabaseHelper.existTable(DatabaseHelper.java:133)
+	at org.zeroclick.meeting.server.sql.migrate.data.PatchLookupToCodeType.undo(PatchLookupToCodeType.java:121)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
+	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
+	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
+	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
+	at org.eclipse.scout.rt.server.context.TransactionProcessor.runTxRequiresNew(TransactionProcessor.java:80)
+	at org.eclipse.scout.rt.server.context.TransactionProcessor.intercept(TransactionProcessor.java:55)
+	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:180)
+	at org.eclipse.scout.rt.platform.security.SubjectProcessor$1.run(SubjectProcessor.java:47)
+	at java.security.AccessController.doPrivileged(Native Method)
+	at javax.security.auth.Subject.doAs(Subject.java:422)
+	at org.eclipse.scout.rt.platform.security.SubjectProcessor.intercept(SubjectProcessor.java:43)
+	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:180)
+	at org.eclipse.scout.rt.platform.chain.callable.CallableChain.call(CallableChain.java:135)
+	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
+	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
+	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
+	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
+	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.eclipse.scout.rt.platform.internal.BeanInstanceUtil.initializeBeanInstance(BeanInstanceUtil.java:66)
+	at org.eclipse.scout.rt.platform.internal.BeanInstanceUtil.createAndInitializeBean(BeanInstanceUtil.java:49)
+	at org.eclipse.scout.rt.platform.internal.DefaultBeanInstanceProducer.createInstance(DefaultBeanInstanceProducer.java:101)
+	at org.eclipse.scout.rt.platform.internal.DefaultBeanInstanceProducer.safeCreateInstance(DefaultBeanInstanceProducer.java:83)
+	at org.eclipse.scout.rt.platform.internal.DefaultBeanInstanceProducer.access$0(DefaultBeanInstanceProducer.java:71)
+	at org.eclipse.scout.rt.platform.internal.DefaultBeanInstanceProducer$1.call(DefaultBeanInstanceProducer.java:60)
+	at org.eclipse.scout.rt.platform.util.FinalValue.setIfAbsent(FinalValue.java:90)
+	at org.eclipse.scout.rt.platform.internal.DefaultBeanInstanceProducer.getApplicationScopedInstance(DefaultBeanInstanceProducer.java:57)
+	at org.eclipse.scout.rt.platform.internal.DefaultBeanInstanceProducer.produce(DefaultBeanInstanceProducer.java:34)
+	at org.eclipse.scout.rt.platform.internal.BeanImplementor.getInstance(BeanImplementor.java:72)
+	at org.eclipse.scout.rt.platform.internal.BeanManagerImplementor.startCreateImmediatelyBeans(BeanManagerImplementor.java:245)
+	at org.eclipse.scout.rt.platform.internal.PlatformImplementor.startCreateImmediatelyBeans(PlatformImplementor.java:265)
+	at org.eclipse.scout.rt.platform.internal.PlatformImplementor.start(PlatformImplementor.java:145)
+	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
+Caused by: ERROR XJ004: Database 'memory:zeroclick-database' not found.
+	at org.apache.derby.iapi.error.StandardException.newException(Unknown Source)
+	at org.apache.derby.impl.jdbc.SQLExceptionFactory.wrapArgsForTransportAcrossDRDA(Unknown Source)
+	... 66 more
+============= begin nested exception, level (1) ===========
+ERROR XJ004: Database 'memory:zeroclick-database' not found.
+	at org.apache.derby.iapi.error.StandardException.newException(Unknown Source)
+	at org.apache.derby.impl.jdbc.SQLExceptionFactory.wrapArgsForTransportAcrossDRDA(Unknown Source)
+	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
+	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
+	at org.apache.derby.impl.jdbc.Util.generateCsSQLException(Unknown Source)
+	at org.apache.derby.impl.jdbc.Util.generateCsSQLException(Unknown Source)
+	at org.apache.derby.impl.jdbc.EmbedConnection.newSQLException(Unknown Source)
+	at org.apache.derby.impl.jdbc.EmbedConnection.handleDBNotFound(Unknown Source)
+	at org.apache.derby.impl.jdbc.EmbedConnection.<init>(Unknown Source)
+	at org.apache.derby.jdbc.InternalDriver$1.run(Unknown Source)
+	at org.apache.derby.jdbc.InternalDriver$1.run(Unknown Source)
+	at java.security.AccessController.doPrivileged(Native Method)
+	at org.apache.derby.jdbc.InternalDriver.getNewEmbedConnection(Unknown Source)
+	at org.apache.derby.jdbc.InternalDriver.connect(Unknown Source)
+	at org.apache.derby.jdbc.InternalDriver.connect(Unknown Source)
+	at org.apache.derby.jdbc.AutoloadedDriver.connect(Unknown Source)
+	at java.sql.DriverManager.getConnection(DriverManager.java:664)
+	at java.sql.DriverManager.getConnection(DriverManager.java:270)
+	at org.eclipse.scout.rt.server.jdbc.internal.pool.SqlConnectionBuilder.createJdbcConnection(SqlConnectionBuilder.java:63)
+	at org.eclipse.scout.rt.server.jdbc.internal.pool.SqlConnectionPool.leaseConnection(SqlConnectionPool.java:103)
+	at org.eclipse.scout.rt.server.jdbc.AbstractSqlService.leaseConnectionInternal(AbstractSqlService.java:550)
+	at org.eclipse.scout.rt.server.jdbc.AbstractSqlService.execCreateConnection(AbstractSqlService.java:321)
+	at org.eclipse.scout.rt.server.jdbc.AbstractSqlService.leaseConnection(AbstractSqlService.java:542)
+	at org.eclipse.scout.rt.server.jdbc.AbstractSqlService.getTransaction(AbstractSqlService.java:621)
+	at org.eclipse.scout.rt.server.jdbc.AbstractSqlService.selectInto(AbstractSqlService.java:659)
+	at org.eclipse.scout.rt.server.jdbc.SQL.selectInto(SQL.java:110)
+	at org.zeroclick.meeting.server.sql.DatabaseHelper.retrieveExistingTables(DatabaseHelper.java:112)
+	at org.zeroclick.meeting.server.sql.DatabaseHelper.getExistingTables(DatabaseHelper.java:186)
+	at org.zeroclick.meeting.server.sql.DatabaseHelper.getExistingTables(DatabaseHelper.java:129)
+	at org.zeroclick.meeting.server.sql.DatabaseHelper.existTable(DatabaseHelper.java:133)
+	at org.zeroclick.meeting.server.sql.migrate.data.PatchLookupToCodeType.undo(PatchLookupToCodeType.java:121)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher$2.run(AbstractDataPatcher.java:125)
+	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:37)
+	at org.eclipse.scout.rt.platform.util.concurrent.Callables$1.call(Callables.java:1)
+	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:185)
+	at org.eclipse.scout.rt.server.context.TransactionProcessor.runTxRequiresNew(TransactionProcessor.java:80)
+	at org.eclipse.scout.rt.server.context.TransactionProcessor.intercept(TransactionProcessor.java:55)
+	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:180)
+	at org.eclipse.scout.rt.platform.security.SubjectProcessor$1.run(SubjectProcessor.java:47)
+	at java.security.AccessController.doPrivileged(Native Method)
+	at javax.security.auth.Subject.doAs(Subject.java:422)
+	at org.eclipse.scout.rt.platform.security.SubjectProcessor.intercept(SubjectProcessor.java:43)
+	at org.eclipse.scout.rt.platform.chain.callable.CallableChain$Chain.continueChain(CallableChain.java:180)
+	at org.eclipse.scout.rt.platform.chain.callable.CallableChain.call(CallableChain.java:135)
+	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:121)
+	at org.eclipse.scout.rt.platform.context.RunContext.call(RunContext.java:101)
+	at org.eclipse.scout.rt.platform.context.RunContext.run(RunContext.java:72)
+	at org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher.remove(AbstractDataPatcher.java:133)
+	at org.zeroclick.meeting.server.sql.migrate.DatabaseMigrateService.undoMigration(DatabaseMigrateService.java:56)
+	at org.zeroclick.meeting.server.sql.DatabaseSetupService.autoCreateDatabase(DatabaseSetupService.java:66)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.eclipse.scout.rt.platform.internal.BeanInstanceUtil.initializeBeanInstance(BeanInstanceUtil.java:66)
+	at org.eclipse.scout.rt.platform.internal.BeanInstanceUtil.createAndInitializeBean(BeanInstanceUtil.java:49)
+	at org.eclipse.scout.rt.platform.internal.DefaultBeanInstanceProducer.createInstance(DefaultBeanInstanceProducer.java:101)
+	at org.eclipse.scout.rt.platform.internal.DefaultBeanInstanceProducer.safeCreateInstance(DefaultBeanInstanceProducer.java:83)
+	at org.eclipse.scout.rt.platform.internal.DefaultBeanInstanceProducer.access$0(DefaultBeanInstanceProducer.java:71)
+	at org.eclipse.scout.rt.platform.internal.DefaultBeanInstanceProducer$1.call(DefaultBeanInstanceProducer.java:60)
+	at org.eclipse.scout.rt.platform.util.FinalValue.setIfAbsent(FinalValue.java:90)
+	at org.eclipse.scout.rt.platform.internal.DefaultBeanInstanceProducer.getApplicationScopedInstance(DefaultBeanInstanceProducer.java:57)
+	at org.eclipse.scout.rt.platform.internal.DefaultBeanInstanceProducer.produce(DefaultBeanInstanceProducer.java:34)
+	at org.eclipse.scout.rt.platform.internal.BeanImplementor.getInstance(BeanImplementor.java:72)
+	at org.eclipse.scout.rt.platform.internal.BeanManagerImplementor.startCreateImmediatelyBeans(BeanManagerImplementor.java:245)
+	at org.eclipse.scout.rt.platform.internal.PlatformImplementor.startCreateImmediatelyBeans(PlatformImplementor.java:265)
+	at org.eclipse.scout.rt.platform.internal.PlatformImplementor.start(PlatformImplementor.java:145)
+	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
+============= end nested exception, level (1) ===========
+Cleanup action completed
+Thu Dec 21 00:42:08 CET 2017 Thread[scout-thread-24,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -2110,7 +2254,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.job.internal.NamedThreadFactory$1.run(NamedThreadFactory.java:54)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Wed Nov 22 22:34:54 CET 2017 Thread[scout-thread-24,5,main] Cleanup action starting
+Thu Dec 21 00:42:08 CET 2017 Thread[scout-thread-24,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)

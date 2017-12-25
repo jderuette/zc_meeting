@@ -240,26 +240,20 @@ public class EventService extends AbstractCommonService implements IEventService
 
 	@Override
 	public EventFormData load(final EventFormData formData) {
-		if (!ACCESS.check(new ReadEventPermission(formData.getEventId()))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new ReadEventPermission(formData.getEventId()));
 		SQL.selectInto(SQLs.EVENT_SELECT, formData);
 		return formData;
 	}
 
 	@Override
 	public RejectEventFormData load(final RejectEventFormData formData) {
-		if (!ACCESS.check(new ReadEventPermission(formData.getEventId()))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new ReadEventPermission(formData.getEventId()));
 		SQL.selectInto(SQLs.EVENT_SELECT_REJECT, formData);
 		return formData;
 	}
 
 	private EventFormData store(final EventFormData formData, final Boolean duringCreate) {
-		if (!ACCESS.check(new UpdateEventPermission(formData.getEventId()))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new UpdateEventPermission(formData.getEventId()));
 		if (null == formData.getLastModifier()) {
 			formData.setLastModifier(super.userHelper.getCurrentUserId());
 		}
@@ -279,9 +273,7 @@ public class EventService extends AbstractCommonService implements IEventService
 
 	@Override
 	public EventFormData storeNewState(final RejectEventFormData formData) {
-		if (!ACCESS.check(new UpdateEventPermission(formData.getEventId()))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new UpdateEventPermission(formData.getEventId()));
 		SQL.update(SQLs.EVENT_UPDATE_STATE, formData);
 
 		// reload the **full** event data after update

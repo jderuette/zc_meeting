@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 
 import org.eclipse.scout.rt.platform.BEANS;
-import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.holders.BeanArrayHolder;
 import org.eclipse.scout.rt.platform.holders.IBeanArrayHolder;
 import org.eclipse.scout.rt.platform.holders.NVPair;
@@ -17,7 +16,6 @@ import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.platform.util.date.UTCDate;
 import org.eclipse.scout.rt.server.clientnotification.ClientNotificationRegistry;
 import org.eclipse.scout.rt.server.jdbc.SQL;
-import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
@@ -49,18 +47,14 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 
 	@Override
 	public SlotFormData prepareCreate(final SlotFormData formData) {
-		if (!ACCESS.check(new CreateSlotPermission())) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new CreateSlotPermission());
 		// TODO [djer] add business logic here.
 		return formData;
 	}
 
 	@Override
 	public SlotFormData create(final SlotFormData formData) {
-		if (!ACCESS.check(new CreateSlotPermission())) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new CreateSlotPermission());
 		// TODO [djer] add business logic here.
 		return formData;
 	}
@@ -78,9 +72,7 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 	}
 
 	private String getSlotCode(final Long slotId) {
-		if (!ACCESS.check(new ReadSlotPermission(slotId))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new ReadSlotPermission(slotId));
 		String slotCode = null;
 
 		final Object[][] result = SQL.select(SQLs.SLOT_SELECT + SQLs.SLOT_SELECT_FILTER_SLOT_ID,
@@ -98,9 +90,7 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 	@Override
 	public DayDurationFormData load(final DayDurationFormData formData) {
 		// Access on Slot implies access on DayDuration
-		if (!ACCESS.check(new ReadSlotPermission(formData.getSlotId()))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new ReadSlotPermission(formData.getSlotId()));
 
 		final StringBuilder sqlBuilder = new StringBuilder();
 
@@ -122,18 +112,14 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 
 	@Override
 	public SlotFormData store(final SlotFormData formData) {
-		if (!ACCESS.check(new UpdateSlotPermission())) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new UpdateSlotPermission());
 		// TODO [djer] add business logic here.
 		return formData;
 	}
 
 	@Override
 	public DayDurationFormData store(final DayDurationFormData formData) {
-		if (!ACCESS.check(new UpdateSlotPermission())) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
-		}
+		super.checkPermission(new UpdateSlotPermission());
 		SQL.update(SQLs.DAY_DURATION_UPDATE, formData);
 
 		this.sendModifiedNotifications(formData);
@@ -169,6 +155,7 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 	}
 
 	private SlotTablePageData getSlotData(final SearchFilter filter, final Boolean displayAllForAdmin) {
+		// No permission check, not admin user automatically see is own data
 		final SlotTablePageData pageData = new SlotTablePageData();
 
 		String ownerFilter = "";
@@ -236,9 +223,7 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 	@Override
 	public Object[][] getDayDurations(final Long slotId) {
 		// Access on SLot implies access on DayDuration
-		if (!ACCESS.check(new ReadSlotPermission(slotId))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new ReadSlotPermission(slotId));
 
 		final String sql = SQLs.DAY_DURATION_SELECT + SQLs.DAY_DURATION_SELECT_FROM_PLUS_GENERIC_WHERE
 				+ SQLs.DAY_DURATION_SELECT_FILTER_SLOT_ID + SQLs.DAY_DURATION_SELECT_ORDER;
@@ -251,9 +236,7 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 	@Override
 	public Object[][] getDayDurationsLight(final Long slotId) {
 		// Access on SLot implies access on DayDuration
-		if (!ACCESS.check(new ReadSlotPermission(slotId))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new ReadSlotPermission(slotId));
 
 		final String sql = SQLs.DAY_DURATION_SELECT_LIGHT + SQLs.DAY_DURATION_SELECT_FILTER_SLOT_ID
 				+ SQLs.DAY_DURATION_SELECT_ORDER;
