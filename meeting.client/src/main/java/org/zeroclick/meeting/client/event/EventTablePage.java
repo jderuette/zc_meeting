@@ -1038,6 +1038,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					Table.this.autoFillDates();
 
 				} catch (final IOException e) {
+					LOG.error("Error while getting (Google) calendar details", e);
 					throw new VetoException("Canno't get calendar details, re-try later", e);
 				}
 			}
@@ -1108,6 +1109,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					Table.this.changeDatesNext();
 					Table.this.reloadMenus(Table.this.getSelectedRow());
 				} catch (final IOException e) {
+					LOG.error("Error while getting (Google) calendar details", e);
 					throw new VetoException("Canno't get calendar details, re-try later", e);
 				}
 			}
@@ -1215,6 +1217,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 						Table.this.changeDatesNext(newStartDate);
 						Table.this.reloadMenus(Table.this.getSelectedRow());
 					} catch (final IOException e) {
+						LOG.error("Error while getting (Google) calendar details", e);
 						throw new VetoException("Canno't get calendar details, re-try later", e);
 					}
 				}
