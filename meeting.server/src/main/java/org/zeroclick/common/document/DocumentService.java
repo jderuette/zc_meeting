@@ -11,8 +11,9 @@ import org.eclipse.scout.rt.platform.holders.NVPair;
 import org.eclipse.scout.rt.server.clientnotification.ClientNotificationRegistry;
 import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
-import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
-import org.zeroclick.common.CommonService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.zeroclick.common.AbstractCommonService;
 import org.zeroclick.common.shared.document.CreateDocumentPermission;
 import org.zeroclick.common.shared.document.DocumentCreatedNotification;
 import org.zeroclick.common.shared.document.DocumentModifiedNotification;
@@ -23,7 +24,14 @@ import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateSubscription;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
-public class DocumentService extends CommonService implements IDocumentService {
+public class DocumentService extends AbstractCommonService implements IDocumentService {
+
+	private static final Logger LOG = LoggerFactory.getLogger(DocumentService.class);
+
+	@Override
+	protected Logger getLog() {
+		return LOG;
+	}
 
 	@Override
 	public DocumentTablePageData getDocumentTableData(final SearchFilter filter) {
@@ -34,9 +42,7 @@ public class DocumentService extends CommonService implements IDocumentService {
 
 	@Override
 	public DocumentFormData prepareCreate(final DocumentFormData formData) {
-		if (!ACCESS.check(new CreateDocumentPermission())) {
-			this.throwAuthorizationFailed();
-		}
+		super.checkPermission(new CreateDocumentPermission());
 		if (null == formData.getDocumentId().getValue()) {
 			formData.getDocumentId()
 					.setValue(Long.valueOf(SQL.getSequenceNextval(PatchCreateSubscription.DOCUMENT_ID_SEQ)));
@@ -46,9 +52,7 @@ public class DocumentService extends CommonService implements IDocumentService {
 
 	@Override
 	public DocumentFormData create(final DocumentFormData formData) {
-		if (!ACCESS.check(new CreateDocumentPermission())) {
-			this.throwAuthorizationFailed();
-		}
+		super.checkPermission(new CreateDocumentPermission());
 
 		// add a unique event id if necessary
 		if (null == formData.getDocumentId().getValue()) {
@@ -69,9 +73,7 @@ public class DocumentService extends CommonService implements IDocumentService {
 
 	@Override
 	public DocumentFormData load(final DocumentFormData formData) {
-		if (!ACCESS.check(new ReadDocumentPermission())) {
-			this.throwAuthorizationFailed();
-		}
+		super.checkPermission(new ReadDocumentPermission());
 		SQL.selectInto(SQLs.DOCUMENT_SELECT + SQLs.DOCUMENT_SELECT_INTO, formData);
 
 		formData.getContent().setValue(this.getContent(formData.getContentData()));
@@ -95,16 +97,12 @@ public class DocumentService extends CommonService implements IDocumentService {
 
 	@Override
 	public DocumentFormData store(final DocumentFormData formData) {
-		if (!ACCESS.check(new UpdateDocumentPermission())) {
-			this.throwAuthorizationFailed();
-		}
+		super.checkPermission(new UpdateDocumentPermission());
 		return this.store(formData, Boolean.FALSE);
 	}
 
 	private DocumentFormData store(final DocumentFormData formData, final Boolean duringCreate) {
-		if (!ACCESS.check(new UpdateDocumentPermission())) {
-			this.throwAuthorizationFailed();
-		}
+		super.checkPermission(new UpdateDocumentPermission());
 		formData.getLastModificationDate().setValue(new Date());
 		formData.setContentData(this.getContentData(formData.getContent().getValue()));
 

@@ -125,7 +125,7 @@ public class Desktop extends AbstractDesktop {
 		final AccessControlService acs = BEANS.get(AccessControlService.class);
 		final Long currentUserId = acs.getZeroClickUserIdOfCurrentSubject();
 		final String currentUserTimeZone = userService.getUserTimeZone(currentUserId);
-		if (null == currentUserTimeZone || !GoogleApiHelper.get().isCalendarConfigured()) {
+		if (null == currentUserTimeZone || !BEANS.get(GoogleApiHelper.class).isCalendarConfigured()) {
 			final OnBoardingUserForm form = new OnBoardingUserForm();
 			form.getUserIdField().setValue(currentUserId);
 			form.setEnabledPermission(new UpdateUserPermission(currentUserId));
@@ -180,7 +180,6 @@ public class Desktop extends AbstractDesktop {
 	}
 
 	private void addNotification(final IStatus status, final Long duration, final Boolean closable) {
-
 		Jobs.schedule(new IRunnable() {
 
 			@Override
@@ -191,7 +190,6 @@ public class Desktop extends AbstractDesktop {
 				ClientSession.get().getDesktop().addNotification(desktopNotification);
 			}
 		}, ModelJobs.newInput(ClientRunContexts.copyCurrent()).withName("adding desktop notification (in ModelJob)"));
-
 	}
 
 	private INotificationListener<ApiCreatedNotification> createApiCreatedListener() {
@@ -203,6 +201,7 @@ public class Desktop extends AbstractDesktop {
 					LOG.debug("Created Api prepare to modify desktop menus (" + this.getClass().getName() + ") : "
 							+ eventForm.getUserId());
 					Desktop.this.getMenu(AddGoogleCalendarMenu.class).setVisible(Boolean.FALSE);
+
 				} catch (final RuntimeException e) {
 					LOG.error("Could not handle new api. (" + this.getClass().getName() + ")", e);
 				}
@@ -221,6 +220,7 @@ public class Desktop extends AbstractDesktop {
 					LOG.debug("Deleted Api prepare to modify desktop menus (" + this.getClass().getName() + ") : "
 							+ eventForm.getUserId());
 					Desktop.this.getMenu(AddGoogleCalendarMenu.class).setVisible(Boolean.TRUE);
+
 				} catch (final RuntimeException e) {
 					LOG.error("Could not handle new api. (" + this.getClass().getName() + ")", e);
 				}
@@ -241,8 +241,8 @@ public class Desktop extends AbstractDesktop {
 
 					final Locale currentLocale = NlsLocale.get();
 
-					if (null == currentLocale
-							|| !currentLocale.getLanguage().equals(userForm.getLanguage().getValue())) {
+					if (null != userForm.getLanguage().getValue() && (null == currentLocale
+							|| !currentLocale.getLanguage().equals(userForm.getLanguage().getValue()))) {
 						ClientSession.get().setLocale(new Locale(userForm.getLanguage().getValue()));
 
 						// IUiSession.get().storePreferredLocaleInCookie(new
@@ -285,7 +285,7 @@ public class Desktop extends AbstractDesktop {
 		protected void execInitAction() {
 			super.execInitAction();
 			this.setVisiblePermission(new CreateApiPermission());
-			this.setVisible(!GoogleApiHelper.get().isCalendarConfigured());
+			this.setVisible(!BEANS.get(GoogleApiHelper.class).isCalendarConfigured());
 		}
 	}
 

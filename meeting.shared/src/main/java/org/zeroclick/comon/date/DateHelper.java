@@ -24,18 +24,23 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.eclipse.scout.rt.platform.ApplicationScoped;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.nls.NlsLocale;
+import org.eclipse.scout.rt.platform.util.TypeCastUtility;
 import org.eclipse.scout.rt.platform.util.date.DateFormatProvider;
+import org.eclipse.scout.rt.platform.util.date.UTCDate;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.comon.user.AppUserHelper;
 
 /**
  * @author djer
@@ -88,10 +93,10 @@ public class DateHelper {
 		return date;
 	}
 
-	public Date toUtcDate(final ZonedDateTime zonedDateTime) {
-		Date date = null;
+	public UTCDate toScoutUTCDate(final ZonedDateTime zonedDateTime) {
+		UTCDate date = null;
 		if (null != zonedDateTime) {
-			date = Date.from(zonedDateTime.toInstant());
+			date = TypeCastUtility.castValue(Date.from(zonedDateTime.toInstant()), UTCDate.class);
 		}
 		return date;
 	}
@@ -109,11 +114,51 @@ public class DateHelper {
 		return utcDate;
 	}
 
+	/**
+	 * Convert a localized userDate time to is equivalent UTC time. <br/>
+	 * <b>WARNING</b> the returned date as a different representation
+	 *
+	 * @param dateFromUser
+	 * @param zoneId
+	 * @return the dateFromUser transformed to UTC date (same instant in time,
+	 *         but different time).
+	 */
+	public Date toUtcDate(final Date dateFromUser, final ZoneId zoneId) {
+		final ZonedDateTime utcZonedDateTime = this.getZonedValue(ZoneOffset.UTC, dateFromUser);
+		final ZonedDateTime userZonedDateTime = utcZonedDateTime.withZoneSameLocal(zoneId);
+		final Date utcDate = this.toDate(userZonedDateTime);
+		return utcDate;
+	}
+
+	/**
+	 * Convert a UTC time to is equivalent User localized time. <br/>
+	 * <b>WARNING</b> the returned date as a different representation
+	 *
+	 * @param utcDate
+	 * @param zoneId
+	 * @return the dateFromUser transformed to UTC date (same instant in time,
+	 *         but different time).
+	 */
+	public Date fromUtcDate(final Date utcDate, final ZoneId zoneId) {
+		final ZonedDateTime userZonedDateTime = this.getZonedValue(ZoneOffset.UTC, utcDate);
+		final ZonedDateTime utcZonedDateTime = userZonedDateTime.withZoneSameLocal(zoneId);
+		final Date userDateTime = this.toDate(utcZonedDateTime);
+		return userDateTime;
+	}
+
 	public Date nowUtc() {
 		final Instant instant = Instant.now();
 		final OffsetDateTime odt = instant.atOffset(ZoneOffset.UTC);
 		final Date nowUtc = Date.from(odt.toInstant());
 		return nowUtc;
+	}
+
+	public Date convertToUtcDate(final ZonedDateTime zonedDateTime) {
+		Date date = null;
+		if (null != zonedDateTime) {
+			date = Date.from(zonedDateTime.minusSeconds(zonedDateTime.getOffset().getTotalSeconds()).toInstant());
+		}
+		return date;
 	}
 
 	public Date toUserDate(final ZonedDateTime zonedDateTime) {
@@ -122,6 +167,31 @@ public class DateHelper {
 			date = Date.from(zonedDateTime.plusSeconds(zonedDateTime.getOffset().getTotalSeconds()).toInstant());
 		}
 		return date;
+	}
+
+	/**
+	 * return a user localized Date from an UTC Date
+	 *
+	 * @param utcDateTime
+	 * @param zoneId
+	 *            current user zoneId
+	 * @return
+	 */
+	public Date toUserDate(final Date utcDateTime, final ZoneId zoneId) {
+		Date date = null;
+		if (null != utcDateTime) {
+			final ZonedDateTime zdt = this.getZonedValue(zoneId, utcDateTime);
+			date = this.toUserDate(zdt);
+		}
+		return date;
+	}
+
+	public Date hoursToDate(final Date date) {
+		return new Date(date.getTime());
+	}
+
+	public ZonedDateTime dateTimeFromHour(final String localizedHour) {
+		return ZonedDateTime.from(DateTimeFormatter.ISO_DATE_TIME.parse("1970-01-01T" + localizedHour));
 	}
 
 	public String format(final Date date, final ZoneId userZoneId, final Boolean ignoreHours) {
@@ -152,23 +222,56 @@ public class DateHelper {
 		return this.formatHours(this.getZonedValue(userZoneId, date));
 	}
 
-	private String formatHours(final ZonedDateTime zonedDateTime) {
-		final DateFormat dateFormat = BEANS.get(DateFormatProvider.class).getTimeInstance(DateFormat.SHORT,
-				NlsLocale.get());
+	public String formatHours(final ZonedDateTime zonedDateTime, final Locale userlocale) {
+		final DateFormat dateFormat = BEANS.get(DateFormatProvider.class).getTimeInstance(DateFormat.SHORT, userlocale);
 
 		return dateFormat.format(this.toUserDate(zonedDateTime));
+	}
+
+	public String formatHours(final ZonedDateTime zonedDateTime) {
+		return this.formatHours(zonedDateTime, NlsLocale.get());
+	}
+
+	public ZonedDateTime atZone(final ZonedDateTime date, final ZoneId zoneId) {
+		return date.withZoneSameInstant(zoneId);
 	}
 
 	public String getRelativeDay(final Date value, final ZoneId zoneId) {
 		return this.getRelativeDay(this.getZonedValue(zoneId, value));
 	}
 
-	public String getRelativeDay(final ZonedDateTime zonedValue) {
+	public String getRelativeDay(final ZonedDateTime zonedValue, final Locale userLcoale) {
+		return this.getRelativeDay(zonedValue, userLcoale, Boolean.FALSE, Boolean.FALSE);
+	}
+
+	public String getRelativeDay(final ZonedDateTime zonedValue, final Locale userLcoale,
+			final Boolean emptyForAbsolute, final Boolean addParenthesis) {
 		final String key = this.getRelativeDateKey(zonedValue, Boolean.TRUE);
 		// the current date is required only when fallback to absolute happen
 		// (aka: nb day shift is not a "named" day).
-		final String value = TEXTS.get(key, this.format(zonedValue, Boolean.TRUE));
-		return value;
+		final StringBuilder builder = new StringBuilder();
+
+		if (emptyForAbsolute && key.contains(".absolute.")) {
+			// let the empty StringBuilder
+		} else {
+			if (addParenthesis) {
+				builder.append('(');
+			}
+			if (null == userLcoale) {
+				builder.append(TEXTS.get(key, this.format(zonedValue, Boolean.TRUE)));
+			} else {
+
+				builder.append(TEXTS.get(userLcoale, key, this.format(zonedValue, Boolean.TRUE)));
+			}
+			if (addParenthesis) {
+				builder.append(')');
+			}
+		}
+		return builder.toString();
+	}
+
+	public String getRelativeDay(final ZonedDateTime zonedValue) {
+		return this.getRelativeDay(zonedValue, null);
 	}
 
 	/**
@@ -218,11 +321,10 @@ public class DateHelper {
 		}
 
 		return builder.toString();
-
 	}
 
 	/**
-	 * unit of time between now and end date. /!\ <ith byFullTimeSlot, if now is
+	 * unit of time between now and end date. /!\ with byFullTimeSlot, if now is
 	 * in the "current" slot 0 is return else the number of slot between now and
 	 * end date (java API differ, for "day" if there is less than 24hours, day
 	 * diff will return 0)
@@ -234,6 +336,22 @@ public class DateHelper {
 	 */
 	public long getRelativeTimeShift(final ZonedDateTime end, final Boolean byFullTimeSlot, final ChronoUnit unit) {
 		final ZonedDateTime start = this.getStartPoint(end, byFullTimeSlot, unit);
+		return this.getRelativeTimeShift(start, end, byFullTimeSlot, unit);
+	}
+
+	/**
+	 * unit of time between now and end date. /!\ with byFullTimeSlot, if now is
+	 * in the "current" slot 0 is return else the number of slot between now and
+	 * end date (java API differ, for "day" if there is less than 24hours, day
+	 * diff will return 0)
+	 *
+	 * @param end
+	 * @param byFullTimeSlot
+	 * @param unit
+	 * @return
+	 */
+	public long getRelativeTimeShift(final ZonedDateTime start, final ZonedDateTime end, final Boolean byFullTimeSlot,
+			final ChronoUnit unit) {
 		final long secondesShift = start.until(end, ChronoUnit.SECONDS);
 		BigDecimal unitShift;
 		switch (unit) {
@@ -255,12 +373,36 @@ public class DateHelper {
 						.divide(BigDecimal.valueOf(ChronoUnit.DAYS.getDuration().getSeconds()), 0, roundingMode);
 			}
 			break;
+		case MINUTES:
+			unitShift = BigDecimal.valueOf(secondesShift)
+					.divide(BigDecimal.valueOf(ChronoUnit.MINUTES.getDuration().getSeconds()), 0, RoundingMode.DOWN);
+			break;
 		default:
 			LOG.warn(unit + " not supported");
 			unitShift = BigDecimal.ZERO;
 			break;
 		}
 		return unitShift.longValue();
+	}
+
+	/**
+	 * unit of time between now and end date. /!\ with byFullTimeSlot, if now is
+	 * in the "current" slot 0 is return else the number of slot between now and
+	 * end date (java API differ, for "day" if there is less than 24hours, day
+	 * diff will return 0)
+	 *
+	 * @param end
+	 * @param byFullTimeSlot
+	 * @param unit
+	 * @return
+	 */
+	public long getRelativeTimeShift(final Date start, final Date end, final Boolean byFullTimeSlot,
+			final ChronoUnit unit) {
+		final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
+		final ZonedDateTime zonedStart = this.getZonedValue(appUserHelper.getCurrentUserTimeZone(), start);
+		final ZonedDateTime zonedEnd = this.getZonedValue(appUserHelper.getCurrentUserTimeZone(), end);
+
+		return this.getRelativeTimeShift(zonedStart, zonedEnd, byFullTimeSlot, unit);
 	}
 
 	public ZonedDateTime getStartPoint(final ZonedDateTime zonedDateTime, final Boolean byFullTimeSlot,

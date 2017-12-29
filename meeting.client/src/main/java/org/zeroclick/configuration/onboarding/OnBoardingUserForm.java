@@ -37,6 +37,8 @@ public class OnBoardingUserForm extends AbstractForm {
 	private INotificationListener<ApiCreatedNotification> apiCreatedListener;
 	private INotificationListener<ApiDeletedNotification> apiDeletedListener;
 
+	private static final String COLOR_WARNING_BACKGROUND = "FF9D00";
+
 	@Override
 	protected String getConfiguredTitle() {
 		return TEXTS.get("zc.common.onBoarding.user");
@@ -143,8 +145,7 @@ public class OnBoardingUserForm extends AbstractForm {
 			protected void execInitField() {
 				super.execInitField();
 				this.setHtmlEnabled(Boolean.TRUE);
-				this.setValue("<a href='/addGoogleCalendar' target='_blank'>"
-						+ TEXTS.get("zc.meeting.addGoogleCalendar") + "</a>");
+				this.setValue(BEANS.get(GoogleApiHelper.class).getAddGoogleLink());
 			}
 		}
 
@@ -152,18 +153,23 @@ public class OnBoardingUserForm extends AbstractForm {
 		public class OkButton extends AbstractOkButton {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("zc.onboarding.mustAddGoogle");
+				return TEXTS.get("zc.onboarding.shouldAddGoogle");
 			}
 
 			@Override
 			protected boolean getConfiguredEnabled() {
-				return Boolean.FALSE;
+				return Boolean.TRUE;
+			}
+
+			@Override
+			protected String getConfiguredBackgroundColor() {
+				return COLOR_WARNING_BACKGROUND;
 			}
 
 			@Override
 			protected void execInitField() {
 				super.execInitField();
-				if (GoogleApiHelper.get().isCalendarConfigured()) {
+				if (BEANS.get(GoogleApiHelper.class).isCalendarConfigured()) {
 					this.setActive();
 				} else {
 					this.setInactive();
@@ -179,12 +185,14 @@ public class OnBoardingUserForm extends AbstractForm {
 			public void setActive() {
 				this.setLabel(TEXTS.get("OkButton"));
 				this.setEnabled(Boolean.TRUE);
+				this.setBackgroundColor(null);// default color
 				OnBoardingUserForm.this.getAddCalendarField().setVisible(Boolean.FALSE);
 			}
 
 			public void setInactive() {
 				this.setLabel(this.getConfiguredLabel());
 				this.setEnabled(this.getConfiguredEnabled());
+				this.setBackgroundColor(COLOR_WARNING_BACKGROUND);
 				OnBoardingUserForm.this.getAddCalendarField().setVisible(Boolean.TRUE);
 			}
 		}

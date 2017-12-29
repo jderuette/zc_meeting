@@ -157,7 +157,8 @@ public class PatchCreateSuperUser extends AbstractDataPatcher {
 
 			// clear permission cache
 			BEANS.get(IAccessControlService.class).clearCache();
-			LOG.info("SuperUser for data migration created");
+			LOG.info("SuperUser for data migration created with "
+					+ BEANS.get(IAccessControlService.class).getPermissions());
 		} else {
 			LOG.error(
 					"Cannot create app user for super user, because the superUser has no principal, see SuperUserSubjectProperty");

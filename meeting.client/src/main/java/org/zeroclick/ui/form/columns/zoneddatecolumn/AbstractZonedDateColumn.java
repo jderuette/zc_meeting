@@ -33,11 +33,11 @@ import org.zeroclick.comon.user.AppUserHelper;
  */
 public abstract class AbstractZonedDateColumn extends AbstractDateColumn {
 
-	private DateHelper getDateHelper() {
+	protected DateHelper getDateHelper() {
 		return BEANS.get(DateHelper.class);
 	}
 
-	private AppUserHelper getAppUserHelper() {
+	protected AppUserHelper getAppUserHelper() {
 		return BEANS.get(AppUserHelper.class);
 	}
 
@@ -92,12 +92,11 @@ public abstract class AbstractZonedDateColumn extends AbstractDateColumn {
 		}
 	}
 
-	@Override
-	protected Date execValidateValue(final ITableRow row, final Date rawValue) {
-		if (null != rawValue) {
-			return this.getDateHelper().toUtcDate(rawValue);
-		} else {
-			return null;
+	public void prepapreStore(final ITableRow row) {
+		final Date currentValue = this.getValue(row.getRowIndex());
+		if (null != currentValue) {
+			this.setValue(row.getRowIndex(),
+					this.getDateHelper().toUtcDate(currentValue, this.getAppUserHelper().getCurrentUserTimeZone()));
 		}
 	}
 

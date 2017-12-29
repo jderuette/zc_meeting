@@ -33,8 +33,8 @@ public class CallTrackerService<KEY_TYPE> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(CallTrackerService.class);
 
-	private final Integer maxSuccessiveCall;
-	private final Duration timeToLive;
+	private Integer maxSuccessiveCall;
+	private Duration timeToLive;
 	private final String context;
 
 	private final Map<KEY_TYPE, CallTracker> alreadyAsk = new HashMap<>();
@@ -97,8 +97,9 @@ public class CallTrackerService<KEY_TYPE> {
 		// Check for Max call
 		if (this.alreadyAsk.get(key).getValue() >= this.maxSuccessiveCall) {
 			final StringBuilder builder = new StringBuilder(50);
-			builder.append(this.context).append(" Probable Loop for key ").append(key).append(", ")
-					.append(this.maxSuccessiveCall).append(" reached");
+			builder.append(this.context).append(" probable Loop for key ").append(key).append(", ")
+					.append(this.maxSuccessiveCall).append(" reached, last call at : ")
+					.append(this.alreadyAsk.get(key).getLastCall());
 			LOG.error(builder.toString());
 			return Boolean.FALSE;
 		}
@@ -128,6 +129,22 @@ public class CallTrackerService<KEY_TYPE> {
 			LOG.warn(builder.toString());
 		}
 
+	}
+
+	public Integer getMaxSuccessiveCall() {
+		return this.maxSuccessiveCall;
+	}
+
+	public void setMaxSuccessiveCall(final Integer maxSuccessiveCall) {
+		this.maxSuccessiveCall = maxSuccessiveCall;
+	}
+
+	public Duration getTimeToLive() {
+		return this.timeToLive;
+	}
+
+	public void setTimeToLive(final Duration timeToLive) {
+		this.timeToLive = timeToLive;
 	}
 
 	public class CallTracker {

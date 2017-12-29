@@ -71,7 +71,7 @@ public abstract class AbstractSlotTablePageData extends AbstractTablePageData {
 		private Long m_dayDurationId;
 		private Date m_start;
 		private Date m_end;
-		private Integer m_slot;
+		private Long m_slot;
 		private Long m_slotId;
 		private Integer m_orderInSlot;
 		private Long m_userId;
@@ -115,11 +115,11 @@ public abstract class AbstractSlotTablePageData extends AbstractTablePageData {
 			m_end = newEnd;
 		}
 
-		public Integer getSlot() {
+		public Long getSlot() {
 			return m_slot;
 		}
 
-		public void setSlot(Integer newSlot) {
+		public void setSlot(Long newSlot) {
 			m_slot = newSlot;
 		}
 

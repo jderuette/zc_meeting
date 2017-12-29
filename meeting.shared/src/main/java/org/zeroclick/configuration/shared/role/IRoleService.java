@@ -32,4 +32,6 @@ public interface IRoleService extends IService {
 
 	LinkedRoleRowData getDocumentMetaData(Long roleId, Long documentId);
 
+	void deleteSubscriptionMetaDataByUser(Long userId);
+
 }

@@ -12,11 +12,13 @@ import org.zeroclick.configuration.client.slot.SlotAdminTablePage;
 import org.zeroclick.configuration.client.slot.SlotForm;
 import org.zeroclick.configuration.client.slot.SlotTablePage;
 import org.zeroclick.configuration.shared.slot.ReadSlotPermission;
+import org.zeroclick.meeting.client.calendar.CalendarConfigurationTablePage;
 import org.zeroclick.meeting.client.event.EventAdminTablePage;
 import org.zeroclick.meeting.client.event.EventAskedTablePage;
 import org.zeroclick.meeting.client.event.EventProcessedTablePage;
 import org.zeroclick.meeting.client.event.EventTablePage;
 import org.zeroclick.meeting.shared.Icons;
+import org.zeroclick.meeting.shared.calendar.ReadCalendarConfigurationPermission;
 import org.zeroclick.meeting.shared.event.ReadEventPermission;
 
 /**
@@ -27,14 +29,22 @@ import org.zeroclick.meeting.shared.event.ReadEventPermission;
 @Order(1000)
 public class MeetingOutline extends AbstractOutline {
 
+	// private static final Logger LOG =
+	// LoggerFactory.getLogger(MeetingOutline.class);
+
 	@Override
 	protected void execCreateChildPages(final List<IPage<?>> pageList) {
 		final int currentUserEventLevel = ACCESS.getLevel(new ReadEventPermission((Long) null));
-		final int currentUserSlotLevel = ACCESS.getLevel(new ReadSlotPermission((Long) null));
 		final Boolean isEventUser = currentUserEventLevel >= ReadEventPermission.LEVEL_OWN;
 		final Boolean isEventAdmin = currentUserEventLevel == ReadEventPermission.LEVEL_ALL;
+
+		final int currentUserSlotLevel = ACCESS.getLevel(new ReadSlotPermission((Long) null));
 		final Boolean isSlotUser = currentUserSlotLevel >= ReadSlotPermission.LEVEL_OWN;
 		final Boolean isSlotAdmin = currentUserSlotLevel == ReadSlotPermission.LEVEL_ALL;
+
+		final int currentUserCalendarConfigLevel = ACCESS
+				.getLevel(new ReadCalendarConfigurationPermission((Long) null));
+		final Boolean iscalendarConfigAdmin = currentUserCalendarConfigLevel == ReadCalendarConfigurationPermission.LEVEL_ALL;
 
 		final EventTablePage eventTablePage = new EventTablePage();
 		eventTablePage.setVisibleGranted(isEventUser);
@@ -60,12 +70,17 @@ public class MeetingOutline extends AbstractOutline {
 				TEXTS.get("zc.meeting.slot.config") + "(tree)");
 		slotForm.setVisibleGranted(isSlotAdmin);
 
+		final CalendarConfigurationTablePage calendarConfigurationTablePage = new CalendarConfigurationTablePage();
+		calendarConfigurationTablePage.setVisibleGranted(Boolean.TRUE);
+		calendarConfigurationTablePage.setVisibleGranted(iscalendarConfigAdmin);
+
 		pageList.add(eventTablePage);
 		pageList.add(eventAskedTablePage);
 		pageList.add(eventProcessedTablePage);
 		pageList.add(eventAdminTablePage);
 		pageList.add(slotTablePage);
 		pageList.add(slotAdminTablePage);
+		pageList.add(calendarConfigurationTablePage);
 		pageList.add(slotForm);
 	}
 

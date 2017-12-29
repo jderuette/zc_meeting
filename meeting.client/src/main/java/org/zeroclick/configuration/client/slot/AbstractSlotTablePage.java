@@ -9,20 +9,20 @@ import org.eclipse.scout.rt.client.ui.basic.cell.ICell;
 import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
 import org.eclipse.scout.rt.client.ui.basic.table.ITableRow;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractBooleanColumn;
-import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractDateColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractIntegerColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractLongColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractSmartColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractStringColumn;
+import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractTimeColumn;
 import org.eclipse.scout.rt.client.ui.desktop.outline.pages.AbstractPageWithTable;
 import org.eclipse.scout.rt.client.ui.desktop.outline.pages.IPage;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.notification.INotificationListener;
+import org.eclipse.scout.rt.shared.services.common.code.ICodeType;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
-import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.shared.slot.AbstractSlotTablePageData;
@@ -30,7 +30,7 @@ import org.zeroclick.configuration.shared.slot.DayDurationFormData;
 import org.zeroclick.configuration.shared.slot.DayDurationModifiedNotification;
 import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.configuration.shared.slot.ReadSlotPermission;
-import org.zeroclick.meeting.client.common.SlotLookupCall;
+import org.zeroclick.configuration.shared.slot.SlotCodeType;
 
 @Data(AbstractSlotTablePageData.class)
 public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.Table> extends AbstractPageWithTable<T> {
@@ -247,6 +247,11 @@ public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.T
 			}
 
 			@Override
+			protected boolean getConfiguredSummary() {
+				return Boolean.TRUE;
+			}
+
+			@Override
 			protected int getConfiguredWidth() {
 				return 150;
 			}
@@ -290,20 +295,10 @@ public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.T
 		}
 
 		@Order(2000)
-		public class StartColumn extends AbstractDateColumn {
+		public class StartColumn extends AbstractTimeColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.dayDuration.hour.start");
-			}
-
-			@Override
-			protected boolean getConfiguredHasDate() {
-				return Boolean.FALSE;
-			}
-
-			@Override
-			protected boolean getConfiguredHasTime() {
-				return Boolean.TRUE;
 			}
 
 			@Override
@@ -313,20 +308,10 @@ public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.T
 		}
 
 		@Order(3000)
-		public class EndColumn extends AbstractDateColumn {
+		public class EndColumn extends AbstractTimeColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.dayDuration.hour.end");
-			}
-
-			@Override
-			protected boolean getConfiguredHasDate() {
-				return Boolean.FALSE;
-			}
-
-			@Override
-			protected boolean getConfiguredHasTime() {
-				return Boolean.TRUE;
 			}
 
 			@Override
@@ -336,7 +321,7 @@ public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.T
 		}
 
 		@Order(4000)
-		public class SlotColumn extends AbstractSmartColumn<Integer> {
+		public class SlotColumn extends AbstractSmartColumn<Long> {
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.dayDuration.code");
@@ -348,8 +333,8 @@ public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.T
 			}
 
 			@Override
-			protected Class<? extends ILookupCall<Integer>> getConfiguredLookupCall() {
-				return SlotLookupCall.class;
+			protected Class<? extends ICodeType<Long, Long>> getConfiguredCodeType() {
+				return SlotCodeType.class;
 			}
 
 			@Override
@@ -430,6 +415,11 @@ public abstract class AbstractSlotTablePage<T extends AbstractSlotTablePage<T>.T
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.dayDuration.userId");
+			}
+
+			@Override
+			protected boolean getConfiguredSummary() {
+				return Boolean.TRUE;
 			}
 
 			@Override

@@ -120,8 +120,17 @@ public class DayDurationForm extends AbstractForm {
 		return this.getFieldByClass(OkButton.class);
 	}
 
+	protected void preapreStore() {
+		// this.getMainBox().getHoursBox().getSlotStartField().prepapreStore();
+		// this.getMainBox().getHoursBox().getSlotEndField().prepapreStore();
+	}
+
 	@Order(1000)
 	public class MainBox extends AbstractGroupBox {
+
+		public HoursBox getHoursBox() {
+			return this.getFieldByClass(HoursBox.class);
+		}
 
 		@Order(1500)
 		public class HoursBox extends AbstractSequenceBox {
@@ -140,6 +149,14 @@ public class DayDurationForm extends AbstractForm {
 				return false;
 			}
 
+			public SlotStartField getSlotStartField() {
+				return this.getFieldByClass(SlotStartField.class);
+			}
+
+			public SlotEndField getSlotEndField() {
+				return this.getFieldByClass(SlotEndField.class);
+			}
+
 			@Order(2000)
 			public class SlotStartField extends AbstractDateField {
 				@Override
@@ -153,13 +170,13 @@ public class DayDurationForm extends AbstractForm {
 				}
 
 				@Override
-				protected boolean getConfiguredHasDate() {
-					return Boolean.FALSE;
+				protected boolean getConfiguredHasTime() {
+					return true;
 				}
 
 				@Override
-				protected boolean getConfiguredHasTime() {
-					return Boolean.TRUE;
+				protected boolean getConfiguredHasDate() {
+					return false;
 				}
 			}
 
@@ -176,13 +193,13 @@ public class DayDurationForm extends AbstractForm {
 				}
 
 				@Override
-				protected boolean getConfiguredHasDate() {
-					return Boolean.FALSE;
+				protected boolean getConfiguredHasTime() {
+					return true;
 				}
 
 				@Override
-				protected boolean getConfiguredHasTime() {
-					return Boolean.TRUE;
+				protected boolean getConfiguredHasDate() {
+					return false;
 				}
 			}
 		}
@@ -329,6 +346,7 @@ public class DayDurationForm extends AbstractForm {
 
 			final ISlotService service = BEANS.get(ISlotService.class);
 			final DayDurationFormData formData = new DayDurationFormData();
+			DayDurationForm.this.preapreStore();
 			DayDurationForm.this.exportFormData(formData);
 			service.store(formData);
 

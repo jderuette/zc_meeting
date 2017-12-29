@@ -14,11 +14,13 @@ import org.eclipse.scout.rt.platform.holders.NVPair;
 import org.eclipse.scout.rt.server.clientnotification.ClientNotificationRegistry;
 import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.eclipse.scout.rt.shared.TEXTS;
+import org.eclipse.scout.rt.shared.cache.ICache;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeroclick.common.CommonService;
+import org.zeroclick.common.AbstractCommonService;
+import org.zeroclick.common.AbstractDataCache;
 import org.zeroclick.common.document.DocumentFormData;
 import org.zeroclick.common.document.DocumentFormData.LinkedRole.LinkedRoleRowData;
 import org.zeroclick.configuration.shared.onboarding.OnBoardingUserFormData;
@@ -26,7 +28,6 @@ import org.zeroclick.configuration.shared.role.CpsAcceptedNotification;
 import org.zeroclick.configuration.shared.role.CreateAssignSubscriptionToUserPermission;
 import org.zeroclick.configuration.shared.role.IRoleService;
 import org.zeroclick.configuration.shared.role.ReadAssignSubscriptionToUserPermission;
-import org.zeroclick.configuration.shared.role.UpdateAssignSubscriptionToUserPermission;
 import org.zeroclick.configuration.shared.role.UpdateAssignToRolePermission;
 import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.configuration.shared.user.CreateUserPermission;
@@ -38,18 +39,39 @@ import org.zeroclick.configuration.shared.user.UserModifiedNotification;
 import org.zeroclick.configuration.shared.user.UserTablePageData;
 import org.zeroclick.configuration.shared.user.UserTablePageData.UserTableRowData;
 import org.zeroclick.configuration.shared.user.ValidateCpsFormData;
+import org.zeroclick.meeting.server.security.ServerAccessControlService;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
-public class UserService extends CommonService implements IUserService {
+public class UserService extends AbstractCommonService implements IUserService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(UserService.class);
 
 	protected static final Charset CHARSET = StandardCharsets.UTF_16;
 
+	private static final String NOTIFICATION_USER = "notification-authenticator";
+
 	public static final Long[] DEFAULT_ROLES_VALUES = new Long[] { 2l };
 	public static final Set<Long> DEFAULT_ROLES = new HashSet<>(Arrays.asList(DEFAULT_ROLES_VALUES));
-	public static final Long DEFAULT_SUBSCRIPTION = 3l;;
+	public static final Long DEFAULT_SUBSCRIPTION = 3l;
+
+	@Override
+	protected Logger getLog() {
+		return LOG;
+	}
+
+	private final AbstractDataCache<Long, UserFormData> dataCache = new AbstractDataCache<Long, UserFormData>() {
+		@Override
+		public UserFormData loadForCache(final Long key) {
+			final UserFormData formData = new UserFormData();
+			formData.getUserId().setValue(key);
+			return UserService.this.loadForCache(formData);
+		}
+	};
+
+	private ICache<Long, UserFormData> getDataCache() {
+		return this.dataCache.getCache();
+	}
 
 	@Override
 	public UserTablePageData getUserTableData(final SearchFilter filter) {
@@ -74,9 +96,7 @@ public class UserService extends CommonService implements IUserService {
 
 	@Override
 	public UserFormData prepareCreate(final UserFormData formData) {
-		if (!ACCESS.check(new CreateUserPermission())) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new CreateUserPermission());
 		LOG.debug("PrepareCreate for User");
 		return formData;
 	}
@@ -93,9 +113,7 @@ public class UserService extends CommonService implements IUserService {
 
 			formData.setInvitedBy(super.userHelper.getCurrentUserId());
 		} else {
-			if (!ACCESS.check(new CreateUserPermission())) {
-				super.throwAuthorizationFailed();
-			}
+			super.checkPermission(new CreateUserPermission());
 		}
 
 		if (null == formData.getUserId().getValue()) {
@@ -109,8 +127,8 @@ public class UserService extends CommonService implements IUserService {
 			formData.getEmail().setValue(formData.getEmail().getValue().toLowerCase());
 		}
 
-		LOG.info("Create User with Id :" + formData.getUserId() + ", Login : " + formData.getLogin().getValue()
-				+ " and email : " + formData.getEmail());
+		LOG.info("Create User with Id :" + formData.getUserId().getValue() + ", Login : "
+				+ formData.getLogin().getValue() + " and email : " + formData.getEmail().getValue());
 
 		if (null != formData.getLogin().getValue() && this.userAlreadyExists(formData.getLogin().getValue())) {
 			LOG.error("Trying to create User with an existing login (lowercase match) : "
@@ -134,7 +152,7 @@ public class UserService extends CommonService implements IUserService {
 	}
 
 	private boolean userAlreadyExists(final String userLogin) {
-		LOG.info("Checking it login : " + userLogin + " already Exists");
+		LOG.info("Checking if login : " + userLogin + " already Exists");
 		final UserFormData input = new UserFormData();
 		input.getLogin().setValue(userLogin.toLowerCase());
 
@@ -144,25 +162,22 @@ public class UserService extends CommonService implements IUserService {
 
 	@Override
 	public UserFormData load(final UserFormData formData) {
-		if (!ACCESS.check(new ReadUserPermission(formData.getUserId().getValue()))) {
-			super.throwAuthorizationFailed();
+		super.checkPermission(new ReadUserPermission(formData.getUserId().getValue()));
+		UserFormData cachedData = this.getDataCache().get(formData.getUserId().getValue());
+		if (null == cachedData) {
+			// avoid NPE
+			cachedData = formData;
 		}
+		return cachedData;
+	}
+
+	private UserFormData loadForCache(final UserFormData formData) {
+		// Permission must be checked outside cache loading !
 		LOG.debug("Load User with Id :" + formData.getUserId().getValue() + " and email : "
 				+ formData.getEmail().getValue() + " (login : " + formData.getLogin().getValue() + ")");
 
-		Long currentSelectedUserId = formData.getUserId().getValue();
-		if (ACCESS.getLevel(new ReadUserPermission((Long) null)) != ReadUserPermission.LEVEL_ALL) {
-			// if not allowed to read ALL User, force currentUser only
+		final Long currentSelectedUserId = formData.getUserId().getValue();
 
-			final Long currenUserId = super.userHelper.getCurrentUserId();
-
-			if (!currenUserId.equals(currentSelectedUserId)) {
-				LOG.warn("User : " + currentSelectedUserId + " not allowed to view : " + currentSelectedUserId
-						+ " forcing to userId to " + currenUserId);
-				currentSelectedUserId = currenUserId;
-				formData.getUserId().setValue(currentSelectedUserId);
-			}
-		}
 		SQL.selectInto(SQLs.USER_SELECT + SQLs.USER_SELECT_FILTER_ID + SQLs.USER_SELECT_INTO, formData,
 				new NVPair("currentUser", currentSelectedUserId));
 
@@ -177,9 +192,7 @@ public class UserService extends CommonService implements IUserService {
 
 	@Override
 	public ValidateCpsFormData load(final ValidateCpsFormData formData) {
-		if (!ACCESS.check(new ReadAssignSubscriptionToUserPermission(formData.getUserId().getValue()))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new ReadAssignSubscriptionToUserPermission(formData.getUserId().getValue()));
 
 		// get THIS subscription details
 		SQL.selectInto(SQLs.USER_ROLE_SELECT_SUBSCRIPTIONS_DETAILS + SQLs.USER_ROLE_FILTER_USER_ID
@@ -212,7 +225,6 @@ public class UserService extends CommonService implements IUserService {
 	}
 
 	private void addNbProcessedEventStat(final UserTablePageData pageData) {
-
 		if (pageData.getRowCount() > 0) {
 			for (final UserTableRowData row : pageData.getRows()) {
 				final Long userId = row.getUserId();
@@ -221,7 +233,6 @@ public class UserService extends CommonService implements IUserService {
 				}
 			}
 		}
-
 	}
 
 	/**
@@ -353,8 +364,18 @@ public class UserService extends CommonService implements IUserService {
 		// No permission check right now, will be done by standard "load" method
 		// when the userId of this email will be retrieved
 		LOG.debug("Searching userId with login : " + formData.getLogin().getValue());
+
+		if (NOTIFICATION_USER.equals(formData.getLogin().getValue())) {
+			// default notification user dosen't exist, because it don't need
+			// specific permissions.
+			return formData; // early Break
+		}
+
 		SQL.selectInto(SQLs.USER_SELECT_ID_ONLY + SQLs.USER_SELECT_FILTER_LOGIN + SQLs.USER_SELECT_INTO_ID_ONLY,
 				formData);
+		if (null == formData.getUserId().getValue()) {
+			LOG.warn("No User ID for user with login : " + formData.getLogin().getValue());
+		}
 		return formData;
 	}
 
@@ -372,13 +393,14 @@ public class UserService extends CommonService implements IUserService {
 		}
 
 		this.updatesRoles(formData, !formData.getAutofilled());
-		// Usefull only for admin, dor other user store(ValidateCpsForm) already
+		// Usefull only for admin, for other user store(ValidateCpsForm) already
 		// do the update
 		this.updateSubscriptions(formData, !formData.getAutofilled());
 
 		// reset permission cache
-
 		this.sendModifiedNotifications(formData);
+		// reset local user cache
+		this.dataCache.clearCache(formData.getUserId().getValue());
 
 		return formData;
 	}
@@ -484,6 +506,8 @@ public class UserService extends CommonService implements IUserService {
 
 	@Override
 	public void delete(final UserFormData formData) {
+		super.checkPermission(new UpdateUserPermission(formData.getUserId().getValue()));
+		final IRoleService roleService = BEANS.get(IRoleService.class);
 		Long userId = null;
 		if (null == formData.getUserId().getValue() && null != formData.getLogin().getValue()) {
 			userId = this.getUserId(formData.getLogin().getValue());
@@ -502,16 +526,18 @@ public class UserService extends CommonService implements IUserService {
 		LOG.info("Deleting User by Id : " + userId + " (asked email : " + formData.getEmail().getValue() + ", login : "
 				+ formData.getLogin().getValue() + ")");
 
+		roleService.deleteSubscriptionMetaDataByUser(userId);
 		this.deleteUserRoleByUser(formData);
 		this.changeInvitedByByUserId(formData);
 		SQL.insert(SQLs.USER_DELETE, formData);
 
+		// reset local user cache
+		this.dataCache.clearCache(formData.getUserId().getValue());
+
 	}
 
 	private void deleteUserRoleByUser(final UserFormData formData) {
-		if (!ACCESS.check(new UpdateAssignToRolePermission())) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new UpdateAssignToRolePermission());
 		LOG.info("Deleting Link between Role and User by user Id : " + formData.getUserId().getValue());
 		SQL.insert(SQLs.USER_ROLE_REMOVE_BY_USER, formData);
 	}
@@ -524,13 +550,14 @@ public class UserService extends CommonService implements IUserService {
 		LOG.info("Changing 'invited_by' for user : " + formData.getUserId().getValue() + " to the new User : "
 				+ defaultInvitedBy);
 		SQL.insert(SQLs.USER_UPDATE_INVITED_BY_BY_USER, formData, new NVPair("invitedBy", defaultInvitedBy));
+		// reset local user cache for all User as many user may be affected by
+		// operation
+		this.dataCache.clearCache();
 	}
 
 	@Override
 	public OnBoardingUserFormData store(final OnBoardingUserFormData formData) {
-		if (!ACCESS.check(new UpdateUserPermission(formData.getUserId().getValue()))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new UpdateUserPermission(formData.getUserId().getValue()));
 		LOG.debug("Store OnBoarding User datas with Id :" + formData.getUserId().getValue() + " (Login : "
 				+ formData.getLogin().getValue() + ")");
 
@@ -547,14 +574,14 @@ public class UserService extends CommonService implements IUserService {
 
 		this.sendModifiedNotifications(userFormForNotifications);
 
+		this.dataCache.clearCache(formData.getUserId().getValue());
+
 		return formData;
 	}
 
 	@Override
 	public ValidateCpsFormData create(final ValidateCpsFormData formData) {
-		if (!ACCESS.check(new CreateAssignSubscriptionToUserPermission(formData.getUserId().getValue()))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new CreateAssignSubscriptionToUserPermission(formData.getUserId().getValue()));
 
 		SQL.update(SQLs.USER_ROLE_INSERT_WITH_START_DATE, new NVPair("userId", formData.getUserId().getValue()),
 				new NVPair("rolesBox", formData.getSubscriptionId().getValue()),
@@ -569,9 +596,7 @@ public class UserService extends CommonService implements IUserService {
 
 	@Override
 	public ValidateCpsFormData store(final ValidateCpsFormData formData) {
-		if (!ACCESS.check(new UpdateAssignSubscriptionToUserPermission(formData.getUserId().getValue()))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new CreateAssignSubscriptionToUserPermission(formData.getUserId().getValue()));
 		final AccessControlService acs = BEANS.get(AccessControlService.class);
 
 		LOG.debug("Store CPS User datas for user Id :" + formData.getUserId().getValue()
@@ -583,6 +608,8 @@ public class UserService extends CommonService implements IUserService {
 		acs.clearUserCache(this.buildNotifiedUsers(formData));
 
 		this.sendModifiedNotifications(formData);
+
+		this.dataCache.clearCache(formData.getUserId().getValue());
 
 		return formData;
 	}
@@ -644,11 +671,10 @@ public class UserService extends CommonService implements IUserService {
 	@Override
 	public String getUserTimeZone(final Long userId) {
 		// No permission check to allow guest get timeZone of hosts
-		final UserFormData formData = new UserFormData();
+		UserFormData formData = new UserFormData();
 		formData.getUserId().setValue(userId);
 
-		SQL.selectInto(SQLs.USER_SELECT_TIME_ZONE + SQLs.USER_SELECT_FILTER_ID + SQLs.USER_SELECT_INTO_TIME_ZONE,
-				formData, new NVPair("currentUser", userId));
+		formData = this.load(formData);
 
 		return formData.getTimeZone().getValue();
 	}
@@ -657,11 +683,10 @@ public class UserService extends CommonService implements IUserService {
 	public String getUserLanguage(final Long userId) {
 		// No permission check to allow organizer get language of guest (for
 		// email)
-		final UserFormData formData = new UserFormData();
+		UserFormData formData = new UserFormData();
 		formData.getUserId().setValue(userId);
 
-		SQL.selectInto(SQLs.USER_SELECT_LANGUAGE + SQLs.USER_SELECT_FILTER_ID + SQLs.USER_SELECT_INTO_LANGUAGE,
-				formData, new NVPair("currentUser", userId));
+		formData = this.load(formData);
 
 		return formData.getLanguage().getValue();
 	}
@@ -669,16 +694,17 @@ public class UserService extends CommonService implements IUserService {
 	@Override
 	public Set<String> getUserNotificationIds(final Long userId) {
 		final Set<String> notificationsIds = new HashSet<>();
+		UserFormData formData = new UserFormData();
+		formData.getUserId().setValue(userId);
 
-		final Object[][] datas = SQL.select(SQLs.USER_SELECT_NOTIFICATION_IDS + SQLs.USER_SELECT_FILTER_ID,
-				new NVPair("currentUser", userId));
+		formData = this.load(formData);
 
-		for (int row = 0; row < datas.length; row++) {
-			for (int col = 0; col < datas[row].length; col++) {
-				notificationsIds.add((String) datas[row][col]);
-			}
+		if (null != formData.getLogin().getValue() && !formData.getLogin().getValue().isEmpty()) {
+			notificationsIds.add(formData.getLogin().getValue());
 		}
-
+		if (null != formData.getEmail().getValue() && !formData.getEmail().getValue().isEmpty()) {
+			notificationsIds.add(formData.getEmail().getValue());
+		}
 		return notificationsIds;
 	}
 
@@ -714,7 +740,7 @@ public class UserService extends CommonService implements IUserService {
 	private UserFormData loadPasswordByEmail(final String email) {
 		LOG.debug("Retriving password with email " + email);
 		final UserFormData formData = new UserFormData();
-		formData.getEmail().setValue(email);
+		formData.getEmail().setValue(email.toLowerCase());
 		SQL.select(SQLs.USER_SELECT_PASSWORD_FILTER_EMAIL, formData);
 
 		if (null == formData.getPassword().getValue()) {
@@ -779,11 +805,24 @@ public class UserService extends CommonService implements IUserService {
 
 	@Override
 	public UserFormData loggedIn(final UserFormData userData) {
-		// No permision check, because used during login
+		// No permission check, because used during login
+		final Date now = new Date();
 		LOG.info("User " + userData.getEmail() + " (login : " + userData.getLogin()
 				+ ") juste logged in, updating stats data");
-		SQL.insert(SQLs.USER_UPDATE_LATS_LOGIN, userData);
+		SQL.insert(SQLs.USER_UPDATE_LAST_LOGIN, userData, new NVPair("currentDate", now));
+
+		this.dataCache.clearCache(userData.getUserId().getValue());
 		return userData;
+	}
+
+	@Override
+	public void clearCache(final Long userId) {
+		LOG.info("Clear cache (and server/UI permisison cache) for user ID : " + userId);
+		this.dataCache.clearCache(userId);
+
+		final Set<String> userCacheKey = this.getUserNotificationIds(userId);
+		BEANS.get(ServerAccessControlService.class).clearCacheOfUsersIds(userCacheKey);
+		// BEANS.get(AccessControlService.class).clearUserCache(userCacheKey);
 	}
 
 	@Override
@@ -798,6 +837,7 @@ public class UserService extends CommonService implements IUserService {
 				final Long userId = itUsers.next();
 				try {
 					this.addSubscriptionAsynch(userId, 3l);
+					this.dataCache.clearCache(userId);
 				} catch (final Exception ex) {
 					LOG.warn("Error while trying to insert Role " + roleId + " to User :" + userId
 							+ " continuing to next User", ex);

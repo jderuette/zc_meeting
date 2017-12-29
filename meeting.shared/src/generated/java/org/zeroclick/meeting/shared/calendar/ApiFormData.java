@@ -119,7 +119,7 @@ public class ApiFormData extends AbstractFormData {
 		private static final long serialVersionUID = 1L;
 	}
 
-	public static class Provider extends AbstractValueFieldData<Integer> {
+	public static class Provider extends AbstractValueFieldData<Long> {
 
 		private static final long serialVersionUID = 1L;
 	}

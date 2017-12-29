@@ -3,6 +3,7 @@ package org.zeroclick.meeting.client.event;
 import java.io.IOException;
 import java.time.ZonedDateTime;
 
+import org.eclipse.scout.rt.client.context.ClientRunContexts;
 import org.eclipse.scout.rt.client.dto.FormData;
 import org.eclipse.scout.rt.client.ui.IDisplayParent;
 import org.eclipse.scout.rt.client.ui.form.AbstractForm;
@@ -10,11 +11,12 @@ import org.eclipse.scout.rt.client.ui.form.AbstractFormHandler;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractCancelButton;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractOkButton;
 import org.eclipse.scout.rt.client.ui.form.fields.groupbox.AbstractGroupBox;
-import org.eclipse.scout.rt.client.ui.form.fields.smartfield.AbstractProposalField;
 import org.eclipse.scout.rt.client.ui.form.fields.stringfield.AbstractStringField;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.exception.VetoException;
+import org.eclipse.scout.rt.platform.job.Jobs;
+import org.eclipse.scout.rt.platform.util.concurrent.IRunnable;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +41,7 @@ import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.RejectEventFormData;
+import org.zeroclick.meeting.shared.event.StateCodeType;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
 
 import com.google.api.services.calendar.Calendar;
@@ -309,10 +312,27 @@ public class RejectEventForm extends AbstractForm {
 		}
 
 		@Order(4500)
-		public class VenueField extends AbstractProposalField<String> {
+		public class VenueField extends AbstractStringField {
 			@Override
 			protected String getConfiguredLabel() {
 				return TEXTS.get("zc.meeting.venue");
+			}
+
+			@Override
+			protected void execInitField() {
+				this.setValueChangeTriggerEnabled(Boolean.TRUE);
+				this.changeDisplayText();
+			}
+
+			@Override
+			protected void execChangedValue() {
+				this.changeDisplayText();
+			}
+
+			private void changeDisplayText() {
+				if (this.getValue() != null && !this.getValue().isEmpty()) {
+					this.setDisplayText(TEXTS.get(this.getValue()));
+				}
 			}
 
 			@Override
@@ -402,22 +422,28 @@ public class RejectEventForm extends AbstractForm {
 				break;
 			}
 
-			this.attendeeGCalSrv = this.getCalendarService(formData.getGuestId());
-			this.hostGCalSrv = this.getCalendarService(formData.getOrganizer());
-
+			try {
+				this.attendeeGCalSrv = this.getCalendarService(formData.getGuestId());
+			} catch (final IOException e) {
+				LOG.debug("No calendar service configured for user Id : " + formData.getGuestId(), e);
+			}
+			try {
+				this.hostGCalSrv = this.getCalendarService(formData.getOrganizer());
+			} catch (final IOException e) {
+				LOG.error("No calendar service configured for (organizer) user Id : " + formData.getOrganizer(), e);
+				throw new VetoException(TEXTS.get("ErrorAndRetryTextDefault"));
+			}
 		}
 
-		private Calendar getCalendarService(final Long userId) {
+		private Calendar getCalendarService(final Long userId) throws IOException {
 			Calendar gCalendarSrv = null;
-			final GoogleApiHelper googleHelper = GoogleApiHelper.get();
+			final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
 			try {
 				if (null != userId) {
 					gCalendarSrv = googleHelper.getCalendarService(userId);
 				}
 			} catch (final UserAccessRequiredException uare) {
 				LOG.debug("No calendar provider for user " + userId);
-			} catch (final IOException e) {
-				throw new VetoException(TEXTS.get("ErrorAndRetryTextDefault"));
 			}
 
 			return gCalendarSrv;
@@ -429,39 +455,47 @@ public class RejectEventForm extends AbstractForm {
 			final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 			notificationHelper.addProcessingNotification("zc.meeting.notification.rejectingEvent");
 
-			final RejectEventFormData formData = new RejectEventFormData();
-			RejectEventForm.this.exportFormData(formData);
+			Jobs.schedule(new IRunnable() {
+				@Override
+				public void run() {
+					final RejectEventFormData formData = new RejectEventFormData();
+					RejectEventForm.this.exportFormData(formData);
 
-			if (null != RejectEventForm.this.getExternalIdOrganizer() && null != this.hostGCalSrv) {
-				try {
-					LOG.info(this.buildRejectLog("Deleting", RejectEventForm.this.getEventId(),
-							RejectEventForm.this.getExternalIdOrganizer(), RejectEventForm.this.getOrganizer()));
-					this.hostGCalSrv.events().delete("primary", RejectEventForm.this.getExternalIdOrganizer())
-							.execute();
-				} catch (final IOException e) {
-					LOG.error(
-							this.buildRejectLog("Error while deleting", RejectEventForm.this.getEventId(),
+					if (null != RejectEventForm.this.getExternalIdOrganizer()
+							&& null != ModifyHandler.this.hostGCalSrv) {
+						try {
+							LOG.info(this.buildRejectLog("Deleting", RejectEventForm.this.getEventId(),
+									RejectEventForm.this.getExternalIdOrganizer(),
+									RejectEventForm.this.getOrganizer()));
+							ModifyHandler.this.hostGCalSrv.events()
+									.delete("primary", RejectEventForm.this.getExternalIdOrganizer()).execute();
+						} catch (final IOException e) {
+							LOG.error(this.buildRejectLog("Error while deleting", RejectEventForm.this.getEventId(),
 									RejectEventForm.this.getExternalIdOrganizer(), RejectEventForm.this.getOrganizer()),
-							e);
-					throw new VetoException(TEXTS.get("zc.meeting.error.deletingEvent"));
+									e);
+							throw new VetoException(TEXTS.get("zc.meeting.error.deletingEvent"));
+						}
+					}
+
+					final IEventService service = BEANS.get(IEventService.class);
+
+					formData.setState(StateCodeType.RefusededCode.ID);
+					final EventFormData fullEventFormData = service.storeNewState(formData);
+
+					RejectEventForm.this.sendEmail(fullEventFormData);
 				}
-			}
 
-			final IEventService service = BEANS.get(IEventService.class);
-
-			formData.setState("REFUSED");
-			final EventFormData fullEventFormData = service.storeNewState(formData);
-
-			RejectEventForm.this.sendEmail(fullEventFormData);
+				private String buildRejectLog(final String prefix, final Long eventId, final String externalId,
+						final Long userId) {
+					final StringBuilder builder = new StringBuilder(75);
+					builder.append(prefix).append(" (Google) event : Id ").append(eventId).append(", external ID : ")
+							.append(externalId).append("for user : ").append(userId);
+					return builder.toString();
+				}
+			}, Jobs.newInput().withName("Refusing event {0}", RejectEventForm.this.getEventId())
+					.withRunContext(ClientRunContexts.copyCurrent()).withThreadName("Refusing event"));
 		}
 
-		private String buildRejectLog(final String prefix, final Long eventId, final String externalId,
-				final Long userId) {
-			final StringBuilder builder = new StringBuilder(75);
-			builder.append(prefix).append(" (Google) event : Id ").append(eventId).append(", external ID : ")
-					.append(externalId).append("for user : ").append(userId);
-			return builder.toString();
-		}
 	}
 
 	private void sendEmail(final EventFormData formData) {

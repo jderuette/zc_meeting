@@ -11,10 +11,11 @@ import org.eclipse.scout.rt.platform.holders.NVPair;
 import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
-import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.eclipse.scout.rt.shared.services.common.security.IAccessControlService;
 import org.eclipse.scout.rt.shared.services.common.security.IPermissionService;
-import org.zeroclick.common.CommonService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.zeroclick.common.AbstractCommonService;
 import org.zeroclick.configuration.shared.role.CreatePermissionPermission;
 import org.zeroclick.configuration.shared.role.IAppPermissionService;
 import org.zeroclick.configuration.shared.role.PermissionFormData;
@@ -23,24 +24,30 @@ import org.zeroclick.configuration.shared.role.ReadPermissionPermission;
 import org.zeroclick.configuration.shared.role.RoleFormData;
 import org.zeroclick.configuration.shared.role.UpdatePermissionPermission;
 import org.zeroclick.configuration.shared.user.IUserService;
+import org.zeroclick.meeting.server.sql.DatabaseHelper;
 import org.zeroclick.meeting.server.sql.SQLs;
+import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateSubscription;
 
-public class AppPermissionService extends CommonService implements IAppPermissionService {
+public class AppPermissionService extends AbstractCommonService implements IAppPermissionService {
+
+	private static final Logger LOG = LoggerFactory.getLogger(AppPermissionService.class);
+
+	@Override
+	protected Logger getLog() {
+		return LOG;
+	}
 
 	@Override
 	public PermissionFormData prepareCreate(final PermissionFormData formData) {
-		if (!ACCESS.check(new CreatePermissionPermission())) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new CreatePermissionPermission());
 		// TODO Djer13 something to prepare ?
 		return formData;
 	}
 
 	@Override
 	public PermissionFormData create(final PermissionFormData formData) {
-		if (!ACCESS.check(new CreatePermissionPermission())) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new CreatePermissionPermission());
+
 		SQL.insert(SQLs.ROLE_PERMISSION_INSERT, formData);
 		BEANS.get(IAccessControlService.class).clearCache();
 		return formData;
@@ -48,24 +55,21 @@ public class AppPermissionService extends CommonService implements IAppPermissio
 
 	@Override
 	public PermissionFormData load(final PermissionFormData formData) {
-		if (!ACCESS.check(new ReadPermissionPermission())) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new ReadPermissionPermission());
 		SQL.selectInto(SQLs.ROLE_SELECT, formData);
 		return formData;
 	}
 
 	@Override
 	public PermissionFormData store(final PermissionFormData formData) {
-		if (!ACCESS.check(new UpdatePermissionPermission())) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new UpdatePermissionPermission());
 		throw new VetoException(TEXTS.get("zc.user.permissionStoreNotAllowed"));
 		// return formData;
 	}
 
 	@Override
 	public PermissionTablePageData getPermissionTableData(final SearchFilter filter) {
+		super.checkPermission(new ReadPermissionPermission());
 		final PermissionTablePageData pageData = new PermissionTablePageData();
 		final String sql = SQLs.ROLE_PERMISSION_PAGE_SELECT + SQLs.ROLE_PERMISSION_PAGE_DATA_SELECT_INTO;
 		SQL.selectInto(sql, new NVPair("rolePermission", pageData));
@@ -74,6 +78,7 @@ public class AppPermissionService extends CommonService implements IAppPermissio
 
 	@Override
 	public PermissionTablePageData getpermissionsByRole(final Long roleId) {
+		super.checkPermission(new ReadPermissionPermission());
 		final PermissionTablePageData pageData = new PermissionTablePageData();
 
 		final RoleFormData roleFormData = new RoleFormData();
@@ -87,11 +92,20 @@ public class AppPermissionService extends CommonService implements IAppPermissio
 
 	@Override
 	public Object[][] getPermissionsByUser(final Long userId) {
-
+		// No permission check to allow init of permissions
 		final StringBuilder sql = new StringBuilder();
 
-		sql.append(SQLs.USER_PERMISSIONS_SELECT_STANDARD_ROLE).append(SQLs.USER_PERMISSIONS_SELECT_FILTER_USER_ID)
-				.append(SQLs.USER_PERMISSIONS_SELECT_GROUP_BY);
+		if (DatabaseHelper.get().isColumnExists(PatchCreateSubscription.PATCHED_TABLE_ROLE,
+				PatchCreateSubscription.ADDED_ROLE_COLUMN)) {
+			sql.append(SQLs.USER_PERMISSIONS_SELECT_ACTIVE_ROLE).append(SQLs.USER_PERMISSIONS_SELECT_FILTER_USER_ID)
+					.append(SQLs.USER_PERMISSIONS_SELECT_GROUP_BY);
+		} else {
+			// before subscription patch, so all role are "always" available (no
+			// "start date")
+			sql.append(SQLs.USER_PERMISSIONS_SELECT_ACTIVE_ROLE_BEFORE_SUB_PATCH)
+					.append(SQLs.USER_PERMISSIONS_SELECT_FILTER_USER_ID).append(SQLs.USER_PERMISSIONS_SELECT_GROUP_BY);
+		}
+
 		final Object[][] standardAndActiveSubscription = SQL.select(sql.toString(), new NVPair("userId", userId));
 
 		// Object[][] activeSubscriptionpermisisons =
@@ -104,6 +118,7 @@ public class AppPermissionService extends CommonService implements IAppPermissio
 
 	@Override
 	public Object[][] getPermissionsByUser(final String userLoginOrEmail) {
+		// permission check done later by getPermissionsByUser(Long userId)
 		final IUserService userService = BEANS.get(IUserService.class);
 		Object[][] permissions = null;
 
@@ -123,6 +138,7 @@ public class AppPermissionService extends CommonService implements IAppPermissio
 	}
 
 	private Object[][] getPermission(final String filter) {
+		super.checkPermission(new ReadPermissionPermission());
 		final ArrayList<String> rows = new ArrayList<>(30);
 		final Set<Class<? extends Permission>> permissions = BEANS.get(IPermissionService.class)
 				.getAllPermissionClasses();

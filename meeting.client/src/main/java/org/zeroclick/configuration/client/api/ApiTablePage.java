@@ -1,12 +1,6 @@
 package org.zeroclick.configuration.client.api;
 
-import java.util.Set;
-
 import org.eclipse.scout.rt.client.dto.Data;
-import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
-import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
-import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
-import org.eclipse.scout.rt.client.ui.action.menu.TableMenuType;
 import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractLongColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractNumberColumn;
@@ -17,18 +11,18 @@ import org.eclipse.scout.rt.client.ui.form.FormEvent;
 import org.eclipse.scout.rt.client.ui.form.FormListener;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
-import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
+import org.eclipse.scout.rt.shared.services.common.code.ICodeType;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
-import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.zeroclick.configuration.client.api.ApiTablePage.ApisTable;
 import org.zeroclick.configuration.shared.api.ApiTablePageData;
-import org.zeroclick.meeting.client.common.ProviderLookupCall;
-import org.zeroclick.meeting.shared.Icons;
+import org.zeroclick.configuration.shared.provider.ProviderCodeType;
 import org.zeroclick.meeting.shared.calendar.DeleteApiPermission;
 import org.zeroclick.meeting.shared.calendar.IApiService;
 import org.zeroclick.meeting.shared.calendar.UpdateApiPermission;
+import org.zeroclick.ui.action.menu.AbstractDeleteMenu;
+import org.zeroclick.ui.action.menu.AbstractEditMenu;
 
 @Data(ApiTablePageData.class)
 public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
@@ -51,17 +45,7 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 	public class ApisTable extends AbstractTable {
 
 		@Order(1000)
-		public class EditMenu extends AbstractMenu {
-			@Override
-			protected String getConfiguredText() {
-				return TEXTS.get("zc.common.edit");
-			}
-
-			@Override
-			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-				return CollectionUtility.hashSet(TableMenuType.SingleSelection);
-			}
-
+		public class EditApiMenu extends AbstractEditMenu {
 			@Override
 			protected boolean getConfiguredEnabled() {
 				return ACCESS.getLevel(new UpdateApiPermission((Long) null)) > UpdateApiPermission.LEVEL_OWN;
@@ -79,17 +63,7 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 		}
 
 		@Order(2000)
-		public class DeleteMenu extends AbstractMenu {
-			@Override
-			protected String getConfiguredText() {
-				return TEXTS.get("DeleteMenu");
-			}
-
-			@Override
-			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-				return CollectionUtility.hashSet(TableMenuType.SingleSelection);
-			}
-
+		public class DeleteApiMenu extends AbstractDeleteMenu {
 			@Override
 			protected boolean getConfiguredEnabled() {
 				return ACCESS.getLevel(new DeleteApiPermission((Long) null)) > DeleteApiPermission.LEVEL_OWN;
@@ -103,16 +77,6 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 				form.addFormListener(new ApiFormListener());
 				// start the form using its modify handler
 				form.startDelete();
-			}
-
-			@Override
-			protected String getConfiguredKeyStroke() {
-				return combineKeyStrokes(IKeyStroke.SHIFT, IKeyStroke.DELETE);
-			}
-
-			@Override
-			public String getConfiguredIconId() {
-				return Icons.ExclamationMark;
 			}
 		}
 
@@ -176,10 +140,15 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 		}
 
 		@Order(2000)
-		public class ProviderColumn extends AbstractSmartColumn<Integer> {
+		public class ProviderColumn extends AbstractSmartColumn<Long> {
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.api.provider");
+			}
+
+			@Override
+			protected boolean getConfiguredSummary() {
+				return Boolean.TRUE;
 			}
 
 			@Override
@@ -188,8 +157,8 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 			}
 
 			@Override
-			protected Class<? extends ILookupCall<Integer>> getConfiguredLookupCall() {
-				return ProviderLookupCall.class;
+			protected Class<? extends ICodeType<Long, Long>> getConfiguredCodeType() {
+				return ProviderCodeType.class;
 			}
 		}
 
@@ -237,6 +206,11 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.user.userId");
+			}
+
+			@Override
+			protected boolean getConfiguredSummary() {
+				return Boolean.TRUE;
 			}
 
 			@Override

@@ -3,7 +3,6 @@ package org.zeroclick.configuration.client.user;
 import java.util.Set;
 
 import org.eclipse.scout.rt.client.dto.Data;
-import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
 import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
 import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.action.menu.TableMenuType;
@@ -19,15 +18,17 @@ import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
+import org.eclipse.scout.rt.shared.services.common.code.ICodeType;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
-import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.zeroclick.configuration.client.user.UserTablePage.Table;
 import org.zeroclick.configuration.shared.user.CreateUserPermission;
 import org.zeroclick.configuration.shared.user.IUserService;
-import org.zeroclick.configuration.shared.user.LanguageLookupCall;
+import org.zeroclick.configuration.shared.user.LanguageCodeType;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.configuration.shared.user.UserTablePageData;
+import org.zeroclick.ui.action.menu.AbstractEditMenu;
+import org.zeroclick.ui.action.menu.AbstractNewMenu;
 import org.zeroclick.ui.form.columns.zoneddatecolumn.AbstractZonedDateColumn;
 
 @Data(UserTablePageData.class)
@@ -54,18 +55,7 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 	public class Table extends AbstractTable {
 
 		@Order(1000)
-		public class NewMenu extends AbstractMenu {
-			@Override
-			protected String getConfiguredText() {
-				return TEXTS.get("New");
-			}
-
-			@Override
-			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-				return CollectionUtility.hashSet(TableMenuType.EmptySpace, TableMenuType.SingleSelection,
-						TableMenuType.MultiSelection);
-			}
-
+		public class NewUserMenu extends AbstractNewMenu {
 			@Override
 			protected void execOwnerValueChanged(final Object newOwnerValue) {
 				final Boolean isUserAllowed = ACCESS.check(new CreateUserPermission());
@@ -80,25 +70,10 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 				form.setEnabledPermission(new CreateUserPermission());
 				form.startNew();
 			}
-
-			@Override
-			protected String getConfiguredKeyStroke() {
-				return combineKeyStrokes(IKeyStroke.SHIFT, "n");
-			}
 		}
 
 		@Order(2000)
-		public class EditMenu extends AbstractMenu {
-			@Override
-			protected String getConfiguredText() {
-				return TEXTS.get("zc.common.edit");
-			}
-
-			@Override
-			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-				return CollectionUtility.hashSet(TableMenuType.SingleSelection);
-			}
-
+		public class EditUserMenu extends AbstractEditMenu {
 			@Override
 			protected void execOwnerValueChanged(final Object newOwnerValue) {
 				final Long currentUserId = Table.this.getUserIdColumn().getSelectedValue();
@@ -116,10 +91,32 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 				form.setEnabledPermission(new UpdateUserPermission(currentUserId));
 				form.startModify();
 			}
+		}
+
+		@Order(3000)
+		public class ClearUserCacheMenu extends AbstractMenu {
+			@Override
+			protected String getConfiguredText() {
+				return TEXTS.get("zc.user.clearCache");
+			}
 
 			@Override
-			protected String getConfiguredKeyStroke() {
-				return combineKeyStrokes(IKeyStroke.SHIFT, "e");
+			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+				return CollectionUtility.hashSet(TableMenuType.SingleSelection);
+			}
+
+			@Override
+			protected void execOwnerValueChanged(final Object newOwnerValue) {
+				final Long currentUserId = Table.this.getUserIdColumn().getSelectedValue();
+				final Boolean isUserAllowed = ACCESS.check(new UpdateUserPermission(currentUserId));
+				this.setVisibleGranted(isUserAllowed);
+				super.execOwnerValueChanged(newOwnerValue);
+			}
+
+			@Override
+			protected void execAction() {
+				final IUserService userService = BEANS.get(IUserService.class);
+				userService.clearCache(Table.this.getUserIdColumn().getValue(Table.this.getSelectedRow()));
 			}
 		}
 
@@ -181,6 +178,11 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 			}
 
 			@Override
+			protected boolean getConfiguredSummary() {
+				return Boolean.TRUE;
+			}
+
+			@Override
 			protected int getConfiguredWidth() {
 				return 128;
 			}
@@ -204,6 +206,11 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.common.email");
+			}
+
+			@Override
+			protected boolean getConfiguredSummary() {
+				return Boolean.TRUE;
 			}
 
 			@Override
@@ -246,8 +253,8 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 			}
 
 			@Override
-			protected Class<? extends ILookupCall<String>> getConfiguredLookupCall() {
-				return LanguageLookupCall.class;
+			protected Class<? extends ICodeType<?, String>> getConfiguredCodeType() {
+				return LanguageCodeType.class;
 			}
 
 			@Override

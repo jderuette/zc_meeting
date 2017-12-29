@@ -5,6 +5,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -14,8 +15,6 @@ import org.eclipse.scout.rt.client.ui.MouseButton;
 import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
 import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
 import org.eclipse.scout.rt.client.ui.action.menu.IMenu;
-import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
-import org.eclipse.scout.rt.client.ui.action.menu.TableMenuType;
 import org.eclipse.scout.rt.client.ui.basic.cell.Cell;
 import org.eclipse.scout.rt.client.ui.basic.cell.ICell;
 import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
@@ -29,34 +28,39 @@ import org.eclipse.scout.rt.client.ui.form.FormEvent;
 import org.eclipse.scout.rt.client.ui.form.FormListener;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
-import org.eclipse.scout.rt.platform.util.CollectionUtility;
+import org.eclipse.scout.rt.platform.util.CompareUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.notification.INotificationListener;
+import org.eclipse.scout.rt.shared.services.common.code.ICode;
+import org.eclipse.scout.rt.shared.services.common.code.ICodeType;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
-import org.eclipse.scout.rt.shared.services.lookup.ILookupRow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.common.params.AppParamsFormData;
+import org.zeroclick.common.params.ParamCreatedNotificationHandler;
+import org.zeroclick.common.params.ParamModifiedNotificationHandler;
 import org.zeroclick.comon.date.DateHelper;
 import org.zeroclick.comon.user.AppUserHelper;
 import org.zeroclick.configuration.client.api.ApiCreatedNotificationHandler;
 import org.zeroclick.configuration.client.slot.DayDurationModifiedNotificationHandler;
 import org.zeroclick.configuration.client.user.UserModifiedNotificationHandler;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
+import org.zeroclick.configuration.shared.duration.DurationCodeType;
+import org.zeroclick.configuration.shared.params.IAppParamsService;
+import org.zeroclick.configuration.shared.params.ParamCreatedNotification;
+import org.zeroclick.configuration.shared.params.ParamModifiedNotification;
 import org.zeroclick.configuration.shared.slot.DayDurationFormData;
 import org.zeroclick.configuration.shared.slot.DayDurationModifiedNotification;
+import org.zeroclick.configuration.shared.slot.SlotCodeType;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.configuration.shared.user.UserModifiedNotification;
 import org.zeroclick.configuration.shared.venue.VenueLookupCall;
 import org.zeroclick.meeting.client.NotificationHelper;
 import org.zeroclick.meeting.client.common.CallTrackerService;
-import org.zeroclick.meeting.client.common.DurationLookupCall;
-import org.zeroclick.meeting.client.common.EventStateLookupCall;
-import org.zeroclick.meeting.client.common.SlotLookupCall;
-import org.zeroclick.meeting.client.event.EventTablePage.Table.NewMenu;
+import org.zeroclick.meeting.client.event.EventTablePage.Table.NewEventMenu;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
-import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.event.AbstractEventNotification;
 import org.zeroclick.meeting.shared.event.EventCreatedNotification;
@@ -64,9 +68,11 @@ import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.EventModifiedNotification;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.ReadEventExtendedPropsPermission;
+import org.zeroclick.meeting.shared.event.StateCodeType;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
 import org.zeroclick.meeting.shared.eventb.AbstractEventsTablePageData;
 import org.zeroclick.meeting.shared.security.AccessControlService;
+import org.zeroclick.ui.action.menu.AbstractCancelMenu;
 import org.zeroclick.ui.form.columns.zoneddatecolumn.AbstractZonedDateColumn;
 
 @Data(AbstractEventsTablePageData.class)
@@ -75,9 +81,14 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 	private static final Logger LOG = LoggerFactory.getLogger(AbstractEventsTablePage.class);
 
-	final private Integer maxTry = 20;
-	final protected CallTrackerService<Long> callTracker = new CallTrackerService<>(this.maxTry, Duration.ofMinutes(3),
-			"Get calendar Events");
+	protected CallTrackerService<Long> callTracker;
+
+	/**
+	 * To avoid event processed twice, when no date available
+	 */
+	private final Set<Long> processedEventWithoutPossibleDates = new HashSet<>(3);
+	private Date processedEventLastModification;
+	private final Long processedEventTtl = 20000L; // millisecondes
 
 	private DateHelper dateHelper;
 	private AppUserHelper appUserHelper;
@@ -86,8 +97,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	// TODO Djer13 is caching here smart ?
 	private final Map<Long, String> cachedUserTimeZone = new HashMap<>();
 
+	protected INotificationListener<ParamCreatedNotification> paramCreatedListener;
+	protected INotificationListener<ParamModifiedNotification> paramModifiedListener;
+
 	protected boolean isUserCalendarConfigured() {
-		return GoogleApiHelper.get().isCalendarConfigured();
+		return BEANS.get(GoogleApiHelper.class).isCalendarConfigured();
 	}
 
 	@Override
@@ -103,6 +117,58 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	@Override
 	protected boolean getConfiguredTableStatusVisible() {
 		return Boolean.FALSE;
+	}
+
+	@Override
+	protected void execInitPage() {
+		final IAppParamsService appParamService = BEANS.get(IAppParamsService.class);
+		Integer maxNbCall = 20;
+		Integer maxDuration = 3;
+
+		final String maxNbCallParam = appParamService.getValue(IAppParamsService.APP_PARAM_KEY_EVENT_CALL_TRACKER_MAX);
+		final String maxDurationParam = appParamService
+				.getValue(IAppParamsService.APP_PARAM_KEY_EVENT_CALL_TRACKER_DURATION);
+
+		try {
+			if (null != maxNbCallParam) {
+				maxNbCall = Integer.valueOf(maxNbCallParam);
+			}
+		} catch (final NumberFormatException nfe) {
+			LOG.warn("No params aviable for Calltracker event max ("
+					+ IAppParamsService.APP_PARAM_KEY_EVENT_CALL_TRACKER_MAX + ") FallBack to default value");
+		}
+
+		try {
+			maxDuration = Integer.valueOf(maxDurationParam);
+		} catch (final NumberFormatException nfe) {
+			LOG.warn("No params aviable for Calltracker event Duration ("
+					+ IAppParamsService.APP_PARAM_KEY_EVENT_CALL_TRACKER_DURATION + ") FallBack to default value");
+		}
+
+		this.callTracker = new CallTrackerService<>(maxNbCall, Duration.ofMinutes(maxDuration), "Get calendar Events");
+
+		final ParamCreatedNotificationHandler paramCreatedNotificationHandler = BEANS
+				.get(ParamCreatedNotificationHandler.class);
+		paramCreatedNotificationHandler.addListener(this.createParamCreatedListener());
+
+		final ParamModifiedNotificationHandler paramModifiedNotificationHandler = BEANS
+				.get(ParamModifiedNotificationHandler.class);
+		paramModifiedNotificationHandler.addListener(this.createParamModifiedListener());
+
+		super.execInitPage();
+	}
+
+	@Override
+	protected void execDisposePage() {
+		final ParamCreatedNotificationHandler paramCreatedNotificationHandler = BEANS
+				.get(ParamCreatedNotificationHandler.class);
+		paramCreatedNotificationHandler.removeListener(this.paramCreatedListener);
+
+		final ParamModifiedNotificationHandler paramModifiedNotificationHandler = BEANS
+				.get(ParamModifiedNotificationHandler.class);
+		paramModifiedNotificationHandler.removeListener(this.paramModifiedListener);
+
+		super.execDisposePage();
 	}
 
 	/**
@@ -151,9 +217,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	 *
 	 * @param formData
 	 *            event Data to search for the key (mostly "state" is used)
-	 * @param isSender
-	 *            does this message for user who modify the event (sender) or
-	 *            the other (receiver) ?
 	 * @return the key to use {@link TEXTS.get()}. <br />
 	 *         Samples : <br/>
 	 *         zc.meeting.notification.modifiedEvent.send (default for user who
@@ -194,6 +257,86 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		}
 
 		return builder.toString();
+	}
+
+	protected void addEventProcessedWithoutDates(final Long eventId) {
+		this.processedEventWithoutPossibleDates.add(eventId);
+		this.processedEventLastModification = new Date();
+	}
+
+	private Boolean isEventProcessed(final Long eventId) {
+		// if (null != this.processedEventLastModification) {
+		// final Date oudatedDataTime = new Date(
+		// this.processedEventLastModification.getTime() +
+		// this.processedEventTtl);
+		// if (new Date().after(oudatedDataTime)) {
+		// this.processedEventWithoutPossibleDates.clear();
+		// }
+		// }
+		return this.processedEventWithoutPossibleDates.contains(eventId);
+	}
+
+	protected INotificationListener<ParamCreatedNotification> createParamCreatedListener() {
+		this.paramCreatedListener = new INotificationListener<ParamCreatedNotification>() {
+			@Override
+			public void handleNotification(final ParamCreatedNotification notification) {
+
+				final AppParamsFormData paramForm = notification.getParamForm();
+				AbstractEventsTablePage.this.updateEventCallTracker(paramForm);
+			}
+		};
+		return this.paramCreatedListener;
+	}
+
+	protected INotificationListener<ParamModifiedNotification> createParamModifiedListener() {
+		this.paramModifiedListener = new INotificationListener<ParamModifiedNotification>() {
+			@Override
+			public void handleNotification(final ParamModifiedNotification notification) {
+
+				final AppParamsFormData paramForm = notification.getParamForm();
+				AbstractEventsTablePage.this.updateEventCallTracker(paramForm);
+			}
+		};
+		return this.paramModifiedListener;
+	}
+
+	private void updateEventCallTracker(final AppParamsFormData paramForm) {
+		final String appParamKey = paramForm.getKey().getValue();
+		final String appParamValue = paramForm.getValue().getValue();
+		LOG.debug("New Param prepare to update Event Configuration (in "
+				+ AbstractEventsTablePage.this.getConfiguredTitle() + ") for param Id : " + paramForm.getParamId()
+				+ " with key : " + appParamKey);
+		try {
+
+			if (null != appParamKey) {
+				if (appParamKey.equals(IAppParamsService.APP_PARAM_KEY_EVENT_CALL_TRACKER_MAX)) {
+					LOG.info("Updatding Events CallTracker max try with value : " + appParamValue);
+					Integer maxSuccesivCall = null;
+					try {
+						maxSuccesivCall = Integer.valueOf(appParamValue);
+						AbstractEventsTablePage.this.callTracker.setMaxSuccessiveCall(maxSuccesivCall);
+					} catch (final NumberFormatException nfe) {
+						LOG.warn("Cannot update Event Call Tracker max successive Call with invalid value : "
+								+ appParamValue, nfe);
+					}
+
+				} else if (appParamKey.equals(IAppParamsService.APP_PARAM_KEY_EVENT_CALL_TRACKER_DURATION)) {
+					LOG.info("Updatding Events CallTracker duration try with value : " + appParamValue);
+
+					Integer ttl = null;
+					try {
+						ttl = Integer.valueOf(appParamValue);
+						AbstractEventsTablePage.this.callTracker.setTimeToLive(Duration.ofMinutes(ttl));
+					} catch (final NumberFormatException nfe) {
+						LOG.warn("Cannot update Event Call Tracker ttl with invalid value : " + appParamValue, nfe);
+					}
+				}
+			}
+
+		} catch (final RuntimeException e) {
+			LOG.error("Could not update Event configuration (new AppPAram). ("
+					+ AbstractEventsTablePage.this.getConfiguredTitle() + ")", e);
+		}
 	}
 
 	public class Table extends AbstractTable {
@@ -273,11 +416,12 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 					LOG.debug("New event prepare to add to table (in " + Table.this.getTitle() + ") for event Id : "
 							+ eventForm.getEventId());
 					try {
-						AbstractEventsTablePage.this.getTable()
+						final ITableRow newRow = AbstractEventsTablePage.this.getTable()
 								.addRow(AbstractEventsTablePage.this.getTable().createTableRowFromForm(eventForm));
 						AbstractEventsTablePage.this.getTable().applyRowFilters();
 
 						AbstractEventsTablePage.this.onNewEvent(eventForm);
+						Table.this.autoFillDates(newRow);
 
 						final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 						notificationHelper.addProccessedNotification(
@@ -460,7 +604,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		}
 
 		private void invalidateIfSlotMatch(final ITableRow row, final String slotCode) {
-			final Integer rowSlotCode = this.getSlotColumn().getValue(row.getRowIndex());
+			final Long rowSlotCode = this.getSlotColumn().getValue(row.getRowIndex());
 
 			if (null != rowSlotCode) {
 				if (rowSlotCode.equals(Integer.valueOf(slotCode))) {
@@ -500,15 +644,19 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		}
 
 		protected Boolean canAutofillDates(final ITableRow row) {
+
+			final Long eventId = this.getEventIdColumn().getValue(row.getRowIndex());
 			final Long hostId = this.getOrganizerColumn().getValue(row.getRowIndex());
 			final Long attendeeId = this.getGuestIdColumn().getValue(row.getRowIndex());
 			final Boolean startDateEmpty = null == this.getStartDateColumn().getValue(row.getRowIndex());
 			final Boolean endDateEmpty = null == this.getEndDateColumn().getValue(row.getRowIndex());
 			final String rowState = this.getStateColumn().getValue(row.getRowIndex());
-			return null != row && "ASKED".equals(rowState) && startDateEmpty && endDateEmpty
-					&& GoogleApiHelper.get().isCalendarConfigured(hostId)
-					&& GoogleApiHelper.get().isCalendarConfigured(attendeeId) && this.isTimeZoneValid(attendeeId)
-					&& this.isTimeZoneValid(hostId) && this.isGuestCurrentUser(row);
+			final Boolean alreadyProcessed = AbstractEventsTablePage.this.isEventProcessed(eventId);
+			return null != row && !alreadyProcessed && CompareUtility.equals(StateCodeType.AskedCode.ID, rowState)
+					&& startDateEmpty && endDateEmpty && BEANS.get(GoogleApiHelper.class).isCalendarConfigured(hostId)
+					// &&
+					// BEANS.get(GoogleApiHelper.class).isCalendarConfigured(attendeeId)
+					&& this.isTimeZoneValid(attendeeId) && this.isTimeZoneValid(hostId) && this.isGuestCurrentUser(row);
 		}
 
 		@Override
@@ -569,20 +717,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		}
 
 		private List<Object> getListFromForm(final EventFormData formData) {
-			// EventIdColumn[Id],
-			// OrganizerColumn[Host],
-			// OrganizerEmailColumn[Host],
-			// SubjectField [Subject ]
-			// GuestIdColumn[AttendeeId],
-			// EmailColumn[Attendee],
-			// DurationColumn[Duration],
-			// StateColumn[State],
-			// StartDateColumn[Start],
-			// EndDateColumn[End],
-			// SlotColumn[Slot],
-			// ExternalIdOrganizerColumn[External Id],
-			// ExternalIdRecipientColumn[External Id]
-			// reasonColumn [reason]
 			final List<Object> datas = new ArrayList<>();
 			datas.add(formData.getEventId());
 			datas.add(formData.getOrganizer().getValue());
@@ -592,6 +726,8 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			datas.add(formData.getEmail().getValue());
 			datas.add(formData.getSubject().getValue());
 			datas.add(formData.getSlot().getValue());
+			datas.add(formData.getMinimalStartDate().getValue());
+			datas.add(formData.getMaximalStartDate().getValue());
 			datas.add(formData.getDuration().getValue());
 			datas.add(formData.getVenue().getValue());
 			datas.add(formData.getState().getValue());
@@ -653,7 +789,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		protected Boolean isGuestCurrentUser(final ITableRow row) {
 			final String rowEmail = this.getEmailColumn().getValue(row.getRowIndex());
 
-			return this.isGuest(rowEmail);
+			return this.isGuest(rowEmail.toLowerCase());
 		}
 
 		protected Boolean isGuest(final String email) {
@@ -672,6 +808,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		protected Boolean userCanUpdate(final ITableRow row) {
 			final Long currentEventId = Table.this.getEventIdColumn().getValue(row.getRowIndex());
 
+			// BEANS.get(AccessControlService.class).clearCacheOfCurrentUser();
 			return ACCESS.check(new UpdateEventPermission(currentEventId));
 		}
 
@@ -734,7 +871,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			if (null != currentRow) {
 				this.reloadMenus(currentRow);
 			} else {
-				final IMenu newEventMenu = this.getMenuByClass(NewMenu.class);
+				final IMenu newEventMenu = this.getMenuByClass(NewEventMenu.class);
 				if (null != newEventMenu) {
 					newEventMenu.setVisible(Boolean.TRUE);
 				}
@@ -777,20 +914,10 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		}
 
 		@Order(3000)
-		public class RefuseMenu extends AbstractMenu {
+		public class RefuseMenu extends AbstractCancelMenu {
 			@Override
 			protected String getConfiguredText() {
 				return TEXTS.get("zc.meeting.refuse");
-			}
-
-			@Override
-			protected String getConfiguredIconId() {
-				return Icons.ExclamationMark;
-			}
-
-			@Override
-			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-				return CollectionUtility.hashSet(TableMenuType.SingleSelection);
 			}
 
 			@Override
@@ -801,9 +928,10 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			private Boolean isWorkflowVisible(final String currentState) {
 
 				Boolean isVisible = Boolean.FALSE;
-				if ("ASKED".equals(currentState) && Table.this.isGuestCurrentUser(Table.this.getSelectedRow())) {
+				if (CompareUtility.equals(StateCodeType.AskedCode.ID, currentState)
+						&& Table.this.isGuestCurrentUser(Table.this.getSelectedRow())) {
 					isVisible = Boolean.TRUE;
-				} else if ("ACCEPTED".equals(currentState)) {
+				} else if (CompareUtility.equals(StateCodeType.AcceptedCode.ID, currentState)) {
 					isVisible = Boolean.TRUE;
 				}
 				return isVisible;
@@ -814,7 +942,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				final ITableRow row = Table.this.getOwnerAsTableRow(newOwnerValue);
 				if (null != row) {
 					this.setVisible(this.isWorkflowVisible(Table.this.getState(row)) && Table.this.userCanReject(row));
-					this.setEnabled(AbstractEventsTablePage.this.isUserCalendarConfigured());
+					// this.setEnabled(AbstractEventsTablePage.this.isUserCalendarConfigured());
 					// TODO Djer13 hide if date.start and date.end are in the
 					// past ?
 				}
@@ -822,6 +950,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 			@Override
 			protected void execAction() {
+
 				final RejectEventForm form = new RejectEventForm();
 				final Long currentEventId = Table.this.getEventIdColumn().getSelectedValue();
 				final ZonedDateTime start = Table.this.getStartDateColumn().getSelectedZonedValue();
@@ -834,13 +963,13 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 						org.zeroclick.meeting.client.event.AbstractEventsTablePage.Table.this.refuseCancelFormListener);
 				// start the form using its modify handler
 				form.startReject(Table.this.isHeldByCurrentUser(Table.this.getSelectedRow()));
+
 			}
 
 			@Override
 			protected String getConfiguredKeyStroke() {
 				return combineKeyStrokes(IKeyStroke.SHIFT, "r");
 			}
-
 		}
 
 		public FormListener refuseCancelFormListener = new FormListener() {
@@ -871,15 +1000,10 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		};
 
 		@Order(4000)
-		public class CancelMenu extends AbstractMenu {
+		public class CancelEventMenu extends AbstractCancelMenu {
 			@Override
 			protected String getConfiguredText() {
 				return TEXTS.get("Cancel");
-			}
-
-			@Override
-			protected String getConfiguredIconId() {
-				return Icons.ExclamationMark;
 			}
 
 			@Override
@@ -888,14 +1012,10 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				return Boolean.FALSE;
 			}
 
-			@Override
-			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-				return CollectionUtility.hashSet(TableMenuType.SingleSelection);
-			}
-
 			private Boolean isWorkflowVisible(final String currentState) {
 				Boolean isVisible = Boolean.FALSE;
-				if ("ASKED".equals(currentState) && Table.this.isHeldByCurrentUser(Table.this.getSelectedRow())) {
+				if (CompareUtility.equals(StateCodeType.AskedCode.ID, currentState)
+						&& Table.this.isHeldByCurrentUser(Table.this.getSelectedRow())) {
 					isVisible = Boolean.TRUE;
 				}
 				return isVisible;
@@ -906,7 +1026,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				final ITableRow row = Table.this.getOwnerAsTableRow(newOwnerValue);
 				if (null != row) {
 					this.setVisible(this.isWorkflowVisible(Table.this.getState(row)) && Table.this.userCanCancel(row));
-					this.setEnabled(AbstractEventsTablePage.this.isUserCalendarConfigured());
+					// this.setEnabled(AbstractEventsTablePage.this.isUserCalendarConfigured());
 					// TODO Djer13 hide if date.start and date.end are in the
 					// past ?
 				}
@@ -921,11 +1041,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				// form.addFormListener(
 				// org.zeroclick.meeting.client.event.AbstractEventsTablePage.Table.this.refuseCancelFormListener);
 				form.startCancel(Table.this.isHeldByCurrentUser(Table.this.getSelectedRow()));
-			}
-
-			@Override
-			protected String getConfiguredKeyStroke() {
-				return combineKeyStrokes(IKeyStroke.SHIFT, "c");
 			}
 		}
 
@@ -979,6 +1094,14 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 		public AbstractEventsTablePage<?>.Table.CreatedDateColumn getCreatedDateColumn() {
 			return this.getColumnSet().getColumnByClass(CreatedDateColumn.class);
+		}
+
+		public AbstractEventsTablePage<?>.Table.MinimalStartDateColumn getMinimalStartDateColumn() {
+			return this.getColumnSet().getColumnByClass(MinimalStartDateColumn.class);
+		}
+
+		public AbstractEventsTablePage<?>.Table.MaximalStartDateColumn getMaximalStartDateColumn() {
+			return this.getColumnSet().getColumnByClass(MaximalStartDateColumn.class);
 		}
 
 		public AbstractEventsTablePage<?>.Table.OrganizerColumn getOrganizerColumn() {
@@ -1042,6 +1165,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			}
 
 			@Override
+			protected boolean getConfiguredSummary() {
+				return Boolean.TRUE;
+			}
+
+			@Override
 			protected boolean getConfiguredVisible() {
 				return Boolean.FALSE;
 			}
@@ -1057,6 +1185,16 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.createdDate");
+			}
+
+			@Override
+			protected int getConfiguredSortIndex() {
+				return 0;
+			}
+
+			@Override
+			protected boolean getConfiguredSortAscending() {
+				return Boolean.TRUE;
 			}
 
 			@Override
@@ -1096,6 +1234,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			}
 
 			@Override
+			protected boolean getConfiguredSummary() {
+				return Boolean.TRUE;
+			}
+
+			@Override
 			protected boolean getConfiguredVisible() {
 				return Boolean.FALSE;
 			}
@@ -1114,13 +1257,18 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			}
 
 			@Override
+			protected boolean getConfiguredSummary() {
+				return Boolean.TRUE;
+			}
+
+			@Override
 			protected int getConfiguredWidth() {
 				return 256;
 			}
 		}
 
 		@Order(100)
-		public class SlotColumn extends AbstractSmartColumn<Integer> {
+		public class SlotColumn extends AbstractSmartColumn<Long> {
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.slot");
@@ -1132,13 +1280,59 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			}
 
 			@Override
-			protected Class<? extends ILookupCall<Integer>> getConfiguredLookupCall() {
-				return SlotLookupCall.class;
+			protected Class<? extends ICodeType<Long, Long>> getConfiguredCodeType() {
+				return SlotCodeType.class;
+			}
+		}
+
+		@Order(150)
+		public class MinimalStartDateColumn extends AbstractZonedDateColumn {
+			@Override
+			protected String getConfiguredHeaderText() {
+				return TEXTS.get("zc.meeting.minimalStartDate");
+			}
+
+			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.FALSE;
+			}
+
+			@Override
+			protected boolean getConfiguredHasTime() {
+				return Boolean.TRUE;
+			}
+
+			@Override
+			protected int getConfiguredWidth() {
+				return 100;
+			}
+		}
+
+		@Order(175)
+		public class MaximalStartDateColumn extends AbstractZonedDateColumn {
+			@Override
+			protected String getConfiguredHeaderText() {
+				return TEXTS.get("zc.meeting.maximalStartDate");
+			}
+
+			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.FALSE;
+			}
+
+			@Override
+			protected boolean getConfiguredHasTime() {
+				return Boolean.TRUE;
+			}
+
+			@Override
+			protected int getConfiguredWidth() {
+				return 100;
 			}
 		}
 
 		@Order(200)
-		public class DurationColumn extends AbstractSmartColumn<Integer> {
+		public class DurationColumn extends AbstractSmartColumn<Long> {
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.duration");
@@ -1150,8 +1344,8 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			}
 
 			@Override
-			protected Class<? extends ILookupCall<Integer>> getConfiguredLookupCall() {
-				return DurationLookupCall.class;
+			protected Class<? extends ICodeType<Long, Long>> getConfiguredCodeType() {
+				return DurationCodeType.class;
 			}
 		}
 
@@ -1175,6 +1369,9 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 		@Order(1100)
 		public class StateColumn extends AbstractSmartColumn<String> {
+			// In User context, so texts are translated
+			final StateCodeType eventStateCodes = new StateCodeType();
+
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.state");
@@ -1196,20 +1393,16 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 				final String stateColumnValue = (String) cell.getValue();
 
-				// TODO Djer13 optimization, useful to create a new lookup for
-				// each cell ?
-				final EventStateLookupCall stateLookUpCall = new EventStateLookupCall();
-				final ILookupRow<String> stateLookupValue = stateLookUpCall.getDataById(stateColumnValue);
-
-				cell.setIconId(stateLookupValue.getIconId());
-				cell.setBackgroundColor(stateLookupValue.getBackgroundColor());
-				cell.setForegroundColor(stateLookupValue.getForegroundColor());
-
+				final ICode<String> currentStateCode = this.eventStateCodes.getCode(stateColumnValue);
+				cell.setIconId(currentStateCode.getIconId());
+				cell.setBackgroundColor(currentStateCode.getBackgroundColor());
+				cell.setForegroundColor(currentStateCode.getForegroundColor());
+				cell.setText(currentStateCode.getText());
 			}
 
 			@Override
-			protected Class<? extends ILookupCall<String>> getConfiguredLookupCall() {
-				return EventStateLookupCall.class;
+			protected Class<? extends ICodeType<Long, String>> getConfiguredCodeType() {
+				return StateCodeType.class;
 			}
 		}
 

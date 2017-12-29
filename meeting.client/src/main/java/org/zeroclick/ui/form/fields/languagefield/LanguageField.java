@@ -24,10 +24,10 @@ import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.nls.NlsLocale;
 import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.shared.TEXTS;
-import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
+import org.eclipse.scout.rt.shared.services.common.code.ICodeType;
 import org.zeroclick.comon.text.TextsHelper;
 import org.zeroclick.comon.text.UserHelper;
-import org.zeroclick.configuration.shared.user.LanguageLookupCall;
+import org.zeroclick.configuration.shared.user.LanguageCodeType;
 import org.zeroclick.meeting.client.ClientSession;
 import org.zeroclick.meeting.shared.Icons;
 
@@ -49,8 +49,8 @@ public class LanguageField extends AbstractSmartField<String> {
 	}
 
 	@Override
-	protected Class<? extends ILookupCall<String>> getConfiguredLookupCall() {
-		return LanguageLookupCall.class;
+	protected Class<? extends ICodeType<?, String>> getConfiguredCodeType() {
+		return LanguageCodeType.class;
 	}
 
 	public Boolean getValueChanged() {

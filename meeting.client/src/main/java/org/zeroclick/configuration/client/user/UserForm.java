@@ -882,7 +882,7 @@ public class UserForm extends AbstractForm {
 		final Long defaultRole = 2l;
 		final Long subscriptionFreeId = 3l;
 
-		this.getEmailField().setValue(email);
+		this.getEmailField().setValue(email.toLowerCase());
 
 		this.generateAndAddFormPassword();
 
@@ -924,9 +924,14 @@ public class UserForm extends AbstractForm {
 
 	private String generatePasword() {
 		final byte[] randomBytes = SecurityUtility.createRandomBytes(20);
+		LOG.info("Generated auto-createUser (before Base64) : " + randomBytes);
 		String plainRandomPassword = Base64Utility.encode(randomBytes);
-		plainRandomPassword.replaceAll("[iI0O/=\\\\]", java.util.regex.Matcher.quoteReplacement(""));
+		LOG.info("Generated auto-createUser (after Base64) : " + plainRandomPassword);
+		plainRandomPassword.replaceAll("[iIlL0Oo/=\\+\\\\]", java.util.regex.Matcher.quoteReplacement(""));
 		plainRandomPassword = plainRandomPassword.substring(0, 8);
+
+		// TODO Djer13 remove this when possible
+		LOG.info("Generated auto-createUser (after substring) partial : " + plainRandomPassword.substring(3, 6));
 
 		return plainRandomPassword;
 	}

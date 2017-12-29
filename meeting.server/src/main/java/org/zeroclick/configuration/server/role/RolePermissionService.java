@@ -22,13 +22,13 @@ import java.util.List;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.holders.NVPair;
 import org.eclipse.scout.rt.server.jdbc.SQL;
-import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeroclick.common.CommonService;
+import org.zeroclick.common.AbstractCommonService;
 import org.zeroclick.configuration.shared.role.AssignToRoleFormData;
 import org.zeroclick.configuration.shared.role.CreateAssignToRolePermission;
 import org.zeroclick.configuration.shared.role.IRolePermissionService;
+import org.zeroclick.configuration.shared.role.ReadAssignToRolePermission;
 import org.zeroclick.configuration.shared.role.UpdateAssignToRolePermission;
 import org.zeroclick.meeting.server.security.ServerAccessControlService;
 import org.zeroclick.meeting.server.sql.SQLs;
@@ -37,9 +37,14 @@ import org.zeroclick.meeting.server.sql.SQLs;
  * @author djer
  *
  */
-public class RolePermissionService extends CommonService implements IRolePermissionService {
+public class RolePermissionService extends AbstractCommonService implements IRolePermissionService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(RolePermissionService.class);
+
+	@Override
+	protected Logger getLog() {
+		return LOG;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -50,9 +55,7 @@ public class RolePermissionService extends CommonService implements IRolePermiss
 	 */
 	@Override
 	public AssignToRoleFormData create(final AssignToRoleFormData formData) {
-		if (!ACCESS.check(new CreateAssignToRolePermission())) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new CreateAssignToRolePermission());
 		final Long roleId = formData.getRoleId().getValue();
 		LOG.info("Adding new permission(s) to role :" + roleId + " : " + formData.getPermission());
 		SQL.insert(SQLs.ROLE_PERMISSION_INSERT, formData);
@@ -63,9 +66,7 @@ public class RolePermissionService extends CommonService implements IRolePermiss
 
 	@Override
 	public void remove(final Long roleId, final List<String> permissions) {
-		if (!ACCESS.check(new UpdateAssignToRolePermission())) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new UpdateAssignToRolePermission());
 		LOG.info("Removing permission(s) to role :" + roleId + " : " + permissions);
 		SQL.insert(SQLs.ROLE_PERMISSION_DELETE, new NVPair("roleId", roleId), new NVPair("permissions", permissions));
 		this.clearCacheOfUsersWithRole(roleId);
@@ -73,9 +74,7 @@ public class RolePermissionService extends CommonService implements IRolePermiss
 
 	@Override
 	public void remove(final Long roleId) {
-		if (!ACCESS.check(new UpdateAssignToRolePermission())) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new UpdateAssignToRolePermission());
 		LOG.info("Removing ALL permission(s) to role :" + roleId);
 		SQL.insert(SQLs.ROLE_PERMISSION_DELETE_BY_ROLE, new NVPair("roleId", roleId));
 		this.clearCacheOfUsersWithRole(roleId);
@@ -97,6 +96,7 @@ public class RolePermissionService extends CommonService implements IRolePermiss
 	}
 
 	private Object[][] getUsersByRole(final Long roleId) {
+		super.checkPermission(new ReadAssignToRolePermission());
 
 		final StringBuilder sql = new StringBuilder();
 
@@ -105,7 +105,7 @@ public class RolePermissionService extends CommonService implements IRolePermiss
 	}
 
 	private Object[][] getAllUsersRole() {
-
+		super.checkPermission(new ReadAssignToRolePermission());
 		final StringBuilder sql = new StringBuilder();
 
 		sql.append(SQLs.USER_ROLE_SELECT);

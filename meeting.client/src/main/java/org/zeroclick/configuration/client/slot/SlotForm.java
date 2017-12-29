@@ -6,7 +6,6 @@ import java.util.Set;
 import org.eclipse.scout.rt.client.dto.FormData;
 import org.eclipse.scout.rt.client.ui.action.keystroke.AbstractKeyStroke;
 import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
-import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
 import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.action.menu.TreeMenuType;
 import org.eclipse.scout.rt.client.ui.basic.tree.AbstractTree;
@@ -35,6 +34,7 @@ import org.zeroclick.configuration.client.slot.SlotForm.MainBox.SlotsBox.SlotSel
 import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.configuration.shared.slot.SlotFormData;
 import org.zeroclick.meeting.shared.security.AccessControlService;
+import org.zeroclick.ui.action.menu.AbstractEditMenu;
 
 @FormData(value = SlotFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class SlotForm extends AbstractForm implements IPageForm {
@@ -110,7 +110,7 @@ public class SlotForm extends AbstractForm implements IPageForm {
 	public class MainBox extends AbstractGroupBox {
 
 		@Order(1000)
-		public class EditMenu extends AbstractMenu {
+		public class EditDayDurationMenu extends AbstractEditMenu {
 			@Override
 			protected String getConfiguredText() {
 				return TEXTS.get("zc.meeting.dayDuration.edit");
@@ -159,7 +159,7 @@ public class SlotForm extends AbstractForm implements IPageForm {
 					public class Tree extends AbstractTree {
 
 						@Order(1000)
-						public class EditMenu extends AbstractMenu {
+						public class EditDayDurationMenu extends AbstractEditMenu {
 							@Override
 							protected String getConfiguredText() {
 								return TEXTS.get("zc.meeting.dayDuration.edit");

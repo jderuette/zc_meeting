@@ -1,27 +1,26 @@
 package org.zeroclick.configuration.server.slot;
 
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
 
 import org.eclipse.scout.rt.platform.BEANS;
-import org.eclipse.scout.rt.platform.exception.VetoException;
+import org.eclipse.scout.rt.platform.holders.BeanArrayHolder;
+import org.eclipse.scout.rt.platform.holders.IBeanArrayHolder;
 import org.eclipse.scout.rt.platform.holders.NVPair;
+import org.eclipse.scout.rt.platform.util.CollectionUtility;
+import org.eclipse.scout.rt.platform.util.date.UTCDate;
 import org.eclipse.scout.rt.server.clientnotification.ClientNotificationRegistry;
 import org.eclipse.scout.rt.server.jdbc.SQL;
-import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeroclick.common.CommonService;
+import org.zeroclick.common.AbstractCommonService;
 import org.zeroclick.comon.date.DateHelper;
 import org.zeroclick.configuration.shared.slot.CreateSlotPermission;
 import org.zeroclick.configuration.shared.slot.DayDurationFormData;
@@ -37,24 +36,25 @@ import org.zeroclick.meeting.server.sql.migrate.data.PatchSlotTable;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
-public class SlotService extends CommonService implements ISlotService {
+public class SlotService extends AbstractCommonService implements ISlotService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(SlotService.class);
 
 	@Override
+	protected Logger getLog() {
+		return LOG;
+	}
+
+	@Override
 	public SlotFormData prepareCreate(final SlotFormData formData) {
-		if (!ACCESS.check(new CreateSlotPermission())) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new CreateSlotPermission());
 		// TODO [djer] add business logic here.
 		return formData;
 	}
 
 	@Override
 	public SlotFormData create(final SlotFormData formData) {
-		if (!ACCESS.check(new CreateSlotPermission())) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new CreateSlotPermission());
 		// TODO [djer] add business logic here.
 		return formData;
 	}
@@ -72,9 +72,7 @@ public class SlotService extends CommonService implements ISlotService {
 	}
 
 	private String getSlotCode(final Long slotId) {
-		if (!ACCESS.check(new ReadSlotPermission(slotId))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new ReadSlotPermission(slotId));
 		String slotCode = null;
 
 		final Object[][] result = SQL.select(SQLs.SLOT_SELECT + SQLs.SLOT_SELECT_FILTER_SLOT_ID,
@@ -92,9 +90,7 @@ public class SlotService extends CommonService implements ISlotService {
 	@Override
 	public DayDurationFormData load(final DayDurationFormData formData) {
 		// Access on Slot implies access on DayDuration
-		if (!ACCESS.check(new ReadSlotPermission(formData.getSlotId()))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new ReadSlotPermission(formData.getSlotId()));
 
 		final StringBuilder sqlBuilder = new StringBuilder();
 
@@ -116,18 +112,14 @@ public class SlotService extends CommonService implements ISlotService {
 
 	@Override
 	public SlotFormData store(final SlotFormData formData) {
-		if (!ACCESS.check(new UpdateSlotPermission())) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new UpdateSlotPermission());
 		// TODO [djer] add business logic here.
 		return formData;
 	}
 
 	@Override
 	public DayDurationFormData store(final DayDurationFormData formData) {
-		if (!ACCESS.check(new UpdateSlotPermission())) {
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
-		}
+		super.checkPermission(new UpdateSlotPermission());
 		SQL.update(SQLs.DAY_DURATION_UPDATE, formData);
 
 		this.sendModifiedNotifications(formData);
@@ -163,6 +155,7 @@ public class SlotService extends CommonService implements ISlotService {
 	}
 
 	private SlotTablePageData getSlotData(final SearchFilter filter, final Boolean displayAllForAdmin) {
+		// No permission check, not admin user automatically see is own data
 		final SlotTablePageData pageData = new SlotTablePageData();
 
 		String ownerFilter = "";
@@ -230,9 +223,7 @@ public class SlotService extends CommonService implements ISlotService {
 	@Override
 	public Object[][] getDayDurations(final Long slotId) {
 		// Access on SLot implies access on DayDuration
-		if (!ACCESS.check(new ReadSlotPermission(slotId))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new ReadSlotPermission(slotId));
 
 		final String sql = SQLs.DAY_DURATION_SELECT + SQLs.DAY_DURATION_SELECT_FROM_PLUS_GENERIC_WHERE
 				+ SQLs.DAY_DURATION_SELECT_FILTER_SLOT_ID + SQLs.DAY_DURATION_SELECT_ORDER;
@@ -245,9 +236,7 @@ public class SlotService extends CommonService implements ISlotService {
 	@Override
 	public Object[][] getDayDurationsLight(final Long slotId) {
 		// Access on SLot implies access on DayDuration
-		if (!ACCESS.check(new ReadSlotPermission(slotId))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new ReadSlotPermission(slotId));
 
 		final String sql = SQLs.DAY_DURATION_SELECT_LIGHT + SQLs.DAY_DURATION_SELECT_FILTER_SLOT_ID
 				+ SQLs.DAY_DURATION_SELECT_ORDER;
@@ -271,14 +260,34 @@ public class SlotService extends CommonService implements ISlotService {
 		return slotId;
 	}
 
-	@Override
-	public Object[][] getDayDurations(final String slotName) {
-		return this.getDayDurations(slotName, super.userHelper.getCurrentUserId());
+	private String buildDayDurationsSelect(final Long userId, final Boolean addInto, final String intoPrefix) {
+		final StringBuilder sql = new StringBuilder(128);
+		sql.append(SQLs.DAY_DURATION_SELECT).append(", ").append(SQLs.DAY_DURATION_SELECT_SLOT_USER_ID)
+				.append(SQLs.DAY_DURATION_SELECT_FROM).append(SQLs.DAY_DURATION_JOIN_SLOT)
+				.append(SQLs.GENERIC_WHERE_FOR_SECURE_AND).append(SQLs.DAY_DURATION_SELECT_FILTER_SLOT_NAME);
+		if (null != userId) {
+			sql.append(SQLs.DAY_DURATION_SELECT_FILTER_SLOT_USER_ID);
+		}
+		sql.append(SQLs.DAY_DURATION_SELECT_ORDER);
+
+		if (addInto) {
+			if (null == intoPrefix) {
+				sql.append(SQLs.DAY_DURATION_SELECT_INTO).append(SQLs.DAY_DURATION_SELECT_INTO_SLOT_USER_ID);
+			} else {
+				sql.append(this.addResultPrefix(SQLs.DAY_DURATION_SELECT_INTO, intoPrefix))
+						.append(this.addResultPrefix(SQLs.DAY_DURATION_SELECT_INTO_SLOT_USER_ID, intoPrefix));
+			}
+		}
+
+		return sql.toString();
+	}
+
+	private String addResultPrefix(final String sql, final String prefix) {
+		return sql.replaceAll("\\:\\{", Matcher.quoteReplacement(":{" + prefix + "."));
 	}
 
 	@Override
-	public Object[][] getDayDurations(final String slotName, final Long userId) {
-		// get Slot Id (if user has a specific configuration)
+	public List<DayDurationFormData> getDayDurations(final String slotName, final Long userId) {
 		final Long slotId = this.getSlotId(slotName, userId);
 		if (null == slotId) {
 			return null; // early Break, Default Slot config should be return
@@ -288,42 +297,16 @@ public class SlotService extends CommonService implements ISlotService {
 			super.throwAuthorizationFailed();
 		}
 
-		final String sql = this.buildDayDurationsSelect(userId, Boolean.FALSE);
+		final IBeanArrayHolder<DayDurationFormData> results = new BeanArrayHolder<>(DayDurationFormData.class);
 
-		final Object[][] results = SQL.select(sql, new NVPair("slotName", slotName), new NVPair("userId", userId));
-
-		return results;
-	}
-
-	private String buildDayDurationsSelect(final Long userId, final Boolean addInto) {
-		final StringBuilder sql = new StringBuilder(128);
-		sql.append(SQLs.DAY_DURATION_SELECT).append(", ").append(SQLs.SLOT_SELECT_FILEDS)
-				.append(SQLs.DAY_DURATION_SELECT_FROM).append(SQLs.DAY_DURATION_JOIN_SLOT)
-				.append(SQLs.GENERIC_WHERE_FOR_SECURE_AND).append(SQLs.DAY_DURATION_SELECT_FILTER_SLOT_NAME);
-		if (null != userId) {
-			sql.append(SQLs.DAY_DURATION_SELECT_FILTER_SLOT_USER_ID);
-		}
-		sql.append(SQLs.DAY_DURATION_SELECT_ORDER);
-
-		if (addInto) {
-			sql.append(SQLs.DAY_DURATION_SELECT_INTO);
-		}
-
-		return sql.toString();
+		final String sql = this.buildDayDurationsSelect(userId, Boolean.TRUE, "results");
+		SQL.selectInto(sql, new NVPair("userId", userId), new NVPair("slotName", slotName),
+				new NVPair("results", results));
+		return null == results ? null : CollectionUtility.arrayList(results.getBeans((BeanArrayHolder.State[]) null));
 	}
 
 	private List<DayDurationFormData> getDayDurationsForAllUsers(final String slotName) {
-		if (ACCESS.getLevel(new ReadSlotPermission((Long) null)) != ReadSlotPermission.LEVEL_ALL) {
-			super.throwAuthorizationFailed();
-		}
-		final List<DayDurationFormData> results = new ArrayList<>();
-
-		final String sql = this.buildDayDurationsSelect(null, Boolean.TRUE);
-
-		SQL.selectInto(sql, new NVPair("slotName", slotName), new NVPair("", results));
-
-		return results;
-
+		return this.getDayDurations(slotName, null);
 	}
 
 	private Long getOwner(final Long slotId) {
@@ -378,6 +361,7 @@ public class SlotService extends CommonService implements ISlotService {
 
 	@Override
 	public void createDefaultSlot(final Long userId) {
+		LOG.info("Creating default Slot and DayDuration configuration for user ID : " + userId);
 		Long slotId = this.createSlot("zc.meeting.slot.1", userId, 1);
 		SQL.insert(SQLs.DAY_DURATION_INSERT_SAMPLE + this.forSlot(SQLs.DAY_DURATION_VALUES_MORNING, slotId));
 		SQL.insert(SQLs.DAY_DURATION_INSERT_SAMPLE + this.forSlot(SQLs.DAY_DURATION_VALUES_AFTERNOON, slotId));
@@ -396,27 +380,27 @@ public class SlotService extends CommonService implements ISlotService {
 	public void updateDayDurationsByTemplate(final String slotName, final String requiredStart,
 			final String requiredEnd, final String newStart, final String newEnd) {
 		final DateHelper dateHelper = BEANS.get(DateHelper.class);
-		final List<DayDurationFormData> evenningDayDuration = this.getDayDurationsForAllUsers(slotName);
+		final List<DayDurationFormData> dayDurations = this.getDayDurationsForAllUsers(slotName);
 
-		if (null != evenningDayDuration && evenningDayDuration.size() > 0) {
-			final Iterator<DayDurationFormData> itWorkDays = evenningDayDuration.iterator();
+		if (null != dayDurations && dayDurations.size() > 0) {
+			final Iterator<DayDurationFormData> itDayDurations = dayDurations.iterator();
 
-			final Date newValidStartEvenning = dateHelper
-					.toDate(ZonedDateTime.parse(newStart, DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)));
-			final Date newValidEndEvenning = dateHelper
-					.toDate(ZonedDateTime.parse(newEnd, DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)));
+			final UTCDate newValidStartEvenning = dateHelper.toScoutUTCDate(dateHelper.dateTimeFromHour(newStart));
+			final UTCDate newValidEndEvenning = dateHelper.toScoutUTCDate(dateHelper.dateTimeFromHour(newEnd));
 
-			while (itWorkDays.hasNext()) {
-				final DayDurationFormData anEveningDayDuration = itWorkDays.next();
-				if (anEveningDayDuration.getSlotStart().getValue().equals(requiredStart)
-						&& anEveningDayDuration.getSlotEnd().getValue().equals(requiredEnd)) {
-					anEveningDayDuration.getSlotStart().setValue(newValidStartEvenning);
-					anEveningDayDuration.getSlotEnd().setValue(newValidEndEvenning);
-					this.store(anEveningDayDuration);
+			final Date requiredStartDate = dateHelper.toDate(dateHelper.dateTimeFromHour(requiredStart));
+			final Date requiredEndDate = dateHelper.toDate(dateHelper.dateTimeFromHour(requiredEnd));
+
+			while (itDayDurations.hasNext()) {
+				final DayDurationFormData aDayDuration = itDayDurations.next();
+				if (aDayDuration.getSlotStart().getValue().equals(requiredStartDate)
+						&& aDayDuration.getSlotEnd().getValue().equals(requiredEndDate)) {
+					aDayDuration.getSlotStart().setValue(newValidStartEvenning);
+					aDayDuration.getSlotEnd().setValue(newValidEndEvenning);
+					this.store(aDayDuration);
 				}
 			}
 		}
-
 	}
 
 	/**
@@ -430,9 +414,15 @@ public class SlotService extends CommonService implements ISlotService {
 		// TODO Djer permission check ? (should be against permissions on (new)
 		// userId
 		final Long slotId = DatabaseHelper.get().getNextVal(PatchSlotTable.SLOT_ID_SEQ);
-		SQL.insert(SQLs.SLOT_INSERT_SAMPLE
-				+ this.forSlot(SQLs.SLOT_VALUES_GENERIC, slotId).replace("__slotCode__", String.valueOf(slotCode))
-						.replace("__slotName__", slotName).replace("__userId__", String.valueOf(userId)));
+
+		if (DatabaseHelper.get().isColumnExists("SLOT", "slot_code")) {
+			SQL.insert(SQLs.SLOT_INSERT_SAMPLE_WITH_CODE + this.forSlot(SQLs.SLOT_VALUES_GENERIC_WITH_CODE, slotId)
+					.replace("__slotCode__", String.valueOf(slotCode)).replace("__slotName__", slotName)
+					.replace("__userId__", String.valueOf(userId)));
+		} else {
+			SQL.insert(SQLs.SLOT_INSERT_SAMPLE + this.forSlot(SQLs.SLOT_VALUES_GENERIC, slotId)
+					.replace("__slotName__", slotName).replace("__userId__", String.valueOf(userId)));
+		}
 		return slotId;
 	}
 
@@ -442,21 +432,65 @@ public class SlotService extends CommonService implements ISlotService {
 
 	@Override
 	public void addDefaultCodeToExistingSlot() {
-		final String sql = SQLs.SLOT_PAGE_SELECT;
+		if (ACCESS.getLevel(new ReadSlotPermission((Long) null)) == ReadSlotPermission.LEVEL_ALL) {
 
-		final Object[][] slots = SQL.select(sql);
+			final String sql = SQLs.SLOT_PAGE_SELECT;
 
-		if (null != slots && slots.length > 0) {
-			for (int row = 0; row < slots.length; row++) {
-				LOG.info("Adding default Slot code for slot");
-				final Object[] slot = slots[row];
-				final String slotName = (String) slot[1];
-				final Long slotId = (Long) slot[0];
-				final String slotCodeExtracted = slotName.substring(slotName.lastIndexOf('.') + 1, slotName.length());
-				final Integer slotCode = Integer.valueOf(slotCodeExtracted);
-				SQL.update(SQLs.SLOT_UPDATE_CODE, new NVPair("slotCode", slotCode), new NVPair("slotId", slotId));
+			final Object[][] slots = SQL.select(sql);
+
+			if (null != slots && slots.length > 0) {
+				for (int row = 0; row < slots.length; row++) {
+					LOG.info("Adding default Slot code for slot");
+					final Object[] slot = slots[row];
+					final String slotName = (String) slot[1];
+					final Long slotId = (Long) slot[0];
+					final String slotCodeExtracted = slotName.substring(slotName.lastIndexOf('.') + 1,
+							slotName.length());
+					final Integer slotCode = Integer.valueOf(slotCodeExtracted);
+					SQL.update(SQLs.SLOT_UPDATE_CODE, new NVPair("slotCode", slotCode), new NVPair("slotId", slotId));
+				}
 			}
+		} else {
+			LOG.error("A Non Slot admin user try to update all Slot Codes ! ");
 		}
 	}
+
+	// @Override
+	// public void migrateDayDurationTimeToUtc(final String slotName) {
+	// final DateHelper dateHelper = BEANS.get(DateHelper.class);
+	// final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
+	// final List<DayDurationFormData> dayDurations =
+	// this.getDayDurationsForAllUsers(slotName);
+	//
+	// if (null != dayDurations && dayDurations.size() > 0) {
+	// final Iterator<DayDurationFormData> itDayDurations =
+	// dayDurations.iterator();
+	//
+	// while (itDayDurations.hasNext()) {
+	// final DayDurationFormData aDayDuration = itDayDurations.next();
+	//
+	// final Date curentStart = aDayDuration.getSlotStart().getValue();
+	// final Date curentEnd = aDayDuration.getSlotEnd().getValue();
+	//
+	// final ZoneId userZoneId =
+	// appUserHelper.getUserZoneId(aDayDuration.getUserId());
+	//
+	// final Date utcStartDate =
+	// dateHelper.fromUtcDate(dateHelper.hoursToDate(curentStart), userZoneId);
+	// final Date utcEndDate =
+	// dateHelper.fromUtcDate(dateHelper.hoursToDate(curentEnd), userZoneId);
+	//
+	// LOG.info("Migrating DayDuration Time to UTC for User : " +
+	// aDayDuration.getUserId() + ". Start from "
+	// + curentStart + "(" + userZoneId + " ?) to " + utcStartDate + ", End from
+	// " + curentEnd + "("
+	// + userZoneId + " ?) to " + utcEndDate);
+	//
+	// aDayDuration.getSlotStart().setValue(utcStartDate);
+	// aDayDuration.getSlotEnd().setValue(utcEndDate);
+	// this.store(aDayDuration);
+	// }
+	// }
+	// }
 
 }

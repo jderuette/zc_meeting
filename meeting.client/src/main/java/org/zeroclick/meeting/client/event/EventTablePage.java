@@ -8,6 +8,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -26,6 +27,7 @@ import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
+import org.eclipse.scout.rt.platform.util.CompareUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
@@ -35,6 +37,7 @@ import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
 import org.zeroclick.comon.text.TextsHelper;
 import org.zeroclick.configuration.client.user.ValidateCpsForm;
+import org.zeroclick.configuration.shared.duration.DurationCodeType;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper.SubscriptionHelperData;
 import org.zeroclick.configuration.shared.user.IUserService;
@@ -52,6 +55,9 @@ import org.zeroclick.meeting.shared.event.CreateEventPermission;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.EventTablePageData;
 import org.zeroclick.meeting.shared.event.IEventService;
+import org.zeroclick.meeting.shared.event.StateCodeType;
+import org.zeroclick.ui.action.menu.AbstractNewMenu;
+import org.zeroclick.ui.action.menu.AbstractValidateMenu;
 
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;
@@ -82,6 +88,8 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		this.setNbEventToProcess(pageData.getRowCount());
 
 		this.refreshTitle();
+
+		super.getTable().autoFillDates();
 	}
 
 	@Override
@@ -97,6 +105,11 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 	@Override
 	protected boolean getConfiguredTableStatusVisible() {
 		return Boolean.FALSE;
+	}
+
+	@Override
+	protected String getConfiguredIconId() {
+		return Icons.LongArrowRight;
 	}
 
 	protected void incNbEventToProcess() {
@@ -120,17 +133,27 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 	protected Boolean canHandleNew(final AbstractEventNotification notification) {
 		final EventFormData formData = notification.getEventForm();
 		return !this.getEventMessageHelper().isHeldByCurrentUser(formData)
-				&& "ASKED".equals(formData.getState().getValue());
+				&& CompareUtility.equals(StateCodeType.AskedCode.ID, formData.getState().getValue());
 	}
 
 	@Override
 	protected Boolean canHandleModified(final AbstractEventNotification notification) {
 		final EventFormData formData = notification.getEventForm();
 		return !this.getEventMessageHelper().isHeldByCurrentUser(formData)
-				&& "ASKED".equals(formData.getState().getValue());
+				&& CompareUtility.equals(StateCodeType.AskedCode.ID, formData.getState().getValue());
 	}
 
 	public class Table extends AbstractEventsTablePage<Table>.Table {
+
+		@Override
+		protected boolean getConfiguredRowIconVisible() {
+			return true;
+		}
+
+		@Override
+		protected String getConfiguredDefaultIconId() {
+			return Icons.Null;
+		}
 
 		@Override
 		protected void execInitTable() {
@@ -166,11 +189,11 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			return EventTablePage.this.buildTitle();
 		}
 
-		@Override
-		protected void execContentChanged() {
-			this.autoFillDates();
-			super.execContentChanged();
-		}
+		// @Override
+		// protected void execContentChanged() {
+		// this.autoFillDates();
+		// super.execContentChanged();
+		// }
 
 		@Override
 		protected void execDecorateRow(final ITableRow row) {
@@ -183,36 +206,91 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			if (this.canAutofillDates(row)) {
 				LOG.info("Calculating new Date (autofill) for row : " + row);
 				try {
-					this.changeDatesNext(row);
+					this.changeDatesNext(row, Boolean.FALSE);
+					final Date calculatedStartDate = this.getStartDateColumn().getValue(row.getRowIndex());
+					if (null == calculatedStartDate) {
+						final Long eventId = this.getEventIdColumn().getValue(row.getRowIndex());
+						LOG.debug("No auto-filled dates for event ID : " + eventId + " Adding to processedList");
+						EventTablePage.this.addEventProcessedWithoutDates(eventId);
+					}
 				} catch (final IOException e) {
 					LOG.warn("Canno't auto calculate start/end meeting for row " + row, e);
 				}
 			}
 		}
 
+		private void changeDatesNext(final ZonedDateTime newStart) throws IOException {
+			this.changeDatesNext(Table.this.getSelectedRow(), newStart, Boolean.TRUE);
+		}
+
 		private void changeDatesNext() throws IOException {
-			this.changeDatesNext(Table.this.getSelectedRow());
+			this.changeDatesNext(Table.this.getSelectedRow(), Boolean.TRUE);
 		}
 
 		class DateReturn {
-			private final ZonedDateTime start;
+			private ZonedDateTime start;
 			private final ZonedDateTime end;
 			private final Boolean created;
+			private final Boolean loopInDates;
+			private Boolean noAvailableDate;
 
 			public DateReturn(final ZonedDateTime recommandedStart) {
 				this.start = recommandedStart;
 				this.end = null;
 				this.created = Boolean.FALSE;
+				this.loopInDates = Boolean.FALSE;
+				this.noAvailableDate = Boolean.FALSE;
+			}
+
+			public DateReturn(final ZonedDateTime recommandedStart, final Boolean loopInDates) {
+				this.start = recommandedStart;
+				this.end = null;
+				this.created = Boolean.FALSE;
+				this.loopInDates = loopInDates;
+				this.noAvailableDate = Boolean.FALSE;
+			}
+
+			public DateReturn(final ZonedDateTime recommandedStart, final Boolean loopInDates,
+					final Boolean noAvailableDate) {
+				this.start = recommandedStart;
+				this.end = null;
+				this.created = Boolean.FALSE;
+				this.loopInDates = loopInDates;
+				this.noAvailableDate = noAvailableDate;
 			}
 
 			public DateReturn(final ZonedDateTime start, final ZonedDateTime calculatedEndDate) {
 				this.start = start;
 				this.end = calculatedEndDate;
 				this.created = Boolean.TRUE;
+				this.loopInDates = Boolean.FALSE;
+				this.noAvailableDate = Boolean.FALSE;
+			}
+
+			public DateReturn(final ZonedDateTime start, final ZonedDateTime calculatedEndDate,
+					final Boolean loopInDates) {
+				this.start = start;
+				this.end = calculatedEndDate;
+				this.created = Boolean.TRUE;
+				this.loopInDates = loopInDates;
+				this.noAvailableDate = Boolean.FALSE;
+			}
+
+			public DateReturn(final ZonedDateTime start, final ZonedDateTime calculatedEndDate,
+					final Boolean loopInDates, final Boolean noAvailableDate) {
+				this.start = start;
+				this.end = calculatedEndDate;
+				this.created = Boolean.TRUE;
+				this.loopInDates = loopInDates;
+				this.noAvailableDate = noAvailableDate;
 			}
 
 			public ZonedDateTime getStart() {
 				return this.start;
+			}
+
+			public void setStart(final ZonedDateTime start) {
+				this.start = start;
 			}
 
 			public ZonedDateTime getEnd() {
@@ -222,28 +300,47 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			public Boolean isCreated() {
 				return this.created;
 			}
+
+			public Boolean isLoopInDates() {
+				return this.loopInDates;
+			}
+
+			public Boolean isNoAvailableDate() {
+				return this.noAvailableDate;
+			}
+
+			public void setNoAvailableDate(final Boolean noAvailableDate) {
+				this.noAvailableDate = noAvailableDate;
+			}
 		}
 
-		protected void changeDatesNext(final ITableRow row) throws IOException {
-			final Long eventId = this.getEventIdColumn().getValue(row.getRowIndex());
+		protected void changeDatesNext(final ITableRow row, final Boolean askedByUser) throws IOException {
+			final ZonedDateTime startDate;
 			final Long guestId = this.getGuestIdColumn().getValue(row.getRowIndex());
-
 			final ZonedDateTime currentStartDate = EventTablePage.this.getDateHelper().getZonedValue(
 					EventTablePage.this.getAppUserHelper().getUserZoneId(guestId),
 					this.getStartDateColumn().getValue(row.getRowIndex()));
 
-			LOG.debug("Changing Next date for Event ID : " + eventId + " with start Date : " + currentStartDate);
-
-			ZonedDateTime nextStartDate = null;
-			DateReturn newPossibleDate;
-			if (null == currentStartDate) {
-				nextStartDate = this.addReactionTime(EventTablePage.this.getAppUserHelper().getUserNow(guestId));
+			if (null != currentStartDate) {
+				startDate = currentStartDate.plus(Duration.ofMinutes(45));
 			} else {
-				// TODO Djer13 : try to stick endOfPeriod if (Set next.end to
-				// period.end, if next.start is after previous.start this a
-				// valid event period) ??
-				nextStartDate = this.addReactionTime(currentStartDate.plus(Duration.ofMinutes(45)));
+				startDate = EventTablePage.this.getAppUserHelper().getUserNow(guestId);
 			}
+
+			this.changeDatesNext(row, startDate, askedByUser);
+
+		}
+
+		protected void changeDatesNext(final ITableRow row, final ZonedDateTime newStartDate, final Boolean askedByUser)
+				throws IOException {
+			final Long eventId = this.getEventIdColumn().getValue(row.getRowIndex());
+			Boolean hasLooped = Boolean.FALSE;
+
+			final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+			LOG.debug("Changing Next date for Event ID : " + eventId + " with start Date : " + newStartDate);
+
+			final ZonedDateTime nextStartDate = this.addReactionTime(newStartDate);
+			DateReturn newPossibleDate;
 
 			newPossibleDate = this.tryChangeDatesNext(nextStartDate, row);
 
@@ -252,9 +349,38 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				// if not, try with the new available start date (in
 				// calendars)
 				if (EventTablePage.this.callTracker.canIncrementNbCall(eventId)) {
+					if (newPossibleDate.isNoAvailableDate()) {
+						// reached end of available date (after maximal)
+						// and the new proposed date is after the one currently
+						// displayed, so now over date are available
+
+						notificationHelper.addErrorNotification("zc.meeting.notification.NoAvailableNextDate");
+						row.setIconId(Icons.ExclamationMark);
+						return;// break new Date search
+					}
 					newPossibleDate = this.tryChangeDatesNext(newPossibleDate.getStart(), row);
+					if (!hasLooped && newPossibleDate.isLoopInDates()) {
+						hasLooped = Boolean.TRUE;
+					}
 				} else {
-					throw new VetoException(TEXTS.get("zc.meeting.googleTooManyCall"));
+					if (askedByUser) {
+						final int continueSearch = MessageBoxes.createYesNo()
+								.withHeader(TEXTS.get("zc.meeting.event.maxSearchReached.title"))
+								.withBody(TEXTS.get("zc.meeting.event.maxSearchReached.message",
+										EventTablePage.this.getDateHelper().format(newPossibleDate.getStart())))
+								.withYesButtonText(TEXTS.get("YesButton")).withIconId(Icons.ExclamationMark)
+								.withSeverity(IStatus.INFO).show();
+						if (continueSearch == IMessageBox.YES_OPTION) {
+							EventTablePage.this.callTracker.resetNbCall(eventId);
+						} else {
+							break; // stop search
+						}
+					} else {
+						// throw new
+						// VetoException(TEXTS.get("zc.meeting.googleTooManyCall"));
+						break; // stop search without prompt, because not a user
+								// action
+					}
 				}
 			}
 			EventTablePage.this.callTracker.resetNbCall(eventId);
@@ -267,14 +393,27 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				row.setCellValue(this.getEndDateColumn().getColumnIndex(),
 						EventTablePage.this.getDateHelper().toDate(newPossibleDate.getEnd()));
 				this.getEndDateColumn().updateDisplayTexts(CollectionUtility.arrayList(row));
+
+				if (hasLooped) {
+					notificationHelper.addWarningNotification("zc.meeting.notification.newMeetingDateFoundFromBegin");
+				} else {
+					notificationHelper.addProccessedNotification("zc.meeting.notification.newMeetingDateFound");
+				}
+				row.setIconId(null);
 			}
 		}
 
 		private DateReturn tryChangeDatesNext(final ZonedDateTime startDate, final ITableRow row) throws IOException {
 			final Integer rowIndex = row.getRowIndex();
-			final DateReturn newPossibleDate = this.tryChangeDatesNext(startDate,
-					this.getDurationColumn().getValue(rowIndex), this.getSlotColumn().getValue(rowIndex),
-					this.getOrganizerColumn().getValue(rowIndex), this.getGuestIdColumn().getValue(rowIndex));
+			final DurationCodeType durationCodes = BEANS.get(DurationCodeType.class);
+			final Integer duration = durationCodes.getCode(this.getDurationColumn().getValue(rowIndex)).getValue()
+					.intValue();
+			final DateReturn newPossibleDate = this.tryChangeDatesNext(startDate, duration,
+					this.getSlotColumn().getValue(rowIndex), this.getOrganizerColumn().getValue(rowIndex),
+					this.getGuestIdColumn().getValue(rowIndex),
+					this.getMinimalStartDateColumn().getZonedValue(rowIndex),
+					this.getMaximalStartDateColumn().getZonedValue(rowIndex),
+					this.getStartDateColumn().getZonedValue(rowIndex));
 
 			return newPossibleDate;
 		}
@@ -350,39 +489,83 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		 *         date is found
 		 * @throws IOException
 		 */
-		protected DateReturn tryChangeDatesNext(final ZonedDateTime startDate, final Integer selectEventDuration,
-				final Integer selectSlotId, final Long organizerUserId, final Long guestUserId) throws IOException {
+		protected DateReturn tryChangeDatesNext(ZonedDateTime startDate, final Integer selectEventDuration,
+				final Long selectSlotId, final Long organizerUserId, final Long guestUserId,
+				final ZonedDateTime minimalStartDate, final ZonedDateTime maximalStartDate,
+				final ZonedDateTime currentStartDate) throws IOException {
 			LOG.info("Checking to create an event starting at " + startDate);
+
+			Boolean loopInDates = Boolean.FALSE;
+
+			if (null != minimalStartDate && startDate.isBefore(minimalStartDate)) {
+				LOG.info("startDate is before the mnimal : " + minimalStartDate);
+				startDate = minimalStartDate;
+			} else if (null != maximalStartDate && startDate.isAfter(maximalStartDate)) {
+				LOG.info("startDate is after the maximal : " + maximalStartDate + " Loop back to the minimal : "
+						+ minimalStartDate);
+				loopInDates = Boolean.TRUE;
+				startDate = minimalStartDate;
+			}
 
 			final ZonedDateTime nextEndDate = startDate.plus(Duration.ofMinutes(selectEventDuration));
 
-			// Check gust slot configuration
+			// Localized Start and Stop for oragnizer
+			final ZonedDateTime organizerStartDate = this.atZone(startDate, organizerUserId);
+			final ZonedDateTime organizerEndDate = this.atZone(nextEndDate, organizerUserId);
+
+			DateReturn proposedDate = null;
+			// Check guest (current connected user) slot configuration
 			if (!SlotHelper.get().isInOneOfPeriods(selectSlotId, startDate, nextEndDate, guestUserId)) {
-				return new DateReturn(
-						SlotHelper.get().getNextValidDateTime(selectSlotId, startDate, nextEndDate, guestUserId));
+				proposedDate = new DateReturn(
+						SlotHelper.get().getNextValidDateTime(selectSlotId, startDate, nextEndDate, guestUserId),
+						loopInDates);
 			}
 
-			// check Organizer Slot configuration
-			if (!SlotHelper.get().isInOneOfPeriods(selectSlotId, startDate, nextEndDate, organizerUserId)) {
-				return new DateReturn(
-						SlotHelper.get().getNextValidDateTime(selectSlotId, startDate, nextEndDate, organizerUserId));
+			if (null == proposedDate) {
+				// check Organizer Slot configuration
+				if (!SlotHelper.get().isInOneOfPeriods(selectSlotId, organizerStartDate, organizerEndDate,
+						organizerUserId)) {
+					proposedDate = new DateReturn(this.atZone(SlotHelper.get().getNextValidDateTime(selectSlotId,
+							organizerStartDate, organizerEndDate, organizerUserId), guestUserId), loopInDates);
+				}
 			}
 
-			// check guest (current connected user) calendars
-			final ZonedDateTime calendareRecommendedDate = this.tryCreateEvent(startDate, nextEndDate,
-					Duration.ofMinutes(selectEventDuration), guestUserId);
-			if (calendareRecommendedDate != null) {
-				return new DateReturn(this.addReactionTime(calendareRecommendedDate));
+			if (null == proposedDate) {
+				// check guest (current connected user) calendars
+				final ZonedDateTime calendareRecommendedDate = this.tryCreateEvent(startDate, nextEndDate,
+						Duration.ofMinutes(selectEventDuration), guestUserId);
+				if (calendareRecommendedDate != null) {
+					return new DateReturn(this.addReactionTime(calendareRecommendedDate), loopInDates);
+				}
 			}
 
-			// Check organizer calendars
-			final ZonedDateTime organizerCalendareRecommendedDate = this.tryCreateEvent(startDate, nextEndDate,
-					Duration.ofMinutes(selectEventDuration), organizerUserId);
-			if (organizerCalendareRecommendedDate != null) {
-				return new DateReturn(this.addReactionTime(organizerCalendareRecommendedDate));
+			if (null == proposedDate) {
+				// Check organizer calendars
+				final ZonedDateTime organizerCalendareRecommendedDate = this.tryCreateEvent(organizerStartDate,
+						organizerEndDate, Duration.ofMinutes(selectEventDuration), organizerUserId);
+				if (organizerCalendareRecommendedDate != null) {
+					return new DateReturn(
+							this.addReactionTime(this.atZone(organizerCalendareRecommendedDate, guestUserId)),
+							loopInDates);
+				}
 			}
 
-			return new DateReturn(startDate, nextEndDate);
+			if (null != proposedDate && loopInDates
+					&& (null == currentStartDate || proposedDate.getStart().isAfter(currentStartDate))) {
+				// Loop and proposed date is after the current, so out of range,
+				// and no available date)
+				proposedDate.setNoAvailableDate(Boolean.TRUE);
+				proposedDate.setStart(currentStartDate);
+			} else if (null == proposedDate) {
+				proposedDate = new DateReturn(startDate, nextEndDate, loopInDates);
+			}
+
+			return proposedDate;
+		}
+
+		private ZonedDateTime atZone(final ZonedDateTime date, final Long userId) {
+			return EventTablePage.this.getDateHelper().atZone(date,
+					EventTablePage.this.getAppUserHelper().getUserZoneId(userId));
 		}
 
 		/**
@@ -402,7 +585,13 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					.append(endDate).append(" for user : ").append(userId);
 			LOG.info(builder.toString());
 
-			final GoogleApiHelper googleHelper = GoogleApiHelper.get();
+			final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+
+			if (!googleHelper.isCalendarConfigured(userId)) {
+				LOG.info("Cannot check user (Google) clendar because no API configured for user : " + userId);
+				// new recommended Date null, means "available" in user calendar
+				return null; // early break
+			}
 
 			final ZoneId userZoneId = EventTablePage.this.getAppUserHelper().getUserZoneId(userId);
 
@@ -469,7 +658,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 		private List<Event> getEvents(final ZonedDateTime startDate, final ZonedDateTime endDate, final Long userId)
 				throws IOException {
-			final GoogleApiHelper googleHelper = GoogleApiHelper.get();
+			final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
 			Calendar gCalendarService;
 
 			try {
@@ -533,13 +722,14 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					event = itEvent.next();
 					isFirstEvent = Boolean.FALSE;
 				}
-				final ZonedDateTime eventZonedStartDate = GoogleApiHelper.get().fromEventDateTime(event.getStart());
+				final ZonedDateTime eventZonedStartDate = BEANS.get(GoogleApiHelper.class)
+						.fromEventDateTime(event.getStart());
 				final DayOfWeek eventLocalStartDateDay = eventZonedStartDate.getDayOfWeek();
 				if (eventZonedStartDate.isAfter(startDate)) {
 					// freeTime from startDate to the beginning of the event
 					freeTime.add(new DayDuration(startDate.toOffsetDateTime().toOffsetTime(),
 							eventZonedStartDate.toLocalTime()
-									.atOffset(GoogleApiHelper.get().timeOffset(event.getStart())),
+									.atOffset(BEANS.get(GoogleApiHelper.class).timeOffset(event.getStart())),
 							CollectionUtility.arrayList(eventLocalStartDateDay), Boolean.FALSE));
 					if (itEvent.hasNext()) {
 						event = itEvent.next();
@@ -547,7 +737,8 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				} else {
 					// freeTime from end of this event to begin of the next (if
 					// this event ends before the endDate)
-					final ZonedDateTime eventZonedEndDate = GoogleApiHelper.get().fromEventDateTime(event.getEnd());
+					final ZonedDateTime eventZonedEndDate = BEANS.get(GoogleApiHelper.class)
+							.fromEventDateTime(event.getEnd());
 					if (eventZonedEndDate.isBefore(endDate)) {
 						Event nextEvent = null;
 						if (itEvent.hasNext()) {
@@ -561,8 +752,9 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 							nextEventLocalStartDate = endDate;
 							offset = endDate.getOffset();
 						} else {
-							nextEventLocalStartDate = GoogleApiHelper.get().fromEventDateTime(nextEvent.getStart());
-							offset = GoogleApiHelper.get().timeOffset(nextEvent.getStart());
+							nextEventLocalStartDate = BEANS.get(GoogleApiHelper.class)
+									.fromEventDateTime(nextEvent.getStart());
+							offset = BEANS.get(GoogleApiHelper.class).timeOffset(nextEvent.getStart());
 						}
 						freeTime.add(new DayDuration(eventZonedEndDate.toLocalTime().atOffset(offset),
 								nextEventLocalStartDate.toLocalTime().atOffset(offset),
@@ -584,14 +776,16 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			LOG.debug("Creating (Google) Event from : " + startDate + " to " + endDate + ", for :" + forUserId
 					+ " (attendee :" + withEmail + ")");
 
-			final GoogleApiHelper googleHelper = GoogleApiHelper.get();
+			final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
 
 			Calendar googleCalendarService;
 
 			try {
 				googleCalendarService = googleHelper.getCalendarService(forUserId);
 			} catch (final UserAccessRequiredException uare) {
-				throw new VetoException(TEXTS.get("zc.meeting.calendarProviderRequired"));
+				// throw new
+				// VetoException(TEXTS.get("zc.meeting.calendarProviderRequired"));
+				return null; // early break;
 			}
 
 			final String EnvDisplay = new ApplicationEnvProperty().displayAsText();
@@ -600,8 +794,9 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			final Event newEvent = new Event();
 			newEvent.setStart(googleHelper.toEventDateTime(startDate));
 			newEvent.setEnd(googleHelper.toEventDateTime(endDate));
-			newEvent.setSummary(EnvDisplay + " " + subject + TEXTS.get("zc.common.email.subject.suffix"));
-			newEvent.setLocation(location);
+			newEvent.setSummary(
+					EnvDisplay + " " + subject + TextsHelper.get(forUserId, "zc.common.email.subject.suffix"));
+			newEvent.setLocation(TextsHelper.get(forUserId, location));
 			newEvent.setDescription(subject);
 
 			final EventAttendee[] attendees = new EventAttendee[] { new EventAttendee().setEmail(withEmail) };
@@ -618,16 +813,24 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		}
 
 		private Event acceptCreatedEvent(final Event organizerEvent, final String organizerCalendarId,
-				final Long userId, final String attendeeEmail) throws IOException {
-			LOG.debug("Acceptiing (Google) Event from (" + organizerEvent.getOrganizer().getEmail() + "), for :"
-					+ userId);
+				final Long userId, final String attendeeEmail, final Long heldByUserId) throws IOException {
+			LOG.debug(
+					"Accepting (Google) Event from (" + organizerEvent.getOrganizer().getEmail() + "), for :" + userId);
 
-			final GoogleApiHelper googleHelper = GoogleApiHelper.get();
+			Long googleApiUserId = userId;
+			final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+
+			if (!googleHelper.isCalendarConfigured(userId)) {
+				LOG.info("User : " + userId
+						+ " as no calendar configured (assuming no API acces), updating the (Google) Event with the heldBy user Id ("
+						+ heldByUserId + ")");
+				googleApiUserId = heldByUserId;
+			}
 
 			Calendar gCalendarService;
 
 			try {
-				gCalendarService = googleHelper.getCalendarService(userId);
+				gCalendarService = googleHelper.getCalendarService(googleApiUserId);
 			} catch (final UserAccessRequiredException uare) {
 				throw new VetoException(TEXTS.get("zc.meeting.calendarProviderRequired"));
 			}
@@ -635,6 +838,8 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			final List<EventAttendee> attendees = organizerEvent.getAttendees();
 			for (final EventAttendee eventAttendee : attendees) {
 				if (attendeeEmail.equals(eventAttendee.getEmail())) {
+					LOG.debug("Updating (Google) event : " + organizerEvent.getSummary()
+							+ " as accepted for attendee : " + eventAttendee.getEmail());
 					eventAttendee.setResponseStatus("accepted");
 				}
 			}
@@ -647,41 +852,35 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		}
 
 		@Order(2000)
-		public class NewMenu extends AbstractMenu {
+		public class NewEventMenu extends AbstractNewMenu {
 			@Override
 			protected String getConfiguredText() {
 				return TEXTS.get("zc.meeting.addEvent");
 			}
 
 			@Override
-			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-				return CollectionUtility.hashSet(TableMenuType.SingleSelection, TableMenuType.EmptySpace);
-			}
-
-			@Override
 			protected void execInitAction() {
-				// final SubscriptionHelper subHelper =
-				// BEANS.get(SubscriptionHelper.class);
-				// final SubscriptionHelperData subscriptionData =
-				// subHelper.canCreateEvent();
-				// this.setEnabledGranted(subscriptionData.isAccessAllowed());
 				this.setVisibleGranted(
 						ACCESS.getLevel(new CreateEventPermission()) >= CreateEventPermission.LEVEL_SUB_FREE);
-
 			}
 
 			@Override
-			protected boolean getConfiguredVisible() {
-				return EventTablePage.this.isUserCalendarConfigured();
-			}
-
-			@Override
-			protected void execOwnerValueChanged(final Object newOwnerValue) {
-				this.setVisible(EventTablePage.this.isUserCalendarConfigured());
+			protected boolean getConfiguredEnabled() {
+				return Boolean.TRUE;
 			}
 
 			@Override
 			protected void execAction() {
+				if (!EventTablePage.this.isUserCalendarConfigured()) {
+					final GoogleApiHelper gooleHelper = BEANS.get(GoogleApiHelper.class);
+					gooleHelper.askToAddApi(Table.this.getCurrentUserId());
+				}
+
+				if (!EventTablePage.this.isUserCalendarConfigured()) {
+					// User won't configure required Data
+					return; // earlyBreak
+				}
+
 				final SubscriptionHelper subHelper = BEANS.get(SubscriptionHelper.class);
 				final SubscriptionHelperData subscriptionData = subHelper.canCreateEvent();
 
@@ -718,11 +917,6 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 						ACCESS.getLevel(new CreateEventPermission()) >= CreateEventPermission.LEVEL_SUB_FREE);
 				form.startNew();
 			}
-
-			@Override
-			protected String getConfiguredKeyStroke() {
-				return combineKeyStrokes(IKeyStroke.SHIFT, "n");
-			}
 		}
 
 		@Order(2100)
@@ -744,20 +938,10 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		}
 
 		@Order(2500)
-		public class AcceptMenu extends AbstractMenu {
+		public class AcceptEventMenu extends AbstractValidateMenu {
 			@Override
 			protected String getConfiguredText() {
 				return TEXTS.get("zc.meeting.Accept");
-			}
-
-			@Override
-			protected String getConfiguredIconId() {
-				return Icons.Calendar;
-			}
-
-			@Override
-			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-				return CollectionUtility.hashSet(TableMenuType.SingleSelection);
 			}
 
 			@Override
@@ -767,7 +951,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			private Boolean isWorkflowVisible(final String currentState) {
 				Boolean isVisible = Boolean.FALSE;
-				if ("ASKED".equals(currentState)) {
+				if (CompareUtility.equals(StateCodeType.AskedCode.ID, currentState)) {
 					isVisible = Boolean.TRUE;
 				}
 				return isVisible;
@@ -781,7 +965,8 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 							&& Table.this.isGuestCurrentUser(row));
 
 					final Boolean hasStartDate = null != Table.this.getStartDateColumn().getValue(row.getRowIndex());
-					this.setEnabled(hasStartDate && EventTablePage.this.isUserCalendarConfigured());
+					// && EventTablePage.this.isUserCalendarConfigured()
+					this.setEnabled(hasStartDate);
 
 					if (hasStartDate) {
 						this.setTooltipText(null);
@@ -813,7 +998,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 						throw new VetoException(TEXTS.get("zc.meeting.chooseDateFirst"));
 					}
 
-					Table.this.getStateColumn().setValue(Table.this.getSelectedRow(), "ACCEPTED");
+					Table.this.getStateColumn().setValue(Table.this.getSelectedRow(), StateCodeType.AcceptedCode.ID);
 
 					if (null == eventHeldBy) {
 						eventHeldBy = userService.getUserIdByEmail(eventHeldEmail);
@@ -821,17 +1006,25 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					// External event for holder
 					final Event externalOrganizerEvent = Table.this.createEvent(start, end, eventHeldBy,
 							eventGuestEmail, subject, venue);
-					Table.this.getExternalIdOrganizerColumn().setValue(Table.this.getSelectedRow(),
-							externalOrganizerEvent.getId());
+					if (null == externalOrganizerEvent) {
+						LOG.warn("Event not created for user : " + eventHeldBy
+								+ " and he is the organizer ! (subject : " + subject + ")");
+					} else {
+						Table.this.getExternalIdOrganizerColumn().setValue(Table.this.getSelectedRow(),
+								externalOrganizerEvent.getId());
+					}
 
 					if (null == eventGuest) {
 						eventGuest = userService.getUserIdByEmail(eventGuestEmail);
 					}
 
 					final Event externalGuestEvent = Table.this.acceptCreatedEvent(externalOrganizerEvent,
-							Table.this.getUserCreateEventCalendar(eventHeldBy), eventGuest, eventGuestEmail);
-					Table.this.getExternalIdRecipientColumn().setValue(Table.this.getSelectedRow(),
-							externalGuestEvent.getId());
+							Table.this.getUserCreateEventCalendar(eventHeldBy), eventGuest, eventGuestEmail,
+							eventHeldBy);
+					if (null != externalGuestEvent) {
+						Table.this.getExternalIdRecipientColumn().setValue(Table.this.getSelectedRow(),
+								externalGuestEvent.getId());
+					}
 
 					// Save at the end to save external IDs !
 					final EventFormData formData = Table.this.saveEventCurrentRow();
@@ -866,11 +1059,6 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					throw new VetoException(TEXTS.get("zc.common.cannotSendEmail"));
 				}
 			}
-
-			@Override
-			protected String getConfiguredKeyStroke() {
-				return combineKeyStrokes(IKeyStroke.SHIFT, "v");
-			}
 		}
 
 		@Order(3000)
@@ -897,7 +1085,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			private Boolean isWorkflowVisible(final String currentState) {
 				Boolean isVisible = Boolean.FALSE;
-				if ("ASKED".equals(currentState)) {
+				if (CompareUtility.equals(StateCodeType.AskedCode.ID, currentState)) {
 					isVisible = Boolean.TRUE;
 				}
 				return isVisible;
@@ -909,15 +1097,13 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				if (null != row) {
 					this.setVisible(Table.this.userCanChooseDate(row)
 							&& this.isWorkflowVisible(Table.this.getState(row)) && Table.this.isGuestCurrentUser(row));
-					this.setEnabled(EventTablePage.this.isUserCalendarConfigured() && Table.this.isUserTimeZoneValid());
+					// EventTablePage.this.isUserCalendarConfigured() &&
+					this.setEnabled(Table.this.isUserTimeZoneValid());
 				}
 			}
 
 			@Override
 			protected void execAction() {
-
-				final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
-				notificationHelper.addProcessingNotification("zc.meeting.notification.searchingNextEvent");
 				try {
 					Table.this.changeDatesNext();
 					Table.this.reloadMenus(Table.this.getSelectedRow());
@@ -930,6 +1116,115 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			protected String getConfiguredKeyStroke() {
 				return combineKeyStrokes(IKeyStroke.SHIFT, IKeyStroke.RIGHT);
 			}
+
 		}
+
+		@Order(4000)
+		public class NextChooserMenu extends AbstractMenu {
+			@Override
+			protected String getConfiguredText() {
+				return TEXTS.get("zc.meeting.nextChooser");
+			}
+
+			@Override
+			protected String getConfiguredIconId() {
+				return Icons.Calendar;
+			}
+
+			@Override
+			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+				return CollectionUtility.hashSet(TableMenuType.SingleSelection);
+			}
+
+			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.FALSE;
+			}
+
+			private Boolean isWorkflowVisible(final String currentState) {
+				Boolean isVisible = Boolean.FALSE;
+				if (CompareUtility.equals(StateCodeType.AskedCode.ID, currentState)) {
+					isVisible = Boolean.TRUE;
+				}
+				return isVisible;
+			}
+
+			@Override
+			protected void execOwnerValueChanged(final Object newOwnerValue) {
+				final ITableRow row = Table.this.getOwnerAsTableRow(newOwnerValue);
+				if (null != row) {
+					this.setVisible(Table.this.userCanChooseDate(row)
+							&& this.isWorkflowVisible(Table.this.getState(row)) && Table.this.isGuestCurrentUser(row));
+					// EventTablePage.this.isUserCalendarConfigured() &&
+					this.setEnabled(Table.this.isUserTimeZoneValid());
+				}
+			}
+
+			@Override
+			protected void execAction() {
+				throw new VetoException("Top level Menu : Not implemented (Yet)");
+			}
+
+			@Order(1000)
+			public class NextDayMenu extends AbstractMenu {
+				@Override
+				protected String getConfiguredText() {
+					return TEXTS.get("zc.meeting.nextDay");
+				}
+
+				@Override
+				protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+					return CollectionUtility.hashSet(TableMenuType.SingleSelection);
+				}
+
+				@Override
+				protected boolean getConfiguredVisible() {
+					return Boolean.FALSE;
+				}
+
+				private Boolean isWorkflowVisible(final String currentState) {
+					Boolean isVisible = Boolean.FALSE;
+					if (CompareUtility.equals(StateCodeType.AskedCode.ID, currentState)) {
+						isVisible = Boolean.TRUE;
+					}
+					return isVisible;
+				}
+
+				@Override
+				protected void execOwnerValueChanged(final Object newOwnerValue) {
+					final ITableRow row = Table.this.getOwnerAsTableRow(newOwnerValue);
+					if (null != row) {
+						this.setVisible(
+								Table.this.userCanChooseDate(row) && this.isWorkflowVisible(Table.this.getState(row))
+										&& Table.this.isGuestCurrentUser(row));
+						// EventTablePage.this.isUserCalendarConfigured() &&
+						this.setEnabled(Table.this.isUserTimeZoneValid());
+					}
+				}
+
+				@Override
+				protected void execAction() {
+					try {
+						final ITableRow row = Table.this.getSelectedRow();
+						final Long guestId = Table.this.getGuestIdColumn().getValue(row.getRowIndex());
+						final ZonedDateTime currentStartDate = EventTablePage.this.getDateHelper().getZonedValue(
+								EventTablePage.this.getAppUserHelper().getUserZoneId(guestId),
+								Table.this.getStartDateColumn().getValue(row.getRowIndex()));
+						final ZonedDateTime newStartDate = currentStartDate.plusDays(1).withHour(0).withMinute(0)
+								.withSecond(0).withNano(0);
+						Table.this.changeDatesNext(newStartDate);
+						Table.this.reloadMenus(Table.this.getSelectedRow());
+					} catch (final IOException e) {
+						throw new VetoException("Canno't get calendar details, re-try later", e);
+					}
+				}
+
+				@Override
+				protected String getConfiguredKeyStroke() {
+					return combineKeyStrokes(IKeyStroke.SHIFT, IKeyStroke.CONTROL, IKeyStroke.RIGHT);
+				}
+			}
+		}
+
 	}
 }

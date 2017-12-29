@@ -72,4 +72,9 @@ public interface IUserService extends IService {
 	 */
 	UserFormData loggedIn(UserFormData userData);
 
+	/**
+	 * Clear userCache and User permission cache
+	 */
+	void clearCache(Long userId);
+
 }

@@ -10,6 +10,8 @@ import org.zeroclick.common.params.AppParamsTablePageData;
 public interface IAppParamsService extends IService {
 
 	public static final String KEY_DATA_VERSION = "dataVersion";
+	public static final String APP_PARAM_KEY_EVENT_CALL_TRACKER_MAX = "callTracker.events.maxSuccesiveCall";
+	public static final String APP_PARAM_KEY_EVENT_CALL_TRACKER_DURATION = "callTracker.events.ttl";
 
 	AppParamsTablePageData getAppParamsTableData(SearchFilter filter);
 
@@ -18,6 +20,8 @@ public interface IAppParamsService extends IService {
 	void create(String key, String value, String category);
 
 	String getValue(String key);
+
+	Boolean isKeyExists(String key);
 
 	void store(String key, String value);
 

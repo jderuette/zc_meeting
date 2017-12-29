@@ -28,22 +28,38 @@ import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.eclipse.scout.rt.client.ui.messagebox.IMessageBox;
+import org.eclipse.scout.rt.client.ui.messagebox.MessageBoxes;
+import org.eclipse.scout.rt.platform.ApplicationScoped;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.config.AbstractStringConfigProperty;
 import org.eclipse.scout.rt.platform.config.CONFIG;
+import org.eclipse.scout.rt.platform.exception.VetoException;
+import org.eclipse.scout.rt.platform.status.IStatus;
+import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.configuration.onboarding.OnBoardingUserForm;
+import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
 import org.zeroclick.meeting.client.common.CallTrackerService;
 import org.zeroclick.meeting.client.common.UserAccessRequiredException;
+import org.zeroclick.meeting.shared.Icons;
+import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
+import org.zeroclick.meeting.shared.calendar.CalendarConfigurationTablePageData.CalendarConfigurationTableRowData;
+import org.zeroclick.meeting.shared.calendar.IApiService;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
 import com.google.api.client.auth.oauth2.AuthorizationCodeFlow;
@@ -60,6 +76,8 @@ import com.google.api.client.util.DateTime;
 import com.google.api.client.util.store.DataStoreFactory;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.CalendarScopes;
+import com.google.api.services.calendar.model.CalendarList;
+import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
 
@@ -67,24 +85,28 @@ import com.google.api.services.calendar.model.EventDateTime;
  * @author djer
  *
  */
+@ApplicationScoped
 public class GoogleApiHelper {
 
 	private static final Logger LOG = LoggerFactory.getLogger(GoogleApiHelper.class);
 
-	private static GoogleApiHelper instance;
-	private final CallTrackerService<Long> callTracker;
-	private final DataStoreFactory dataStoreFactory;
+	public static final String ADD_GOOGLE_CALENDAR_URL = "/addGoogleCalendar";
 
-	private GoogleApiHelper() {
+	private CallTrackerService<Long> callTracker;
+	private DataStoreFactory dataStoreFactory;
+
+	@PostConstruct
+	public void init() {
 		this.callTracker = new CallTrackerService<>(5, Duration.ofMinutes(1), "GoogleApiHelper create API flow");
 		this.dataStoreFactory = new ScoutDataStoreFactory();
 	}
 
-	public static GoogleApiHelper get() {
-		if (null == instance) {
-			instance = new GoogleApiHelper();
-		}
-		return instance;
+	public String getAddGoogleLink() {
+		final StringBuilder builder = new StringBuilder(64);
+		builder.append("<a href='").append(ADD_GOOGLE_CALENDAR_URL).append("' target='_blank'>")
+				.append(TEXTS.get("zc.meeting.addGoogleCalendar")).append("</a>");
+
+		return builder.toString();
 	}
 
 	private GoogleClientSecrets getClientSecret() throws IOException {
@@ -362,6 +384,64 @@ public class GoogleApiHelper {
 
 	}
 
+	public Map<String, AbstractCalendarConfigurationTableRowData> getCalendars() {
+		return this.getCalendars(this.getCurrentUserId());
+	}
+
+	/**
+	 * Retrieve calendar's list in Google account.
+	 *
+	 * @param userId
+	 * @return a map, id is the Google calendar Id, value is a **partial** table
+	 *         Row (some data not exist in, Google configuration)
+	 */
+	public Map<String, AbstractCalendarConfigurationTableRowData> getCalendars(final Long userId) {
+		LOG.info("Retireving all (Google) calendar for user : " + userId);
+		final Map<String, AbstractCalendarConfigurationTableRowData> calendars = new HashMap<>();
+		try {
+			final Calendar calendarService = this.getCalendarService(userId);
+			final CalendarList calendarsList = calendarService.calendarList().list().execute();
+
+			final List<CalendarListEntry> calendarItems = calendarsList.getItems();
+			for (final CalendarListEntry calendarItem : calendarItems) {
+				// final com.google.api.services.calendar.model.Calendar cal =
+				// calendarService.calendars().get(calendarKey)
+				// .execute();
+				calendars.put(calendarItem.getId(), this.toCalendarConfig(calendarItem, userId));
+			}
+		} catch (final IOException e) {
+			LOG.warn("Cannot get (Google) calendar Service for user : " + userId, e);
+			throw new VetoException("Cannot get your Google calendar Data");
+		}
+		return calendars;
+	}
+
+	private AbstractCalendarConfigurationTableRowData toCalendarConfig(final CalendarListEntry cal, final Long userId)
+			throws IOException {
+		LOG.debug("Creating model data for (Google) calendar data : " + cal);
+		final CalendarConfigurationTableRowData calendarConfigData = new CalendarConfigurationTableRowData();
+		calendarConfigData.setExternalId(cal.getId());
+		calendarConfigData.setUserId(userId);
+		calendarConfigData.setOAuthCredentialId(this.getOAuthCredentialId(userId));
+		LOG.debug("Calendar Config modele created with externalId : " + calendarConfigData.getExternalId()
+				+ ", UserId : " + calendarConfigData.getUserId() + ", OAuthCredentialId : "
+				+ calendarConfigData.getOAuthCredentialId());
+		return calendarConfigData;
+	}
+
+	private Long getOAuthCredentialId() throws IOException {
+		return this.getOAuthCredentialId(this.getCurrentUserId());
+	}
+
+	private Long getOAuthCredentialId(final Long userId) throws IOException {
+		final Credential credential = this.getCredential(userId);
+
+		final IApiService apiService = BEANS.get(IApiService.class);
+		final Long oAuthCredentialId = apiService.getApiIdByAccessToken(userId, credential.getAccessToken());
+
+		return oAuthCredentialId;
+	}
+
 	/**
 	 * Check if current connected User as Calendar configured
 	 *
@@ -370,6 +450,21 @@ public class GoogleApiHelper {
 	public Boolean isCalendarConfigured() {
 		final AccessControlService acs = BEANS.get(AccessControlService.class);
 		return this.isCalendarConfigured(acs.getZeroClickUserIdOfCurrentSubject());
+	}
+
+	public void askToAddApi(final Long userId) {
+		final int userDecision = MessageBoxes.createYesNo().withHeader(TEXTS.get("zc.api.calendarRequired.title"))
+				.withBody(TEXTS.get("zc.api.calendarRequired.message"))
+				// .withYesButtonText(TEXTS.get("zc.subscription.notAllowed.yesButton"))
+				.withIconId(Icons.ExclamationMark).withSeverity(IStatus.WARNING).show();
+
+		if (userDecision == IMessageBox.YES_OPTION) {
+			final OnBoardingUserForm form = new OnBoardingUserForm();
+			form.getUserIdField().setValue(userId);
+			form.setEnabledPermission(new UpdateUserPermission(userId));
+			form.startModify();
+			form.waitFor();
+		}
 	}
 
 	public String aslog(final Event event) {

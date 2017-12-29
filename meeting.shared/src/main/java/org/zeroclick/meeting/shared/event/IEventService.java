@@ -61,4 +61,9 @@ public interface IEventService extends IService {
 	 */
 	Map<Long, Integer> getNbEventsByUser(String state, Boolean onlyAsOrganizer);
 
+	/**
+	 * Used for data migration
+	 */
+	void migrateDurationlookupToCodeType();
+
 }

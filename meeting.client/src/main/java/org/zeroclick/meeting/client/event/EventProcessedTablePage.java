@@ -2,12 +2,15 @@ package org.zeroclick.meeting.client.event;
 
 import org.eclipse.scout.rt.client.dto.Data;
 import org.eclipse.scout.rt.platform.BEANS;
+import org.eclipse.scout.rt.platform.util.CompareUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.zeroclick.meeting.client.event.EventProcessedTablePage.Table;
+import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.event.AbstractEventNotification;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.IEventService;
+import org.zeroclick.meeting.shared.event.StateCodeType;
 import org.zeroclick.meeting.shared.eventb.EventsTablePageData;
 
 @Data(EventsTablePageData.class)
@@ -24,6 +27,11 @@ public class EventProcessedTablePage extends AbstractEventsTablePage<Table> {
 	}
 
 	@Override
+	protected String getConfiguredIconId() {
+		return Icons.Checked;
+	}
+
+	@Override
 	protected Boolean canHandleNew(final AbstractEventNotification notification) {
 		return Boolean.FALSE;
 	}
@@ -31,7 +39,8 @@ public class EventProcessedTablePage extends AbstractEventsTablePage<Table> {
 	@Override
 	protected Boolean canHandleModified(final AbstractEventNotification notification) {
 		final EventFormData formData = notification.getEventForm();
-		return "ACCEPTED".equals(formData.getState().getValue()) || "REFUSED".equals(formData.getState().getValue());
+		return CompareUtility.isOneOf(formData.getState().getValue(), StateCodeType.AcceptedCode.ID,
+				StateCodeType.RefusededCode.ID);
 	}
 
 	public class Table extends AbstractEventsTablePage<Table>.Table {

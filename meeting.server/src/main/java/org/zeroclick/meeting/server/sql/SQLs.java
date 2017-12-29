@@ -11,14 +11,17 @@
 package org.zeroclick.meeting.server.sql;
 
 import org.zeroclick.configuration.shared.role.IRoleTypeLookupService;
+import org.zeroclick.meeting.server.sql.migrate.data.PatchAddEventMinAndMaxDate;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchAddLastLogin;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchAddSlotCode;
+import org.zeroclick.meeting.server.sql.migrate.data.PatchConfigureCalendar;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateParamsTable;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateSubscription;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateVenue;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchEventAddCreatedDate;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchEventRejectReason;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchSlotTable;
+import org.zeroclick.meeting.shared.event.StateCodeType;
 
 @SuppressWarnings("PMD.LongVariable")
 public interface SQLs {
@@ -52,7 +55,8 @@ public interface SQLs {
 	String AND_LIKE_CAUSE = "AND LOWER(%s) LIKE LOWER(:%s || '%%') ";
 
 	String EVENT_PAGE_SELECT = "SELECT event_id, organizer, organizer_email, duration, slot, email, guest_id, state, reason, subject, venue, startDate, endDate, externalIdRecipient, externalIdOrganizer, "
-			+ PatchEventAddCreatedDate.PATCHED_COLUMN + "  FROM EVENT WHERE 1=1";
+			+ PatchEventAddCreatedDate.PATCHED_COLUMN + ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MIN_DATE_COLUMN
+			+ ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MAX_DATE_COLUMN + " FROM EVENT WHERE 1=1";
 	// + "CASE WHEN organizer = :currentUser THEN 1 ELSE 0 END AS held"
 	// + "CASE WHEN email = :currentUserEmail THEN 1 ELSE 0 END AS guest FROM
 	// EVENT WHERE 1=1";
@@ -68,9 +72,9 @@ public interface SQLs {
 
 	String EVENT_PAGE_SELECT_FILTER_USER = " AND organizer = :currentUser";
 	String EVENT_PAGE_SELECT_FILTER_RECIPIENT = " OR email = :currentUserEmail";
-	String EVENT_PAGE_SELECT_FILTER_USER_OR_RECIPIENT = " AND (organizer = :currentUser OR email = :currentUserEmail)";
+	String EVENT_PAGE_SELECT_FILTER_USER_OR_RECIPIENT = " AND (organizer = :currentUser OR guest_id = :currentUser)";
 
-	String EVENT_PAGE_DATA_SELECT_INTO = " INTO :{page.eventId}, :{page.organizer}, :{page.organizerEmail}, :{page.duration}, :{page.slot}, :{page.email}, :{page.guestId}, :{page.state}, :{page.reason}, :{page.subject}, :{page.venue}, :{page.startDate}, :{page.endDate}, :{page.externalIdRecipient}, :{page.externalIdOrganizer}, :{page.createdDate}";
+	String EVENT_PAGE_DATA_SELECT_INTO = " INTO :{page.eventId}, :{page.organizer}, :{page.organizerEmail}, :{page.duration}, :{page.slot}, :{page.email}, :{page.guestId}, :{page.state}, :{page.reason}, :{page.subject}, :{page.venue}, :{page.startDate}, :{page.endDate}, :{page.externalIdRecipient}, :{page.externalIdOrganizer}, :{page.createdDate}, :{page.minimalStartDate}, :{page.maximalStartDate}";
 
 	String EVENT_SELECT_USERS_EVENT_GUEST = "SELECT event_id, organizer FROM EVENT WHERE guest_id=:currentUser";
 	String EVENT_SELECT_USERS_EVENT_HOST = "SELECT event_id, guest_id FROM EVENT WHERE organizer=:currentUser";
@@ -79,12 +83,15 @@ public interface SQLs {
 	String EVENT_INSERT = "INSERT INTO EVENT (event_id, organizer) " + "VALUES (:eventId, :organizer)";
 
 	String EVENT_UPDATE = "UPDATE EVENT SET organizer_email=:organizerEmail, duration=:duration, slot=:slot, email=:email, guest_id=:guestId, state=:state, subject=:subject, venue=:venue, startDate=:startDate, endDate=:endDate, externalIdRecipient=:externalIdRecipient, externalIdOrganizer=:externalIdOrganizer, "
-			+ PatchEventAddCreatedDate.PATCHED_COLUMN + "=:createdDate WHERE event_id=:eventId";
+			+ PatchEventAddCreatedDate.PATCHED_COLUMN + "=:createdDate, "
+			+ PatchAddEventMinAndMaxDate.PATCHED_ADDED_MIN_DATE_COLUMN + "=:minimalStartDate, "
+			+ PatchAddEventMinAndMaxDate.PATCHED_ADDED_MAX_DATE_COLUMN + "=:maximalStartDate WHERE event_id=:eventId";
 	String EVENT_UPDATE_STATE = "UPDATE EVENT SET state=:state, reason=:reason WHERE event_id=:eventId";
 
 	String EVENT_SELECT = "SELECT duration, slot, email, guest_id, state, reason, subject, venue, startDate, endDate, externalIdRecipient, externalIdOrganizer, organizer, organizer_email, "
-			+ PatchEventAddCreatedDate.PATCHED_COLUMN + " FROM EVENT" + " WHERE event_id=:eventId"
-			+ " INTO :duration, :slot, :email, :guestId, :state, :reason, :subject, :venue, :startDate, :endDate, :externalIdRecipient, :externalIdOrganizer, :organizer, :organizerEmail, :createdDate";
+			+ PatchEventAddCreatedDate.PATCHED_COLUMN + ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MIN_DATE_COLUMN
+			+ ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MAX_DATE_COLUMN + " FROM EVENT WHERE event_id=:eventId"
+			+ " INTO :duration, :slot, :email, :guestId, :state, :reason, :subject, :venue, :startDate, :endDate, :externalIdRecipient, :externalIdOrganizer, :organizer, :organizerEmail, :createdDate, :minimalStartDate, :maximalStartDate";
 
 	String EVENT_SELECT_REJECT = "SELECT organizer_email, email, subject, venue, organizer, guest_id, externalIdOrganizer, externalIdRecipient FROM EVENT WHERE event_id=:eventId INTO :organizerEmail, :email, :subject, :venue, :organizer, :guestId, :externalIdOrganizer, :externalIdRecipient";
 
@@ -118,6 +125,11 @@ public interface SQLs {
 	String EVENT_ALTER_TABLE_ADD_CREATED_DATE = "ALTER TABLE EVENT ADD COLUMN "
 			+ PatchEventAddCreatedDate.PATCHED_COLUMN + " TIMESTAMP";
 
+	String EVENT_ALTER_TABLE_ADD_MINIMAL_DATE = "ALTER TABLE EVENT ADD COLUMN "
+			+ PatchAddEventMinAndMaxDate.PATCHED_ADDED_MIN_DATE_COLUMN + " TIMESTAMP";
+	String EVENT_ALTER_TABLE_ADD_MAXIMAL_DATE = "ALTER TABLE EVENT ADD COLUMN "
+			+ PatchAddEventMinAndMaxDate.PATCHED_ADDED_MAX_DATE_COLUMN + " TIMESTAMP";
+
 	/**
 	 * OAuth credential
 	 */
@@ -144,6 +156,7 @@ public interface SQLs {
 
 	String OAUHTCREDENTIAL_FILTER_OAUTH_ID = " AND api_credential_id = :apiCredentialId";
 	String OAUHTCREDENTIAL_FILTER_USER_ID = " AND user_id= :userId";
+	String OAUHTCREDENTIAL_FILTER_ACESS_TOKEN = " AND access_token= :accessToken";
 
 	String OAUHTCREDENTIAL_SELECT_ALL_USER_IDS = "select user_id FROM OAUHTCREDENTIAL";
 
@@ -172,7 +185,9 @@ public interface SQLs {
 	String ROLE_UPDATE_WITHOUT_TYPE = "UPDATE ROLE SET name=:roleName WHERE role_id=:roleId";
 
 	String ROLE_SELECT = "SELECT role_id, name, type FROM ROLE WHERE 1=1 AND role_id = :roleId";
+	String ROLE_SELECT_BY_NAME_WITHOUT_TYPE = "SELECT role_id, name FROM ROLE WHERE 1=1 AND name = :roleName";
 	String ROLE_SELECT_BY_NAME = "SELECT role_id, name, type FROM ROLE WHERE 1=1 AND name = :roleName";
+	String ROLE_SELECT_INTO_WITHOUT_TYPE = " INTO :roleId, :roleName";
 	String ROLE_SELECT_INTO = " INTO :roleId, :roleName, :type";
 
 	String ROLE_LOOKUP = "SELECT role_id, name FROM ROLE WHERE 1=1 <key>   AND role_id = :key </key>"
@@ -374,7 +389,8 @@ public interface SQLs {
 	/**
 	 * Users permissions
 	 */
-	String USER_PERMISSIONS_SELECT_STANDARD_ROLE = "SELECT P.permission, MAX(P.level) FROM ROLE_PERMISSION P INNER JOIN USER_ROLE UR ON P.role_id = UR.role_id INNER JOIN ROLE R on UR.role_id = R.role_id WHERE ("
+	String USER_PERMISSIONS_SELECT_ACTIVE_ROLE_BEFORE_SUB_PATCH = "SELECT P.permission, MAX(P.level) FROM ROLE_PERMISSION P INNER JOIN USER_ROLE UR ON P.role_id = UR.role_id INNER JOIN ROLE R on UR.role_id = R.role_id WHERE 1=1";
+	String USER_PERMISSIONS_SELECT_ACTIVE_ROLE = "SELECT P.permission, MAX(P.level) FROM ROLE_PERMISSION P INNER JOIN USER_ROLE UR ON P.role_id = UR.role_id INNER JOIN ROLE R on UR.role_id = R.role_id WHERE ("
 			+ PatchCreateSubscription.ADDED_ROLE_COLUMN + "!='" + IRoleTypeLookupService.TYPE_SUBSCRIPTION + "'"
 			+ " OR UR.role_id IN (" + USER_ROLE_SELECT_ACTIVE_SUBSCRIPTION + "))";
 	String USER_PERMISSIONS_SELECT_FILTER_USER_ID = " AND UR.user_id = :userId";
@@ -392,8 +408,10 @@ public interface SQLs {
 	String USER_PAGE_DATA_SELECT_INTO = " INTO :{page.userId}, :{page.login}, :{page.email}, :{page.timeZone}, :{page.invitedBy}, :{page.language},  :{page.lastLogin}";
 
 	String USER_PAGE_ADD_STATS_SELECT = ", nbOrganizedWaitingEvent, nbInvetedWaitingEvent";
-	String USER_PAGE_ADD_STATS = " left outer join (select organizer, count(event_id) as nbOrganizedWaitingEvent FROM EVENT WHERE state='ASKED' GROUP BY organizer) as stat2 ON stat2.organizer=user_id"
-			+ " left outer join (select guest_id, count(event_id) as nbInvetedWaitingEvent FROM EVENT WHERE state='ASKED' GROUP BY guest_id) as stat3 ON stat3.guest_id=user_id";
+	String USER_PAGE_ADD_STATS = " left outer join (select organizer, count(event_id) as nbOrganizedWaitingEvent FROM EVENT WHERE state='"
+			+ StateCodeType.AskedCode.ID + "' GROUP BY organizer) as stat2 ON stat2.organizer=user_id"
+			+ " left outer join (select guest_id, count(event_id) as nbInvetedWaitingEvent FROM EVENT WHERE state='"
+			+ StateCodeType.AskedCode.ID + "' GROUP BY guest_id) as stat3 ON stat3.guest_id=user_id";
 	String USER_PAGE_ADD_STATS_INTO = ", :{page.NbOrganizedEventWaiting}, :{page.NbInvitedEventWaiting}";
 
 	String USER_STATS_NB_PROCESSED_EVENT = "select count(event_id) FROM EVENT WHERE organizer=:userId OR guest_id=:userId INTO :{nbProcessedEvent}";
@@ -407,24 +425,16 @@ public interface SQLs {
 	String USER_SELECT_INTO = " INTO :userId, :login, :email, :hashedPassword, :timeZone, :invitedBy, :language";
 	String USER_SELECT_INTO_ID_ONLY = " INTO :userId";
 
-	String USER_SELECT_TIME_ZONE = "SELECT time_zone FROM APP_USER WHERE 1=1";
-	String USER_SELECT_INTO_TIME_ZONE = " INTO :timeZone";
-
-	String USER_SELECT_LANGUAGE = "SELECT language FROM APP_USER WHERE 1=1";
-	String USER_SELECT_INTO_LANGUAGE = " INTO :language";
-
-	String USER_SELECT_NOTIFICATION_IDS = "SELECT login, email FROM APP_USER WHERE 1=1";
-
 	String USER_SELECT_INTO_ROLES = " INTO :{rolesBox}";
 	String USER_SELECT_INTO_SUBSCRIPTION = " INTO :subscriptionBox";
 
-	String USER_SELECT_PASSWORD_FILTER_LOGIN = "select user_id, password FROM APP_USER where login=:login INTO :userId,  :password";
+	String USER_SELECT_PASSWORD_FILTER_LOGIN = "select user_id, password FROM APP_USER where login=:login INTO :userId, :password";
 	String USER_SELECT_PASSWORD_FILTER_EMAIL = "select user_id, password FROM APP_USER where email=:email INTO :userId, :password";
 
 	String USER_INSERT = "INSERT INTO APP_USER (user_id) VALUES (:userId)";
 
-	String USER_UPDATE_LATS_LOGIN = "UPDATE APP_USER set " + PatchAddLastLogin.PATCHED_ADDED_COLUMN
-			+ "=now() WHERE user_id=:userId";
+	String USER_UPDATE_LAST_LOGIN = "UPDATE APP_USER set " + PatchAddLastLogin.PATCHED_ADDED_COLUMN
+			+ "=:currentDate WHERE user_id=:userId";
 
 	String USER_ALTER_TABLE_INVITED_BY = "ALTER TABLE APP_USER ADD COLUMN invited_by INTEGER";
 	String USER_ALTER_TABLE_INVITED_BY_CONSTRAINT = "ALTER TABLE APP_USER ADD CONSTRAINT FK_INVITED_BY FOREIGN KEY (invited_by) REFERENCES APP_USER(user_id)";
@@ -475,7 +485,7 @@ public interface SQLs {
 
 	String PARAMS_INSERT = "INSERT INTO APP_PARAMS (param_id) VALUES (:paramId)";
 
-	String PARAMS_UPDATE = "UPDATE APP_PARAMS SET key=:key value=:value WHERE key=:key";
+	String PARAMS_UPDATE = "UPDATE APP_PARAMS SET key=:key, value=:value WHERE param_id=:paramId";
 	String PARAMS_UPDATE_WITH_CATEGORY = "UPDATE APP_PARAMS SET key=:key, category=:category, value=:value WHERE param_id=:paramId";
 
 	String PARAMS_INSERT_SAMPLE = "INSERT INTO APP_PARAMS (param_id, key, value)";
@@ -523,8 +533,11 @@ public interface SQLs {
 	String SLOT_SELECT_OWNER = "SELECT user_id FROM SLOT WHERE slot_id=:slotId";
 	String SLOT_SELECT_ID_BY_NAME = "SELECT SLOT.slot_id FROM SLOT WHERE SLOT.name=:slotName AND SLOT.user_id=:userId";
 
-	String SLOT_INSERT_SAMPLE = "INSERT INTO SLOT (slot_id, name, user_id)";
-	String SLOT_VALUES_GENERIC = " VALUES (__slotId__, '__slotName__', __userId__)";
+	String SLOT_INSERT_SAMPLE = "INSERT INTO SLOT (slot_id, name,  user_id)";
+	String SLOT_VALUES_GENERIC = " VALUES (__slotId__, '__slotName__',  __userId__)";
+
+	String SLOT_INSERT_SAMPLE_WITH_CODE = "INSERT INTO SLOT (slot_id, name, slot_code, user_id)";
+	String SLOT_VALUES_GENERIC_WITH_CODE = " VALUES (__slotId__, '__slotName__', __slotCode__, __userId__)";
 	// String SLOT_VALUES_DAY = " VALUES (nextval('" +
 	// PatchSlotTable.SLOT_ID_SEQ + "'), 'zc.meeting.slot.1', 1)";
 	// String SLOT_VALUES_LUNCH = " VALUES (nextval('" +
@@ -541,12 +554,14 @@ public interface SQLs {
 	String DAY_DURATION_SELECT = "SELECT DAY_DURATION.day_duration_id, DAY_DURATION.name, slot_start, slot_end, "
 			+ "monday, tuesday, wednesday, thursday, friday, saturday, sunday, weekly_perpetual, order_in_slot, DAY_DURATION.slot_id, SLOT.slot_code";
 	String DAY_DURATION_SELECT_LIGHT = "SELECT day_duration_id, name, slot_id FROM DAY_DURATION WHERE 1=1";
+	String DAY_DURATION_SELECT_SLOT_USER_ID = "SLOT.user_id";
 	String DAY_DURATION_SELECT_FILTER_SLOT_ID = " AND slot_id=:slotId";
 	String DAY_DURATION_SELECT_FILTER_SLOT_NAME = " AND SLOT.name=:slotName";
 	String DAY_DURATION_SELECT_FILTER_SLOT_USER_ID = " AND SLOT.user_id=:userId";
 	String DAY_DURATION_SELECT_FILTER_DAY_DURATION_ID = " AND day_duration_id=:dayDurationId";
 	String DAY_DURATION_SELECT_ORDER = " ORDER BY order_in_slot";
 	String DAY_DURATION_SELECT_INTO = " INTO :{dayDurationId}, :{name}, :{slotStart}, :{slotEnd}, :{monday}, :{tuesday}, :{wednesday}, :{thursday}, :{friday}, :{saturday}, :{sunday}, :{weeklyPerpetual}, :{orderInSlot}, :{slotId}, :{slotCode}";
+	String DAY_DURATION_SELECT_INTO_SLOT_USER_ID = ", :{userId}";
 	String DAY_DURATION_SELECT_FROM = " FROM DAY_DURATION";
 	String DAY_DURATION_SELECT_FROM_PLUS_GENERIC_WHERE = " FROM DAY_DURATION" + GENERIC_WHERE_FOR_SECURE_AND;
 
@@ -615,6 +630,11 @@ public interface SQLs {
 	String SUBSCRIPTION_INSERT = "INSERT INTO " + PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME
 			+ " (user_id, role_id, start_date) VALUES (:userId, :subscriptionId, :startDate)";
 
+	String SUBSCRIPTION_DELETE_BY_ROLE = "DELETE FROM " + PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME
+			+ " WHERE role_id=:roleId";
+	String SUBSCRIPTION_DELETE_BY_USER_ID = "DELETE FROM " + PatchCreateSubscription.SUBSCRIPTION_TABLE_NAME
+			+ " WHERE user_id=:userId";
+
 	/**
 	 * Documents table
 	 */
@@ -663,4 +683,42 @@ public interface SQLs {
 			+ PatchCreateSubscription.ROLE_DOCUMENT_TABLE_NAME + " WHERE role_id=:roleId AND document_id=:documentId";
 
 	String ROLE_DOCUMENT_SELECT_ROLE_DOCUMENT_INTO = " INTO :documentId, :roleId, :startDate";
+
+	/**
+	 * User custom configuration for his agendas
+	 */
+
+	String CALENDAR_CONFIG_CREATE = "CREATE TABLE " + PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME
+			+ "(agenda_config_id INTEGER NOT NULL, external_id VARCHAR(250) NOT NULL, process_full_day_event BOOLEAN, process_busy_event BOOLEAN, process_not_registred_on_event BOOLEAN, oAuth_credential_id INTEGER NOT NULL,"
+			+ " CONSTRAINT " + PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME + "_PK PRIMARY KEY (agenda_config_id),"
+			+ " CONSTRAINT " + PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME
+			+ "_OAUHTCREDENTIAL_FK FOREIGN KEY (oAuth_credential_id) REFERENCES OAUHTCREDENTIAL(api_credential_id))";
+	String CALENDAR_CONFIG_JOIN_OAUTH = " INNER JOIN OAUHTCREDENTIAL ON oAuth_credential_id=api_credential_id";
+
+	String CALENDAR_CONFIG_PAGE_SELECT = "select agenda_config_id, external_id, process_full_day_event, process_busy_event, process_not_registred_on_event, oAuth_credential_id, user_id FROM "
+			+ PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME + CALENDAR_CONFIG_JOIN_OAUTH + " WHERE 1=1";
+	String CALENDAR_CONFIG_PAGE_SELECT_INTO = " INTO :{page.calendarConfigurationId}, :{page.externalId}, :{page.processFullDayEvent}, :{page.ProcessFreeEvent}, :{page.processNotRegistredOnEvent}, :{page.OAuthCredentialId}, :{page.userId}";
+
+	String CALENDAR_CONFIG_FILTER_CURRENT_USER = " AND user_id = :currentUser";
+	String CALENDAR_CONFIG_FILTER_USER_ID = " AND user_id = :userId";
+	String CALENDAR_CONFIG_FILTER_EXTERNAL_ID = " AND external_id = :externalId";
+
+	String CALENDAR_CONFIG_SELECT = "select agenda_config_id, external_id, process_full_day_event, process_busy_event, process_not_registred_on_event, oAuth_credential_id FROM "
+			+ PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME + CALENDAR_CONFIG_JOIN_OAUTH;
+
+	String CALENDAR_CONFIG_SELECT_ID = "select agenda_config_id FROM "
+			+ PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME + CALENDAR_CONFIG_JOIN_OAUTH;
+
+	String CALENDAR_CONFIG_SELECT_INTO = " INTO :calendarConfigurationId, :externalId, :processFullDayEvent, :processFreeEvent, :processNotRegistredOnEvent, :oAuthCredentialId";
+
+	String CALENDAR_CONFIG_SELECT_OWNER = "SELECT user_id FROM " + PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME
+			+ CALENDAR_CONFIG_JOIN_OAUTH + " WHERE agenda_config_id=:calendarConfigurationId";
+
+	String CALENDAR_CONFIG_INSERT = "INSERT INTO " + PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME
+			+ " (agenda_config_id, external_id, oAuth_credential_id) VALUES(:calendarConfigurationId, :externalId, :OAuthCredentialId)";
+	String CALENDAR_CONFIG_UPDATE = "UPDATE " + PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME
+			+ " SET process_full_day_event=:processFullDayEvent, process_busy_event=:ProcessFreeEvent, process_not_registred_on_event=:processNotRegistredOnEvent WHERE 1=1 ";
+	String CALENDAR_CONFIG_DELETE_BY_API_ID = "DELETE FROM " + PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME
+			+ " WHERE oAuth_credential_id=:oAuthCredentialId";
+
 }

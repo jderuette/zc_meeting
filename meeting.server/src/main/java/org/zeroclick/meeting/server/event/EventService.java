@@ -13,13 +13,16 @@ import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.server.clientnotification.ClientNotificationRegistry;
 import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.eclipse.scout.rt.shared.data.page.AbstractTablePageData;
+import org.eclipse.scout.rt.shared.services.common.code.ICode;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeroclick.common.CommonService;
+import org.zeroclick.common.AbstractCommonService;
 import org.zeroclick.comon.date.DateHelper;
+import org.zeroclick.configuration.shared.duration.DurationCodeType;
+import org.zeroclick.configuration.shared.slot.SlotCodeType;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper.SubscriptionHelperData;
 import org.zeroclick.configuration.shared.user.IUserService;
@@ -32,12 +35,18 @@ import org.zeroclick.meeting.shared.event.EventTablePageData;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.ReadEventPermission;
 import org.zeroclick.meeting.shared.event.RejectEventFormData;
+import org.zeroclick.meeting.shared.event.StateCodeType;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
-public class EventService extends CommonService implements IEventService {
+public class EventService extends AbstractCommonService implements IEventService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(EventService.class);
+
+	@Override
+	protected Logger getLog() {
+		return LOG;
+	}
 
 	private EventTablePageData getEvents(final SearchFilter filter, final String eventStatusCriteria,
 			final Boolean displayAllForAdmin) {
@@ -62,17 +71,19 @@ public class EventService extends CommonService implements IEventService {
 
 	@Override
 	public EventTablePageData getEventTableData(final SearchFilter filter) {
-		return this.getEvents(filter, " AND state = 'ASKED' AND guest_id=:currentUser", Boolean.FALSE);
+		return this.getEvents(filter, " AND state = '" + StateCodeType.AskedCode.ID + "' AND guest_id=:currentUser",
+				Boolean.FALSE);
 	}
 
 	@Override
 	public AbstractTablePageData getEventAskedTableData(final SearchFilter filter) {
-		return this.getEvents(filter, " AND state = 'ASKED' AND guest_id!=:currentUser", Boolean.FALSE);
+		return this.getEvents(filter, " AND state = '" + StateCodeType.AskedCode.ID + "' AND guest_id!=:currentUser",
+				Boolean.FALSE);
 	}
 
 	@Override
 	public AbstractTablePageData getEventProcessedTableData(final SearchFilter filter) {
-		return this.getEvents(filter, " AND state <> 'ASKED'", Boolean.FALSE);
+		return this.getEvents(filter, " AND state <> '" + StateCodeType.AskedCode.ID + "'", Boolean.FALSE);
 	}
 
 	@Override
@@ -164,12 +175,9 @@ public class EventService extends CommonService implements IEventService {
 		}
 		LOG.debug("PrepareCreate for Event");
 
-		// TODO Djer move EventStateLookupCall to shared part ?
-		formData.getState().setValue("ASKED");
-		// TODO Djer move DurationLookupCall to shared Part ?
-		formData.getDuration().setValue(30);
-		// TODO Djer move SlotLookup to shared Part ?
-		formData.getSlot().setValue(1);
+		formData.getState().setValue(StateCodeType.AskedCode.ID);
+		formData.getDuration().setValue(DurationCodeType.HalfHourCode.ID);
+		formData.getSlot().setValue(SlotCodeType.DayCode.ID);
 
 		final DateHelper dateHelper = BEANS.get(DateHelper.class);
 		formData.getCreatedDate().setValue(dateHelper.nowUtc());
@@ -232,26 +240,20 @@ public class EventService extends CommonService implements IEventService {
 
 	@Override
 	public EventFormData load(final EventFormData formData) {
-		if (!ACCESS.check(new ReadEventPermission(formData.getEventId()))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new ReadEventPermission(formData.getEventId()));
 		SQL.selectInto(SQLs.EVENT_SELECT, formData);
 		return formData;
 	}
 
 	@Override
 	public RejectEventFormData load(final RejectEventFormData formData) {
-		if (!ACCESS.check(new ReadEventPermission(formData.getEventId()))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new ReadEventPermission(formData.getEventId()));
 		SQL.selectInto(SQLs.EVENT_SELECT_REJECT, formData);
 		return formData;
 	}
 
 	private EventFormData store(final EventFormData formData, final Boolean duringCreate) {
-		if (!ACCESS.check(new UpdateEventPermission(formData.getEventId()))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new UpdateEventPermission(formData.getEventId()));
 		if (null == formData.getLastModifier()) {
 			formData.setLastModifier(super.userHelper.getCurrentUserId());
 		}
@@ -271,9 +273,7 @@ public class EventService extends CommonService implements IEventService {
 
 	@Override
 	public EventFormData storeNewState(final RejectEventFormData formData) {
-		if (!ACCESS.check(new UpdateEventPermission(formData.getEventId()))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new UpdateEventPermission(formData.getEventId()));
 		SQL.update(SQLs.EVENT_UPDATE_STATE, formData);
 
 		// reload the **full** event data after update
@@ -359,7 +359,7 @@ public class EventService extends CommonService implements IEventService {
 		if (null == eventRecipient || "".equals(eventRecipient)) {
 			LOG.error("Event " + eventId + " as NO recipient (email)");
 			isRecipient = Boolean.FALSE;
-		} else if (eventRecipient.equals(this.getCurrentUserEmail())) {
+		} else if (eventRecipient.equalsIgnoreCase(this.getCurrentUserEmail())) {
 			isRecipient = Boolean.TRUE;
 		}
 		return isRecipient;
@@ -371,5 +371,18 @@ public class EventService extends CommonService implements IEventService {
 		final UserFormData userDetails = userService.getCurrentUserDetails();
 
 		return userDetails.getEmail().getValue();
+	}
+
+	@Override
+	public void migrateDurationlookupToCodeType() {
+		LOG.info("Updating Event duration from minutes to IDs");
+		final DurationCodeType durationCodeType = new DurationCodeType();
+		final List<? extends ICode<Long>> existingCodes = durationCodeType.getCodes(Boolean.FALSE);
+
+		for (final ICode<Long> code : existingCodes) {
+			LOG.debug("Updating event with durantion : " + code.getValue() + " with id : " + code.getId());
+			final String sql = "UPDATE event set duration=:durationId where duration=:durationminutes";
+			SQL.update(sql, new NVPair("durationId", code.getId()), new NVPair("durationminutes", code.getValue()));
+		}
 	}
 }

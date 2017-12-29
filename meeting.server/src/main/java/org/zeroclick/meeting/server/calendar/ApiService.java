@@ -8,16 +8,14 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.scout.rt.platform.BEANS;
-import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.holders.NVPair;
 import org.eclipse.scout.rt.server.clientnotification.ClientNotificationRegistry;
 import org.eclipse.scout.rt.server.jdbc.SQL;
-import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeroclick.common.CommonService;
+import org.zeroclick.common.AbstractCommonService;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
 import org.zeroclick.configuration.shared.api.ApiDeletedNotification;
 import org.zeroclick.configuration.shared.api.ApiTablePageData;
@@ -26,15 +24,21 @@ import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CreateApiPermission;
 import org.zeroclick.meeting.shared.calendar.DeleteApiPermission;
 import org.zeroclick.meeting.shared.calendar.IApiService;
+import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.calendar.ReadApiPermission;
 import org.zeroclick.meeting.shared.calendar.UpdateApiPermission;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.ReadEventPermission;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
-public class ApiService extends CommonService implements IApiService {
+public class ApiService extends AbstractCommonService implements IApiService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ApiService.class);
+
+	@Override
+	protected Logger getLog() {
+		return LOG;
+	}
 
 	@Override
 	public ApiTablePageData getApiTableData(final SearchFilter filter) {
@@ -57,18 +61,14 @@ public class ApiService extends CommonService implements IApiService {
 
 	@Override
 	public ApiFormData prepareCreate(final ApiFormData formData) {
-		if (!ACCESS.check(new CreateApiPermission())) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new CreateApiPermission());
 		LOG.warn("PrepareCreate for Api");
 		return this.store(formData);
 	}
 
 	@Override
 	public ApiFormData create(final ApiFormData formData) {
-		if (!ACCESS.check(new CreateApiPermission())) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new CreateApiPermission());
 
 		Boolean isNew = Boolean.FALSE;
 
@@ -94,7 +94,6 @@ public class ApiService extends CommonService implements IApiService {
 		}
 
 		return apiFormCreated;
-
 	}
 
 	private void sendCreatedNotifications(final ApiFormData formData) {
@@ -118,8 +117,15 @@ public class ApiService extends CommonService implements IApiService {
 	public ApiFormData load(final ApiFormData formData) {
 		final Long userId = formData.getUserIdProperty().getValue();
 		Long oAuthId = formData.getApiCredentialIdProperty().getValue();
+		final String accesToken = formData.getAccessToken().getValue();
 
-		LOG.debug("Loading credential by ID : " + oAuthId + ", and UserId : " + userId);
+		LOG.debug("Loading credential by ID : " + oAuthId + ", and UserId : " + userId + " and accesToken : "
+				+ accesToken);
+
+		if (null == oAuthId && null != accesToken && !accesToken.isEmpty()) {
+			LOG.debug("No API ID but an accessTOken, using accessToken to load api Data");
+			oAuthId = this.getApiIdByAccessToken(userId, accesToken);
+		}
 
 		if (null == oAuthId) {
 			oAuthId = this.getApiId(userId);
@@ -136,7 +142,8 @@ public class ApiService extends CommonService implements IApiService {
 			LOG.error("User :" + currentUserId + " (id : " + currentUserId + " try to load Api Data with Id : "
 					+ oAuthId + " (user : " + userId + ") wich belong to User " + userId
 					+ " But haven't 'ALL'/'RELATED' read permission");
-			throw new VetoException(TEXTS.get("AuthorizationFailed"));
+
+			super.throwAuthorizationFailed();
 		}
 
 		SQL.selectInto(
@@ -158,9 +165,7 @@ public class ApiService extends CommonService implements IApiService {
 
 	@Override
 	public ApiFormData store(final ApiFormData formData) {
-		if (!ACCESS.check(new UpdateApiPermission(formData.getApiCredentialId()))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new UpdateApiPermission(formData.getApiCredentialId()));
 
 		LOG.debug("Storing API in DB for user : " + formData.getUserIdProperty().getValue() + " for provider : "
 				+ formData.getProvider().getValue());
@@ -170,14 +175,17 @@ public class ApiService extends CommonService implements IApiService {
 
 	@Override
 	public void delete(final ApiFormData formData) {
-		if (!ACCESS.check(new DeleteApiPermission(formData.getApiCredentialId()))) {
-			super.throwAuthorizationFailed();
-		}
+		super.checkPermission(new DeleteApiPermission(formData.getApiCredentialId()));
 
 		final ApiFormData dataBeforeDeletion = this.load(formData);
 
 		LOG.debug("Deleting API in DB for api_id : " + formData.getApiCredentialId() + "(user : "
 				+ formData.getUserIdProperty().getValue() + ") for provider : " + formData.getProvider().getValue());
+
+		// delete related table data to maintain FK constraints
+		final ICalendarConfigurationService calendarConfigurationService = BEANS
+				.get(ICalendarConfigurationService.class);
+		calendarConfigurationService.deleteByApiId(formData.getApiCredentialId());
 
 		SQL.delete(SQLs.OAUHTCREDENTIAL_DELETE, dataBeforeDeletion);
 
@@ -198,6 +206,28 @@ public class ApiService extends CommonService implements IApiService {
 		if (null != formData.getApiCredentialId()
 				&& !ACCESS.check(new ReadApiPermission(formData.getApiCredentialId()))) {
 			super.throwAuthorizationFailed();
+		}
+		return formData.getApiCredentialId();
+	}
+
+	@Override
+	public Long getApiIdByAccessToken(final Long userId, final String accessToken) {
+		LOG.debug("Searching API Id  : " + userId + " with Acces Token : " + accessToken);
+		final ApiFormData formData = new ApiFormData();
+		formData.setUserId(userId);
+		formData.getAccessToken().setValue(accessToken);
+		SQL.selectInto(SQLs.OAUHTCREDENTIAL_SELECT_API_ID + SQLs.OAUHTCREDENTIAL_FILTER_USER_ID
+				+ SQLs.OAUHTCREDENTIAL_FILTER_ACESS_TOKEN + SQLs.OAUHTCREDENTIAL_SELECT_INTO_API_ID, formData);
+
+		if (null != formData.getApiCredentialId()
+				&& !ACCESS.check(new ReadApiPermission(formData.getApiCredentialId()))) {
+			super.throwAuthorizationFailed();
+		}
+		if (null == formData.getApiCredentialId()) {
+			LOG.warn("No API Id in DataBase for user :" + userId + " and accesToken : " + accessToken);
+		} else {
+			LOG.debug("API id : " + formData.getApiCredentialId() + " for user :" + userId + " and accesToken : "
+					+ accessToken);
 		}
 		return formData.getApiCredentialId();
 	}
