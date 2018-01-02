@@ -787,9 +787,12 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		 * @return
 		 */
 		protected Boolean isGuestCurrentUser(final ITableRow row) {
+			String guestEmail = null;
 			final String rowEmail = this.getEmailColumn().getValue(row.getRowIndex());
-
-			return this.isGuest(rowEmail.toLowerCase());
+			if (null != rowEmail) {
+				guestEmail = rowEmail.toLowerCase();
+			}
+			return this.isGuest(guestEmail);
 		}
 
 		protected Boolean isGuest(final String email) {

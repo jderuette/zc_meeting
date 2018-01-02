@@ -145,17 +145,23 @@ public class Desktop extends AbstractDesktop {
 
 	@Override
 	protected void execClosing() {
-		final ApiCreatedNotificationHandler apiCreatedNotificationHandler = BEANS
-				.get(ApiCreatedNotificationHandler.class);
-		apiCreatedNotificationHandler.removeListener(this.apiCreatedListener);
+		if (null != this.apiCreatedListener) {
+			final ApiCreatedNotificationHandler apiCreatedNotificationHandler = BEANS
+					.get(ApiCreatedNotificationHandler.class);
+			apiCreatedNotificationHandler.removeListener(this.apiCreatedListener);
+		}
 
-		final ApiDeletedNotificationHandler apiDeletedNotificationHandler = BEANS
-				.get(ApiDeletedNotificationHandler.class);
-		apiDeletedNotificationHandler.removeListener(this.apiDeletedListener);
+		if (null != this.apiDeletedListener) {
+			final ApiDeletedNotificationHandler apiDeletedNotificationHandler = BEANS
+					.get(ApiDeletedNotificationHandler.class);
+			apiDeletedNotificationHandler.removeListener(this.apiDeletedListener);
+		}
 
-		final UserModifiedNotificationHandler userModifiedNotificationHandler = BEANS
-				.get(UserModifiedNotificationHandler.class);
-		userModifiedNotificationHandler.removeListener(this.userModifiedListener);
+		if (null != this.userModifiedListener) {
+			final UserModifiedNotificationHandler userModifiedNotificationHandler = BEANS
+					.get(UserModifiedNotificationHandler.class);
+			userModifiedNotificationHandler.removeListener(this.userModifiedListener);
+		}
 	}
 
 	protected void selectFirstVisibleOutline() {
