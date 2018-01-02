@@ -1004,21 +1004,19 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 					if (hasStartDate) {
 						this.setTooltipText(null);
-						this.setIconId(null);
 						// row.setTooltipText(null);
 					} else {
-						// this.setTooltipText(TEXTS.get("zc.meeting.accept.require.startDate"));
-						this.setIconId(Icons.ExclamationMark);
+						this.setTooltipText(TEXTS.get("zc.meeting.accept.require.startDate"));
+						// this.setIconId(Icons.ExclamationMark);
 						rowMessages.append(TEXTS.get("zc.meeting.accept.require.startDate"));
 					}
 
 					if (isOrganizerCalendarConfigured) {
 						this.setTooltipText(null);
-						this.setIconId(null);
 						row.setTooltipText(null);
 					} else {
-						// this.setTooltipText(TEXTS.get("zc.meeting.accept.require.OrganizerElectronicCalendar"));
-						this.setIconId(Icons.ExclamationMark);
+						this.setTooltipText(TEXTS.get("zc.meeting.accept.require.OrganizerElectronicCalendar"));
+						// this.setIconId(Icons.ExclamationMark);
 						rowMessages.append(TEXTS.get("zc.meeting.accept.require.OrganizerElectronicCalendar"));
 					}
 				}
