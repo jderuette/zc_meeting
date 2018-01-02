@@ -104,6 +104,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		return BEANS.get(GoogleApiHelper.class).isCalendarConfigured();
 	}
 
+	protected boolean isOrganizerCalendarConfigured(final ITableRow row) {
+		return BEANS.get(GoogleApiHelper.class)
+				.isCalendarConfigured(this.getTable().getOrganizerColumn().getValue(row));
+	}
+
 	@Override
 	protected String getConfiguredTitle() {
 		return TEXTS.get("zc.meeting.events");
