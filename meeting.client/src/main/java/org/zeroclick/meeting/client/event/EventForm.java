@@ -385,6 +385,11 @@ public class EventForm extends AbstractForm {
 				}
 
 				@Override
+				protected String getConfiguredTooltipText() {
+					return TEXTS.get("zc.meeting.attendeeEmail.unique.tootips");
+				}
+
+				@Override
 				protected boolean getConfiguredBorderVisible() {
 					return Boolean.TRUE;
 				}
@@ -446,6 +451,11 @@ public class EventForm extends AbstractForm {
 						text = TEXTS.get("zc.meeting.multipleEmails") + " (" + nbAttendee + ")";
 					}
 					return text;
+				}
+
+				@Override
+				protected String getConfiguredTooltipText() {
+					return TEXTS.get("zc.meeting.attendeeEmail.multiple.tootips");
 				}
 
 				@Override
