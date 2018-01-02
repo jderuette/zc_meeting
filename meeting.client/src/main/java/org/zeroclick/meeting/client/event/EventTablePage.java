@@ -13,7 +13,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.scout.rt.client.context.ClientRunContexts;
 import org.eclipse.scout.rt.client.dto.Data;
+import org.eclipse.scout.rt.client.job.ModelJobs;
 import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
 import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
 import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
@@ -28,6 +30,7 @@ import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.platform.util.CompareUtility;
+import org.eclipse.scout.rt.platform.util.concurrent.IRunnable;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
@@ -187,6 +190,34 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		@Override
 		protected String getConfiguredTitle() {
 			return EventTablePage.this.buildTitle();
+		}
+
+		/**
+		 * Set the row Tooltip text in a new ModelJob too avoid LOOP
+		 *
+		 * @param row
+		 * @param message
+		 */
+		protected void setRowTooltip(final ITableRow row, final String message) {
+			ModelJobs.schedule(new IRunnable() {
+
+				@Override
+				public void run() {
+					row.setTooltipText(message);
+
+				}
+			}, ModelJobs.newInput(ClientRunContexts.copyCurrent()));
+		}
+
+		protected void removeRowToolTips(final ITableRow row) {
+			ModelJobs.schedule(new IRunnable() {
+
+				@Override
+				public void run() {
+					row.setTooltipText(null);
+
+				}
+			}, ModelJobs.newInput(ClientRunContexts.copyCurrent()));
 		}
 
 		// @Override
@@ -960,19 +991,42 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			@Override
 			protected void execOwnerValueChanged(final Object newOwnerValue) {
 				final ITableRow row = Table.this.getOwnerAsTableRow(newOwnerValue);
+				final StringBuffer rowMessages = new StringBuffer();
 				if (null != row) {
+					final Boolean isOrganizerCalendarConfigured = EventTablePage.this
+							.isOrganizerCalendarConfigured(row);
 					this.setVisible(Table.this.userCanAccept(row) && this.isWorkflowVisible(Table.this.getState(row))
 							&& Table.this.isGuestCurrentUser(row));
 
 					final Boolean hasStartDate = null != Table.this.getStartDateColumn().getValue(row.getRowIndex());
 					// && EventTablePage.this.isUserCalendarConfigured()
-					this.setEnabled(hasStartDate);
+					this.setEnabled(hasStartDate && isOrganizerCalendarConfigured);
 
 					if (hasStartDate) {
 						this.setTooltipText(null);
+						// row.setTooltipText(null);
 					} else {
 						this.setTooltipText(TEXTS.get("zc.meeting.accept.require.startDate"));
+						// this.setIconId(Icons.ExclamationMark);
+						rowMessages.append(TEXTS.get("zc.meeting.accept.require.startDate"));
 					}
+
+					if (isOrganizerCalendarConfigured) {
+						this.setTooltipText(null);
+						row.setTooltipText(null);
+					} else {
+						this.setTooltipText(TEXTS.get("zc.meeting.accept.require.OrganizerElectronicCalendar"));
+						// this.setIconId(Icons.ExclamationMark);
+						rowMessages.append(TEXTS.get("zc.meeting.accept.require.OrganizerElectronicCalendar"));
+					}
+				}
+
+				if (rowMessages.length() > 0) {
+					// Table.this.setRowTooltip(row, rowMessages.toString());
+					this.setTooltipText(rowMessages.toString());
+				} else {
+					// Table.this.removeRowToolTips(row);
+					this.setTooltipText(null);
 				}
 			}
 
@@ -1038,6 +1092,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					Table.this.autoFillDates();
 
 				} catch (final IOException e) {
+					LOG.error("Error while getting (Google) calendar details", e);
 					throw new VetoException("Canno't get calendar details, re-try later", e);
 				}
 			}
@@ -1098,7 +1153,8 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					this.setVisible(Table.this.userCanChooseDate(row)
 							&& this.isWorkflowVisible(Table.this.getState(row)) && Table.this.isGuestCurrentUser(row));
 					// EventTablePage.this.isUserCalendarConfigured() &&
-					this.setEnabled(Table.this.isUserTimeZoneValid());
+					this.setEnabled(
+							Table.this.isUserTimeZoneValid() && EventTablePage.this.isOrganizerCalendarConfigured(row));
 				}
 			}
 
@@ -1108,6 +1164,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					Table.this.changeDatesNext();
 					Table.this.reloadMenus(Table.this.getSelectedRow());
 				} catch (final IOException e) {
+					LOG.error("Error while getting (Google) calendar details", e);
 					throw new VetoException("Canno't get calendar details, re-try later", e);
 				}
 			}
@@ -1156,7 +1213,8 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					this.setVisible(Table.this.userCanChooseDate(row)
 							&& this.isWorkflowVisible(Table.this.getState(row)) && Table.this.isGuestCurrentUser(row));
 					// EventTablePage.this.isUserCalendarConfigured() &&
-					this.setEnabled(Table.this.isUserTimeZoneValid());
+					this.setEnabled(
+							Table.this.isUserTimeZoneValid() && EventTablePage.this.isOrganizerCalendarConfigured(row));
 				}
 			}
 
@@ -1198,7 +1256,8 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 								Table.this.userCanChooseDate(row) && this.isWorkflowVisible(Table.this.getState(row))
 										&& Table.this.isGuestCurrentUser(row));
 						// EventTablePage.this.isUserCalendarConfigured() &&
-						this.setEnabled(Table.this.isUserTimeZoneValid());
+						this.setEnabled(Table.this.isUserTimeZoneValid()
+								&& EventTablePage.this.isOrganizerCalendarConfigured(row));
 					}
 				}
 
@@ -1215,6 +1274,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 						Table.this.changeDatesNext(newStartDate);
 						Table.this.reloadMenus(Table.this.getSelectedRow());
 					} catch (final IOException e) {
+						LOG.error("Error while getting (Google) calendar details", e);
 						throw new VetoException("Canno't get calendar details, re-try later", e);
 					}
 				}

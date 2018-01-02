@@ -104,6 +104,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		return BEANS.get(GoogleApiHelper.class).isCalendarConfigured();
 	}
 
+	protected boolean isOrganizerCalendarConfigured(final ITableRow row) {
+		return BEANS.get(GoogleApiHelper.class)
+				.isCalendarConfigured(this.getTable().getOrganizerColumn().getValue(row));
+	}
+
 	@Override
 	protected String getConfiguredTitle() {
 		return TEXTS.get("zc.meeting.events");
@@ -474,10 +479,9 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 							final String previousStateRow = eventForm.getPreviousState();
 
 							Table.this.updateTableRowFromForm(row, eventForm);
-
 							AbstractEventsTablePage.this.getTable().applyRowFilters();
-
 							AbstractEventsTablePage.this.onModifiedEvent(eventForm, previousStateRow);
+							Table.this.refreshAutoFillDate(row);
 
 							final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 							notificationHelper.addProccessedNotification(
@@ -551,10 +555,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				public void handleNotification(final DayDurationModifiedNotification notification) {
 					try {
 						final DayDurationFormData dayDurationForm = notification.getDayDurationForm();
-						LOG.debug("Day Duration modified prepare to reset invalid date proposal ("
-								+ Table.this.getTitle() + ") for slotCode : " + notification.getSlotCode() + " ("
-								+ dayDurationForm.getDayDurationId() + ")");
-						Table.this.resetInvalidatesEvent(notification.getSlotCode());
+						LOG.debug(
+								"Day Duration modified prepare to reset invalid date proposal (" + Table.this.getTitle()
+										+ ") for slotCode : " + notification.getDayDurationForm().getSlotCode()
+										+ " ( ID " + dayDurationForm.getDayDurationId() + ")");
+						Table.this.resetInvalidatesEvent(notification.getDayDurationForm().getSlotCode());
 
 					} catch (final RuntimeException e) {
 						LOG.error("Could not handle modified DayDuration. (" + Table.this.getTitle() + ")", e);
@@ -607,11 +612,16 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			final Long rowSlotCode = this.getSlotColumn().getValue(row.getRowIndex());
 
 			if (null != rowSlotCode) {
-				if (rowSlotCode.equals(Integer.valueOf(slotCode))) {
-					this.getStartDateColumn().setValue(row.getRowIndex(), (Date) null);
-					this.getEndDateColumn().setValue(row.getRowIndex(), (Date) null);
+				if (rowSlotCode.equals(Long.valueOf(slotCode))) {
+					this.refreshAutoFillDate(row);
 				}
 			}
+		}
+
+		private void refreshAutoFillDate(final ITableRow row) {
+			this.getStartDateColumn().setValue(row.getRowIndex(), (Date) null);
+			this.getEndDateColumn().setValue(row.getRowIndex(), (Date) null);
+			this.autoFillDates(row);
 		}
 
 		protected Boolean isTimeZoneValid(final Long userId) {
@@ -787,9 +797,12 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		 * @return
 		 */
 		protected Boolean isGuestCurrentUser(final ITableRow row) {
+			String guestEmail = null;
 			final String rowEmail = this.getEmailColumn().getValue(row.getRowIndex());
-
-			return this.isGuest(rowEmail.toLowerCase());
+			if (null != rowEmail) {
+				guestEmail = rowEmail.toLowerCase();
+			}
+			return this.isGuest(guestEmail);
 		}
 
 		protected Boolean isGuest(final String email) {
