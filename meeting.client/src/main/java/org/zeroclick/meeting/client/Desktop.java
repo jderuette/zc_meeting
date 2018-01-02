@@ -273,6 +273,11 @@ public class Desktop extends AbstractDesktop {
 		}
 
 		@Override
+		protected String getConfiguredTooltipText() {
+			return TEXTS.get("zc.meeting.addCalendar.tooltips");
+		}
+
+		@Override
 		protected Set<? extends IMenuType> getConfiguredMenuTypes() {
 			return CollectionUtility.hashSet();
 		}

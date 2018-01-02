@@ -142,6 +142,11 @@ public class OnBoardingUserForm extends AbstractForm {
 			}
 
 			@Override
+			protected String getConfiguredTooltipText() {
+				return TEXTS.get("zc.meeting.addCalendar.tooltips");
+			}
+
+			@Override
 			protected void execInitField() {
 				super.execInitField();
 				this.setHtmlEnabled(Boolean.TRUE);
