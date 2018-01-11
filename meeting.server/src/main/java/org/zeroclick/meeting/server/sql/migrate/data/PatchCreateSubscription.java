@@ -107,7 +107,8 @@ public class PatchCreateSubscription extends AbstractDataPatcher {
 			structureAltered = Boolean.TRUE;
 		}
 
-		if (this.getDatabaseHelper().existTable(PATCHED_TABLE_ROLE)) {
+		if (this.getDatabaseHelper().existTable(PATCHED_TABLE_ROLE)
+				&& !this.getDatabaseHelper().isColumnExists(PATCHED_TABLE_ROLE, ADDED_ROLE_COLUMN)) {
 			SQL.insert(SQLs.ROLE_ADD_TYPE);
 			// define default type for existing roles
 			SQL.insert(SQLs.ROLE_ADD_DEFAULT_TYPE_TO_EXISTING);
