@@ -382,7 +382,8 @@ public class EventService extends AbstractCommonService implements IEventService
 		for (final ICode<Long> code : existingCodes) {
 			LOG.debug("Updating event with durantion : " + code.getValue() + " with id : " + code.getId());
 			final String sql = "UPDATE event set duration=:durationId where duration=:durationminutes";
-			SQL.update(sql, new NVPair("durationId", code.getId()), new NVPair("durationminutes", code.getValue()));
+			SQL.update(sql, new NVPair("durationId", code.getId()),
+					new NVPair("durationminutes", code.getValue().intValue()));
 		}
 	}
 }
