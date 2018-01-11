@@ -488,7 +488,7 @@ public class ValidateCpsForm extends AbstractForm {
 			}
 
 			public void setActive() {
-				this.setLabel(TEXTS.get("OkButton"));
+				this.setLabel(TEXTS.get("SaveButton"));
 				this.setEnabled(Boolean.TRUE);
 				ValidateCpsForm.this.getAddSubscriptionField().setVisible(Boolean.FALSE);
 				this.setBackgroundColor(this.getConfiguredBackgroundColor());

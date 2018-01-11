@@ -15,6 +15,10 @@ public class CalendarConfigurationFormData extends AbstractFormData {
 
 	private static final long serialVersionUID = 1L;
 
+	public AddEventToCalendar getAddEventToCalendar() {
+		return getFieldByClass(AddEventToCalendar.class);
+	}
+
 	public CalendarConfigurationId getCalendarConfigurationId() {
 		return getFieldByClass(CalendarConfigurationId.class);
 	}
@@ -23,8 +27,20 @@ public class CalendarConfigurationFormData extends AbstractFormData {
 		return getFieldByClass(ExternalId.class);
 	}
 
+	public Main getMain() {
+		return getFieldByClass(Main.class);
+	}
+
+	public Name getName() {
+		return getFieldByClass(Name.class);
+	}
+
 	public OAuthCredentialId getOAuthCredentialId() {
 		return getFieldByClass(OAuthCredentialId.class);
+	}
+
+	public Process getProcess() {
+		return getFieldByClass(Process.class);
 	}
 
 	public ProcessFreeEvent getProcessFreeEvent() {
@@ -39,8 +55,17 @@ public class CalendarConfigurationFormData extends AbstractFormData {
 		return getFieldByClass(ProcessNotRegistredOnEvent.class);
 	}
 
+	public ReadOnly getReadOnly() {
+		return getFieldByClass(ReadOnly.class);
+	}
+
 	public UserId getUserId() {
 		return getFieldByClass(UserId.class);
+	}
+
+	public static class AddEventToCalendar extends AbstractValueFieldData<Boolean> {
+
+		private static final long serialVersionUID = 1L;
 	}
 
 	public static class CalendarConfigurationId extends AbstractValueFieldData<Long> {
@@ -53,7 +78,22 @@ public class CalendarConfigurationFormData extends AbstractFormData {
 		private static final long serialVersionUID = 1L;
 	}
 
+	public static class Main extends AbstractValueFieldData<Boolean> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class Name extends AbstractValueFieldData<String> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
 	public static class OAuthCredentialId extends AbstractValueFieldData<Long> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class Process extends AbstractValueFieldData<Boolean> {
 
 		private static final long serialVersionUID = 1L;
 	}
@@ -69,6 +109,11 @@ public class CalendarConfigurationFormData extends AbstractFormData {
 	}
 
 	public static class ProcessNotRegistredOnEvent extends AbstractValueFieldData<Boolean> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class ReadOnly extends AbstractValueFieldData<Boolean> {
 
 		private static final long serialVersionUID = 1L;
 	}

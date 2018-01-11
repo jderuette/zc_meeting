@@ -16,6 +16,9 @@ limitations under the License.
 package org.zeroclick.common;
 
 import java.security.Permission;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.PostConstruct;
 
@@ -32,6 +35,8 @@ import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.eclipse.scout.rt.shared.services.common.security.IAccessControlService;
 import org.slf4j.Logger;
 import org.zeroclick.comon.text.UserHelper;
+import org.zeroclick.meeting.shared.event.IEventService;
+import org.zeroclick.meeting.shared.security.AccessControlService;
 
 /**
  * @author djer
@@ -67,6 +72,41 @@ public abstract class AbstractCommonService {
 		if (!ACCESS.check(p)) {
 			this.throwAuthorizationFailed(p);
 		}
+	}
+
+	protected Set<String> buildNotifiedUsers(final Long ownerObjectId, final Boolean addPendingMeetingUsers) {
+		final HashSet<String> notifiedUsers = new HashSet<>();
+		if (null != ownerObjectId) {
+			notifiedUsers.addAll(this.getUserNotificationIds(ownerObjectId));
+		}
+
+		if (addPendingMeetingUsers) {
+			final Set<Long> pendingUsers = this.getUserWithPendingEvent();
+			if (null != pendingUsers) {
+				for (final Long userId : pendingUsers) {
+					notifiedUsers.addAll(this.getUserNotificationIds(userId));
+				}
+			}
+		}
+		return notifiedUsers;
+	}
+
+	protected Set<Long> getUserWithPendingEvent() {
+		Set<Long> pendingMeetingUser = new HashSet<>();
+
+		final IEventService eventService = BEANS.get(IEventService.class);
+		final Map<Long, Integer> pendingUsers = eventService.getUsersWithPendingMeeting();
+
+		if (null != pendingUsers) {
+			pendingMeetingUser = pendingUsers.keySet();
+		}
+
+		return pendingMeetingUser;
+	}
+
+	protected Set<String> getUserNotificationIds(final Long ownerObjectId) {
+		final AccessControlService acs = BEANS.get(AccessControlService.class);
+		return acs.getUserNotificationIds(ownerObjectId);
 	}
 
 	protected void insertInsideNewTransaction(final String sql, final Object... bindBases) {

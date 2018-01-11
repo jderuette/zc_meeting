@@ -58,10 +58,20 @@ import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.configuration.shared.user.UserModifiedNotification;
 import org.zeroclick.configuration.shared.venue.VenueLookupCall;
 import org.zeroclick.meeting.client.NotificationHelper;
+import org.zeroclick.meeting.client.calendar.CalendarConfigurationCreatedNotificationHandler;
+import org.zeroclick.meeting.client.calendar.CalendarConfigurationModifiedNotificationHandler;
+import org.zeroclick.meeting.client.calendar.CalendarsConfigurationCreatedNotificationHandler;
+import org.zeroclick.meeting.client.calendar.CalendarsConfigurationModifiedNotificationHandler;
 import org.zeroclick.meeting.client.common.CallTrackerService;
 import org.zeroclick.meeting.client.event.EventTablePage.Table.NewEventMenu;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
+import org.zeroclick.meeting.shared.calendar.CalendarConfigurationCreatedNotification;
+import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
+import org.zeroclick.meeting.shared.calendar.CalendarConfigurationModifiedNotification;
+import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationCreatedNotification;
+import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationFormData;
+import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationModifiedNotification;
 import org.zeroclick.meeting.shared.event.AbstractEventNotification;
 import org.zeroclick.meeting.shared.event.EventCreatedNotification;
 import org.zeroclick.meeting.shared.event.EventFormData;
@@ -352,6 +362,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		protected INotificationListener<UserModifiedNotification> userModifiedListener;
 		protected INotificationListener<DayDurationModifiedNotification> dayDurationModifiedListener;
 
+		private INotificationListener<CalendarsConfigurationModifiedNotification> calendarsConfigurationModifiedNotificationListener;
+		private INotificationListener<CalendarsConfigurationCreatedNotification> calendarsConfigurationCreatedNotificationListener;
+		private INotificationListener<CalendarConfigurationModifiedNotification> calendarConfigurationModifiedNotificationListener;
+		private INotificationListener<CalendarConfigurationCreatedNotification> calendarConfigurationCreatedNotificationListener;
+
 		@Override
 		protected boolean getConfiguredHeaderEnabled() {
 			return Boolean.FALSE;
@@ -405,6 +420,26 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			final DayDurationModifiedNotificationHandler createDayDurationModifiedHandler = BEANS
 					.get(DayDurationModifiedNotificationHandler.class);
 			createDayDurationModifiedHandler.addListener(this.createDayDurationModifiedListener());
+
+			final CalendarsConfigurationModifiedNotificationHandler calendarsConfigurationModifiedNotificationHandler = BEANS
+					.get(CalendarsConfigurationModifiedNotificationHandler.class);
+			calendarsConfigurationModifiedNotificationHandler
+					.addListener(this.createCalendarsConfigrationModifiedListener());
+
+			final CalendarConfigurationModifiedNotificationHandler calendarConfigurationModifiedNotificationHandler = BEANS
+					.get(CalendarConfigurationModifiedNotificationHandler.class);
+			calendarConfigurationModifiedNotificationHandler
+					.addListener(this.createCalendarConfigrationModifiedListener());
+
+			final CalendarsConfigurationCreatedNotificationHandler calendarsConfigurationCreatedNotificationHandler = BEANS
+					.get(CalendarsConfigurationCreatedNotificationHandler.class);
+			calendarsConfigurationCreatedNotificationHandler
+					.addListener(this.createCalendarsConfigrationCreatedListener());
+
+			final CalendarConfigurationCreatedNotificationHandler calendarConfigurationCreatedNotificationHandler = BEANS
+					.get(CalendarConfigurationCreatedNotificationHandler.class);
+			calendarConfigurationCreatedNotificationHandler
+					.addListener(this.createCalendarConfigrationCreatedListener());
 
 		}
 
@@ -570,6 +605,103 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			return this.dayDurationModifiedListener;
 		}
 
+		private INotificationListener<CalendarsConfigurationModifiedNotification> createCalendarsConfigrationModifiedListener() {
+			this.calendarsConfigurationModifiedNotificationListener = new INotificationListener<CalendarsConfigurationModifiedNotification>() {
+				@Override
+				public void handleNotification(final CalendarsConfigurationModifiedNotification notification) {
+					try {
+						final CalendarsConfigurationFormData calendarsConfigurationFormData = notification
+								.getFormData();
+						Long userId = null;
+						if (calendarsConfigurationFormData.getCalendarConfigTable().getRowCount() > 0) {
+							userId = calendarsConfigurationFormData.getCalendarConfigTable().getRows()[0].getUserId();
+						}
+						LOG.debug("Calendar Configuration modified prepare to refresh event ("
+								+ this.getClass().getName() + ") : (first UserId)" + userId);
+
+						Table.this.refreshAutoFillDate();
+
+					} catch (final RuntimeException e) {
+						LOG.error("Could not handle modified Calendars Configuration. (" + this.getClass().getName()
+								+ ")", e);
+					}
+				}
+			};
+
+			return this.calendarsConfigurationModifiedNotificationListener;
+		}
+
+		private INotificationListener<CalendarConfigurationModifiedNotification> createCalendarConfigrationModifiedListener() {
+			this.calendarConfigurationModifiedNotificationListener = new INotificationListener<CalendarConfigurationModifiedNotification>() {
+				@Override
+				public void handleNotification(final CalendarConfigurationModifiedNotification notification) {
+					try {
+						final CalendarConfigurationFormData calendarConfigurationFormData = notification.getFormData();
+						LOG.debug("Calendar Configuration modified prepare to refresh event ("
+								+ this.getClass().getName() + ") : " + calendarConfigurationFormData.getUserId());
+
+						Table.this.refreshAutoFillDate();
+
+					} catch (final RuntimeException e) {
+						LOG.error(
+								"Could not handle modified Calendar Configuration. (" + this.getClass().getName() + ")",
+								e);
+					}
+				}
+			};
+
+			return this.calendarConfigurationModifiedNotificationListener;
+		}
+
+		private INotificationListener<CalendarsConfigurationCreatedNotification> createCalendarsConfigrationCreatedListener() {
+			this.calendarsConfigurationCreatedNotificationListener = new INotificationListener<CalendarsConfigurationCreatedNotification>() {
+				@Override
+				public void handleNotification(final CalendarsConfigurationCreatedNotification notification) {
+					try {
+						final CalendarsConfigurationFormData calendarsConfigurationFormData = notification
+								.getFormData();
+						Long userId = null;
+						if (calendarsConfigurationFormData.getCalendarConfigTable().getRowCount() > 0) {
+							userId = calendarsConfigurationFormData.getCalendarConfigTable().getRows()[0].getUserId();
+						}
+						LOG.debug("Calendar Configuration created prepare to refresh event ("
+								+ this.getClass().getName() + ") : " + userId);
+
+						Table.this.refreshAutoFillDate();
+
+					} catch (final RuntimeException e) {
+						LOG.error(
+								"Could not handle created Calendars Configuration. (" + this.getClass().getName() + ")",
+								e);
+					}
+				}
+			};
+
+			return this.calendarsConfigurationCreatedNotificationListener;
+		}
+
+		private INotificationListener<CalendarConfigurationCreatedNotification> createCalendarConfigrationCreatedListener() {
+			this.calendarConfigurationCreatedNotificationListener = new INotificationListener<CalendarConfigurationCreatedNotification>() {
+				@Override
+				public void handleNotification(final CalendarConfigurationCreatedNotification notification) {
+					try {
+						final CalendarConfigurationFormData calendarsConfigurationFormData = notification.getFormData();
+						LOG.debug("Calendar Configuration created prepare to refresh event ("
+								+ this.getClass().getName() + ") : " + calendarsConfigurationFormData.getUserId());
+
+						Table.this.refreshAutoFillDate();
+
+					} catch (final RuntimeException e) {
+						LOG.error(
+								"Could not handle created Calendar Configuration. (" + this.getClass().getName() + ")",
+								e);
+					}
+				}
+			};
+
+			return this.calendarConfigurationCreatedNotificationListener;
+		}
+
 		protected void autoFillDates(final ITableRow row) {
 			// TODO Auto-generated method stub
 		}
@@ -615,6 +747,13 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				if (rowSlotCode.equals(Long.valueOf(slotCode))) {
 					this.refreshAutoFillDate(row);
 				}
+			}
+		}
+
+		protected void refreshAutoFillDate() {
+			final List<ITableRow> rows = this.getRows();
+			for (final ITableRow row : rows) {
+				this.refreshAutoFillDate(row);
 			}
 		}
 
@@ -689,6 +828,26 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			final DayDurationModifiedNotificationHandler dayDurationModifiedNotificationHandler = BEANS
 					.get(DayDurationModifiedNotificationHandler.class);
 			dayDurationModifiedNotificationHandler.removeListener(this.dayDurationModifiedListener);
+
+			final CalendarsConfigurationModifiedNotificationHandler calendarsConfigurationModifiedNotificationHandler = BEANS
+					.get(CalendarsConfigurationModifiedNotificationHandler.class);
+			calendarsConfigurationModifiedNotificationHandler
+					.removeListener(this.calendarsConfigurationModifiedNotificationListener);
+
+			final CalendarConfigurationModifiedNotificationHandler calendarConfigurationModifiedNotificationHandler = BEANS
+					.get(CalendarConfigurationModifiedNotificationHandler.class);
+			calendarConfigurationModifiedNotificationHandler
+					.removeListener(this.calendarConfigurationModifiedNotificationListener);
+
+			final CalendarsConfigurationCreatedNotificationHandler calendarsConfigurationCreatedNotificationHandler = BEANS
+					.get(CalendarsConfigurationCreatedNotificationHandler.class);
+			calendarsConfigurationCreatedNotificationHandler
+					.removeListener(this.calendarsConfigurationCreatedNotificationListener);
+
+			final CalendarConfigurationCreatedNotificationHandler calendarConfigurationCreatedNotificationHandler = BEANS
+					.get(CalendarConfigurationCreatedNotificationHandler.class);
+			calendarConfigurationCreatedNotificationHandler
+					.removeListener(this.calendarConfigurationCreatedNotificationListener);
 
 			super.execDisposeTable();
 		}

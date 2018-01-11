@@ -12,14 +12,19 @@ import org.eclipse.scout.rt.client.ui.form.fields.stringfield.AbstractStringFiel
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
+import org.zeroclick.meeting.client.calendar.CalendarConfigurationForm.MainBox.AddEventToCalendarField;
 import org.zeroclick.meeting.client.calendar.CalendarConfigurationForm.MainBox.CalendarConfigurationIdField;
 import org.zeroclick.meeting.client.calendar.CalendarConfigurationForm.MainBox.CancelButton;
 import org.zeroclick.meeting.client.calendar.CalendarConfigurationForm.MainBox.ExternalIdField;
+import org.zeroclick.meeting.client.calendar.CalendarConfigurationForm.MainBox.MainField;
+import org.zeroclick.meeting.client.calendar.CalendarConfigurationForm.MainBox.NameField;
 import org.zeroclick.meeting.client.calendar.CalendarConfigurationForm.MainBox.OAuthCredentialIdField;
 import org.zeroclick.meeting.client.calendar.CalendarConfigurationForm.MainBox.OkButton;
+import org.zeroclick.meeting.client.calendar.CalendarConfigurationForm.MainBox.ProcessField;
 import org.zeroclick.meeting.client.calendar.CalendarConfigurationForm.MainBox.ProcessFreeEventField;
 import org.zeroclick.meeting.client.calendar.CalendarConfigurationForm.MainBox.ProcessFullDayEventField;
 import org.zeroclick.meeting.client.calendar.CalendarConfigurationForm.MainBox.ProcessNotRegistredOnEventField;
+import org.zeroclick.meeting.client.calendar.CalendarConfigurationForm.MainBox.ReadOnlyField;
 import org.zeroclick.meeting.client.calendar.CalendarConfigurationForm.MainBox.UserIdField;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.CreateCalendarConfigurationPermission;
@@ -74,12 +79,37 @@ public class CalendarConfigurationForm extends AbstractForm {
 		return this.getFieldByClass(UserIdField.class);
 	}
 
+	public MainField getMainField() {
+		return this.getFieldByClass(MainField.class);
+	}
+
+	public ProcessField getProcessField() {
+		return this.getFieldByClass(ProcessField.class);
+	}
+
+	public AddEventToCalendarField getAddEventToCalendarField() {
+		return this.getFieldByClass(AddEventToCalendarField.class);
+	}
+
+	public ReadOnlyField getReadOnlyField() {
+		return this.getFieldByClass(ReadOnlyField.class);
+	}
+
+	public NameField getNameField() {
+		return this.getFieldByClass(NameField.class);
+	}
+
 	public OAuthCredentialIdField getOAuthCredentialIdField() {
 		return this.getFieldByClass(OAuthCredentialIdField.class);
 	}
 
 	public OkButton getOkButton() {
 		return this.getFieldByClass(OkButton.class);
+	}
+
+	@Override
+	protected void execInitForm() {
+		this.getAddEventToCalendarField().setValue(!this.getReadOnlyField().getValue());
 	}
 
 	@Order(1000)
@@ -116,12 +146,73 @@ public class CalendarConfigurationForm extends AbstractForm {
 			}
 
 			@Override
+			protected boolean getConfiguredEnabled() {
+				return Boolean.FALSE;
+			}
+
+			@Override
 			protected int getConfiguredMaxLength() {
 				return 150;
 			}
 		}
 
 		@Order(3000)
+		public class NameField extends AbstractStringField {
+			@Override
+			protected String getConfiguredLabel() {
+				return TEXTS.get("zc.meeting.calendar.name");
+			}
+
+			@Override
+			protected int getConfiguredMaxLength() {
+				return 128;
+			}
+		}
+
+		@Order(4000)
+		public class ReadOnlyField extends AbstractBooleanField {
+			@Override
+			protected String getConfiguredLabel() {
+				return TEXTS.get("zc.meeting.calendar.readOnly");
+			}
+
+			@Override
+			protected boolean getConfiguredEnabled() {
+				return Boolean.FALSE;
+			}
+
+		}
+
+		@Order(5000)
+		public class MainField extends AbstractBooleanField {
+			@Override
+			protected String getConfiguredLabel() {
+				return TEXTS.get("zc.meeting.calendar.main");
+			}
+
+			@Override
+			protected boolean getConfiguredEnabled() {
+				return false;
+			}
+		}
+
+		@Order(6000)
+		public class ProcessField extends AbstractBooleanField {
+			@Override
+			protected String getConfiguredLabel() {
+				return TEXTS.get("zc.meeting.calendar.processThisCalendar");
+			}
+		}
+
+		@Order(7000)
+		public class AddEventToCalendarField extends AbstractBooleanField {
+			@Override
+			protected String getConfiguredLabel() {
+				return TEXTS.get("zc.meeting.calendar.addEventToThisCalendar");
+			}
+		}
+
+		@Order(8000)
 		public class ProcessFullDayEventField extends AbstractBooleanField {
 			@Override
 			protected String getConfiguredLabel() {
@@ -129,7 +220,7 @@ public class CalendarConfigurationForm extends AbstractForm {
 			}
 		}
 
-		@Order(4000)
+		@Order(9000)
 		public class ProcessFreeEventField extends AbstractBooleanField {
 			@Override
 			protected String getConfiguredLabel() {
@@ -137,7 +228,7 @@ public class CalendarConfigurationForm extends AbstractForm {
 			}
 		}
 
-		@Order(5000)
+		@Order(10000)
 		public class ProcessNotRegistredOnEventField extends AbstractBooleanField {
 			@Override
 			protected String getConfiguredLabel() {
@@ -145,7 +236,7 @@ public class CalendarConfigurationForm extends AbstractForm {
 			}
 		}
 
-		@Order(6000)
+		@Order(11000)
 		public class OAuthCredentialIdField extends AbstractLongField {
 			@Override
 			protected String getConfiguredLabel() {
@@ -168,7 +259,7 @@ public class CalendarConfigurationForm extends AbstractForm {
 			}
 		}
 
-		@Order(7000)
+		@Order(12000)
 		public class UserIdField extends AbstractLongField {
 			@Override
 			protected String getConfiguredLabel() {
@@ -211,7 +302,7 @@ public class CalendarConfigurationForm extends AbstractForm {
 			CalendarConfigurationForm.this.importFormData(formData);
 
 			CalendarConfigurationForm.this.setEnabledPermission(
-					new UpdateCalendarConfigurationPermission(formData.getCalendarConfigurationId().getValue()));
+					new UpdateCalendarConfigurationPermission(formData.getOAuthCredentialId().getValue()));
 		}
 
 		@Override
@@ -234,7 +325,7 @@ public class CalendarConfigurationForm extends AbstractForm {
 			CalendarConfigurationForm.this.importFormData(formData);
 
 			CalendarConfigurationForm.this.setEnabledPermission(
-					new CreateCalendarConfigurationPermission(formData.getCalendarConfigurationId().getValue()));
+					new CreateCalendarConfigurationPermission(formData.getOAuthCredentialId().getValue()));
 		}
 
 		@Override

@@ -67,12 +67,19 @@ public class MeetingOutline extends AbstractOutline {
 
 		// TODO Djer13 try to directly use the "configuredTitle"'s form
 		final FormPage slotForm = new FormPage(SlotForm.class, Boolean.TRUE,
-				TEXTS.get("zc.meeting.slot.config") + "(tree)");
+				TEXTS.get("zc.meeting.slot.config") + " (tree)");
 		slotForm.setVisibleGranted(isSlotAdmin);
 
 		final CalendarConfigurationTablePage calendarConfigurationTablePage = new CalendarConfigurationTablePage();
-		calendarConfigurationTablePage.setVisibleGranted(Boolean.TRUE);
 		calendarConfigurationTablePage.setVisibleGranted(iscalendarConfigAdmin);
+
+		// final FormPage calendarConfigFormPage = new
+		// FormPage(CalendarsConfigurationForm.class, Boolean.TRUE,
+		// TEXTS.get("zc.meeting.calendar.configuration") + " (PageForm)");
+
+		// final CalendarsConfigurationForm calendarConfigForm = new
+		// CalendarsConfigurationForm(calendarConfigurationTablePage);
+		// calendarConfigForm.setVisibleGranted(iscalendarConfigAdmin);
 
 		pageList.add(eventTablePage);
 		pageList.add(eventAskedTablePage);
@@ -81,6 +88,7 @@ public class MeetingOutline extends AbstractOutline {
 		pageList.add(slotTablePage);
 		pageList.add(slotAdminTablePage);
 		pageList.add(calendarConfigurationTablePage);
+		// pageList.add(calendarConfigFormPage);
 		pageList.add(slotForm);
 	}
 

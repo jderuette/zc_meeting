@@ -420,7 +420,12 @@ public class GoogleApiHelper {
 			throws IOException {
 		LOG.debug("Creating model data for (Google) calendar data : " + cal);
 		final CalendarConfigurationTableRowData calendarConfigData = new CalendarConfigurationTableRowData();
+		final String accessRole = cal.getAccessRole();
+		final boolean isWritable = accessRole.equalsIgnoreCase("writer") || accessRole.equalsIgnoreCase("owner");
 		calendarConfigData.setExternalId(cal.getId());
+		calendarConfigData.setName(cal.getSummary());
+		calendarConfigData.setMain(cal.isPrimary());
+		calendarConfigData.setReadOnly(!isWritable);
 		calendarConfigData.setUserId(userId);
 		calendarConfigData.setOAuthCredentialId(this.getOAuthCredentialId(userId));
 		LOG.debug("Calendar Config modele created with externalId : " + calendarConfigData.getExternalId()

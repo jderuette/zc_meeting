@@ -48,6 +48,7 @@ import org.zeroclick.configuration.shared.user.ReadUserPermission;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.configuration.shared.user.UserModifiedNotification;
+import org.zeroclick.meeting.client.calendar.CalendarsConfigurationForm;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
 import org.zeroclick.meeting.client.meeting.MeetingOutline;
 import org.zeroclick.meeting.shared.Icons;
@@ -308,7 +309,7 @@ public class Desktop extends AbstractDesktop {
 			return AbstractIcons.Person;
 		}
 
-		@Order(31000)
+		@Order(1000)
 		public class WhoAmIMenuMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {
@@ -332,7 +333,7 @@ public class Desktop extends AbstractDesktop {
 			}
 		}
 
-		@Order(32000)
+		@Order(2000)
 		public class EditMyAccountMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {
@@ -349,21 +350,63 @@ public class Desktop extends AbstractDesktop {
 				return CollectionUtility.hashSet();
 			}
 
-			@Override
-			protected void execAction() {
-				// AccessControlService = clientSide Access Control Service.
-				// getUserIdOfCurrentUser() implemented in super abstract
-				// parent.
-				final Long currentUserId = ((AccessControlService) BEANS.get(IAccessControlService.class))
-						.getZeroClickUserIdOfCurrentSubject();
-				final UserForm form = new UserForm();
-				form.getUserIdField().setValue(currentUserId);
-				form.setEnabledPermission(new UpdateUserPermission(currentUserId));
-				form.startModify();
+			@Order(1000)
+			public class EditPersonalInformationsMenu extends AbstractMenu {
+				@Override
+				protected String getConfiguredText() {
+					return TEXTS.get("zc.user.edit.perosnalInformations");
+				}
+
+				@Override
+				protected String getConfiguredIconId() {
+					return Icons.Person;
+				}
+
+				@Override
+				protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+					return CollectionUtility.hashSet();
+				}
+
+				@Override
+				protected void execAction() {
+					// AccessControlService = clientSide Access Control Service.
+					// getUserIdOfCurrentUser() implemented in super abstract
+					// parent.
+					final Long currentUserId = ((AccessControlService) BEANS.get(IAccessControlService.class))
+							.getZeroClickUserIdOfCurrentSubject();
+					final UserForm form = new UserForm();
+					form.getUserIdField().setValue(currentUserId);
+					form.setEnabledPermission(new UpdateUserPermission(currentUserId));
+					form.startModify();
+				}
+			}
+
+			@Order(2000)
+			public class EditCalendarConfigurationsMenu extends AbstractMenu {
+				@Override
+				protected String getConfiguredText() {
+					return TEXTS.get("zc.meeting.calendar.configuration");
+				}
+
+				@Override
+				protected String getConfiguredIconId() {
+					return Icons.Calendar;
+				}
+
+				@Override
+				protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+					return CollectionUtility.hashSet();
+				}
+
+				@Override
+				protected void execAction() {
+					final CalendarsConfigurationForm configForm = new CalendarsConfigurationForm();
+					configForm.startModify();
+				}
 			}
 		}
 
-		@Order(33000)
+		@Order(3000)
 		public class LogoutMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {

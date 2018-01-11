@@ -52,6 +52,11 @@ public abstract class AbstractCalendarConfigurationTablePageData extends Abstrac
 		private static final long serialVersionUID = 1L;
 		public static final String calendarConfigurationId = "calendarConfigurationId";
 		public static final String externalId = "externalId";
+		public static final String name = "name";
+		public static final String readOnly = "readOnly";
+		public static final String main = "main";
+		public static final String process = "process";
+		public static final String addEventToCalendar = "addEventToCalendar";
 		public static final String processFullDayEvent = "processFullDayEvent";
 		public static final String processFreeEvent = "processFreeEvent";
 		public static final String processNotRegistredOnEvent = "processNotRegistredOnEvent";
@@ -59,6 +64,11 @@ public abstract class AbstractCalendarConfigurationTablePageData extends Abstrac
 		public static final String userId = "userId";
 		private Long m_calendarConfigurationId;
 		private String m_externalId;
+		private String m_name;
+		private Boolean m_readOnly;
+		private Boolean m_main;
+		private Boolean m_process;
+		private Boolean m_addEventToCalendar;
 		private Boolean m_processFullDayEvent;
 		private Boolean m_processFreeEvent;
 		private Boolean m_processNotRegistredOnEvent;
@@ -79,6 +89,46 @@ public abstract class AbstractCalendarConfigurationTablePageData extends Abstrac
 
 		public void setExternalId(String newExternalId) {
 			m_externalId = newExternalId;
+		}
+
+		public String getName() {
+			return m_name;
+		}
+
+		public void setName(String newName) {
+			m_name = newName;
+		}
+
+		public Boolean getReadOnly() {
+			return m_readOnly;
+		}
+
+		public void setReadOnly(Boolean newReadOnly) {
+			m_readOnly = newReadOnly;
+		}
+
+		public Boolean getMain() {
+			return m_main;
+		}
+
+		public void setMain(Boolean newMain) {
+			m_main = newMain;
+		}
+
+		public Boolean getProcess() {
+			return m_process;
+		}
+
+		public void setProcess(Boolean newProcess) {
+			m_process = newProcess;
+		}
+
+		public Boolean getAddEventToCalendar() {
+			return m_addEventToCalendar;
+		}
+
+		public void setAddEventToCalendar(Boolean newAddEventToCalendar) {
+			m_addEventToCalendar = newAddEventToCalendar;
 		}
 
 		public Boolean getProcessFullDayEvent() {

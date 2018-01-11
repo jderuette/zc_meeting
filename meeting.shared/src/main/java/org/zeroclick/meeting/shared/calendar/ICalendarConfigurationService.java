@@ -13,6 +13,8 @@ public interface ICalendarConfigurationService extends IService {
 	CalendarConfigurationTablePageData getCalendarConfigurationTableData(SearchFilter filter,
 			Boolean displayAllForAdmin);
 
+	CalendarsConfigurationFormData getCalendarConfigurationTableData(Boolean displayAllForAdmin);
+
 	void autoConfigure(Map<String, AbstractCalendarConfigurationTableRowData> calendars);
 
 	CalendarConfigurationFormData prepareCreate(CalendarConfigurationFormData formData);
@@ -25,7 +27,9 @@ public interface ICalendarConfigurationService extends IService {
 
 	CalendarConfigurationFormData createWithDefault(CalendarConfigurationFormData formData);
 
-	boolean isOwn(Long calendarConfigurationId);
+	boolean isOwn(Long apiCredentailId);
 
 	void deleteByApiId(Long apiCredentialId);
+
+	CalendarConfigurationFormData getCalendarToStoreEvents(Long userId);
 }

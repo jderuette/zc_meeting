@@ -1,10 +1,8 @@
 package org.zeroclick.configuration.server.slot;
 
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 
@@ -33,8 +31,6 @@ import org.zeroclick.configuration.shared.slot.UpdateSlotPermission;
 import org.zeroclick.meeting.server.sql.DatabaseHelper;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchSlotTable;
-import org.zeroclick.meeting.shared.event.IEventService;
-import org.zeroclick.meeting.shared.security.AccessControlService;
 
 public class SlotService extends AbstractCommonService implements ISlotService {
 
@@ -127,29 +123,9 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 		return formData;
 	}
 
-	private Set<String> buildNotifiedUsers(final DayDurationFormData formData) {
-		// Notify Users for DayDuration update
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-
-		final Set<String> notifiedUsers = new HashSet<>();
-		if (null != formData.getUserId()) {
-			notifiedUsers.addAll(acs.getUserNotificationIds(formData.getUserId()));
-		}
-
-		// inform all attendee with pending event
-		// TODO Djer13 only event with "current" slotId ?
-		final Set<Long> pendingUsers = this.getUserWithPendingEvent();
-		if (null != pendingUsers) {
-			for (final Long userId : pendingUsers) {
-				notifiedUsers.addAll(acs.getUserNotificationIds(userId));
-			}
-		}
-		return notifiedUsers;
-	}
-
 	private void sendModifiedNotifications(final DayDurationFormData formData) {
 		final String sltoCode = this.getSlotCode(formData.getSlotId());
-		final Set<String> notifiedUsers = this.buildNotifiedUsers(formData);
+		final Set<String> notifiedUsers = this.buildNotifiedUsers(formData.getUserId(), Boolean.TRUE);
 		BEANS.get(ClientNotificationRegistry.class).putForUsers(notifiedUsers,
 				new DayDurationModifiedNotification(formData, sltoCode));
 	}
@@ -343,20 +319,6 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 		final Set<Long> pendingUsers = this.getUserWithPendingEvent();
 
 		return pendingUsers.contains(slotOwner);
-	}
-
-	private Set<Long> getUserWithPendingEvent() {
-		Set<Long> pendingMeetingUser = new HashSet<>();
-
-		final IEventService eventService = BEANS.get(IEventService.class);
-		final Map<Long, Integer> pendingUsers = eventService.getUsersWithPendingMeeting();
-
-		if (null != pendingUsers) {
-			pendingMeetingUser = pendingUsers.keySet();
-		}
-
-		return pendingMeetingUser;
-
 	}
 
 	@Override

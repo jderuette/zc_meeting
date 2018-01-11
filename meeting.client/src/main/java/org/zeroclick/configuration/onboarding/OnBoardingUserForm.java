@@ -188,7 +188,7 @@ public class OnBoardingUserForm extends AbstractForm {
 			}
 
 			public void setActive() {
-				this.setLabel(TEXTS.get("OkButton"));
+				this.setLabel(TEXTS.get("SaveButton"));
 				this.setEnabled(Boolean.TRUE);
 				this.setBackgroundColor(null);// default color
 				OnBoardingUserForm.this.getAddCalendarField().setVisible(Boolean.FALSE);

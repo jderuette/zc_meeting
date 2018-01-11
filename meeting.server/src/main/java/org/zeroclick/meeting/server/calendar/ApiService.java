@@ -263,7 +263,7 @@ public class ApiService extends AbstractCommonService implements IApiService {
 		return result;
 	}
 
-	private Long getOwner(final Long apiCredentialId) {
+	public Long getOwner(final Long apiCredentialId) {
 		final ApiFormData formData = new ApiFormData();
 		formData.setApiCredentialId(apiCredentialId);
 		SQL.selectInto(SQLs.OAUHTCREDENTIAL_SELECT_OWNER, formData);
