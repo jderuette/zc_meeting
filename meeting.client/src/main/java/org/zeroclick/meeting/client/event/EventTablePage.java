@@ -685,7 +685,8 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		}
 
 		private String getUserCreateEventCalendar(final Long userId) {
-			// final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+			// final GoogleApiHelper googleHelper =
+			// BEANS.get(GoogleApiHelper.class);
 			final String calendarId = "primary";
 
 			// if (calendarId.equals("primary") && !(this.getCurrentUserId() ==
@@ -815,8 +816,14 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 		private Event createEvent(final ZonedDateTime startDate, final ZonedDateTime endDate, final Long forUserId,
 				final String withEmail, final String subject, final String location) throws IOException {
+			return this.createEvent(startDate, endDate, forUserId, withEmail, subject, location, Boolean.FALSE);
+		}
+
+		private Event createEvent(final ZonedDateTime startDate, final ZonedDateTime endDate, final Long forUserId,
+				final String withEmail, final String subject, final String location,
+				final Boolean guestAutoAcceptMeeting) throws IOException {
 			LOG.debug("Creating (Google) Event from : " + startDate + " to " + endDate + ", for :" + forUserId
-					+ " (attendee :" + withEmail + ")");
+					+ " (attendee :" + withEmail + ", autoAccept? " + guestAutoAcceptMeeting + ")");
 
 			final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
 
@@ -841,7 +848,12 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			newEvent.setLocation(TextsHelper.get(forUserId, location));
 			newEvent.setDescription(subject);
 
-			final EventAttendee[] attendees = new EventAttendee[] { new EventAttendee().setEmail(withEmail) };
+			final EventAttendee attendeeEmail = new EventAttendee().setEmail(withEmail);
+			if (guestAutoAcceptMeeting) {
+				attendeeEmail.setResponseStatus("accepted");
+			}
+
+			final EventAttendee[] attendees = new EventAttendee[] { attendeeEmail };
 			newEvent.setAttendees(Arrays.asList(attendees));
 
 			final Event createdEvent = googleCalendarService.events().insert(createdEventCalendarId, newEvent)
@@ -1066,6 +1078,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			@Override
 			protected void execAction() {
+				final Boolean guestAutoAcceptEvent = Boolean.TRUE;
 
 				final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 				notificationHelper.addProcessingNotification("zc.meeting.notification.acceptingEvent");
@@ -1093,7 +1106,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					}
 					// External event for holder
 					final Event externalOrganizerEvent = Table.this.createEvent(start, end, eventHeldBy,
-							eventGuestEmail, subject, venue);
+							eventGuestEmail, subject, venue, guestAutoAcceptEvent);
 					if (null == externalOrganizerEvent) {
 						LOG.warn("Event not created for user : " + eventHeldBy
 								+ " and he is the organizer ! (subject : " + subject + ")");
@@ -1102,16 +1115,23 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 								externalOrganizerEvent.getId());
 					}
 
-					if (null == eventGuest) {
-						eventGuest = userService.getUserIdByEmail(eventGuestEmail);
-					}
+					if (!guestAutoAcceptEvent) {
+						// Only if required to process "accept" in a other
+						// request
+						if (null == eventGuest) {
+							eventGuest = userService.getUserIdByEmail(eventGuestEmail);
+						}
 
-					final Event externalGuestEvent = Table.this.acceptCreatedEvent(externalOrganizerEvent,
-							Table.this.getUserCreateEventCalendar(eventHeldBy), eventGuest, eventGuestEmail,
-							eventHeldBy);
-					if (null != externalGuestEvent) {
+						final Event externalGuestEvent = Table.this.acceptCreatedEvent(externalOrganizerEvent,
+								Table.this.getUserCreateEventCalendar(eventHeldBy), eventGuest, eventGuestEmail,
+								eventHeldBy);
+						if (null != externalGuestEvent) {
+							Table.this.getExternalIdRecipientColumn().setValue(Table.this.getSelectedRow(),
+									externalGuestEvent.getId());
+						}
+					} else {
 						Table.this.getExternalIdRecipientColumn().setValue(Table.this.getSelectedRow(),
-								externalGuestEvent.getId());
+								externalOrganizerEvent.getId());
 					}
 
 					// Save at the end to save external IDs !
