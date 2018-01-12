@@ -122,11 +122,11 @@ public class CallTrackerService<KEY_TYPE> {
 			builder.append(this.context)
 					.append(" Resting without controlling nbCall (value Null in map for this key : ").append(key)
 					.append(')');
-			LOG.info(builder.toString());
+			LOG.warn(builder.toString());
 		} else {
 			builder.append(this.context).append(" Reseting after ").append(realNbCalls).append(" for key : ")
 					.append(key);
-			LOG.warn(builder.toString());
+			LOG.info(builder.toString());
 		}
 
 	}
