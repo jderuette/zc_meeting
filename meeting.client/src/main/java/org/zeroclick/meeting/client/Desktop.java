@@ -350,63 +350,45 @@ public class Desktop extends AbstractDesktop {
 				return CollectionUtility.hashSet();
 			}
 
-			@Order(1000)
-			public class EditPersonalInformationsMenu extends AbstractMenu {
-				@Override
-				protected String getConfiguredText() {
-					return TEXTS.get("zc.user.edit.perosnalInformations");
-				}
-
-				@Override
-				protected String getConfiguredIconId() {
-					return Icons.Person;
-				}
-
-				@Override
-				protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-					return CollectionUtility.hashSet();
-				}
-
-				@Override
-				protected void execAction() {
-					// AccessControlService = clientSide Access Control Service.
-					// getUserIdOfCurrentUser() implemented in super abstract
-					// parent.
-					final Long currentUserId = ((AccessControlService) BEANS.get(IAccessControlService.class))
-							.getZeroClickUserIdOfCurrentSubject();
-					final UserForm form = new UserForm();
-					form.getUserIdField().setValue(currentUserId);
-					form.setEnabledPermission(new UpdateUserPermission(currentUserId));
-					form.startModify();
-				}
-			}
-
-			@Order(2000)
-			public class EditCalendarConfigurationsMenu extends AbstractMenu {
-				@Override
-				protected String getConfiguredText() {
-					return TEXTS.get("zc.meeting.calendar.configuration");
-				}
-
-				@Override
-				protected String getConfiguredIconId() {
-					return Icons.Calendar;
-				}
-
-				@Override
-				protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-					return CollectionUtility.hashSet();
-				}
-
-				@Override
-				protected void execAction() {
-					final CalendarsConfigurationForm configForm = new CalendarsConfigurationForm();
-					configForm.startModify();
-				}
+			@Override
+			protected void execAction() {
+				// AccessControlService = clientSide Access Control Service.
+				// getUserIdOfCurrentUser() implemented in super abstract
+				// parent.
+				final Long currentUserId = ((AccessControlService) BEANS.get(IAccessControlService.class))
+						.getZeroClickUserIdOfCurrentSubject();
+				final UserForm form = new UserForm();
+				form.getUserIdField().setValue(currentUserId);
+				form.setEnabledPermission(new UpdateUserPermission(currentUserId));
+				form.startModify();
 			}
 		}
 
 		@Order(3000)
+		public class EditCalendarConfigurationsMenu extends AbstractMenu {
+			@Override
+			protected String getConfiguredText() {
+				return TEXTS.get("zc.meeting.calendar.configuration");
+			}
+
+			@Override
+			protected String getConfiguredIconId() {
+				return Icons.Calendar;
+			}
+
+			@Override
+			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+				return CollectionUtility.hashSet();
+			}
+
+			@Override
+			protected void execAction() {
+				final CalendarsConfigurationForm configForm = new CalendarsConfigurationForm();
+				configForm.startModify();
+			}
+		}
+
+		@Order(4000)
 		public class LogoutMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {
