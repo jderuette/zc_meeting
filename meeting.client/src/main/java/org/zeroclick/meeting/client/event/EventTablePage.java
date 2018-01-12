@@ -62,6 +62,7 @@ import org.zeroclick.meeting.shared.event.StateCodeType;
 import org.zeroclick.ui.action.menu.AbstractNewMenu;
 import org.zeroclick.ui.action.menu.AbstractValidateMenu;
 
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.CalendarListEntry;
@@ -684,7 +685,17 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		}
 
 		private String getUserCreateEventCalendar(final Long userId) {
-			return "primary";
+			// final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+			final String calendarId = "primary";
+
+			// if (calendarId.equals("primary") && !(this.getCurrentUserId() ==
+			// userId)) {
+			// // other users anno't use "primary" because it's refer to there
+			// // owned primary calendar.
+			// calendarId = googleHelper.getPrimaryToCalendarId(userId);
+			// }
+
+			return calendarId;
 		}
 
 		private List<Event> getEvents(final ZonedDateTime startDate, final ZonedDateTime endDate, final Long userId)
@@ -836,17 +847,23 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			final Event createdEvent = googleCalendarService.events().insert(createdEventCalendarId, newEvent)
 					.execute();
 
-			LOG.info("(Google) Event created  with id : " + createdEvent.getId() + " from " + startDate + " to "
-					+ endDate + ", for : " + forUserId + " ICalUID : " + createdEvent.getICalUID() + " link : "
-					+ createdEvent.getHtmlLink());
+			final StringBuilder sbEventInfo = new StringBuilder(250);
+			sbEventInfo.append("(Google) Event created  with id : ").append(createdEvent.getId())
+					.append(" in calendar : ").append(createdEventCalendarId).append(" with ")
+					.append(createdEvent.getAttendees().size()).append(" attendee(s) ; From ").append(startDate)
+					.append(" to ").append(endDate).append(", for : ").append(forUserId).append(" ICalUID : ")
+					.append(createdEvent.getICalUID()).append(" link : ").append(createdEvent.getHtmlLink());
+
+			LOG.info(sbEventInfo.toString());
 
 			return createdEvent;
 		}
 
 		private Event acceptCreatedEvent(final Event organizerEvent, final String organizerCalendarId,
 				final Long userId, final String attendeeEmail, final Long heldByUserId) throws IOException {
-			LOG.debug(
-					"Accepting (Google) Event from (" + organizerEvent.getOrganizer().getEmail() + "), for :" + userId);
+			LOG.info("Accepting (Google) Event from (" + organizerEvent.getOrganizer().getEmail()
+					+ " organizerCalendarId : " + organizerCalendarId + "), for :" + userId + " with his email : "
+					+ attendeeEmail);
 
 			Long googleApiUserId = userId;
 			final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
@@ -876,8 +893,25 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			}
 
 			// Update the event
-			final Event updatedEvent = gCalendarService.events()
-					.update(organizerCalendarId, organizerEvent.getId(), organizerEvent).execute();
+			Event updatedEvent = null;
+			try {
+				updatedEvent = gCalendarService.events()
+						.update(organizerCalendarId, organizerEvent.getId(), organizerEvent).execute();
+			} catch (final GoogleJsonResponseException gjre) {
+				if (gjre.getStatusCode() == 404) {
+					// wait a few and re-try
+					LOG.warn("(Google); exception while accepting recently created event (id :" + organizerEvent.getId()
+							+ "), re-trying)");
+					try {
+						Thread.sleep(200);
+					} catch (final InterruptedException e) {
+						// do nothing
+					}
+				}
+
+				updatedEvent = gCalendarService.events()
+						.update(organizerCalendarId, organizerEvent.getId(), organizerEvent).execute();
+			}
 
 			return updatedEvent;
 		}

@@ -428,10 +428,30 @@ public class GoogleApiHelper {
 		calendarConfigData.setReadOnly(!isWritable);
 		calendarConfigData.setUserId(userId);
 		calendarConfigData.setOAuthCredentialId(this.getOAuthCredentialId(userId));
-		LOG.debug("Calendar Config modele created with externalId : " + calendarConfigData.getExternalId()
+		LOG.debug("Calendar Config model created with externalId : " + calendarConfigData.getExternalId()
 				+ ", UserId : " + calendarConfigData.getUserId() + ", OAuthCredentialId : "
 				+ calendarConfigData.getOAuthCredentialId());
 		return calendarConfigData;
+	}
+
+	public String getPrimaryToCalendarId(final Long userId) {
+		LOG.debug("Searching  for (Google) calendar id for the primary tag for user : " + userId);
+		try {
+			final Map<String, AbstractCalendarConfigurationTableRowData> userCalendars = this.getCalendars(userId);
+
+			for (final String calendarKey : userCalendars.keySet()) {
+				final AbstractCalendarConfigurationTableRowData calendarData = userCalendars.get(calendarKey);
+				if (calendarData.getMain()) {
+					return calendarData.getExternalId();// early break;
+				}
+			}
+		} catch (final UserAccessRequiredException uare) {
+			throw new VetoException(TEXTS.get("zc.meeting.calendarProviderRequired"));
+		}
+
+		LOG.warn("Cannot find primary calendard 'real' ID for user : " + userId);
+
+		return "unknow";
 	}
 
 	private Long getOAuthCredentialId() throws IOException {
