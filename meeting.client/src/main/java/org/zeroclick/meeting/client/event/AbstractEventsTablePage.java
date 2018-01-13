@@ -724,11 +724,22 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				final ZonedDateTime newAcceptedEventEnd) {
 			final ZonedDateTime rowStart = this.getStartDateColumn().getZonedValue(row.getRowIndex());
 			final ZonedDateTime rowEnd = this.getEndDateColumn().getZonedValue(row.getRowIndex());
+			final Long rowEventId = this.getEventIdColumn().getValue(row);
+			final String rowState = this.getStateColumn().getValue(row);
 
-			if (null != rowStart && null != rowEnd) {
-				if (!rowStart.isBefore(newAcceptedEventstart) && !rowEnd.isAfter(rowEnd)) {
+			final Boolean isAsked = StateCodeType.AskedCode.ID.equals(rowState);
+
+			if (null != rowStart && null != rowEnd && isAsked) {
+
+				if (AbstractEventsTablePage.this.getDateHelper().isPeriodOverlap(rowStart, rowEnd,
+						newAcceptedEventstart, newAcceptedEventEnd)) {
+					LOG.info("Reseting start/end (" + rowStart + " / " + rowEnd + ") date for event id : " + rowEventId
+							+ " because an other event was in the start/end period (" + newAcceptedEventstart + " / "
+							+ newAcceptedEventEnd + ")");
 					this.getStartDateColumn().setValue(row.getRowIndex(), (Date) null);
 					this.getEndDateColumn().setValue(row.getRowIndex(), (Date) null);
+				} else {
+					LOG.debug("No reset needed for event id : " + rowEventId);
 				}
 			}
 		}

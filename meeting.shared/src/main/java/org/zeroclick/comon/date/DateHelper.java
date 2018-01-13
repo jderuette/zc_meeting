@@ -425,4 +425,20 @@ public class DateHelper {
 		return startPoint;
 	}
 
+	public Boolean isInPeriodInlcusiv(final ZonedDateTime checkedDate, final ZonedDateTime peridoStart,
+			final ZonedDateTime periodEnd) {
+		if (null == checkedDate) {
+			return false; // early break
+		}
+		return !checkedDate.isBefore(peridoStart) && !checkedDate.isAfter(periodEnd);
+	}
+
+	public Boolean isPeriodOverlap(final ZonedDateTime checkedDateStart, final ZonedDateTime checkedDateEnd,
+			final ZonedDateTime peridoStart, final ZonedDateTime periodEnd) {
+		final Boolean isStartInPeriod = this.isInPeriodInlcusiv(checkedDateStart, peridoStart, periodEnd);
+		final Boolean isEndInPeriod = this.isInPeriodInlcusiv(checkedDateEnd, peridoStart, periodEnd);
+
+		return isStartInPeriod || isEndInPeriod;
+	}
+
 }
