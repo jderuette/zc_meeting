@@ -190,6 +190,7 @@ public class EventService extends AbstractCommonService implements IEventService
 	@Override
 	public EventFormData create(final EventFormData formData) {
 		final SubscriptionHelper subHelper = BEANS.get(SubscriptionHelper.class);
+
 		final SubscriptionHelperData subscriptionData = subHelper.canCreateEvent();
 		if (!subscriptionData.isAccessAllowed()) {
 			super.throwAuthorizationFailed();
@@ -259,8 +260,9 @@ public class EventService extends AbstractCommonService implements IEventService
 		}
 		SQL.update(SQLs.EVENT_UPDATE, formData);
 
-		if (!duringCreate) {
+		this.updateParticipantsPermissions(formData);
 
+		if (!duringCreate) {
 			this.sendModifiedNotifications(formData);
 		}
 		return formData;
@@ -371,6 +373,18 @@ public class EventService extends AbstractCommonService implements IEventService
 		final UserFormData userDetails = userService.getCurrentUserDetails();
 
 		return userDetails.getEmail().getValue();
+	}
+
+	/**
+	 * allow "related" permissions to be updated
+	 *
+	 * @param formData
+	 */
+	private void updateParticipantsPermissions(final EventFormData formData) {
+		final IUserService userService = BEANS.get(IUserService.class);
+
+		userService.clearCache(formData.getOrganizer().getValue());
+		userService.clearCache(formData.getGuestId().getValue());
 	}
 
 	@Override
