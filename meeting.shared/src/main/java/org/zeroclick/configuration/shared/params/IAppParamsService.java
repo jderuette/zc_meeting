@@ -12,6 +12,7 @@ public interface IAppParamsService extends IService {
 	public static final String KEY_DATA_VERSION = "dataVersion";
 	public static final String APP_PARAM_KEY_EVENT_CALL_TRACKER_MAX = "callTracker.events.maxSuccesiveCall";
 	public static final String APP_PARAM_KEY_EVENT_CALL_TRACKER_DURATION = "callTracker.events.ttl";
+	public static final String APP_PARAM_KEY_TOS_URL = "tos.url";
 
 	AppParamsTablePageData getAppParamsTableData(SearchFilter filter);
 
