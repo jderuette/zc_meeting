@@ -783,13 +783,11 @@ public class UserForm extends AbstractForm {
 		final UserFormData formData = new UserFormData();
 		UserForm.this.exportFormData(formData);
 
-		final String plainPassword = formData.getPassword().getValue();
-
-		if (null == plainPassword) {
+		if (null == formData.getPassword().getValue()) {
 			LOG.warn("No Generated Plain Paswword during saving new User. Generating one");
 			this.generateAndAddFormPassword();
 		}
-		formData.setHashedPassword(UserForm.this.hashPassword(plainPassword));
+		formData.setHashedPassword(UserForm.this.hashPassword(formData.getPassword().getValue()));
 
 		if (null == formData.getAutofilled()) {
 			formData.setAutofilled(Boolean.FALSE);
