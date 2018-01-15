@@ -17,6 +17,7 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.zeroclick.configuration.client.slot.DayDurationForm.MainBox.CancelButton;
 import org.zeroclick.configuration.client.slot.DayDurationForm.MainBox.OkButton;
 import org.zeroclick.configuration.client.slot.DayDurationForm.MainBox.OrderInSlotField;
+import org.zeroclick.configuration.client.slot.DayDurationForm.MainBox.WeekEndDaysBox;
 import org.zeroclick.configuration.client.slot.DayDurationForm.MainBox.WeeklyPerpetualField;
 import org.zeroclick.configuration.shared.slot.DayDurationFormData;
 import org.zeroclick.configuration.shared.slot.ISlotService;
@@ -116,6 +117,10 @@ public class DayDurationForm extends AbstractForm {
 		return this.getFieldByClass(OrderInSlotField.class);
 	}
 
+	public WeekEndDaysBox getWeekEndDaysBox() {
+		return this.getFieldByClass(WeekEndDaysBox.class);
+	}
+
 	public OkButton getOkButton() {
 		return this.getFieldByClass(OkButton.class);
 	}
@@ -205,20 +210,20 @@ public class DayDurationForm extends AbstractForm {
 		}
 
 		@Order(4000)
-		public class DaysBox extends AbstractSequenceBox {
+		public class WorkDayBox extends AbstractSequenceBox {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("zc.meeting.dayDuration.validDays");
+				return null;
+			}
+
+			@Override
+			protected boolean getConfiguredLabelVisible() {
+				return false;
 			}
 
 			@Override
 			protected boolean getConfiguredAutoCheckFromTo() {
 				return false;
-			}
-
-			@Override
-			protected int getConfiguredLabelPosition() {
-				return IFormField.LABEL_POSITION_TOP;
 			}
 
 			@Order(1000)
@@ -260,8 +265,26 @@ public class DayDurationForm extends AbstractForm {
 					return TEXTS.get("zc.meeting.dayDuration.friday");
 				}
 			}
+		}
 
-			@Order(6000)
+		@Order(5000)
+		public class WeekEndDaysBox extends AbstractSequenceBox {
+			@Override
+			protected String getConfiguredLabel() {
+				return null;
+			}
+
+			@Override
+			protected boolean getConfiguredLabelVisible() {
+				return false;
+			}
+
+			@Override
+			protected boolean getConfiguredAutoCheckFromTo() {
+				return false;
+			}
+
+			@Order(1000)
 			public class SaturdayField extends AbstractBooleanField {
 				@Override
 				protected String getConfiguredLabel() {
@@ -269,7 +292,7 @@ public class DayDurationForm extends AbstractForm {
 				}
 			}
 
-			@Order(7000)
+			@Order(2000)
 			public class SundayField extends AbstractBooleanField {
 				@Override
 				protected String getConfiguredLabel() {
@@ -278,7 +301,7 @@ public class DayDurationForm extends AbstractForm {
 			}
 		}
 
-		@Order(5000)
+		@Order(6000)
 		public class WeeklyPerpetualField extends AbstractBooleanField {
 			@Override
 			protected String getConfiguredLabel() {
@@ -296,7 +319,7 @@ public class DayDurationForm extends AbstractForm {
 			}
 		}
 
-		@Order(6000)
+		@Order(7000)
 		public class OrderInSlotField extends AbstractLongField {
 			@Override
 			protected String getConfiguredLabel() {

@@ -110,8 +110,9 @@ public class SlotTablePage extends AbstractSlotTablePage<Table> {
 		dayDurationForm.setDayDurationId(dayDurationId);
 		dayDurationForm.setSlotId(slotId);
 		dayDurationForm.setDisplayParent(IDesktop.CURRENT.get().getOutline());
-		dayDurationForm.setDisplayHint(IForm.DISPLAY_HINT_VIEW);
-		dayDurationForm.setDisplayViewId(IForm.VIEW_ID_E);
+		dayDurationForm.setDisplayHint(IForm.DISPLAY_HINT_DIALOG);
+		// dayDurationForm.setDisplayHint(IForm.DISPLAY_HINT_VIEW);
+		// dayDurationForm.setDisplayViewId(IForm.VIEW_ID_E);
 
 		dayDurationForm.startModify();
 	}
