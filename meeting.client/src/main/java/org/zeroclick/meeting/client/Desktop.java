@@ -9,6 +9,7 @@ import org.eclipse.scout.rt.client.context.ClientRunContexts;
 import org.eclipse.scout.rt.client.job.ModelJobs;
 import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
 import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
+import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenuSeparator;
 import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.desktop.AbstractDesktop;
 import org.eclipse.scout.rt.client.ui.desktop.OpenUriAction;
@@ -38,6 +39,7 @@ import org.zeroclick.configuration.client.api.ApiDeletedNotificationHandler;
 import org.zeroclick.configuration.client.user.UserForm;
 import org.zeroclick.configuration.client.user.UserModifiedNotificationHandler;
 import org.zeroclick.configuration.client.user.ValidateCpsForm;
+import org.zeroclick.configuration.client.user.ViewCpsForm;
 import org.zeroclick.configuration.onboarding.OnBoardingUserForm;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
 import org.zeroclick.configuration.shared.api.ApiDeletedNotification;
@@ -385,6 +387,41 @@ public class Desktop extends AbstractDesktop {
 			protected void execAction() {
 				final CalendarsConfigurationForm configForm = new CalendarsConfigurationForm();
 				configForm.startModify();
+			}
+		}
+
+		@Order(3500)
+		public class ContractSeparatorMenu extends AbstractMenuSeparator {
+			@Override
+			protected String getConfiguredText() {
+				return null;
+			}
+
+			@Override
+			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+				return CollectionUtility.hashSet();
+			}
+		}
+
+		@Order(3750)
+		public class ViewCpsMenu extends AbstractMenu {
+			@Override
+			protected String getConfiguredText() {
+				return TEXTS.get("zc.user.role.subscription.cps.view");
+			}
+
+			@Override
+			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+				return CollectionUtility.hashSet();
+			}
+
+			@Override
+			protected void execAction() {
+				final IUserService userService = BEANS.get(IUserService.class);
+				final UserFormData userData = userService.getCurrentUserDetails();
+				final ViewCpsForm viewCpsForm = new ViewCpsForm();
+				viewCpsForm.getUserIdField().setValue(userData.getUserId().getValue());
+				viewCpsForm.startNew(userData.getSubscriptionBox().getValue());
 			}
 		}
 

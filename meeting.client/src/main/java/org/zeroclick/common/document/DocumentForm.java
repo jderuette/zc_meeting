@@ -583,4 +583,36 @@ public class DocumentForm extends AbstractForm {
 			DocumentForm.this.getLinkedRoleField().doSave();
 		}
 	}
+
+	// public class ViewHandler extends AbstractFormHandler {
+	//
+	// @Override
+	// protected void execLoad() {
+	// final IDocumentService service = BEANS.get(IDocumentService.class);
+	// DocumentFormData formData = new DocumentFormData();
+	// DocumentForm.this.exportFormData(formData);
+	//
+	//
+	//
+	// formData = service.load(formData);
+	// DocumentForm.this.importFormData(formData);
+	//
+	// DocumentForm.this.setEnabledPermission(new ReadDocumentPermission());
+	// DocumentForm.this.getLastModificationDateField().setVisible(false);
+	// DocumentForm.this.getContentField().setVisible(false);
+	// DocumentForm.this.getLinkedRoleBox().setVisible(false);
+	//
+	// }
+	//
+	// @Override
+	// protected void execStore() {
+	// // final IDocumentService service =
+	// // BEANS.get(IDocumentService.class);
+	// // final DocumentFormData formData = new DocumentFormData();
+	// // DocumentForm.this.exportFormData(formData);
+	// // service.store(formData);
+	// // // handle links
+	// // DocumentForm.this.getLinkedRoleField().doSave();
+	// }
+	// }
 }

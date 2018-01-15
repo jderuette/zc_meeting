@@ -202,6 +202,13 @@ public class DateHelper {
 		return this.format(this.getZonedValue(userZoneId, this.toUtcDate(date)));
 	}
 
+	public String formatForUi(final Date date, final ZoneId userZoneId) {
+		// WARNING the \n is REQUIRED to allow scout detect
+		// hours part of the date !
+		final ZonedDateTime userZonedDate = this.getZonedValue(userZoneId, date);
+		return this.format(userZonedDate, Boolean.TRUE) + "\n" + this.formatHours(userZonedDate);
+	}
+
 	public String format(final ZonedDateTime zoneDateTime) {
 		return this.format(zoneDateTime, Boolean.FALSE);
 	}
@@ -220,6 +227,12 @@ public class DateHelper {
 
 	public String formatHours(final Date date, final ZoneId userZoneId) {
 		return this.formatHours(this.getZonedValue(userZoneId, date));
+	}
+
+	public String formatHoursForUi(final Date date, final ZoneId userZoneId) {
+		// WARNING the \n is REQUIRED to allow scout detect
+		// hours part of the date !
+		return "\n" + this.formatHours(this.getZonedValue(userZoneId, date));
 	}
 
 	public String formatHours(final ZonedDateTime zonedDateTime, final Locale userlocale) {

@@ -5,7 +5,6 @@ import java.util.Locale;
 
 import org.eclipse.scout.rt.client.dto.FormData;
 import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
-import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractDateColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractLongColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractSmartColumn;
 import org.eclipse.scout.rt.client.ui.form.AbstractForm;
@@ -36,7 +35,6 @@ import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
 import org.zeroclick.common.security.ScoutServiceCredentialVerifier;
 import org.zeroclick.comon.text.TextsHelper;
-import org.zeroclick.comon.user.AppUserHelper;
 import org.zeroclick.configuration.client.user.UserForm.MainBox.CancelButton;
 import org.zeroclick.configuration.client.user.UserForm.MainBox.ConfirmPasswordField;
 import org.zeroclick.configuration.client.user.UserForm.MainBox.EmailField;
@@ -65,6 +63,7 @@ import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
 import org.zeroclick.meeting.client.NotificationHelper;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.security.AccessControlService;
+import org.zeroclick.ui.form.columns.zoneddatecolumn.AbstractZonedDateColumn;
 
 @FormData(value = UserFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class UserForm extends AbstractForm {
@@ -550,7 +549,7 @@ public class UserForm extends AbstractForm {
 						}
 
 						@Order(3000)
-						public class StartDateColumn extends AbstractDateColumn {
+						public class StartDateColumn extends AbstractZonedDateColumn {
 							@Override
 							protected String getConfiguredHeaderText() {
 								return TEXTS.get("zc.user.role.subscription.startDate");
@@ -588,7 +587,7 @@ public class UserForm extends AbstractForm {
 						}
 
 						@Order(4000)
-						public class AcceptedCpsDateColumn extends AbstractDateColumn {
+						public class AcceptedCpsDateColumn extends AbstractZonedDateColumn {
 							@Override
 							protected String getConfiguredHeaderText() {
 								return TEXTS.get("zc.user.role.subscription.acceptedCpsDate");
@@ -611,7 +610,7 @@ public class UserForm extends AbstractForm {
 						}
 
 						@Order(5000)
-						public class AcceptedWithdrawalDateColumn extends AbstractDateColumn {
+						public class AcceptedWithdrawalDateColumn extends AbstractZonedDateColumn {
 							@Override
 							protected String getConfiguredHeaderText() {
 								return TEXTS.get("zc.user.role.subscription.acceptedWithdrawalDate");
@@ -725,12 +724,14 @@ public class UserForm extends AbstractForm {
 	protected Boolean handleSubscriptionModification() {
 		Boolean subscriptionAndCpsValid = Boolean.TRUE;
 		if (UserForm.this.getSubscriptionBox().getValueChanged()) {
-			final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
-			final Date startDate = appUserHelper.getUserNowInHisTimeZone(this.getUserIdField().getValue());
+			// final AppUserHelper appUserHelper =
+			// BEANS.get(AppUserHelper.class);
+			// final Date startDate =
+			// appUserHelper.getUserNowInHisTimeZone(this.getUserIdField().getValue());
 			final ValidateCpsForm validateCpsForm = new ValidateCpsForm();
 			validateCpsForm.getUserIdField().setValue(this.getUserIdField().getValue());
 			validateCpsForm.getSubscriptionIdField().setValue(this.getSubscriptionBox().getValue());
-			validateCpsForm.getStartDateField().setValue(startDate);
+			validateCpsForm.getStartDateField().setValue(new Date());
 			if (this.isMyself()) {
 				validateCpsForm.setModal(Boolean.TRUE);
 				validateCpsForm.startNew(this.getSubscriptionBox().getValue());

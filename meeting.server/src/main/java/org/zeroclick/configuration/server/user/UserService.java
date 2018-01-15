@@ -383,8 +383,12 @@ public class UserService extends AbstractCommonService implements IUserService {
 		if (!isCreation && !ACCESS.check(new UpdateUserPermission(formData.getUserId().getValue()))) {
 			super.throwAuthorizationFailed();
 		}
+		final AccessControlService acs = BEANS.get(AccessControlService.class);
+
 		LOG.debug("Store User with Id :" + formData.getUserId().getValue() + " and email : "
 				+ formData.getEmail().getValue() + " (Login : " + formData.getLogin().getValue() + ")");
+
+		final boolean isMySelf = acs.getZeroClickUserIdOfCurrentSubject().equals(formData.getUserId().getValue());
 
 		SQL.update(SQLs.USER_UPDATE, formData);
 
@@ -393,9 +397,14 @@ public class UserService extends AbstractCommonService implements IUserService {
 		}
 
 		this.updatesRoles(formData, !formData.getAutofilled());
-		// Usefull only for admin, for other user store(ValidateCpsForm) already
-		// do the update
-		this.updateSubscriptions(formData, !formData.getAutofilled());
+		if (!isMySelf) {
+			// Usefull only for admin (and autoFilled), for other user
+			// store(ValidateCpsForm) already do the update
+			this.updateSubscriptions(formData, !formData.getAutofilled());
+		} else {
+			LOG.info(
+					"No Role Update during user update, should be handled by store(ValidateCpsForm) because user edit hisself");
+		}
 
 		// reset permission cache
 		this.sendModifiedNotifications(formData);

@@ -11,7 +11,6 @@ import org.eclipse.scout.rt.client.ui.form.AbstractFormHandler;
 import org.eclipse.scout.rt.client.ui.form.fields.booleanfield.AbstractBooleanField;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractCancelButton;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractOkButton;
-import org.eclipse.scout.rt.client.ui.form.fields.datefield.AbstractDateField;
 import org.eclipse.scout.rt.client.ui.form.fields.groupbox.AbstractGroupBox;
 import org.eclipse.scout.rt.client.ui.form.fields.htmlfield.AbstractHtmlField;
 import org.eclipse.scout.rt.client.ui.form.fields.longfield.AbstractLongField;
@@ -44,6 +43,7 @@ import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.configuration.shared.user.ValidateCpsFormData;
+import org.zeroclick.ui.form.fields.datefield.AbstractZonedDateField;
 
 @FormData(value = ValidateCpsFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class ValidateCpsForm extends AbstractForm {
@@ -68,6 +68,11 @@ public class ValidateCpsForm extends AbstractForm {
 	public void startModify(final Long defaultSubscriptionIdValue) {
 		this.defaultSubscriptionIdValue = defaultSubscriptionIdValue;
 		this.startInternalExclusive(new ModifyHandler());
+	}
+
+	public void startView(final Long defaultSubscriptionIdValue) {
+		this.defaultSubscriptionIdValue = defaultSubscriptionIdValue;
+		this.startInternal(new ViewHandler());
 	}
 
 	public void startReValidate(final Long userId) {
@@ -280,8 +285,7 @@ public class ValidateCpsForm extends AbstractForm {
 					@Override
 					protected void execChangedValue() {
 						if (this.getValue()) {
-							ValidateCpsForm.this.getAcceptedCpsDateField()
-									.setValue(ValidateCpsForm.this.getNowUserDate());
+							ValidateCpsForm.this.getAcceptedCpsDateField().setValue(new Date());
 							if (ValidateCpsForm.this.getAcceptWithdrawalField().isVisible()) {
 								if (ValidateCpsForm.this.getAcceptWithdrawalField().getValue()) {
 									ValidateCpsForm.this.getAddSubscriptionField().activateIfRequired();
@@ -290,7 +294,7 @@ public class ValidateCpsForm extends AbstractForm {
 								ValidateCpsForm.this.getAddSubscriptionField().activateIfRequired();
 							}
 						} else {
-							ValidateCpsForm.this.getAcceptedCpsDateField().setValue(null);
+							ValidateCpsForm.this.getAcceptedCpsDateField().setValue((Date) null);
 							ValidateCpsForm.this.getAddSubscriptionField().setInactive();
 						}
 					}
@@ -307,7 +311,7 @@ public class ValidateCpsForm extends AbstractForm {
 				}
 
 				@Order(2000)
-				public class AcceptedCpsDateField extends AbstractDateField {
+				public class AcceptedCpsDateField extends AbstractZonedDateField {
 					@Override
 					protected String getConfiguredLabel() {
 						return TEXTS.get("zc.user.role.subscription.acceptedCpsDate");
@@ -339,8 +343,7 @@ public class ValidateCpsForm extends AbstractForm {
 					@Override
 					protected void execChangedValue() {
 						if (this.getValue()) {
-							ValidateCpsForm.this.getAcceptedWithdrawalDateField()
-									.setValue(ValidateCpsForm.this.getNowUserDate());
+							ValidateCpsForm.this.getAcceptedWithdrawalDateField().setValue(new Date());
 							if (ValidateCpsForm.this.getAcceptCpsField().isVisible()) {
 								if (ValidateCpsForm.this.getAcceptCpsField().getValue()) {
 									ValidateCpsForm.this.getAddSubscriptionField().activateIfRequired();
@@ -349,7 +352,7 @@ public class ValidateCpsForm extends AbstractForm {
 								ValidateCpsForm.this.getAddSubscriptionField().activateIfRequired();
 							}
 						} else {
-							ValidateCpsForm.this.getAcceptedWithdrawalDateField().setValue(null);
+							ValidateCpsForm.this.getAcceptedWithdrawalDateField().setValue((Date) null);
 							ValidateCpsForm.this.getAddSubscriptionField().setInactive();
 						}
 					}
@@ -366,7 +369,7 @@ public class ValidateCpsForm extends AbstractForm {
 				}
 
 				@Order(4000)
-				public class AcceptedWithdrawalDateField extends AbstractDateField {
+				public class AcceptedWithdrawalDateField extends AbstractZonedDateField {
 					@Override
 					protected String getConfiguredLabel() {
 						return TEXTS.get("zc.user.role.subscription.acceptedWithdrawalDate");
@@ -453,7 +456,7 @@ public class ValidateCpsForm extends AbstractForm {
 		}
 
 		@Order(6000)
-		public class StartDateField extends AbstractDateField {
+		public class StartDateField extends AbstractZonedDateField {
 			@Override
 			protected String getConfiguredLabel() {
 				return TEXTS.get("zc.user.role.subscription.startDate");
@@ -556,6 +559,45 @@ public class ValidateCpsForm extends AbstractForm {
 			final ValidateCpsFormData formData = new ValidateCpsFormData();
 			ValidateCpsForm.this.exportFormData(formData);
 			service.store(formData);
+		}
+	}
+
+	public class ViewHandler extends AbstractFormHandler {
+
+		Boolean validationRequired;
+
+		public ViewHandler() {
+			super();
+			this.validationRequired = Boolean.FALSE;
+		}
+
+		@Override
+		protected void execLoad() {
+			final IUserService service = BEANS.get(IUserService.class);
+			ValidateCpsFormData formData = null;
+			formData = new ValidateCpsFormData();
+			ValidateCpsForm.this.exportFormData(formData);
+			formData = service.load(formData);
+			ValidateCpsForm.this.importFormData(formData);
+
+			ValidateCpsForm.this.setEnabledPermission(
+					new UpdateAssignSubscriptionToUserPermission(formData.getUserId().getValue()));
+
+			ValidateCpsForm.this.initFormAfterLoad();
+
+			ValidateCpsForm.this.getAcceptCpsField().setVisible(false);
+			ValidateCpsForm.this.getAcceptedCpsDateField().setVisible(true);
+			ValidateCpsForm.this.getAcceptWithdrawalField().setVisible(false);
+			ValidateCpsForm.this.getAcceptedWithdrawalDateField().setVisible(true);
+			ValidateCpsForm.this.getStartDateField().setVisible(false);
+		}
+
+		@Override
+		protected void execStore() {
+			// final IUserService service = BEANS.get(IUserService.class);
+			// final ValidateCpsFormData formData = new ValidateCpsFormData();
+			// ValidateCpsForm.this.exportFormData(formData);
+			// service.store(formData);
 		}
 	}
 
