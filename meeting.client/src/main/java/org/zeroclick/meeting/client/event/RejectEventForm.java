@@ -331,7 +331,7 @@ public class RejectEventForm extends AbstractForm {
 
 			private void changeDisplayText() {
 				if (this.getValue() != null && !this.getValue().isEmpty()) {
-					this.setDisplayText(TEXTS.get(this.getValue()));
+					this.setDisplayText(TextsHelper.get(this.getValue()));
 				}
 			}
 
