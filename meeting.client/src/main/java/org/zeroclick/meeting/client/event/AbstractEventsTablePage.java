@@ -210,6 +210,53 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	}
 
 	/**
+	 * Allow subClass to defined if they want to handle notification for this
+	 * kind of event
+	 *
+	 * @param formdata
+	 * @return true if this (sub) tablePage want handle the event
+	 */
+	protected Boolean canHandle(final CalendarConfigurationCreatedNotification notification) {
+		return Boolean.FALSE;
+	}
+
+	/**
+	 * Allow subClass to defined if they want to handle notification for this
+	 * kind of event
+	 *
+	 * @param formdata
+	 * @param previousStateRow
+	 * @return true if this (sub) tablePage want handle the event
+	 */
+	protected Boolean canHandle(final CalendarConfigurationModifiedNotification notification) {
+		return Boolean.FALSE;
+	}
+
+	/**
+	 * Allow subClass to defined if they want to handle notification for this
+	 * kind of event
+	 *
+	 * @param formdata
+	 * @param previousStateRow
+	 * @return true if this (sub) tablePage want handle the event
+	 */
+	protected Boolean canHandle(final CalendarsConfigurationModifiedNotification notification) {
+		return Boolean.FALSE;
+	}
+
+	/**
+	 * Allow subClass to defined if they want to handle notification for this
+	 * kind of event
+	 *
+	 * @param formdata
+	 * @param previousStateRow
+	 * @return true if this (sub) tablePage want handle the event
+	 */
+	protected Boolean canHandle(final CalendarsConfigurationCreatedNotification notification) {
+		return Boolean.FALSE;
+	}
+
+	/**
 	 * Propagate new Events to child page if implemented.Default do Nothing
 	 *
 	 * @param formData
@@ -552,7 +599,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 								+ ") : " + eventForm.getUserId());
 						final List<ITableRow> rows = Table.this.getRows();
 						for (final ITableRow row : rows) {
-							Table.this.autoFillDates(row);
+							Table.this.refreshAutoFillDate(row);
 						}
 					} catch (final RuntimeException e) {
 						LOG.error("Could not handle new api. (" + Table.this.getTitle() + ")", e);
@@ -573,7 +620,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 								+ userForm.getUserId());
 						final List<ITableRow> rows = Table.this.getRows();
 						for (final ITableRow row : rows) {
-							Table.this.autoFillDates(row);
+							Table.this.refreshAutoFillDate(row);
 						}
 					} catch (final RuntimeException e) {
 						LOG.error("Could not handle modified User. (" + Table.this.getTitle() + ")", e);
@@ -609,21 +656,27 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			this.calendarsConfigurationModifiedNotificationListener = new INotificationListener<CalendarsConfigurationModifiedNotification>() {
 				@Override
 				public void handleNotification(final CalendarsConfigurationModifiedNotification notification) {
-					try {
-						final CalendarsConfigurationFormData calendarsConfigurationFormData = notification
-								.getFormData();
-						Long userId = null;
-						if (calendarsConfigurationFormData.getCalendarConfigTable().getRowCount() > 0) {
-							userId = calendarsConfigurationFormData.getCalendarConfigTable().getRows()[0].getUserId();
+					if (AbstractEventsTablePage.this.canHandle(notification)) {
+						try {
+
+							final CalendarsConfigurationFormData calendarsConfigurationFormData = notification
+									.getFormData();
+							Long userId = null;
+							if (calendarsConfigurationFormData.getCalendarConfigTable().getRowCount() > 0) {
+								userId = calendarsConfigurationFormData.getCalendarConfigTable().getRows()[0]
+										.getUserId();
+							}
+							LOG.debug("Calendars Configurations modified prepare to refresh event ("
+									+ this.getClass().getName() + ") : (first UserId)" + userId);
+
+							Table.this.refreshAutoFillDate();
+
+						} catch (final RuntimeException e) {
+							LOG.error("Could not handle modified Calendars Configurations. ("
+									+ this.getClass().getName() + ")", e);
 						}
-						LOG.debug("Calendar Configuration modified prepare to refresh event ("
-								+ this.getClass().getName() + ") : (first UserId)" + userId);
-
-						Table.this.refreshAutoFillDate();
-
-					} catch (final RuntimeException e) {
-						LOG.error("Could not handle modified Calendars Configuration. (" + this.getClass().getName()
-								+ ")", e);
+					} else {
+						LOG.debug(this.getClass().getName() + " don't handle notification : " + notification);
 					}
 				}
 			};
@@ -635,17 +688,28 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			this.calendarConfigurationModifiedNotificationListener = new INotificationListener<CalendarConfigurationModifiedNotification>() {
 				@Override
 				public void handleNotification(final CalendarConfigurationModifiedNotification notification) {
-					try {
-						final CalendarConfigurationFormData calendarConfigurationFormData = notification.getFormData();
-						LOG.debug("Calendar Configuration modified prepare to refresh event ("
-								+ this.getClass().getName() + ") : " + calendarConfigurationFormData.getUserId());
+					if (AbstractEventsTablePage.this.canHandle(notification)) {
+						try {
+							final CalendarConfigurationFormData calendarConfigurationFormData = notification
+									.getFormData();
+							LOG.debug("Calendar Configuration modified prepare to refresh event ("
+									+ this.getClass().getName() + ") : " + calendarConfigurationFormData.getUserId());
 
-						Table.this.refreshAutoFillDate();
+							if (Table.this.isMySelf(calendarConfigurationFormData.getUserId().getValue())) {
+								final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+								notificationHelper.addProccessedNotification(
+										"zc.meeting.calendar.notification.modifiedCalendarConfig",
+										calendarConfigurationFormData.getName().getValue());
+							}
 
-					} catch (final RuntimeException e) {
-						LOG.error(
-								"Could not handle modified Calendar Configuration. (" + this.getClass().getName() + ")",
-								e);
+							Table.this.refreshAutoFillDate();
+
+						} catch (final RuntimeException e) {
+							LOG.error("Could not handle modified Calendar Configuration. (" + this.getClass().getName()
+									+ ")", e);
+						}
+					} else {
+						LOG.debug(this.getClass().getName() + " don't handle notification : " + notification);
 					}
 				}
 			};
@@ -657,22 +721,26 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			this.calendarsConfigurationCreatedNotificationListener = new INotificationListener<CalendarsConfigurationCreatedNotification>() {
 				@Override
 				public void handleNotification(final CalendarsConfigurationCreatedNotification notification) {
-					try {
-						final CalendarsConfigurationFormData calendarsConfigurationFormData = notification
-								.getFormData();
-						Long userId = null;
-						if (calendarsConfigurationFormData.getCalendarConfigTable().getRowCount() > 0) {
-							userId = calendarsConfigurationFormData.getCalendarConfigTable().getRows()[0].getUserId();
+					if (AbstractEventsTablePage.this.canHandle(notification)) {
+						try {
+							final CalendarsConfigurationFormData calendarsConfigurationFormData = notification
+									.getFormData();
+							Long userId = null;
+							if (calendarsConfigurationFormData.getCalendarConfigTable().getRowCount() > 0) {
+								userId = calendarsConfigurationFormData.getCalendarConfigTable().getRows()[0]
+										.getUserId();
+							}
+							LOG.debug("Calendars Configurations created prepare to refresh event ("
+									+ this.getClass().getName() + ") : " + userId);
+
+							Table.this.refreshAutoFillDate();
+
+						} catch (final RuntimeException e) {
+							LOG.error("Could not handle created Calendars Configuration. (" + this.getClass().getName()
+									+ ")", e);
 						}
-						LOG.debug("Calendar Configuration created prepare to refresh event ("
-								+ this.getClass().getName() + ") : " + userId);
-
-						Table.this.refreshAutoFillDate();
-
-					} catch (final RuntimeException e) {
-						LOG.error(
-								"Could not handle created Calendars Configuration. (" + this.getClass().getName() + ")",
-								e);
+					} else {
+						LOG.debug(this.getClass().getName() + " don't handle notification : " + notification);
 					}
 				}
 			};
@@ -684,17 +752,28 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			this.calendarConfigurationCreatedNotificationListener = new INotificationListener<CalendarConfigurationCreatedNotification>() {
 				@Override
 				public void handleNotification(final CalendarConfigurationCreatedNotification notification) {
-					try {
-						final CalendarConfigurationFormData calendarsConfigurationFormData = notification.getFormData();
-						LOG.debug("Calendar Configuration created prepare to refresh event ("
-								+ this.getClass().getName() + ") : " + calendarsConfigurationFormData.getUserId());
+					if (AbstractEventsTablePage.this.canHandle(notification)) {
+						try {
+							final CalendarConfigurationFormData calendarConfigurationFormData = notification
+									.getFormData();
+							LOG.debug("Calendar Configuration created prepare to refresh event ("
+									+ this.getClass().getName() + ") : " + calendarConfigurationFormData.getUserId());
 
-						Table.this.refreshAutoFillDate();
+							if (Table.this.isMySelf(calendarConfigurationFormData.getUserId().getValue())) {
+								final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+								notificationHelper.addProccessedNotification(
+										"zc.meeting.calendar.notification.createdCalendarConfig",
+										calendarConfigurationFormData.getName().getValue());
+							}
 
-					} catch (final RuntimeException e) {
-						LOG.error(
-								"Could not handle created Calendar Configuration. (" + this.getClass().getName() + ")",
-								e);
+							Table.this.refreshAutoFillDate();
+
+						} catch (final RuntimeException e) {
+							LOG.error("Could not handle created Calendar Configuration. (" + this.getClass().getName()
+									+ ")", e);
+						}
+					} else {
+						LOG.debug(this.getClass().getName() + " don't handle notification : " + notification);
 					}
 				}
 			};
@@ -982,6 +1061,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			final String currentUserEmail = userDetails.getEmail().getValue();
 
 			return currentUserEmail.equals(email);
+		}
+
+		protected Boolean isMySelf(final Long userId) {
+			final Long currentUser = AbstractEventsTablePage.this.getAppUserHelper().getCurrentUserId();
+			return currentUser.equals(userId);
 		}
 
 		protected String getState(final ITableRow row) {

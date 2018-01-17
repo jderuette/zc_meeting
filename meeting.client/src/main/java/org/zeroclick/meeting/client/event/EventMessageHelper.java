@@ -285,8 +285,11 @@ public class EventMessageHelper {
 	}
 
 	protected Boolean isOrganizer(final Long userId) {
-		final Long currentUser = this.getAppUserHelper().getCurrentUserId();
+		return this.isMySelf(userId);
+	}
 
+	protected Boolean isMySelf(final Long userId) {
+		final Long currentUser = this.getAppUserHelper().getCurrentUserId();
 		return currentUser.equals(userId);
 	}
 

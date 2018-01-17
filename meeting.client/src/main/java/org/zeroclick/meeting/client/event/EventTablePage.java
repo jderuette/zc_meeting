@@ -53,6 +53,10 @@ import org.zeroclick.meeting.client.common.UserAccessRequiredException;
 import org.zeroclick.meeting.client.event.EventTablePage.Table;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
 import org.zeroclick.meeting.shared.Icons;
+import org.zeroclick.meeting.shared.calendar.CalendarConfigurationCreatedNotification;
+import org.zeroclick.meeting.shared.calendar.CalendarConfigurationModifiedNotification;
+import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationCreatedNotification;
+import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationModifiedNotification;
 import org.zeroclick.meeting.shared.event.AbstractEventNotification;
 import org.zeroclick.meeting.shared.event.CreateEventPermission;
 import org.zeroclick.meeting.shared.event.EventFormData;
@@ -145,6 +149,26 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		final EventFormData formData = notification.getEventForm();
 		return !this.getEventMessageHelper().isHeldByCurrentUser(formData)
 				&& CompareUtility.equals(StateCodeType.AskedCode.ID, formData.getState().getValue());
+	}
+
+	@Override
+	protected Boolean canHandle(final CalendarConfigurationCreatedNotification notification) {
+		return Boolean.TRUE;
+	}
+
+	@Override
+	protected Boolean canHandle(final CalendarConfigurationModifiedNotification notification) {
+		return Boolean.TRUE;
+	}
+
+	@Override
+	protected Boolean canHandle(final CalendarsConfigurationModifiedNotification notification) {
+		return Boolean.TRUE;
+	}
+
+	@Override
+	protected Boolean canHandle(final CalendarsConfigurationCreatedNotification notification) {
+		return Boolean.TRUE;
 	}
 
 	public class Table extends AbstractEventsTablePage<Table>.Table {
