@@ -786,7 +786,7 @@ public class UserForm extends AbstractForm {
 
 		if (null == formData.getPassword().getValue()) {
 			LOG.warn("No Generated Plain Paswword during saving new User. Generating one");
-			this.generateAndAddFormPassword();
+			this.generateAndAddFormPassword(formData);
 		}
 		formData.setHashedPassword(UserForm.this.hashPassword(formData.getPassword().getValue()));
 
@@ -856,6 +856,7 @@ public class UserForm extends AbstractForm {
 			notificationHelper.addProcessingNotification("zc.user.notification.invitedUser",
 					newUser.getEmailField().getValue());
 		} catch (final MailException e) {
+			LOG.error("Cannot send email to : " + newUser.getEmailField().getValue() + " with subject : " + subject, e);
 			throw new VetoException(TEXTS.get("zc.common.cannotSendEmail"));
 		}
 	}
@@ -867,6 +868,7 @@ public class UserForm extends AbstractForm {
 				+ " with meetingSubject : " + meetingSubject);
 
 		if (userService.isEmailAlreadyUsed(email)) {
+			LOG.error("Cannot invite (new ?) user with email : " + email + " because he is not new");
 			new VetoException(TEXTS.get("zc.user.emailAlreadyUsed"));
 		}
 
@@ -906,6 +908,10 @@ public class UserForm extends AbstractForm {
 	}
 
 	private void generateAndAddFormPassword() {
+		this.generateAndAddFormPassword(null);
+	}
+
+	private void generateAndAddFormPassword(final UserFormData formData) {
 		String plainRandomPassword = this.generatePasword();
 
 		if (null == plainRandomPassword || "".equals(plainRandomPassword.trim())) {
@@ -917,8 +923,14 @@ public class UserForm extends AbstractForm {
 			}
 		}
 
-		this.getPasswordField().setValue(plainRandomPassword);
-		this.getConfirmPasswordField().setValue(plainRandomPassword);
+		if (null == formData) {
+			// store to the curent form, should be exported as formData latter
+			this.getPasswordField().setValue(plainRandomPassword);
+			this.getConfirmPasswordField().setValue(plainRandomPassword);
+		} else {
+			formData.getPassword().setValue(plainRandomPassword);
+			formData.getConfirmPassword().setValue(plainRandomPassword);
+		}
 	}
 
 	private String generatePasword() {
