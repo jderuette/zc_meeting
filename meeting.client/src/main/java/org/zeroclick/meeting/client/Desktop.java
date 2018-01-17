@@ -19,7 +19,6 @@ import org.eclipse.scout.rt.client.ui.desktop.outline.IOutline;
 import org.eclipse.scout.rt.client.ui.desktop.outline.pages.IPage;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
-import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.job.Jobs;
 import org.eclipse.scout.rt.platform.nls.NlsLocale;
 import org.eclipse.scout.rt.platform.status.IStatus;
@@ -44,7 +43,6 @@ import org.zeroclick.configuration.client.user.ViewCpsForm;
 import org.zeroclick.configuration.onboarding.OnBoardingUserForm;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
 import org.zeroclick.configuration.shared.api.ApiDeletedNotification;
-import org.zeroclick.configuration.shared.params.IAppParamsService;
 import org.zeroclick.configuration.shared.role.ReadPermissionPermission;
 import org.zeroclick.configuration.shared.role.ReadRolePermission;
 import org.zeroclick.configuration.shared.user.IUserService;
@@ -409,7 +407,7 @@ public class Desktop extends AbstractDesktop {
 		public class ViewCpsMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {
-				return TEXTS.get("zc.user.role.subscription.cps.view");
+				return TEXTS.get("zc.user.role.subscription.contracts");
 			}
 
 			@Override
@@ -427,29 +425,32 @@ public class Desktop extends AbstractDesktop {
 			}
 		}
 
-		@Order(6000)
-		public class ViewTosMenu extends AbstractMenu {
-			@Override
-			protected String getConfiguredText() {
-				return TEXTS.get("zc.user.role.subscription.tos.label");
-			}
-
-			@Override
-			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-				return CollectionUtility.hashSet();
-			}
-
-			@Override
-			protected void execAction() {
-				final IAppParamsService appParamService = BEANS.get(IAppParamsService.class);
-				final String url = appParamService.getValue(IAppParamsService.APP_PARAM_KEY_TOS_URL);
-
-				if (null == url || url.isEmpty()) {
-					throw new VetoException("No Term Of Use to display");
-				}
-				ClientSession.get().getDesktop().openUri(url, OpenUriAction.NEW_WINDOW);
-			}
-		}
+		// @Order(6000)
+		// public class ViewTosMenu extends AbstractMenu {
+		// @Override
+		// protected String getConfiguredText() {
+		// return TEXTS.get("zc.user.role.subscription.tos.label");
+		// }
+		//
+		// @Override
+		// protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+		// return CollectionUtility.hashSet();
+		// }
+		//
+		// @Override
+		// protected void execAction() {
+		// final IAppParamsService appParamService =
+		// BEANS.get(IAppParamsService.class);
+		// final String url =
+		// appParamService.getValue(IAppParamsService.APP_PARAM_KEY_TOS_URL);
+		//
+		// if (null == url || url.isEmpty()) {
+		// throw new VetoException("No Term Of Use to display");
+		// }
+		// ClientSession.get().getDesktop().openUri(url,
+		// OpenUriAction.NEW_WINDOW);
+		// }
+		// }
 
 		@Order(7000)
 		public class LogoutMenu extends AbstractMenu {

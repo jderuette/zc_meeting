@@ -8,11 +8,14 @@ import org.eclipse.scout.rt.client.ui.form.fields.htmlfield.AbstractHtmlField;
 import org.eclipse.scout.rt.client.ui.form.fields.longfield.AbstractLongField;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
+import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.zeroclick.configuration.client.user.ViewCpsForm.MainBox.CloseButton;
 import org.zeroclick.configuration.client.user.ViewCpsForm.MainBox.CpsTextField;
+import org.zeroclick.configuration.client.user.ViewCpsForm.MainBox.MyHtmlField;
 import org.zeroclick.configuration.client.user.ViewCpsForm.MainBox.SubscriptionIdField;
 import org.zeroclick.configuration.client.user.ViewCpsForm.MainBox.UserIdField;
+import org.zeroclick.configuration.shared.params.IAppParamsService;
 import org.zeroclick.configuration.shared.role.ReadAssignSubscriptionToUserPermission;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
 import org.zeroclick.configuration.shared.user.IUserService;
@@ -35,6 +38,10 @@ public class ViewCpsForm extends AbstractForm {
 
 	public MainBox getMainBox() {
 		return this.getFieldByClass(MainBox.class);
+	}
+
+	public MyHtmlField getMyHtmlField() {
+		return this.getFieldByClass(MyHtmlField.class);
 	}
 
 	public SubscriptionIdField getSubscriptionIdField() {
@@ -156,6 +163,35 @@ public class ViewCpsForm extends AbstractForm {
 			protected Long getConfiguredMaxValue() {
 				return 999999999999L;
 			}
+		}
+
+		@Order(5000)
+		public class MyHtmlField extends AbstractHtmlField {
+			@Override
+			protected String getConfiguredLabel() {
+				return TEXTS.get("zc.user.role.subscription.contracts");
+			}
+
+			@Override
+			protected void execInitField() {
+				super.execInitField();
+				this.setHtmlEnabled(Boolean.TRUE);
+				final IAppParamsService appParamService = BEANS.get(IAppParamsService.class);
+				final String url = appParamService.getValue(IAppParamsService.APP_PARAM_KEY_TOS_URL);
+
+				if (null == url || url.isEmpty()) {
+					throw new VetoException("No Term Of Use to display");
+				}
+
+				this.setValue(MainBox.this.buildLink(TEXTS.get("zc.user.role.subscription.tos.label"), url));
+			}
+		}
+
+		public String buildLink(final String label, final String url) {
+			final StringBuilder builder = new StringBuilder(64);
+			builder.append("<a href='").append(url).append("' target='_blank'>").append(label).append("</a>");
+
+			return builder.toString();
 		}
 
 		@Order(100000)

@@ -16,11 +16,11 @@ import org.zeroclick.common.AbstractCommonService;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationCreatedNotification;
-import org.zeroclick.meeting.shared.calendar.CalendarConfigurationModifiedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
+import org.zeroclick.meeting.shared.calendar.CalendarConfigurationModifiedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationTablePageData;
-import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationModifiedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationFormData;
+import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationModifiedNotification;
 import org.zeroclick.meeting.shared.calendar.CreateCalendarConfigurationPermission;
 import org.zeroclick.meeting.shared.calendar.DeleteApiPermission;
 import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
@@ -226,7 +226,7 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 					existingCalendarConfig.getAddEventToCalendar().setValue(Boolean.FALSE);
 				}
 
-				this.store(existingCalendarConfig);
+				this.store(existingCalendarConfig, Boolean.FALSE);
 			}
 		}
 		// TODO Djer send global notification instead of one notification for
