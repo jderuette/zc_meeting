@@ -6,6 +6,7 @@ import java.security.Permission;
 import java.security.PermissionCollection;
 import java.security.Permissions;
 import java.util.Collection;
+import java.util.Set;
 
 import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.eclipse.scout.rt.platform.BEANS;
@@ -100,7 +101,20 @@ public class ServerAccessControlService extends AccessControlService {
 		return ConstructorUtils.invokeExactConstructor(implType, level);
 	}
 
+	/**
+	 * Clear the cache with the passed userIds (login and Email)
+	 *
+	 * @param userId
+	 *            login or email to user cache
+	 */
+	@Override
+	public void clearUserCache(final Set<String> userIds) {
+		this.clearCache(userIds);
+		this.clearUserIdsCache(userIds);
+	}
+
 	public void clearCacheOfUsersIds(final Collection<String> cacheKeys) throws ProcessingException {
+		this.clearCache();
 		if (cacheKeys != null && !cacheKeys.isEmpty()) {
 			this.getCache().invalidate(new KeyCacheEntryFilter<String, PermissionCollection>(cacheKeys), true);
 		}

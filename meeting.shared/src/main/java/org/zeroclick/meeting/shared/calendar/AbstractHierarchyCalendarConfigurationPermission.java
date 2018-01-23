@@ -28,6 +28,11 @@ public abstract class AbstractHierarchyCalendarConfigurationPermission extends B
 
 	public static final int LEVEL_OWN = 10;
 
+	/**
+	 * Only CalendarCOnfig I'm Involved (I have a meeting with user api owner)
+	 */
+	public static final int LEVEL_INVOLVED = 5;
+
 	private Long oAuthCredentialId;
 
 	public AbstractHierarchyCalendarConfigurationPermission(final Integer level) {
@@ -41,7 +46,7 @@ public abstract class AbstractHierarchyCalendarConfigurationPermission extends B
 
 	/**
 	 * Must be overwrite by subClass
-	 * 
+	 *
 	 * @return
 	 */
 	protected static String getPermissionName() {
@@ -57,6 +62,10 @@ public abstract class AbstractHierarchyCalendarConfigurationPermission extends B
 					.getoAuthCredentialId();
 			if (BEANS.get(ICalendarConfigurationService.class).isOwn(oAuthCredentialId)) {
 				result = LEVEL_OWN;
+			}
+
+			if (BEANS.get(ICalendarConfigurationService.class).isInvolved(oAuthCredentialId)) {
+				result = LEVEL_INVOLVED;
 			}
 		}
 

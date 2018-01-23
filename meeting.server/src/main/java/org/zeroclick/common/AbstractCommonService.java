@@ -15,15 +15,19 @@ limitations under the License.
  */
 package org.zeroclick.common;
 
+import java.security.AccessController;
 import java.security.Permission;
+import java.security.Principal;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
+import javax.security.auth.Subject;
 
 import org.eclipse.scout.rt.platform.ApplicationScoped;
 import org.eclipse.scout.rt.platform.BEANS;
+import org.eclipse.scout.rt.platform.config.CONFIG;
 import org.eclipse.scout.rt.platform.context.RunContext;
 import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.job.Jobs;
@@ -35,6 +39,9 @@ import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.eclipse.scout.rt.shared.services.common.security.IAccessControlService;
 import org.slf4j.Logger;
 import org.zeroclick.comon.text.UserHelper;
+import org.zeroclick.configuration.shared.user.IUserService;
+import org.zeroclick.configuration.shared.user.UserFormData;
+import org.zeroclick.meeting.server.sql.DatabaseProperties.SuperUserSubjectProperty;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
@@ -81,7 +88,7 @@ public abstract class AbstractCommonService {
 		}
 
 		if (addPendingMeetingUsers) {
-			final Set<Long> pendingUsers = this.getUserWithPendingEvent();
+			final Set<Long> pendingUsers = this.getUserWithPendingEvent(ownerObjectId);
 			if (null != pendingUsers) {
 				for (final Long userId : pendingUsers) {
 					notifiedUsers.addAll(this.getUserNotificationIds(userId));
@@ -91,11 +98,20 @@ public abstract class AbstractCommonService {
 		return notifiedUsers;
 	}
 
+	/**
+	 * Get all UserId having a pending event with current connected user
+	 * 
+	 * @return
+	 */
 	protected Set<Long> getUserWithPendingEvent() {
+		return this.getUserWithPendingEvent(null);
+	}
+
+	protected Set<Long> getUserWithPendingEvent(final Long forUserId) {
 		Set<Long> pendingMeetingUser = new HashSet<>();
 
 		final IEventService eventService = BEANS.get(IEventService.class);
-		final Map<Long, Integer> pendingUsers = eventService.getUsersWithPendingMeeting();
+		final Map<Long, Integer> pendingUsers = eventService.getUsersWithPendingMeeting(forUserId);
 
 		if (null != pendingUsers) {
 			pendingMeetingUser = pendingUsers.keySet();
@@ -107,6 +123,49 @@ public abstract class AbstractCommonService {
 	protected Set<String> getUserNotificationIds(final Long ownerObjectId) {
 		final AccessControlService acs = BEANS.get(AccessControlService.class);
 		return acs.getUserNotificationIds(ownerObjectId);
+	}
+
+	protected String getCurrentUserEmail() {
+		final IUserService userService = BEANS.get(IUserService.class);
+		final UserFormData userDetails = userService.getCurrentUserDetails();
+
+		return userDetails.getEmail().getValue();
+	}
+
+	protected String getCurrentUserLogin() {
+		final IUserService userService = BEANS.get(IUserService.class);
+		final UserFormData userDetails = userService.getCurrentUserDetails();
+
+		return userDetails.getLogin().getValue();
+	}
+
+	protected String getSuperUserPrincipal() {
+		final Set<Principal> superUserPrincipals = CONFIG.getPropertyValue(SuperUserSubjectProperty.class)
+				.getPrincipals();
+		String firstSuperUserPrincipal = null;
+		for (final Principal principal : superUserPrincipals) {
+			if (null == firstSuperUserPrincipal || "".equals(firstSuperUserPrincipal)) {
+				firstSuperUserPrincipal = principal.getName().toLowerCase();
+			}
+		}
+
+		return firstSuperUserPrincipal;
+	}
+
+	protected Boolean isCurrentUserSuperUser() {
+		final Subject currentUserSubject = Subject.getSubject(AccessController.getContext());
+		final String superUserPrincipal = this.getSuperUserPrincipal();
+
+		if (null != currentUserSubject && currentUserSubject.getPrincipals().size() > 0) {
+			for (final Principal principal : currentUserSubject.getPrincipals()) {
+				final String name = principal.getName();
+				if (superUserPrincipal.equalsIgnoreCase(name)) {
+					return Boolean.TRUE;
+				}
+			}
+		}
+
+		return Boolean.FALSE;
 	}
 
 	protected void insertInsideNewTransaction(final String sql, final Object... bindBases) {

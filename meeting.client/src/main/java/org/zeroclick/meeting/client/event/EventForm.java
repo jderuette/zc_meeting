@@ -1241,7 +1241,7 @@ public class EventForm extends AbstractForm {
 					eventService.create(formData);
 				}
 			}, Jobs.newInput()
-					.withName("Creating event organizer {0}, invitee {1}",
+					.withName("Creating event organizer {}, invitee {}",
 							EventForm.this.getOrganizerEmailField().getValue(), eventGuestEmail)
 					.withRunContext(ClientRunContexts.copyCurrent()).withThreadName("Creating event"));
 

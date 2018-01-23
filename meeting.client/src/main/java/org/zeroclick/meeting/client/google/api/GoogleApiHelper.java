@@ -58,8 +58,10 @@ import org.zeroclick.meeting.client.common.CallTrackerService;
 import org.zeroclick.meeting.client.common.UserAccessRequiredException;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
+import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationTablePageData.CalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.IApiService;
+import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
 import com.google.api.client.auth.oauth2.AuthorizationCodeFlow;
@@ -454,6 +456,26 @@ public class GoogleApiHelper {
 		return "unknow";
 	}
 
+	public String getUserCreateEventCalendar(final Long userId) {
+		final ICalendarConfigurationService calendarConfigurationService = BEANS
+				.get(ICalendarConfigurationService.class);
+
+		String calendarId = "primary";
+
+		final CalendarConfigurationFormData calendarToStoreEvent = calendarConfigurationService
+				.getCalendarToStoreEvents(userId);
+
+		if (null != calendarToStoreEvent) {
+			calendarId = calendarToStoreEvent.getExternalId().getValue();
+		} else {
+			LOG.warn("No calendar configured to store (new) event for user id : " + userId);
+		}
+
+		LOG.debug("Event will be store in : " + calendarId + " for user : " + userId);
+
+		return calendarId;
+	}
+
 	private Long getOAuthCredentialId() throws IOException {
 		return this.getOAuthCredentialId(this.getCurrentUserId());
 	}
@@ -497,8 +519,8 @@ public class GoogleApiHelper {
 			final StringBuilder builder = new StringBuilder(100);
 			builder.append("Google Event : ").append(event.getId()).append(", start : ").append(event.getStart())
 					.append(", end : ").append(event.getEnd()).append(", status : ").append(event.getStatus())
-					.append(", summary : ").append(event.getSummary());
-
+					.append(", transparancy : ").append(event.getTransparency()).append(", from recurent event : ")
+					.append(event.getRecurringEventId()).append(", summary : ").append(event.getSummary());
 			return builder.toString();
 		}
 		return "";

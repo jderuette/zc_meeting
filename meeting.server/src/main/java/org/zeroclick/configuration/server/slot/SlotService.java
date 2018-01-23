@@ -394,7 +394,10 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 
 	@Override
 	public void addDefaultCodeToExistingSlot() {
-		if (ACCESS.getLevel(new ReadSlotPermission((Long) null)) == ReadSlotPermission.LEVEL_ALL) {
+		// "isCurrentUserSuperUser" Ugly but required to allow datamigration
+		// BEFORE super userCreated
+		if (this.isCurrentUserSuperUser()
+				|| ACCESS.getLevel(new ReadSlotPermission((Long) null)) == ReadSlotPermission.LEVEL_ALL) {
 
 			final String sql = SQLs.SLOT_PAGE_SELECT;
 
@@ -402,10 +405,11 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 
 			if (null != slots && slots.length > 0) {
 				for (int row = 0; row < slots.length; row++) {
-					LOG.info("Adding default Slot code for slot");
+
 					final Object[] slot = slots[row];
 					final String slotName = (String) slot[1];
 					final Long slotId = (Long) slot[0];
+					LOG.info("Adding default Slot code for slot : " + slotName + " (" + slotId + ")");
 					final String slotCodeExtracted = slotName.substring(slotName.lastIndexOf('.') + 1,
 							slotName.length());
 					final Integer slotCode = Integer.valueOf(slotCodeExtracted);

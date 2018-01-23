@@ -29,6 +29,8 @@ import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractBooleanColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractLongColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractStringColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.IColumn;
+import org.eclipse.scout.rt.client.ui.form.FormEvent;
+import org.eclipse.scout.rt.client.ui.form.FormListener;
 import org.eclipse.scout.rt.client.ui.messagebox.IMessageBox;
 import org.eclipse.scout.rt.client.ui.messagebox.MessageBoxes;
 import org.eclipse.scout.rt.platform.BEANS;
@@ -68,6 +70,11 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 	}
 
 	@Override
+	protected boolean getConfiguredHeaderEnabled() {
+		return true;
+	}
+
+	@Override
 	protected boolean getConfiguredAutoResizeColumns() {
 		return Boolean.TRUE;
 	}
@@ -81,6 +88,10 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 		return false;
 	}
 
+	protected boolean getConfiguredAutoLoad() {
+		return true;
+	}
+
 	@Override
 	protected void execInitTable() {
 		this.displayAllUsers = this.getConfiguredDisplayAllUsers();
@@ -92,6 +103,16 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 			this.getUserIdColumn().setInitialGrouped(true);
 			this.getUserIdColumn().setInitialSortIndex(1);
 			this.getUserIdColumn().setInitialSortAscending(true);
+			final List<IColumn<?>> columns = this.getColumns();
+
+			if (null != columns && columns.size() > 0) {
+				for (final IColumn<?> column : columns) {
+					column.setEditable(false);
+				}
+			}
+
+			final AutoImportMyCalendarsMenu autoImportMenu = this.getMenuByClass(AutoImportMyCalendarsMenu.class);
+			autoImportMenu.setVisible(false);
 		}
 	}
 
@@ -177,6 +198,15 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 					.getSelectedValue();
 			form.getCalendarConfigurationIdField().setValue(calendarId);
 			form.setEnabledPermission(new UpdateCalendarConfigurationPermission(calendarId));
+			form.addFormListener(new FormListener() {
+
+				@Override
+				public void formChanged(final FormEvent e) {
+					if (FormEvent.TYPE_CLOSED == e.getType() && form.isFormStored()) {
+						AbstractCalendarConfigurationTable.this.loadData();
+					}
+				}
+			});
 			form.startModify();
 		}
 	}
@@ -301,7 +331,9 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 	}
 
 	private void enableCell(final Cell view, final String rowColor) {
-		view.setEditable(true);
+		if (!this.displayAllUsers) {
+			view.setEditable(true);
+		}
 		view.setBackgroundColor(rowColor);
 	}
 

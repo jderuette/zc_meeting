@@ -270,7 +270,8 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	 *
 	 * @param formData
 	 */
-	protected void onModifiedEvent(final EventFormData formData, final String previousStateRow) {
+	protected void onModifiedEvent(final EventFormData formData, final String previousStateRow,
+			final ITableRow modifiedRow) {
 
 	}
 
@@ -539,7 +540,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 							// TODO Djer13 not really a "modified" event, just a
 							// row removed
-							AbstractEventsTablePage.this.onModifiedEvent(eventForm, eventForm.getPreviousState());
+							AbstractEventsTablePage.this.onModifiedEvent(eventForm, eventForm.getPreviousState(), row);
 						}
 						return; // early break
 					}
@@ -547,6 +548,8 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 					try {
 						ITableRow row = AbstractEventsTablePage.this.getTable().getRow(eventForm.getEventId());
 						if (null == row) {
+							LOG.debug("Modified event prepare to ADD table row (in " + Table.this.getTitle()
+									+ ") for event Id : " + eventForm.getEventId());
 							row = AbstractEventsTablePage.this.getTable()
 									.addRow(AbstractEventsTablePage.this.getTable().createTableRowFromForm(eventForm));
 						}
@@ -555,15 +558,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 									+ ") for event Id : " + eventForm.getEventId());
 							// if row is null, this table instance should not
 							// handle this event. We can safely ignore.
-							// TODO Djer13 perf : avoid handling notification in
-							// child xxxEventTablePage if this event is not the
-							// current Table
 							final String previousStateRow = eventForm.getPreviousState();
 
 							Table.this.updateTableRowFromForm(row, eventForm);
 							AbstractEventsTablePage.this.getTable().applyRowFilters();
-							AbstractEventsTablePage.this.onModifiedEvent(eventForm, previousStateRow);
-							Table.this.refreshAutoFillDate(row);
+							AbstractEventsTablePage.this.onModifiedEvent(eventForm, previousStateRow, row);
 
 							final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 							notificationHelper.addProccessedNotification(
@@ -693,7 +692,9 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 							final CalendarConfigurationFormData calendarConfigurationFormData = notification
 									.getFormData();
 							LOG.debug("Calendar Configuration modified prepare to refresh event ("
-									+ this.getClass().getName() + ") : " + calendarConfigurationFormData.getUserId());
+									+ this.getClass().getName() + "), modified calendar : "
+									+ calendarConfigurationFormData.getName().getValue() + " : "
+									+ calendarConfigurationFormData.getUserId().getValue());
 
 							if (Table.this.isMySelf(calendarConfigurationFormData.getUserId().getValue())) {
 								final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
@@ -757,7 +758,8 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 							final CalendarConfigurationFormData calendarConfigurationFormData = notification
 									.getFormData();
 							LOG.debug("Calendar Configuration created prepare to refresh event ("
-									+ this.getClass().getName() + ") : " + calendarConfigurationFormData.getUserId());
+									+ this.getClass().getName() + ") : "
+									+ calendarConfigurationFormData.getUserId().getValue());
 
 							if (Table.this.isMySelf(calendarConfigurationFormData.getUserId().getValue())) {
 								final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
@@ -793,8 +795,17 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		}
 
 		protected void resetInvalidatesEvent(final ZonedDateTime start, final ZonedDateTime end) {
+			this.resetInvalidatesEvent(start, end, null);
+		}
+
+		protected void resetInvalidatesEvent(final ZonedDateTime start, final ZonedDateTime end,
+				final Long exeptEventId) {
 			final List<ITableRow> rows = this.getRows();
+
 			for (final ITableRow row : rows) {
+				if (this.getEventIdColumn().getValue(row).equals(exeptEventId)) {
+					continue;
+				}
 				this.invalidateIfSlotAlreadyUsed(row, start, end);
 			}
 		}
@@ -847,7 +858,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			}
 		}
 
-		private void refreshAutoFillDate(final ITableRow row) {
+		protected void refreshAutoFillDate(final ITableRow row) {
 			this.getStartDateColumn().setValue(row.getRowIndex(), (Date) null);
 			this.getEndDateColumn().setValue(row.getRowIndex(), (Date) null);
 			this.autoFillDates(row);
@@ -1255,8 +1266,10 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 									"Cannot re-calculate start/end date after cancel/reject meeting because end date was NULL for event : "
 											+ rejectEventForm.getEventId());
 						} else {
-							Table.this.resetInvalidatesEvent(rejectEventForm.getStart(), rejectEventForm.getEnd());
+							Table.this.resetInvalidatesEvent(rejectEventForm.getStart(), rejectEventForm.getEnd(),
+									rejectEventForm.getEventId());
 							Table.this.autoFillDates();
+							// Autofill handled by EventModifiedNotification
 						}
 					} catch (final ClassCastException cce) {
 						LOG.warn("Cannot re-calculate start/end date after cancel/reject meeting", cce);

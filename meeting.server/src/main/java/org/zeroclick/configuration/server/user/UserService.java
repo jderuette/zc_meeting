@@ -162,7 +162,13 @@ public class UserService extends AbstractCommonService implements IUserService {
 
 	@Override
 	public UserFormData load(final UserFormData formData) {
-		super.checkPermission(new ReadUserPermission(formData.getUserId().getValue()));
+		return this.load(formData, Boolean.TRUE);
+	}
+
+	private UserFormData load(final UserFormData formData, final Boolean checkPermission) {
+		if (checkPermission) {
+			super.checkPermission(new ReadUserPermission(formData.getUserId().getValue()));
+		}
 		UserFormData cachedData = this.getDataCache().get(formData.getUserId().getValue());
 		if (null == cachedData) {
 			// avoid NPE
@@ -674,7 +680,7 @@ public class UserService extends AbstractCommonService implements IUserService {
 	public UserFormData getCurrentUserDetails() {
 		final UserFormData formData = new UserFormData();
 		formData.getUserId().setValue(super.userHelper.getCurrentUserId());
-		return this.load(formData);
+		return this.load(formData, Boolean.FALSE);
 	}
 
 	@Override
@@ -683,7 +689,7 @@ public class UserService extends AbstractCommonService implements IUserService {
 		UserFormData formData = new UserFormData();
 		formData.getUserId().setValue(userId);
 
-		formData = this.load(formData);
+		formData = this.load(formData, Boolean.FALSE);
 
 		return formData.getTimeZone().getValue();
 	}
@@ -695,7 +701,7 @@ public class UserService extends AbstractCommonService implements IUserService {
 		UserFormData formData = new UserFormData();
 		formData.getUserId().setValue(userId);
 
-		formData = this.load(formData);
+		formData = this.load(formData, Boolean.FALSE);
 
 		return formData.getLanguage().getValue();
 	}
@@ -706,7 +712,7 @@ public class UserService extends AbstractCommonService implements IUserService {
 		UserFormData formData = new UserFormData();
 		formData.getUserId().setValue(userId);
 
-		formData = this.load(formData);
+		formData = this.load(formData, Boolean.FALSE);
 
 		if (null != formData.getLogin().getValue() && !formData.getLogin().getValue().isEmpty()) {
 			notificationsIds.add(formData.getLogin().getValue());
@@ -714,6 +720,7 @@ public class UserService extends AbstractCommonService implements IUserService {
 		if (null != formData.getEmail().getValue() && !formData.getEmail().getValue().isEmpty()) {
 			notificationsIds.add(formData.getEmail().getValue());
 		}
+		LOG.debug("Notifications IDs for user : " + userId + " are : " + notificationsIds);
 		return notificationsIds;
 	}
 
@@ -830,8 +837,8 @@ public class UserService extends AbstractCommonService implements IUserService {
 		this.dataCache.clearCache(userId);
 
 		final Set<String> userCacheKey = this.getUserNotificationIds(userId);
-		BEANS.get(ServerAccessControlService.class).clearCacheOfUsersIds(userCacheKey);
-		// BEANS.get(AccessControlService.class).clearUserCache(userCacheKey);
+		BEANS.get(ServerAccessControlService.class).clearUserCache(userCacheKey);
+		BEANS.get(AccessControlService.class).clearUserCache(userCacheKey);
 	}
 
 	@Override

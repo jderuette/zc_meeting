@@ -88,8 +88,8 @@ public class CallTrackerService<KEY_TYPE> {
 		if (this.alreadyAsk.get(key).getLastCall().plus(this.timeToLive).isBefore(LocalDateTime.now())) {
 			if (LOG.isDebugEnabled()) {
 				final StringBuilder builder = new StringBuilder(50);
-				builder.append(this.context).append(" Last call was more than ").append(this.timeToLive)
-						.append(" reseting the call Tracker");
+				builder.append(this.context).append(" Last call was more than ").append(this.timeToLive.toMinutes())
+						.append(" minutes reseting the call Tracker");
 				LOG.debug(builder.toString());
 			}
 			this.alreadyAsk.get(key).reset();
@@ -108,7 +108,8 @@ public class CallTrackerService<KEY_TYPE> {
 		if (LOG.isDebugEnabled()) {
 			final StringBuilder builder = new StringBuilder(50);
 			builder.append(this.context).append(" Tracker state ").append(this.alreadyAsk.get(key))
-					.append(" (max configured : ").append(this.maxSuccessiveCall).append(')');
+					.append(" (max configured : ").append(this.maxSuccessiveCall).append(", ttl : ")
+					.append(this.timeToLive.toMinutes());
 			LOG.debug(builder.toString());
 		}
 

@@ -317,6 +317,10 @@ public class SlotHelper {
 	 */
 	private DayDuration getClosestForwardDayDuration(final List<DayDuration> periods, final ZonedDateTime checkedDate,
 			final ZonedDateTime endDate) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Searching for closest forward period from : " + checkedDate + " to " + endDate + " in periods : "
+					+ periods);
+		}
 		if (periods.size() == 1) {
 			if (periods.get(0).isWeeklyerpetual()) {
 				return periods.get(0);
@@ -390,7 +394,7 @@ public class SlotHelper {
 		final DateHelper dateHelper = BEANS.get(DateHelper.class);
 		final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
 		// TODO Djer hour are checked using 'locaDateTime" so we Should use
-		// localized DateTime. Double check the Waring bellow ! 
+		// localized DateTime. Double check the Waring bellow !
 		// WARNING we NEED to use UTC
 		final ZonedDateTime zonedStart = dateHelper.getZonedValue(appUserHelper.getUserZoneId(userId), minimalDate);
 		final ZonedDateTime zonedEnd = dateHelper.getZonedValue(appUserHelper.getUserZoneId(userId), maximalDate);

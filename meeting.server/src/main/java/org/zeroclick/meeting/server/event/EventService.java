@@ -26,7 +26,6 @@ import org.zeroclick.configuration.shared.slot.SlotCodeType;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper.SubscriptionHelperData;
 import org.zeroclick.configuration.shared.user.IUserService;
-import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.shared.event.EventCreatedNotification;
 import org.zeroclick.meeting.shared.event.EventFormData;
@@ -92,21 +91,41 @@ public class EventService extends AbstractCommonService implements IEventService
 	}
 
 	@Override
+	public Map<Long, Integer> getUsersWithPendingMeeting() {
+		return this.getNbEventsByUser(null, Boolean.FALSE, null);
+	}
+
+	@Override
+	public Map<Long, Integer> getUsersWithPendingMeeting(final Long forUserId) {
+		return this.getNbEventsByUser(null, Boolean.FALSE, forUserId);
+	}
+
+	@Override
 	public Map<Long, Integer> getNbEventsByUser(final String state) {
 		return this.getNbEventsByUser(state, Boolean.FALSE);
 	}
 
 	@Override
-	public Map<Long, Integer> getNbEventsByUser(final String state, final Boolean onlyAsOrganizer) {
+	public Map<Long, Integer> getNbEventsByUser(final String state, final Boolean onlyAsOrganizer,
+			final Long forUserId) {
 		final Map<Long, Integer> users = new HashMap<>();
-
 		final Long currentUser = super.userHelper.getCurrentUserId();
-		LOG.debug("Loading pending meeting users with : " + currentUser + " (Only as organizer : " + onlyAsOrganizer
-				+ ")");
+		Long userId = forUserId;
+
+		if (null == userId) {
+			userId = currentUser;
+		}
+
+		final boolean isMySelf = userId == currentUser;
+		if (!isMySelf) {
+			this.checkPermission(new ReadEventPermission(userId));
+		}
+
+		LOG.debug("Loading pending meeting users with : " + userId + " (Only as organizer : " + onlyAsOrganizer + ")");
 
 		if (!onlyAsOrganizer) {
 			final Object[][] pendingOrganizer = this.getEventsByUser(SQLs.EVENT_SELECT_USERS_EVENT_GUEST, state,
-					currentUser);
+					userId);
 			if (null != pendingOrganizer && pendingOrganizer.length > 0) {
 				for (int i = 0; i < pendingOrganizer.length; i++) {
 					final Long pendingUserOrganizer = (Long) pendingOrganizer[i][1];
@@ -119,7 +138,7 @@ public class EventService extends AbstractCommonService implements IEventService
 			}
 		}
 
-		final Object[][] pendingAttendee = this.getEventsByUser(SQLs.EVENT_SELECT_USERS_EVENT_HOST, state, currentUser);
+		final Object[][] pendingAttendee = this.getEventsByUser(SQLs.EVENT_SELECT_USERS_EVENT_HOST, state, userId);
 
 		if (null != pendingAttendee && pendingAttendee.length > 0) {
 			for (int i = 0; i < pendingAttendee.length; i++) {
@@ -132,9 +151,16 @@ public class EventService extends AbstractCommonService implements IEventService
 			}
 		}
 
-		LOG.debug("List of pending meeting (Only as organizer : " + onlyAsOrganizer + ") users with : " + currentUser
-				+ " : " + users);
+		LOG.debug("List of pending meeting (Only as organizer : " + onlyAsOrganizer + ") users with : " + userId + " : "
+				+ users);
 		return users;
+	}
+
+	@Override
+	public Map<Long, Integer> getNbEventsByUser(final String state, final Boolean onlyAsOrganizer) {
+		final Long currentUser = super.userHelper.getCurrentUserId();
+		return this.getNbEventsByUser(state, onlyAsOrganizer, currentUser);
+
 	}
 
 	private Object[][] getEventsByUser(final String sqlBase, final String state, final Long forUser) {
@@ -159,11 +185,6 @@ public class EventService extends AbstractCommonService implements IEventService
 				CollectionUtility.toArray(eventByUsersBindBases, Object.class));
 
 		return eventByUsers;
-	}
-
-	@Override
-	public Map<Long, Integer> getUsersWithPendingMeeting() {
-		return this.getNbEventsByUser(null);
 	}
 
 	@Override
@@ -366,13 +387,6 @@ public class EventService extends AbstractCommonService implements IEventService
 		}
 		return isRecipient;
 
-	}
-
-	private String getCurrentUserEmail() {
-		final IUserService userService = BEANS.get(IUserService.class);
-		final UserFormData userDetails = userService.getCurrentUserDetails();
-
-		return userDetails.getEmail().getValue();
 	}
 
 	/**

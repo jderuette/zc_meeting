@@ -53,10 +53,12 @@ import org.zeroclick.meeting.client.common.UserAccessRequiredException;
 import org.zeroclick.meeting.client.event.EventTablePage.Table;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
 import org.zeroclick.meeting.shared.Icons;
+import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationCreatedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationModifiedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationCreatedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationModifiedNotification;
+import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.event.AbstractEventNotification;
 import org.zeroclick.meeting.shared.event.CreateEventPermission;
 import org.zeroclick.meeting.shared.event.EventFormData;
@@ -69,7 +71,6 @@ import org.zeroclick.ui.action.menu.AbstractValidateMenu;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;
-import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventAttendee;
 import com.google.api.services.calendar.model.Events;
@@ -270,7 +271,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 						EventTablePage.this.addEventProcessedWithoutDates(eventId);
 					}
 				} catch (final IOException e) {
-					LOG.warn("Canno't auto calculate start/end meeting for row " + row, e);
+					LOG.error("Canno't auto calculate start/end meeting for row " + row, e);
 				}
 			}
 		}
@@ -591,7 +592,8 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				final ZonedDateTime calendareRecommendedDate = this.tryCreateEvent(startDate, nextEndDate,
 						Duration.ofMinutes(selectEventDuration), guestUserId);
 				if (calendareRecommendedDate != null) {
-					return new DateReturn(this.addReactionTime(calendareRecommendedDate), loopInDates);
+					return new DateReturn(this.atZone(this.addReactionTime(calendareRecommendedDate), guestUserId),
+							loopInDates);
 				}
 			}
 
@@ -692,35 +694,33 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					}
 					// The new potential start is the end of the last event
 					final Event lastEvent = this.getLastEvent(allConcurentEvent);
+					final String lastBlockingEventText = googleHelper.aslog(lastEvent);
 					if (LOG.isDebugEnabled()) {
 						final StringBuilder builderDebug = new StringBuilder(100);
-						builderDebug.append("Last (Google) blocking event ").append(googleHelper.aslog(lastEvent));
+						builderDebug.append("Last (Google) blocking event ").append(lastBlockingEventText);
 						LOG.debug(builderDebug.toString());
 					}
 					final ZonedDateTime endLastEvent = googleHelper.fromEventDateTime(lastEvent.getEnd());
 					// TODO Djer13 is required to add 1 minute ?
 					recommendedNewDate = endLastEvent.plus(Duration.ofMinutes(1));
 					LOG.info("Recommanding new search from : " + recommendedNewDate + " (cause : " + userId
-							+ " whole period blocked by " + allConcurentEvent.size() + " event(s)");
+							+ " has whole period blocked by " + allConcurentEvent.size()
+							+ " event(s), last blocking event : " + lastBlockingEventText);
 				}
 			}
 
 			return recommendedNewDate;
 		}
 
-		private String getUserCreateEventCalendar(final Long userId) {
-			// final GoogleApiHelper googleHelper =
-			// BEANS.get(GoogleApiHelper.class);
-			final String calendarId = "primary";
+		private Set<AbstractCalendarConfigurationTableRowData> getUserUsedEventCalendar(final Long userId) {
+			final ICalendarConfigurationService calendarConfigurationService = BEANS
+					.get(ICalendarConfigurationService.class);
 
-			// if (calendarId.equals("primary") && !(this.getCurrentUserId() ==
-			// userId)) {
-			// // other users anno't use "primary" because it's refer to there
-			// // owned primary calendar.
-			// calendarId = googleHelper.getPrimaryToCalendarId(userId);
-			// }
+			final Set<AbstractCalendarConfigurationTableRowData> usedCalendars = calendarConfigurationService
+					.getUsedCalendars(userId);
 
-			return calendarId;
+			return usedCalendars;
+
 		}
 
 		private List<Event> getEvents(final ZonedDateTime startDate, final ZonedDateTime endDate, final Long userId)
@@ -735,33 +735,86 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			}
 
 			// getEvent from start to End for each calendar
-			final String readEventCalendarId = this.getUserCreateEventCalendar(userId);
-			final List<CalendarListEntry> userGCalendars = CollectionUtility
-					.arrayList(gCalendarService.calendarList().get(readEventCalendarId).execute());
+			final Set<AbstractCalendarConfigurationTableRowData> activatedEventCalendars = this
+					.getUserUsedEventCalendar(userId);
+			// final List<CalendarListEntry> userGCalendars = CollectionUtility
+			// .arrayList(gCalendarService.calendarList().get(readEventCalendarId).execute());
+
+			final String myEmail = "djer13@gmail.com";
 
 			final DateTime googledStartDate = googleHelper.toDateTime(startDate);
 			final DateTime googledEndDate = googleHelper.toDateTime(endDate);
 
 			final List<Event> allConcurentEvent = new ArrayList<>();
-			for (final CalendarListEntry calendar : userGCalendars) {
-				final Events events = gCalendarService.events().list(calendar.getId()).setMaxResults(50)
-						.setTimeMin(googledStartDate).setTimeMax(googledEndDate).setOrderBy("startTime")
-						.setSingleEvents(true).execute();
-				allConcurentEvent.addAll(events.getItems());
-			}
+			for (final AbstractCalendarConfigurationTableRowData calendar : activatedEventCalendars) {
+				final String calendarId = calendar.getExternalId();
+				final Boolean processFullDay = calendar.getProcessFullDayEvent();
+				final Boolean processFree = calendar.getProcessFreeEvent();
+				final Boolean processNotRegisteredOn = calendar.getProcessNotRegistredOnEvent();
 
-			final Boolean ignoreFullDayEvents = Boolean.TRUE;
+				final com.google.api.services.calendar.Calendar.Events.List eventQuery = gCalendarService.events()
+						.list(calendarId).setMaxResults(50).setTimeMin(googledStartDate).setTimeMax(googledEndDate)
+						.setSingleEvents(true).setOrderBy("startTime");
 
-			if (!allConcurentEvent.isEmpty() && ignoreFullDayEvents) {
-				final Iterator<Event> itEvents = allConcurentEvent.iterator();
-				while (itEvents.hasNext()) {
-					final Event event = itEvents.next();
-					if (null != event.getStart().getDate()) {
-						LOG.debug("FullDay Event removed : " + googleHelper.aslog(event));
-						itEvents.remove();
+				final Events events = eventQuery.execute();
+				if (null != events.getItems() && events.getItems().size() > 0) {
+					for (final Event event : events.getItems()) {
+						// dispo/busy
+						if (!processFree && "transparent".equals(event.getTransparency())) {
+							LOG.info("Event : " + events.getSummary() + " (" + event.getId()
+									+ ") is ignored because processFree is False in this calendar ("
+									+ calendar.getCalendarConfigurationId() + ") and transparency is : "
+									+ event.getTransparency() + " from calendar : " + calendarId);
+							continue;
+						}
+
+						// event registred on
+						if (!processNotRegisteredOn) {
+							final String organizer = event.getOrganizer().getEmail();
+							final List<EventAttendee> attendees = event.getAttendees();
+							Boolean iAmRegistred = Boolean.FALSE;
+							if (null != attendees && attendees.size() > 0) {
+								for (final EventAttendee attendee : attendees) {
+									if (myEmail.equalsIgnoreCase(attendee.getEmail())) {
+										if ("accepted".equals(attendee.getResponseStatus())) {
+											iAmRegistred = Boolean.TRUE;
+										}
+									}
+								}
+							}
+							if (!(myEmail.equalsIgnoreCase(organizer) || iAmRegistred)) {
+								LOG.info("Event : " + events.getSummary() + " (" + event.getId()
+										+ ") is ignored because processNotRegisteredOn is False in this calendar ("
+										+ calendar.getCalendarConfigurationId() + ") and " + myEmail
+										+ " isn't organizer or hasen't accepted the event from calendar : "
+										+ calendarId);
+								continue;
+							}
+						}
+
+						// full day event
+						if (!processFullDay && null != event.getStart().getDate()) {
+							LOG.debug("FullDay Event from calendar : " + calendarId + " ignored : "
+									+ googleHelper.aslog(event));
+							continue;
+						}
+
+						allConcurentEvent.add(event);
 					}
 				}
 			}
+
+			// final Boolean ignoreFullDayEvents = Boolean.TRUE;
+			//
+			// if (!allConcurentEvent.isEmpty() && ignoreFullDayEvents) {
+			// final Iterator<Event> itEvents = allConcurentEvent.iterator();
+			// while (itEvents.hasNext()) {
+			// final Event event = itEvents.next();
+			//
+			// itEvents.remove();
+			// }
+			// }
+			// }
 
 			return allConcurentEvent;
 		}
@@ -862,7 +915,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			}
 
 			final String EnvDisplay = new ApplicationEnvProperty().displayAsText();
-			final String createdEventCalendarId = this.getUserCreateEventCalendar(forUserId);
+			final String createdEventCalendarId = googleHelper.getUserCreateEventCalendar(forUserId);
 
 			final Event newEvent = new Event();
 			newEvent.setStart(googleHelper.toEventDateTime(startDate));
@@ -1146,8 +1199,10 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 							eventGuest = userService.getUserIdByEmail(eventGuestEmail);
 						}
 
+						final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+
 						final Event externalGuestEvent = Table.this.acceptCreatedEvent(externalOrganizerEvent,
-								Table.this.getUserCreateEventCalendar(eventHeldBy), eventGuest, eventGuestEmail,
+								googleHelper.getUserCreateEventCalendar(eventHeldBy), eventGuest, eventGuestEmail,
 								eventHeldBy);
 						if (null != externalGuestEvent) {
 							Table.this.getExternalIdRecipientColumn().setValue(Table.this.getSelectedRow(),

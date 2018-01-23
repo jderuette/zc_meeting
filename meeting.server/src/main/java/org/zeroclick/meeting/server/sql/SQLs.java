@@ -704,14 +704,15 @@ public interface SQLs {
 	String CALENDAR_CONFIG_FILTER_USER_ID = " AND user_id = :userId";
 	String CALENDAR_CONFIG_FILTER_EXTERNAL_ID = " AND external_id = :externalId";
 	String CALENDAR_CONFIG_FILTER_ADD_EVENT = " AND add_event_to_calendar='true'";
+	String CALENDAR_CONFIG_FILTER_PROCESSED = " AND process = 'true'";
 
-	String CALENDAR_CONFIG_SELECT = "select agenda_config_id, external_id, name, main, read_only, process, add_event_to_calendar, process_full_day_event, process_busy_event, process_not_registred_on_event, oAuth_credential_id FROM "
+	String CALENDAR_CONFIG_SELECT = "select agenda_config_id, external_id, name, main, read_only, process, add_event_to_calendar, process_full_day_event, process_busy_event, process_not_registred_on_event, oAuth_credential_id, user_id FROM "
 			+ PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME + CALENDAR_CONFIG_JOIN_OAUTH;
 
 	String CALENDAR_CONFIG_SELECT_ID = "select agenda_config_id FROM "
 			+ PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME + CALENDAR_CONFIG_JOIN_OAUTH;
 
-	String CALENDAR_CONFIG_SELECT_INTO = " INTO :calendarConfigurationId, :externalId, :name, :main, :readOnly, :process, :addEventToCalendar, :processFullDayEvent, :processFreeEvent, :processNotRegistredOnEvent, :oAuthCredentialId";
+	String CALENDAR_CONFIG_SELECT_INTO = " INTO :calendarConfigurationId, :externalId, :name, :main, :readOnly, :process, :addEventToCalendar, :processFullDayEvent, :processFreeEvent, :processNotRegistredOnEvent, :oAuthCredentialId, :userId";
 
 	String CALENDAR_CONFIG_SELECT_OWNER = "SELECT user_id FROM " + PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME
 			+ CALENDAR_CONFIG_JOIN_OAUTH + " WHERE agenda_config_id=:calendarConfigurationId";

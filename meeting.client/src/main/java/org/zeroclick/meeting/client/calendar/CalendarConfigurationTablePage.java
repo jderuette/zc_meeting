@@ -16,10 +16,8 @@ public class CalendarConfigurationTablePage extends AbstractCalendarConfiguratio
 
 	@Override
 	protected void execLoadData(final SearchFilter filter) {
-		// Data loaded by the Table itself
-		// this.importPageData(
-		// BEANS.get(ICalendarConfigurationService.class).getCalendarConfigurationTableData(filter,
-		// Boolean.TRUE));
+		// manual load, to allow correct handle of refresh (F5)
+		this.getTable().loadData();
 	}
 
 	public class Table extends AbstractCalendarConfigurationTablePage<Table>.Table {
@@ -27,6 +25,11 @@ public class CalendarConfigurationTablePage extends AbstractCalendarConfiguratio
 		@Override
 		protected boolean getConfiguredDisplayAllUsers() {
 			return true;
+		}
+
+		@Override
+		protected boolean getConfiguredAutoLoad() {
+			return false;
 		}
 	}
 }

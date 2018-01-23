@@ -20,6 +20,7 @@ import org.zeroclick.meeting.client.calendar.CalendarsConfigurationForm.MainBox.
 import org.zeroclick.meeting.client.calendar.CalendarsConfigurationForm.MainBox.CloseButton;
 import org.zeroclick.meeting.client.calendar.CalendarsConfigurationForm.MainBox.SaveButton;
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationFormData;
+import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationFormData.CalendarConfigTable.CalendarConfigTableRowData;
 import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 
 @FormData(value = CalendarsConfigurationFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
@@ -148,21 +149,51 @@ public class CalendarsConfigurationForm extends AbstractForm implements IPageFor
 		}
 
 		@Override
+		protected boolean execValidate() {
+			return CalendarsConfigurationForm.this.getCalendarConfigTableField().getTable().canStore();
+		}
+
+		@Override
 		protected void execStore() {
-			if (CalendarsConfigurationForm.this.getCalendarConfigTableField().getTable().canStore()) {
-				final List<ITableRow> modifiedRows = CalendarsConfigurationForm.this.getCalendarConfigTableField()
-						.getTable().getUpdatedRows();
-				if (modifiedRows.size() > 0) {
-					final ICalendarConfigurationService calendarConfigurationService = BEANS
-							.get(ICalendarConfigurationService.class);
+			final CalendarsConfigurationFormData formData = new CalendarsConfigurationFormData();
+			CalendarsConfigurationForm.this.exportFormData(formData);
 
-					for (final ITableRow row : modifiedRows) {
-
-						calendarConfigurationService.store(CalendarsConfigurationForm.this.getCalendarConfigTableField()
-								.getTable().getRowAsFormData(row));
+			final List<ITableRow> modifiedRows = CalendarsConfigurationForm.this.getCalendarConfigTableField()
+					.getTable().getUpdatedRows();
+			if (modifiedRows.size() > 0) {
+				final ICalendarConfigurationService calendarConfigurationService = BEANS
+						.get(ICalendarConfigurationService.class);
+				// remove unmodified rows, to avoid useless work on server side
+				final CalendarConfigTableRowData[] exportedRows = formData.getCalendarConfigTable().getRows();
+				for (final CalendarConfigTableRowData row : exportedRows) {
+					if (!this.isModified(row, modifiedRows)) {
+						formData.getCalendarConfigTable().removeRow(row);
 					}
 				}
+
+				calendarConfigurationService.store(formData);
+
+				// for (final ITableRow row : modifiedRows) {
+				//
+				// calendarConfigurationService.store(CalendarsConfigurationForm.this.getCalendarConfigTableField()
+				// .getTable().getRowAsFormData(row));
+				// }
 			}
+		}
+
+		private Boolean isModified(final CalendarConfigTableRowData row, final List<ITableRow> modifiedRows) {
+			final Long calendarConfigurationId = row.getCalendarConfigurationId();
+			return this.contains(calendarConfigurationId, modifiedRows);
+		}
+
+		private Boolean contains(final Long calendarConfigurationId, final List<ITableRow> modifiedRows) {
+			for (final ITableRow row : modifiedRows) {
+				if (CalendarsConfigurationForm.this.getCalendarConfigTableField().getTable()
+						.getCalendarConfigurationIdColumn().getValue(row) == calendarConfigurationId) {
+					return Boolean.TRUE;
+				}
+			}
+			return Boolean.FALSE;
 		}
 	}
 

@@ -1,5 +1,6 @@
 package org.zeroclick.meeting.server.calendar;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,7 +20,10 @@ import org.zeroclick.meeting.shared.calendar.CalendarConfigurationCreatedNotific
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationModifiedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationTablePageData;
+import org.zeroclick.meeting.shared.calendar.CalendarConfigurationTablePageData.CalendarConfigurationTableRowData;
+import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationCreatedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationFormData;
+import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationFormData.CalendarConfigTable.CalendarConfigTableRowData;
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationModifiedNotification;
 import org.zeroclick.meeting.shared.calendar.CreateCalendarConfigurationPermission;
 import org.zeroclick.meeting.shared.calendar.DeleteApiPermission;
@@ -85,6 +89,11 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 
 	@Override
 	public CalendarConfigurationFormData create(final CalendarConfigurationFormData formData) {
+		return this.create(formData, Boolean.TRUE);
+	}
+
+	private CalendarConfigurationFormData create(final CalendarConfigurationFormData formData,
+			final Boolean sendNotification) {
 		LOG.info("Creating new Calendar Configuration for API Id : " + formData.getOAuthCredentialId().getValue()
 				+ " for calendar Key : " + formData.getExternalId().getValue() + " for User ID : "
 				+ formData.getUserId().getValue());
@@ -96,7 +105,9 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		}
 		SQL.insert(SQLs.CALENDAR_CONFIG_INSERT, formData);
 
-		this.sendCreatedNotifications(formData);
+		if (sendNotification) {
+			this.sendCreatedNotifications(formData);
+		}
 
 		return this.store(formData, Boolean.TRUE);
 	}
@@ -129,7 +140,7 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 	@Override
 	public CalendarConfigurationFormData load(final CalendarConfigurationFormData formData) {
 		final Long apiId = formData.getOAuthCredentialId().getValue();
-		// apiId is optional, if provides check permission BEFORE request
+		// apiId is optional, if provided check permission BEFORE request
 		if (null != formData.getOAuthCredentialId().getValue()) {
 			this.checkPermission(new ReadCalendarConfigurationPermission(apiId));
 		}
@@ -139,10 +150,26 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 
 		SQL.selectInto(sql, formData);
 
-		// check permission, required if no apiId provides in input data, else
+		// check permission, required if no apiId provided in input data, else
 		// double check (also required if apiId provided is not the one to the
 		// clalendarConfigId)
 		this.checkPermission(new ReadCalendarConfigurationPermission(formData.getOAuthCredentialId().getValue()));
+		return formData;
+	}
+
+	@Override
+	public CalendarsConfigurationFormData store(final CalendarsConfigurationFormData formData) {
+
+		final CalendarConfigTableRowData[] rows = formData.getCalendarConfigTable().getRows();
+
+		for (final CalendarConfigTableRowData row : rows) {
+			this.checkPermission(new UpdateCalendarConfigurationPermission(row.getOAuthCredentialId()));
+			SQL.insert(SQLs.CALENDAR_CONFIG_UPDATE + SQLs.GENERIC_WHERE_FOR_SECURE_AND + SQLs.CALENDAR_CONFIG_FILTER_ID
+					+ SQLs.CALENDAR_CONFIG_FILTER_EXTERNAL_ID, row);
+		}
+
+		this.sendModifiedNotifications(formData);
+
 		return formData;
 	}
 
@@ -190,6 +217,7 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		LOG.info("Auto importing calendars for User");
 		Long lastUserId = null;
 		Boolean atLeastOneCalendarConfigModified = Boolean.FALSE;
+		Boolean atLeastOneCalendarConfigAdded = Boolean.FALSE;
 		for (final String calendarKey : calendars.keySet()) {
 			final AbstractCalendarConfigurationTableRowData calendarData = calendars.get(calendarKey);
 			final CalendarConfigurationFormData data = new CalendarConfigurationFormData();
@@ -208,7 +236,8 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 
 			final Long existingCalendarConfigId = this.getCalendarConfigId(data);
 			if (null == existingCalendarConfigId) {
-				this.create(data);
+				this.create(data, Boolean.FALSE);
+				atLeastOneCalendarConfigAdded = Boolean.TRUE;
 			} else {
 				final CalendarConfigurationFormData formData = new CalendarConfigurationFormData();
 
@@ -243,8 +272,11 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		}
 
 		// FIXME Djer13 handle deletes calendars (already created in DB but
-		// soen't exist anymore in calendars Provider)
+		// doen't exist anymore in calendars Provider)
 
+		if (atLeastOneCalendarConfigAdded) {
+			this.sendCreatedNotifications(lastUserId);
+		}
 		if (atLeastOneCalendarConfigModified) {
 			this.sendModifiedNotifications(lastUserId);
 		}
@@ -258,7 +290,7 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		final Boolean nameChanged = newCalendarData.getName().equals(existingCalendarConfig.getName());
 		final Boolean readOnlyChanged = newCalendarData.getReadOnly().equals(existingCalendarConfig.getReadOnly());
 
-		return externalIdChanged || nameChanged || nameChanged;
+		return externalIdChanged || nameChanged || readOnlyChanged;
 	}
 
 	private Long getCalendarConfigId(final CalendarConfigurationFormData formData) {
@@ -289,12 +321,36 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		return calendarConfigId;
 	}
 
+	@Override
+	public Set<AbstractCalendarConfigurationTableRowData> getUsedCalendars(final Long userId) {
+		final CalendarConfigurationTablePageData pageData = new CalendarConfigurationTablePageData();
+		final Set<AbstractCalendarConfigurationTableRowData> configuredCalendars = new HashSet<>();
+
+		final String sql = SQLs.CALENDAR_CONFIG_PAGE_SELECT + SQLs.CALENDAR_CONFIG_FILTER_CURRENT_USER
+				+ SQLs.CALENDAR_CONFIG_FILTER_PROCESSED + SQLs.CALENDAR_CONFIG_PAGE_SELECT_INTO;
+
+		SQL.selectInto(sql, new NVPair("page", pageData), new NVPair("currentUser", userId));
+
+		if (pageData.getRowCount() > 0) {
+			for (final CalendarConfigurationTableRowData calendarConfig : pageData.getRows()) {
+				if (ACCESS.check(new ReadCalendarConfigurationPermission(calendarConfig.getOAuthCredentialId()))) {
+					configuredCalendars.add(calendarConfig);
+				} else {
+					LOG.warn("Calendar configuration : " + calendarConfig.getCalendarConfigurationId()
+							+ " ignored in configured list because current user don't have Read permission");
+				}
+			}
+		}
+
+		return configuredCalendars;
+	}
+
 	private void sendModifiedNotifications(final CalendarsConfigurationFormData formData) {
 		if (formData.getCalendarConfigTable().getRowCount() > 0) {
 			this.sendModifiedNotifications(formData.getCalendarConfigTable().getRows()[0].getUserId(), formData);
 		} else {
 			LOG.warn(
-					"Cannot send user CalendarsConfigurationModifiedNotification because no User ID (no calendars modified");
+					"Cannot send user CalendarsConfigurationModifiedNotification because no User ID (no calendars modified)");
 		}
 	}
 
@@ -316,6 +372,21 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		final Set<String> notifiedUsers = this.buildNotifiedUsers(formData.getUserId().getValue(), Boolean.TRUE);
 		BEANS.get(ClientNotificationRegistry.class).putForUsers(notifiedUsers,
 				new CalendarConfigurationModifiedNotification(formData));
+	}
+
+	private void sendCreatedNotifications(final Long ownerUserId) {
+		final CalendarsConfigurationFormData formData = new CalendarsConfigurationFormData();
+		formData.getCalendarConfigTable().addRow();
+		formData.getCalendarConfigTable().getRows()[0].setUserId(ownerUserId);
+
+		this.sendCreatedNotifications(ownerUserId, formData);
+
+	}
+
+	private void sendCreatedNotifications(final Long ownerUserId, final CalendarsConfigurationFormData formData) {
+		final Set<String> notifiedUsers = this.buildNotifiedUsers(ownerUserId, Boolean.TRUE);
+		BEANS.get(ClientNotificationRegistry.class).putForUsers(notifiedUsers,
+				new CalendarsConfigurationCreatedNotification(formData));
 	}
 
 	private void sendCreatedNotifications(final CalendarConfigurationFormData formData) {
@@ -343,4 +414,15 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		return false;
 	}
 
+	@Override
+	public boolean isInvolved(final Long apiCredentailId) {
+		final Long apiCredentialOwner = this.getOwner(apiCredentailId);
+
+		if (null == apiCredentialOwner) {
+			LOG.error("apiCredentailId " + apiCredentailId + " as NO owner (user_id) on his OAuth related data ");
+			return false;
+		}
+		final Set<Long> relatedUserId = this.getUserWithPendingEvent();
+		return relatedUserId.contains(apiCredentialOwner);
+	}
 }

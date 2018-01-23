@@ -467,8 +467,13 @@ public class RejectEventForm extends AbstractForm {
 							LOG.info(this.buildRejectLog("Deleting", RejectEventForm.this.getEventId(),
 									RejectEventForm.this.getExternalIdOrganizer(),
 									RejectEventForm.this.getOrganizer()));
+							final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+
 							ModifyHandler.this.hostGCalSrv.events()
-									.delete("primary", RejectEventForm.this.getExternalIdOrganizer()).execute();
+									.delete(googleHelper
+											.getUserCreateEventCalendar(RejectEventForm.this.getOrganizer()),
+											RejectEventForm.this.getExternalIdOrganizer())
+									.execute();
 						} catch (final IOException e) {
 							LOG.error(this.buildRejectLog("Error while deleting", RejectEventForm.this.getEventId(),
 									RejectEventForm.this.getExternalIdOrganizer(), RejectEventForm.this.getOrganizer()),
@@ -492,7 +497,7 @@ public class RejectEventForm extends AbstractForm {
 							.append(externalId).append("for user : ").append(userId);
 					return builder.toString();
 				}
-			}, Jobs.newInput().withName("Refusing event {0}", RejectEventForm.this.getEventId())
+			}, Jobs.newInput().withName("Refusing event {}", RejectEventForm.this.getEventId())
 					.withRunContext(ClientRunContexts.copyCurrent()).withThreadName("Refusing event"));
 		}
 

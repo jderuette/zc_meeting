@@ -194,7 +194,7 @@ public class Desktop extends AbstractDesktop {
 			@Override
 			@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 			public void run() throws Exception {
-				LOG.debug("Adding desktop notification : " + status.getMessage());
+				LOG.debug("Adding desktop notification : " + status.getMessage() + "(" + status.getClass() + ")");
 				final DesktopNotification desktopNotification = new DesktopNotification(status, duration, closable);
 				ClientSession.get().getDesktop().addNotification(desktopNotification);
 			}
