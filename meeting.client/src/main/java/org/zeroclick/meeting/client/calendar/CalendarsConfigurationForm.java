@@ -79,7 +79,7 @@ public class CalendarsConfigurationForm extends AbstractForm implements IPageFor
 
 			@Override
 			protected int getConfiguredGridH() {
-				return 2;
+				return 4;
 			}
 
 			@Override
@@ -95,6 +95,11 @@ public class CalendarsConfigurationForm extends AbstractForm implements IPageFor
 			@Override
 			protected boolean getConfiguredFocusable() {
 				return false;
+			}
+
+			@Override
+			protected double getConfiguredGridWeightY() {
+				return 0.2;
 			}
 		}
 
@@ -117,13 +122,18 @@ public class CalendarsConfigurationForm extends AbstractForm implements IPageFor
 			}
 
 			@Override
-			protected boolean getConfiguredEnabled() {
-				return true;
+			protected int getConfiguredGridH() {
+				return 5;
 			}
 
 			@Override
-			protected int getConfiguredGridH() {
-				return 6;
+			protected double getConfiguredGridWeightY() {
+				return 0.9;
+			}
+
+			@Override
+			protected boolean getConfiguredEnabled() {
+				return true;
 			}
 
 			public class Table extends AbstractCalendarConfigurationTable {

@@ -228,9 +228,9 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 			data.getMain().setValue(calendarData.getMain());
 			data.getAddEventToCalendar().setValue(calendarData.getMain());
 			data.getOAuthCredentialId().setValue(calendarData.getOAuthCredentialId());
-			data.getProcessFreeEvent().setValue(Boolean.TRUE);
-			data.getProcessFullDayEvent().setValue(Boolean.FALSE);
-			data.getProcessNotRegistredOnEvent().setValue(Boolean.TRUE);
+			data.getProcessFullDayEvent().setValue(Boolean.TRUE);
+			data.getProcessFreeEvent().setValue(Boolean.FALSE);
+			data.getProcessNotRegistredOnEvent().setValue(Boolean.FALSE);
 
 			lastUserId = calendarData.getUserId();
 

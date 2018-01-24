@@ -113,6 +113,10 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 
 			final AutoImportMyCalendarsMenu autoImportMenu = this.getMenuByClass(AutoImportMyCalendarsMenu.class);
 			autoImportMenu.setVisible(false);
+
+			final EditCalendarCondfigMenu editCalendarConfigurationMenu = this
+					.getMenuByClass(EditCalendarCondfigMenu.class);
+			editCalendarConfigurationMenu.setVisible(true);
 		}
 	}
 
@@ -208,6 +212,11 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 				}
 			});
 			form.startModify();
+		}
+
+		@Override
+		protected boolean getConfiguredVisible() {
+			return false;
 		}
 	}
 
@@ -492,12 +501,15 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 			final List<ITableRow> rows = AbstractCalendarConfigurationTable.this.getRows();
 			final Long checkedCalendarId = AbstractCalendarConfigurationTable.this.getCalendarConfigurationIdColumn()
 					.getValue(row);
+			final Long userId = AbstractCalendarConfigurationTable.this.getUserIdColumn().getValue(row);
 
 			if (null != rows) {
 				for (final ITableRow aRow : rows) {
 					final Long aRowId = AbstractCalendarConfigurationTable.this.getCalendarConfigurationIdColumn()
 							.getValue(aRow);
-					if (aRowId != checkedCalendarId
+					final Long aRowUserId = AbstractCalendarConfigurationTable.this.getUserIdColumn().getValue(aRow);
+
+					if (aRowId != checkedCalendarId && aRowUserId == userId
 							&& AbstractCalendarConfigurationTable.this.getAddEventToCalendarColumn().getValue(aRow)) {
 						LOG.debug("Unchecking addEventToCalendar for calendar configuration ID : " + aRowId);
 						AbstractCalendarConfigurationTable.this.getAddEventToCalendarColumn().setValue(aRow, false);
@@ -523,6 +535,11 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 		protected int getConfiguredWidth() {
 			return 150;
 		}
+
+		@Override
+		protected String getConfiguredHeaderTooltipText() {
+			return TEXTS.get("zc.meeting.calendar.processFullDayEvent.tooltip");
+		}
 	}
 
 	@Order(9000)
@@ -541,6 +558,11 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 		protected int getConfiguredWidth() {
 			return 150;
 		}
+
+		@Override
+		protected String getConfiguredHeaderTooltipText() {
+			return TEXTS.get("zc.meeting.calendar.processFreeEvent.tooltip");
+		}
 	}
 
 	@Order(10000)
@@ -558,6 +580,11 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 		@Override
 		protected int getConfiguredWidth() {
 			return 150;
+		}
+
+		@Override
+		protected String getConfiguredHeaderTooltipText() {
+			return TEXTS.get("zc.meeting.calendar.processNotRegisteredOnEvent.tooltip");
 		}
 	}
 

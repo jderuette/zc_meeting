@@ -1,5 +1,7 @@
 package org.zeroclick.configuration.onboarding;
 
+import java.util.Map;
+
 import org.eclipse.scout.rt.client.dto.FormData;
 import org.eclipse.scout.rt.client.ui.form.AbstractForm;
 import org.eclipse.scout.rt.client.ui.form.AbstractFormHandler;
@@ -27,7 +29,9 @@ import org.zeroclick.configuration.shared.onboarding.OnBoardingUserFormData;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
+import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
+import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 
 @FormData(value = OnBoardingUserFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class OnBoardingUserForm extends AbstractForm {
@@ -255,6 +259,7 @@ public class OnBoardingUserForm extends AbstractForm {
 					OnBoardingUserForm.this.setAskIfNeedSave(Boolean.FALSE);
 				}
 				OnBoardingUserForm.this.getLanguageField().askToReloadSession();
+
 			}
 		}
 	}
@@ -267,6 +272,16 @@ public class OnBoardingUserForm extends AbstractForm {
 					final ApiFormData eventForm = notification.getApiForm();
 					LOG.debug("Created Api prepare to modify OnBoardingForm state : " + eventForm.getUserId());
 					OnBoardingUserForm.this.getOkButton().setActive();
+
+					// auto import calendar
+					final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+					final Map<String, AbstractCalendarConfigurationTableRowData> calendars = googleHelper
+							.getCalendars();
+
+					final ICalendarConfigurationService calendarConfigurationService = BEANS
+							.get(ICalendarConfigurationService.class);
+					calendarConfigurationService.autoConfigure(calendars);
+
 				} catch (final RuntimeException e) {
 					LOG.error("Could not handle new api. (" + this.getClass().getName() + ")", e);
 				}
