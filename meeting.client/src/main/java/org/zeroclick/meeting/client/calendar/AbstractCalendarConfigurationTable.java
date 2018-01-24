@@ -505,13 +505,15 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 
 			if (null != rows) {
 				for (final ITableRow aRow : rows) {
-					final Long aRowId = AbstractCalendarConfigurationTable.this.getCalendarConfigurationIdColumn()
-							.getValue(aRow);
+					final Long aRowCalendarConfigId = AbstractCalendarConfigurationTable.this
+							.getCalendarConfigurationIdColumn().getValue(aRow);
 					final Long aRowUserId = AbstractCalendarConfigurationTable.this.getUserIdColumn().getValue(aRow);
+					final boolean isRowChecked = AbstractCalendarConfigurationTable.this.getAddEventToCalendarColumn()
+							.getValue(aRow);
 
-					if (aRowId != checkedCalendarId && aRowUserId == userId
-							&& AbstractCalendarConfigurationTable.this.getAddEventToCalendarColumn().getValue(aRow)) {
-						LOG.debug("Unchecking addEventToCalendar for calendar configuration ID : " + aRowId);
+					if (aRowCalendarConfigId != checkedCalendarId && aRowUserId.equals(userId) && isRowChecked) {
+						LOG.debug("Unchecking addEventToCalendar for calendar configuration ID : "
+								+ aRowCalendarConfigId);
 						AbstractCalendarConfigurationTable.this.getAddEventToCalendarColumn().setValue(aRow, false);
 					}
 				}

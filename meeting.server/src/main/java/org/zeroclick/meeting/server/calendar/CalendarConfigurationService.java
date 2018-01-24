@@ -226,6 +226,7 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 			data.getName().setValue(calendarData.getName());
 			data.getProcess().setValue(calendarData.getMain());
 			data.getMain().setValue(calendarData.getMain());
+			data.getReadOnly().setValue(calendarData.getReadOnly());
 			data.getAddEventToCalendar().setValue(calendarData.getMain());
 			data.getOAuthCredentialId().setValue(calendarData.getOAuthCredentialId());
 			data.getProcessFullDayEvent().setValue(Boolean.TRUE);
@@ -286,11 +287,12 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 			final AbstractCalendarConfigurationTableRowData newCalendarData,
 			final CalendarConfigurationFormData existingCalendarConfig) {
 		final Boolean externalIdChanged = newCalendarData.getExternalId()
-				.equals(existingCalendarConfig.getExternalId());
-		final Boolean nameChanged = newCalendarData.getName().equals(existingCalendarConfig.getName());
-		final Boolean readOnlyChanged = newCalendarData.getReadOnly().equals(existingCalendarConfig.getReadOnly());
+				.equals(existingCalendarConfig.getExternalId().getValue());
+		final Boolean nameChanged = newCalendarData.getName().equals(existingCalendarConfig.getName().getValue());
+		final Boolean readOnlyChanged = newCalendarData.getReadOnly()
+				.equals(existingCalendarConfig.getReadOnly().getValue());
 
-		return externalIdChanged || nameChanged || readOnlyChanged;
+		return !externalIdChanged || !nameChanged || !readOnlyChanged;
 	}
 
 	private Long getCalendarConfigId(final CalendarConfigurationFormData formData) {
