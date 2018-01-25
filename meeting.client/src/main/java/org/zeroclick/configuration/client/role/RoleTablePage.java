@@ -91,7 +91,7 @@ public class RoleTablePage extends AbstractPageWithTable<Table> {
 		}
 
 		@Order(3000)
-		public class DeleteMenu extends AbstractDeleteMenu {
+		public class DeleteRoleMenu extends AbstractDeleteMenu {
 			@Override
 			protected String getConfiguredText() {
 				return TEXTS.get("zc.user.role.delete");

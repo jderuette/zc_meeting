@@ -122,6 +122,12 @@ public class PatchConfigureCalendar extends AbstractDataPatcher {
 		LOG.info("create a default value for TOS URL");
 		appParamsService.create(IAppParamsService.APP_PARAM_KEY_TOS_URL, "https://www.elycoop.fr/", "contract");
 
+		LOG.info("Add missing roles to admin");
+
+		this.getDatabaseHelper().addAdminPermission(
+				"org.zeroclick.configuration.shared.role.ReadAssignToRolePermission",
+				ReadAssignSubscriptionToUserPermission.LEVEL_ALL);
+
 	}
 
 	@Override

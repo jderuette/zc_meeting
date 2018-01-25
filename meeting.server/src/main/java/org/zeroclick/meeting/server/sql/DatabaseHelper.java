@@ -44,7 +44,7 @@ public class DatabaseHelper {
 	}
 
 	public static DatabaseHelper get() {
-		if (null == instance) {
+ 		if (null == instance) {
 			instance = new DatabaseHelper();
 		}
 		return instance;

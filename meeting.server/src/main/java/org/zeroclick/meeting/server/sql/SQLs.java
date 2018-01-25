@@ -185,6 +185,7 @@ public interface SQLs {
 	String ROLE_UPDATE_WITHOUT_TYPE = "UPDATE ROLE SET name=:roleName WHERE role_id=:roleId";
 
 	String ROLE_SELECT = "SELECT role_id, name, type FROM ROLE WHERE 1=1 AND role_id = :roleId";
+	String ROLE_SELECT_WITHOUT_TYPE = "SELECT role_id, name FROM ROLE WHERE 1=1 AND role_id = :roleId";
 	String ROLE_SELECT_BY_NAME_WITHOUT_TYPE = "SELECT role_id, name FROM ROLE WHERE 1=1 AND name = :roleName";
 	String ROLE_SELECT_BY_NAME = "SELECT role_id, name, type FROM ROLE WHERE 1=1 AND name = :roleName";
 	String ROLE_SELECT_INTO_WITHOUT_TYPE = " INTO :roleId, :roleName";
@@ -345,6 +346,8 @@ public interface SQLs {
 
 	String USER_ROLE_INSERT = "INSERT INTO USER_ROLE (user_id, role_id) VALUES (:userId, :{rolesBox})";
 	String USER_ROLE_INSERT_WITH_START_DATE = "INSERT INTO USER_ROLE (user_id, role_id, start_date) VALUES (:userId, :{rolesBox}, :{startDate})";
+
+	String USER_ROLE_UPDATE_MASS_CHANGE_ROLE_ID = "UPDATE USER_ROLE SET role_id=:newRoleId WHERE role_id=:oldRoleId";
 
 	// Avoid deleting role of kind "subscription" !!
 
