@@ -116,7 +116,7 @@ public class EventService extends AbstractCommonService implements IEventService
 			userId = currentUser;
 		}
 
-		final boolean isMySelf = userId == currentUser;
+		final boolean isMySelf = userId.equals(currentUser);
 		if (!isMySelf) {
 			this.checkPermission(new ReadEventPermission(userId));
 		}
