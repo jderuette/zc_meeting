@@ -668,6 +668,12 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 							LOG.debug("Calendars Configurations modified prepare to refresh event ("
 									+ this.getClass().getName() + ") : (first UserId)" + userId);
 
+							if (Table.this.isMySelf(userId)) {
+								final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+								notificationHelper.addProccessedNotification(
+										"zc.meeting.calendar.notification.modifiedCalendarsConfig");
+							}
+
 							Table.this.refreshAutoFillDate();
 
 						} catch (final RuntimeException e) {
@@ -733,6 +739,12 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 							}
 							LOG.debug("Calendars Configurations created prepare to refresh event ("
 									+ this.getClass().getName() + ") : " + userId);
+
+							if (Table.this.isMySelf(userId)) {
+								final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+								notificationHelper.addProccessedNotification(
+										"zc.meeting.calendar.notification.createdCalendarsConfig");
+							}
 
 							Table.this.refreshAutoFillDate();
 
