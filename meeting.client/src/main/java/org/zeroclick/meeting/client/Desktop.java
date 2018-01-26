@@ -3,6 +3,7 @@ package org.zeroclick.meeting.client;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.scout.rt.client.context.ClientRunContexts;
@@ -54,8 +55,12 @@ import org.zeroclick.meeting.client.calendar.CalendarsConfigurationForm;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
 import org.zeroclick.meeting.client.meeting.MeetingOutline;
 import org.zeroclick.meeting.shared.Icons;
+import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
+import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
+import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.CreateApiPermission;
+import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.calendar.ReadApiPermission;
 import org.zeroclick.meeting.shared.event.ReadEventPermission;
 import org.zeroclick.meeting.shared.security.AccessControlService;
@@ -128,7 +133,8 @@ public class Desktop extends AbstractDesktop {
 		final AccessControlService acs = BEANS.get(AccessControlService.class);
 		final Long currentUserId = acs.getZeroClickUserIdOfCurrentSubject();
 		final String currentUserTimeZone = userService.getUserTimeZone(currentUserId);
-		if (null == currentUserTimeZone || !BEANS.get(GoogleApiHelper.class).isCalendarConfigured()) {
+		final Boolean isCalendarConfigured = BEANS.get(GoogleApiHelper.class).isCalendarConfigured();
+		if (null == currentUserTimeZone || !isCalendarConfigured) {
 			final OnBoardingUserForm form = new OnBoardingUserForm();
 			form.getUserIdField().setValue(currentUserId);
 			form.setEnabledPermission(new UpdateUserPermission(currentUserId));
@@ -143,6 +149,30 @@ public class Desktop extends AbstractDesktop {
 			validateCpsForm.startReValidate(currentUserId);
 			// accepted CPS/withdraw and respective Date are let empty to force
 			// User re-check
+		}
+
+		// Calendars configuration in 0Click
+		final ICalendarConfigurationService calendarConfigurationService = BEANS
+				.get(ICalendarConfigurationService.class);
+
+		final CalendarConfigurationFormData formData = new CalendarConfigurationFormData();
+		formData.getUserId().setValue(currentUserId);
+		final CalendarsConfigurationFormData configuredCalendars = calendarConfigurationService
+				.getCalendarConfigurationTableData(false);
+
+		if (isCalendarConfigured && (null == configuredCalendars
+				|| null != configuredCalendars && configuredCalendars.getCalendarConfigTable() != null
+						&& configuredCalendars.getCalendarConfigTable().getRowCount() == 0)) {
+			LOG.info("Auto-importing user Calendars for user : " + currentUserId);
+
+			try {
+				final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+				final Map<String, AbstractCalendarConfigurationTableRowData> calendars = googleHelper.getCalendars();
+
+				calendarConfigurationService.autoConfigure(calendars);
+			} catch (final Exception ex) {
+				LOG.error("Error while importing (Google) calendar for user Id : " + currentUserId, ex);
+			}
 		}
 	}
 
