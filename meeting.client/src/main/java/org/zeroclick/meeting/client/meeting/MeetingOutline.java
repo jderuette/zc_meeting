@@ -7,13 +7,9 @@ import org.eclipse.scout.rt.client.ui.desktop.outline.pages.IPage;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
-import org.zeroclick.common.desktop.pages.FormPage;
-import org.zeroclick.configuration.client.slot.SlotAdminTablePage;
-import org.zeroclick.configuration.client.slot.SlotForm;
 import org.zeroclick.configuration.client.slot.SlotTablePage;
 import org.zeroclick.configuration.shared.slot.ReadSlotPermission;
-import org.zeroclick.meeting.client.calendar.CalendarConfigurationTablePage;
-import org.zeroclick.meeting.client.event.EventAdminTablePage;
+import org.zeroclick.meeting.client.admin.EventAdminNodePage;
 import org.zeroclick.meeting.client.event.EventAskedTablePage;
 import org.zeroclick.meeting.client.event.EventProcessedTablePage;
 import org.zeroclick.meeting.client.event.EventTablePage;
@@ -56,40 +52,17 @@ public class MeetingOutline extends AbstractOutline {
 		eventAskedTablePage.load();
 		eventAskedTablePage.setVisibleGranted(isEventUser);
 
-		final EventAdminTablePage eventAdminTablePage = new EventAdminTablePage();
-		eventAdminTablePage.setVisibleGranted(isEventAdmin);
-
 		final SlotTablePage slotTablePage = new SlotTablePage();
 		slotTablePage.setVisibleGranted(isSlotUser);
 
-		final SlotAdminTablePage slotAdminTablePage = new SlotAdminTablePage();
-		slotAdminTablePage.setVisibleGranted(isSlotAdmin);
-
-		// TODO Djer13 try to directly use the "configuredTitle"'s form
-		final FormPage slotForm = new FormPage(SlotForm.class, Boolean.TRUE,
-				TEXTS.get("zc.meeting.slot.config") + " (tree)");
-		slotForm.setVisibleGranted(isSlotAdmin);
-
-		final CalendarConfigurationTablePage calendarConfigurationTablePage = new CalendarConfigurationTablePage();
-		calendarConfigurationTablePage.setVisibleGranted(iscalendarConfigAdmin);
-
-		// final FormPage calendarConfigFormPage = new
-		// FormPage(CalendarsConfigurationForm.class, Boolean.TRUE,
-		// TEXTS.get("zc.meeting.calendar.configuration") + " (PageForm)");
-
-		// final CalendarsConfigurationForm calendarConfigForm = new
-		// CalendarsConfigurationForm(calendarConfigurationTablePage);
-		// calendarConfigForm.setVisibleGranted(iscalendarConfigAdmin);
+		final EventAdminNodePage eventAdminNodePage = new EventAdminNodePage();
+		eventAdminNodePage.setVisibleGranted(isEventAdmin || isSlotAdmin || iscalendarConfigAdmin);
 
 		pageList.add(eventTablePage);
 		pageList.add(eventAskedTablePage);
 		pageList.add(eventProcessedTablePage);
-		pageList.add(eventAdminTablePage);
 		pageList.add(slotTablePage);
-		pageList.add(slotAdminTablePage);
-		pageList.add(calendarConfigurationTablePage);
-		// pageList.add(calendarConfigFormPage);
-		pageList.add(slotForm);
+		pageList.add(eventAdminNodePage);
 	}
 
 	@Override
