@@ -1,13 +1,19 @@
 package org.zeroclick.meeting.client.calendar;
 
 import org.eclipse.scout.rt.client.dto.Data;
+import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
-import org.zeroclick.meeting.client.calendar.CalendarConfigurationTablePage.Table;
+import org.zeroclick.meeting.client.calendar.CalendarConfigurationAdminTablePage.Table;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationTablePageData;
 
 @Data(CalendarConfigurationTablePageData.class)
-public class CalendarConfigurationTablePage extends AbstractCalendarConfigurationTablePage<Table> {
+public class CalendarConfigurationAdminTablePage extends AbstractCalendarConfigurationTablePage<Table> {
+
+	@Override
+	protected String getConfiguredTitle() {
+		return TEXTS.get("zc.meeting.calendar.configuration.admin");
+	}
 
 	@Override
 	protected String getConfiguredIconId() {
