@@ -44,6 +44,7 @@ import org.zeroclick.configuration.shared.duration.DurationCodeType;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper.SubscriptionHelperData;
 import org.zeroclick.configuration.shared.user.IUserService;
+import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationEnvProperty;
 import org.zeroclick.meeting.client.NotificationHelper;
 import org.zeroclick.meeting.client.calendar.GoogleEventStartComparator;
@@ -740,7 +741,9 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			// final List<CalendarListEntry> userGCalendars = CollectionUtility
 			// .arrayList(gCalendarService.calendarList().get(readEventCalendarId).execute());
 
-			final String myEmail = "djer13@gmail.com";
+			final IUserService userService = BEANS.get(IUserService.class);
+			final UserFormData userDetails = userService.getUserDetails(userId);
+			final String myEmail = userDetails.getEmail().getValue();
 
 			final DateTime googledStartDate = googleHelper.toDateTime(startDate);
 			final DateTime googledEndDate = googleHelper.toDateTime(endDate);
@@ -761,16 +764,17 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					for (final Event event : events.getItems()) {
 						// dispo/busy
 						if (!processFree && "transparent".equals(event.getTransparency())) {
-							LOG.info("Event : " + events.getSummary() + " (" + event.getId()
-									+ ") is ignored because processFree is False in this calendar ("
-									+ calendar.getCalendarConfigurationId() + ") and transparency is : "
-									+ event.getTransparency() + " from calendar : " + calendarId);
+							LOG.info(
+									"Event : " + event.getSummary() + " (" + event.getId() + "in " + events.getSummary()
+											+ ") is ignored because processFree is False in this calendar configuration ("
+											+ calendar.getCalendarConfigurationId() + ") and transparency is : "
+											+ event.getTransparency() + " from calendar : " + calendarId);
 							continue;
 						}
 
 						// event registred on
 						if (!processNotRegisteredOn) {
-							final String organizer = event.getOrganizer().getEmail();
+							final String eventCreator = event.getCreator().getEmail();
 							final List<EventAttendee> attendees = event.getAttendees();
 							Boolean iAmRegistred = Boolean.FALSE;
 							if (null != attendees && attendees.size() > 0) {
@@ -782,10 +786,11 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 									}
 								}
 							}
-							if (!(myEmail.equalsIgnoreCase(organizer) || iAmRegistred)) {
-								LOG.info("Event : " + events.getSummary() + " (" + event.getId()
-										+ ") is ignored because processNotRegisteredOn is False in this calendar ("
-										+ calendar.getCalendarConfigurationId() + ") and " + myEmail
+							if (!(myEmail.equalsIgnoreCase(eventCreator) || iAmRegistred)) {
+								LOG.info("Event : " + event.getSummary() + " (" + event.getId()
+										+ ") is ignored because processNotRegisteredOn is False in this calendar COnfiguration ("
+										+ calendar.getCalendarConfigurationId() + " from " + events.getSummary()
+										+ " and " + myEmail
 										+ " isn't organizer or hasen't accepted the event from calendar : "
 										+ calendarId);
 								continue;

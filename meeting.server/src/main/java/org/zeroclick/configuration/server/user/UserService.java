@@ -678,8 +678,13 @@ public class UserService extends AbstractCommonService implements IUserService {
 
 	@Override
 	public UserFormData getCurrentUserDetails() {
+		return this.getUserDetails(super.userHelper.getCurrentUserId());
+	}
+
+	@Override
+	public UserFormData getUserDetails(final Long userId) {
 		final UserFormData formData = new UserFormData();
-		formData.getUserId().setValue(super.userHelper.getCurrentUserId());
+		formData.getUserId().setValue(userId);
 		return this.load(formData, Boolean.FALSE);
 	}
 
