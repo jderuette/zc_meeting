@@ -79,7 +79,7 @@ public class CalendarsConfigurationForm extends AbstractForm implements IPageFor
 
 			@Override
 			protected int getConfiguredGridH() {
-				return 4;
+				return 6;
 			}
 
 			@Override
@@ -99,7 +99,7 @@ public class CalendarsConfigurationForm extends AbstractForm implements IPageFor
 
 			@Override
 			protected double getConfiguredGridWeightY() {
-				return 0.2;
+				return 0.4;
 			}
 		}
 
@@ -114,6 +114,11 @@ public class CalendarsConfigurationForm extends AbstractForm implements IPageFor
 			@Override
 			protected int getConfiguredLabelPosition() {
 				return LABEL_POSITION_TOP;
+			}
+
+			@Override
+			protected boolean getConfiguredLabelVisible() {
+				return false;
 			}
 
 			@Override
