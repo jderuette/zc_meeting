@@ -209,7 +209,27 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		// permission based on API permissions (not calendar permissions)
 		this.checkPermission(new DeleteApiPermission(apiCredentialId));
 
-		SQL.delete(SQLs.CALENDAR_CONFIG_DELETE_BY_API_ID, new NVPair("oAuthCredentialId", apiCredentialId));
+		LOG.info("Deleting calendars configuration with API ID : " + apiCredentialId);
+
+		final int nbDeletedRows = SQL.delete(SQLs.CALENDAR_CONFIG_DELETE_BY_API_ID,
+				new NVPair("oAuthCredentialId", apiCredentialId));
+
+		LOG.debug(nbDeletedRows + " deleteted in calendars configuration with API ID : " + apiCredentialId);
+	}
+
+	private void delete(final String externalId, final Long apiCredentialId) {
+		// permission based on API permissions (not calendar permissions)
+		this.checkPermission(new DeleteApiPermission(apiCredentialId));
+
+		LOG.info("Deleting calendars configuration : " + apiCredentialId + " for API ID : " + apiCredentialId);
+
+		final int nbDeletedRows = SQL.delete(SQLs.CALENDAR_CONFIG_DELETE_BY_EXTERNAL_ID,
+				new NVPair("externalId", externalId), new NVPair("oAuthCredentialId", apiCredentialId));
+
+		if (nbDeletedRows == 0) {
+			LOG.warn(
+					"No row deleted calendars configuration : " + apiCredentialId + " for API ID : " + apiCredentialId);
+		}
 	}
 
 	@Override
@@ -218,6 +238,7 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		Long lastUserId = null;
 		Boolean atLeastOneCalendarConfigModified = Boolean.FALSE;
 		Boolean atLeastOneCalendarConfigAdded = Boolean.FALSE;
+
 		for (final String calendarKey : calendars.keySet()) {
 			final AbstractCalendarConfigurationTableRowData calendarData = calendars.get(calendarKey);
 			final CalendarConfigurationFormData data = new CalendarConfigurationFormData();
@@ -273,7 +294,19 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		}
 
 		// FIXME Djer13 handle deletes calendars (already created in DB but
-		// doen't exist anymore in calendars Provider)
+		// doesn't exist anymore in calendars Provider)
+		final CalendarsConfigurationFormData configuredCalendars = this.getCalendarConfigurationTableData(false);
+
+		if (null != configuredCalendars && null != configuredCalendars.getCalendarConfigTable()
+				&& configuredCalendars.getCalendarConfigTable().getRowCount() > 0) {
+			for (final CalendarConfigTableRowData calendar : configuredCalendars.getCalendarConfigTable().getRows()) {
+				if (!calendars.keySet().contains(calendar.getExternalId())) {
+					LOG.info("Calendar : " + calendar.getExternalId()
+							+ " does not exist anymore in provider data, removing it from user config");
+					this.delete(calendar.getExternalId(), calendar.getOAuthCredentialId());
+				}
+			}
+		}
 
 		if (atLeastOneCalendarConfigAdded) {
 			this.sendCreatedNotifications(lastUserId);

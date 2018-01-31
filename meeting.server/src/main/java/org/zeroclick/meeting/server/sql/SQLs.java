@@ -726,5 +726,7 @@ public interface SQLs {
 			+ " SET name=:name, main=:main, read_only=:readOnly, process=:process, add_event_to_calendar=:addEventToCalendar, process_full_day_event=:processFullDayEvent, process_busy_event=:ProcessFreeEvent, process_not_registred_on_event=:processNotRegistredOnEvent";
 	String CALENDAR_CONFIG_DELETE_BY_API_ID = "DELETE FROM " + PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME
 			+ " WHERE oAuth_credential_id=:oAuthCredentialId";
+	String CALENDAR_CONFIG_DELETE_BY_EXTERNAL_ID = "DELETE FROM " + PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME
+			+ " WHERE external_id=:externalId AND oAuth_credential_id=:oAuthCredentialId";
 
 }
