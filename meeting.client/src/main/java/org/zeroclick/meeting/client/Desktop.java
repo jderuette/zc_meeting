@@ -239,7 +239,16 @@ public class Desktop extends AbstractDesktop {
 					final ApiFormData eventForm = notification.getApiForm();
 					LOG.debug("Created Api prepare to modify desktop menus (" + this.getClass().getName() + ") : "
 							+ eventForm.getUserId());
-					Desktop.this.getMenu(AddGoogleCalendarMenu.class).setVisible(Boolean.FALSE);
+					// Desktop.this.getMenu(AddGoogleCalendarMenu.class).setVisible(Boolean.FALSE);
+
+					LOG.info("Created Api prepare to autoConfigure Calendar's API");
+					final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+					final Map<String, AbstractCalendarConfigurationTableRowData> calendars = googleHelper
+							.getCalendars();
+
+					final ICalendarConfigurationService calendarConfigurationService = BEANS
+							.get(ICalendarConfigurationService.class);
+					calendarConfigurationService.autoConfigure(calendars);
 
 				} catch (final RuntimeException e) {
 					LOG.error("Could not handle new api. (" + this.getClass().getName() + ")", e);
@@ -329,7 +338,7 @@ public class Desktop extends AbstractDesktop {
 		protected void execInitAction() {
 			super.execInitAction();
 			this.setVisiblePermission(new CreateApiPermission());
-			this.setVisible(!BEANS.get(GoogleApiHelper.class).isCalendarConfigured());
+			// this.setVisible(!BEANS.get(GoogleApiHelper.class).isCalendarConfigured());
 		}
 	}
 

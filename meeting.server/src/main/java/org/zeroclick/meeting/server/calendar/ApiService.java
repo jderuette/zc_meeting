@@ -2,6 +2,7 @@ package org.zeroclick.meeting.server.calendar;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,7 @@ import org.zeroclick.common.AbstractCommonService;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
 import org.zeroclick.configuration.shared.api.ApiDeletedNotification;
 import org.zeroclick.configuration.shared.api.ApiTablePageData;
+import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CreateApiPermission;
@@ -28,7 +30,6 @@ import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.calendar.ReadApiPermission;
 import org.zeroclick.meeting.shared.calendar.UpdateApiPermission;
 import org.zeroclick.meeting.shared.event.IEventService;
-import org.zeroclick.meeting.shared.event.ReadEventPermission;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
 public class ApiService extends AbstractCommonService implements IApiService {
@@ -44,19 +45,55 @@ public class ApiService extends AbstractCommonService implements IApiService {
 	public ApiTablePageData getApiTableData(final SearchFilter filter) {
 		final ApiTablePageData pageData = new ApiTablePageData();
 
-		Long currentConnectedUserId = 0L;
+		Long userId = null;
+
+		if (null != filter && null != filter.getFormData() && null != filter.getFormData().getPropertyById("userId")) {
+			userId = (Long) filter.getFormData().getPropertyById("userId").getValue();
+		}
+
 		final StringBuilder sql = new StringBuilder();
 		sql.append(SQLs.OAUHTCREDENTIAL_PAGE_SELECT);
 
-		if (ACCESS.getLevel(new ReadEventPermission((Long) null)) != ReadEventPermission.LEVEL_ALL) {
+		if (null == userId && ACCESS.getLevel(new ReadApiPermission((Long) null)) != ReadApiPermission.LEVEL_ALL) {
+			userId = super.userHelper.getCurrentUserId();
+		}
+
+		if (null != userId) {
 			sql.append(SQLs.OAUHTCREDENTIAL_PAGE_SELECT_FILTER_USER);
-			currentConnectedUserId = super.userHelper.getCurrentUserId();
 		}
 
 		sql.append(SQLs.OAUHTCREDENTIAL_PAGE_DATA_SELECT_INTO);
-		SQL.selectInto(sql.toString(), new NVPair("page", pageData), new NVPair("currentUser", currentConnectedUserId));
+		SQL.selectInto(sql.toString(), new NVPair("page", pageData), new NVPair("currentUser", userId));
+
+		if (pageData.getRowCount() > 0) {
+			// Local cache to avoid multiple validation of same apiCredentialId
+			final Map<Long, Boolean> alreadyCheckReadAcces = new HashMap<>();
+			// Post check permission base on OAuthId
+			for (final ApiTableRowData row : pageData.getRows()) {
+				if (null == alreadyCheckReadAcces.get(row.getApiCredentialId())) {
+					final Boolean canRead = ACCESS.check(new ReadApiPermission(row.getApiCredentialId()));
+					alreadyCheckReadAcces.put(row.getApiCredentialId(), canRead);
+				}
+				if (!alreadyCheckReadAcces.get(row.getApiCredentialId())) {
+					LOG.warn("User : " + super.userHelper.getCurrentUserId() + " try to access UserApi : "
+							+ row.getApiCredentialId() + " belonging to user : " + row.getUserId()
+							+ " but hasen't acces. Silently removing this (api) row");
+					pageData.removeRow(row);
+				}
+			}
+		}
 
 		return pageData;
+	}
+
+	@Override
+	public ApiTablePageData getApis(final Long userId) {
+		final SearchFilter filter = new SearchFilter();
+		final ApiFormData apiSearchFilterForm = new ApiFormData();
+		apiSearchFilterForm.setUserId(userId);
+		filter.setFormData(apiSearchFilterForm);
+
+		return this.getApiTableData(filter);
 	}
 
 	@Override
@@ -72,21 +109,23 @@ public class ApiService extends AbstractCommonService implements IApiService {
 
 		Boolean isNew = Boolean.FALSE;
 
-		if (!this.checkAlreadyExists(formData)) {
-			LOG.info("Creating new API in DB for user : " + formData.getUserIdProperty().getValue() + " for provider : "
-					+ formData.getProvider().getValue());
-			isNew = Boolean.TRUE;
-			// add a unique id if necessary
-			if (null == formData.getApiCredentialId()) {
-				formData.setApiCredentialId(SQL.getSequenceNextval("OAUHTCREDENTIAL_ID_SEQ"));
-			}
-			SQL.insert(SQLs.OAUHTCREDENTIAL_INSERT, formData);
-		} else {
-			final Long existingApiId = this.getApiId(formData.getUserId());
-			LOG.warn("Trying to create a new API for user " + formData.getUserId()
-					+ " and this user already has a configured API Key with ID : " + existingApiId);
-			formData.setApiCredentialId(existingApiId);
+		// if (!this.checkAlreadyExists(formData)) {
+		LOG.info("Creating new API in DB for user : " + formData.getUserIdProperty().getValue() + " for provider : "
+				+ formData.getProvider().getValue());
+		isNew = Boolean.TRUE;
+		// add a unique id if necessary
+		if (null == formData.getApiCredentialId()) {
+			formData.setApiCredentialId(SQL.getSequenceNextval("OAUHTCREDENTIAL_ID_SEQ"));
 		}
+		SQL.insert(SQLs.OAUHTCREDENTIAL_INSERT, formData);
+		// } else {
+		// final Long existingApiId = this.getApiId(formData.getUserId());
+		// LOG.warn("Trying to create a new API for user " +
+		// formData.getUserId()
+		// + " and this user already has a configured API Key with ID : " +
+		// existingApiId);
+		// formData.setApiCredentialId(existingApiId);
+		// }
 		final ApiFormData apiFormCreated = this.store(formData);
 
 		if (isNew) {

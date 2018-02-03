@@ -13,6 +13,8 @@ public interface IApiService extends IService {
 
 	ApiTablePageData getApiTableData(SearchFilter filter);
 
+	ApiTablePageData getApis(Long userId);
+
 	ApiFormData prepareCreate(ApiFormData formData);
 
 	ApiFormData create(ApiFormData formData);

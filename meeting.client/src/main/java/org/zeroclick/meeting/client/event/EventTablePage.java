@@ -53,9 +53,11 @@ import org.zeroclick.meeting.client.common.SlotHelper;
 import org.zeroclick.meeting.client.common.UserAccessRequiredException;
 import org.zeroclick.meeting.client.event.EventTablePage.Table;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
+import org.zeroclick.meeting.client.google.api.GoogleApiHelper.ApiCalendar;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationCreatedNotification;
+import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationModifiedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationCreatedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationModifiedNotification;
@@ -727,13 +729,6 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		private List<Event> getEvents(final ZonedDateTime startDate, final ZonedDateTime endDate, final Long userId)
 				throws IOException {
 			final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
-			Calendar gCalendarService;
-
-			try {
-				gCalendarService = googleHelper.getCalendarService(userId);
-			} catch (final UserAccessRequiredException uare) {
-				throw new VetoException(TEXTS.get("zc.meeting.calendarProviderRequired"));
-			}
 
 			// getEvent from start to End for each calendar
 			final Set<AbstractCalendarConfigurationTableRowData> activatedEventCalendars = this
@@ -750,6 +745,14 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			final List<Event> allConcurentEvent = new ArrayList<>();
 			for (final AbstractCalendarConfigurationTableRowData calendar : activatedEventCalendars) {
+				Calendar gCalendarService = null;
+				try {
+					gCalendarService = googleHelper.getCalendarService(calendar.getOAuthCredentialId());
+				} catch (final UserAccessRequiredException uare) {
+					LOG.error("Error while getting (Google) events", uare);
+					throw new VetoException(TEXTS.get("zc.meeting.calendarProviderRequired"));
+				}
+
 				final String calendarId = calendar.getExternalId();
 				final Boolean processFullDay = calendar.getProcessFullDayEvent();
 				final Boolean processFree = calendar.getProcessFreeEvent();
@@ -788,9 +791,9 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 							}
 							if (!(myEmail.equalsIgnoreCase(eventCreator) || iAmRegistred)) {
 								LOG.info("Event : " + event.getSummary() + " (" + event.getId()
-										+ ") is ignored because processNotRegisteredOn is False in this calendar COnfiguration ("
+										+ ") is ignored because processNotRegisteredOn is False in this calendar Configuration ("
 										+ calendar.getCalendarConfigurationId() + " from " + events.getSummary()
-										+ " and " + myEmail
+										+ ") and " + myEmail
 										+ " isn't organizer or hasen't accepted the event from calendar : "
 										+ calendarId);
 								continue;
@@ -912,7 +915,13 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			Calendar googleCalendarService;
 
 			try {
-				googleCalendarService = googleHelper.getCalendarService(forUserId);
+				final ICalendarConfigurationService calendarConfigurationService = BEANS
+						.get(ICalendarConfigurationService.class);
+				final CalendarConfigurationFormData calendarToStoreEvent = calendarConfigurationService
+						.getCalendarToStoreEvents(forUserId);
+
+				googleCalendarService = googleHelper
+						.getCalendarService(calendarToStoreEvent.getOAuthCredentialId().getValue());
 			} catch (final UserAccessRequiredException uare) {
 				// throw new
 				// VetoException(TEXTS.get("zc.meeting.calendarProviderRequired"));
@@ -969,10 +978,9 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				googleApiUserId = heldByUserId;
 			}
 
-			Calendar gCalendarService;
-
+			List<ApiCalendar> gCalendarsServices;
 			try {
-				gCalendarService = googleHelper.getCalendarService(googleApiUserId);
+				gCalendarsServices = googleHelper.getCalendarsServices(googleApiUserId);
 			} catch (final UserAccessRequiredException uare) {
 				throw new VetoException(TEXTS.get("zc.meeting.calendarProviderRequired"));
 			}
@@ -988,23 +996,47 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			// Update the event
 			Event updatedEvent = null;
-			try {
-				updatedEvent = gCalendarService.events()
-						.update(organizerCalendarId, organizerEvent.getId(), organizerEvent).execute();
-			} catch (final GoogleJsonResponseException gjre) {
-				if (gjre.getStatusCode() == 404) {
-					// wait a few and re-try
-					LOG.warn("(Google); exception while accepting recently created event (id :" + organizerEvent.getId()
-							+ "), re-trying)");
-					try {
-						Thread.sleep(200);
-					} catch (final InterruptedException e) {
-						// do nothing
+			Boolean eventUpdated = Boolean.FALSE;
+
+			if (null != gCalendarsServices && gCalendarsServices.size() > 0) {
+				for (final ApiCalendar gCalendarService : gCalendarsServices) {
+					if (!eventUpdated) {
+						try {
+							updatedEvent = gCalendarService.getCalendar().events()
+									.update(organizerCalendarId, organizerEvent.getId(), organizerEvent).execute();
+							eventUpdated = Boolean.TRUE;
+						} catch (final GoogleJsonResponseException gjre) {
+							if (gjre.getStatusCode() == 404) {
+								// wait a few and re-try
+								LOG.warn(
+										"(Google); exception while accepting recently created event (id :"
+												+ organizerEvent.getId() + ") with apiConfigurationId : "
+												+ gCalendarService.getMetaData().getApiCredentialId() + ", re-trying",
+										gjre);
+								try {
+									Thread.sleep(200);
+								} catch (final InterruptedException e) {
+									// do nothing
+								}
+								try {
+									updatedEvent = gCalendarService.getCalendar().events()
+											.update(organizerCalendarId, organizerEvent.getId(), organizerEvent)
+											.execute();
+									eventUpdated = Boolean.TRUE;
+								} catch (final GoogleJsonResponseException gjre2) {
+									LOG.warn("(Google); exception while accepting recently created event (id :"
+											+ organizerEvent.getId() + ")  with apiConfigurationId : "
+											+ gCalendarService.getMetaData().getApiCredentialId() + ", in second try",
+											gjre);
+								}
+							}
+						}
 					}
 				}
+			}
 
-				updatedEvent = gCalendarService.events()
-						.update(organizerCalendarId, organizerEvent.getId(), organizerEvent).execute();
+			if (!eventUpdated) {
+				LOG.error("Error while update Event, cannot acces event with any GCalendarService confgiured");
 			}
 
 			return updatedEvent;

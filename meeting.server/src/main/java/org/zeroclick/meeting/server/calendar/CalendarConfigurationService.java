@@ -218,8 +218,10 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		Long lastUserId = null;
 		Boolean atLeastOneCalendarConfigModified = Boolean.FALSE;
 		Boolean atLeastOneCalendarConfigAdded = Boolean.FALSE;
+
 		for (final String calendarKey : calendars.keySet()) {
 			final AbstractCalendarConfigurationTableRowData calendarData = calendars.get(calendarKey);
+
 			final CalendarConfigurationFormData data = new CalendarConfigurationFormData();
 			data.getUserId().setValue(calendarData.getUserId());
 			data.getExternalId().setValue(calendarData.getExternalId());
@@ -227,7 +229,7 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 			data.getProcess().setValue(calendarData.getMain());
 			data.getMain().setValue(calendarData.getMain());
 			data.getReadOnly().setValue(calendarData.getReadOnly());
-			data.getAddEventToCalendar().setValue(calendarData.getMain());
+			data.getAddEventToCalendar().setValue(!this.hasCreateEventCalendar(calendarData.getUserId()));
 			data.getOAuthCredentialId().setValue(calendarData.getOAuthCredentialId());
 			data.getProcessFullDayEvent().setValue(Boolean.TRUE);
 			data.getProcessFreeEvent().setValue(Boolean.FALSE);
@@ -281,6 +283,15 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		if (atLeastOneCalendarConfigModified) {
 			this.sendModifiedNotifications(lastUserId);
 		}
+	}
+
+	private Boolean hasCreateEventCalendar(final Long userId) {
+		Boolean alreadyHasAddEventToCalendar = Boolean.FALSE;
+		final CalendarConfigurationFormData currentUserCreateCalendar = this.getCalendarToStoreEvents(userId);
+		if (null != currentUserCreateCalendar && null != currentUserCreateCalendar.getExternalId().getValue()) {
+			alreadyHasAddEventToCalendar = Boolean.TRUE;
+		}
+		return alreadyHasAddEventToCalendar;
 	}
 
 	private boolean isCalendarCondifgRequiredModification(
