@@ -27,7 +27,6 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -49,6 +48,7 @@ import org.eclipse.scout.rt.platform.config.AbstractStringConfigProperty;
 import org.eclipse.scout.rt.platform.config.CONFIG;
 import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.status.IStatus;
+import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,6 +85,8 @@ import com.google.api.services.calendar.model.CalendarList;
 import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
+import com.google.api.services.people.v1.PeopleService;
+import com.google.api.services.people.v1.PeopleServiceScopes;
 
 /**
  * @author djer
@@ -131,7 +133,9 @@ public class GoogleApiHelper {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Initilazing Google API Flow");
 		}
-		final Collection<String> scopes = Collections.singleton(CalendarScopes.CALENDAR);
+		final Collection<String> scopes = CollectionUtility.arrayList(CalendarScopes.CALENDAR,
+				PeopleServiceScopes.USERINFO_PROFILE, PeopleServiceScopes.PLUS_LOGIN);
+		// Collections.singleton();
 
 		return new GoogleAuthorizationCodeFlow.Builder(new NetHttpTransport(), JacksonFactory.getDefaultInstance(),
 				this.getClientSecret(), scopes).setDataStoreFactory(this.dataStoreFactory).setAccessType("offline")
@@ -384,6 +388,23 @@ public class GoogleApiHelper {
 		final Credential credential = this.getCredential(apiCredentialId);
 		if (null != credential) {
 			return new Calendar.Builder(new NetHttpTransport(), JacksonFactory.getDefaultInstance(), credential)
+					.setApplicationName("0Click Meeting").build();
+		}
+		throw new UserAccessRequiredException();
+	}
+
+	/**
+	 * Build and return an authorized Calendar client service.
+	 *
+	 * @return an authorized Calendar client service
+	 * @throws IOException
+	 * @throws UserAccessRequiredException
+	 *             when no credential can be found for the user
+	 */
+	public PeopleService getPeopleService(final Long apiCredentialId) throws IOException {
+		final Credential credential = this.getCredential(apiCredentialId);
+		if (null != credential) {
+			return new PeopleService.Builder(new NetHttpTransport(), JacksonFactory.getDefaultInstance(), credential)
 					.setApplicationName("0Click Meeting").build();
 		}
 		throw new UserAccessRequiredException();

@@ -25,6 +25,9 @@ import com.google.api.services.calendar.model.CalendarList;
 import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Events;
+import com.google.api.services.people.v1.PeopleService;
+import com.google.api.services.people.v1.model.EmailAddress;
+import com.google.api.services.people.v1.model.Person;
 
 /**
  * Mapped to /oauth2callback
@@ -61,6 +64,29 @@ public class GoogleApiServletCallback extends HttpServlet {
 
 		final Credential credential = this.googleApiHelper.tryStoreCredential(req, resp,
 				createdData.getApiCredentialId());
+
+		final PeopleService peopleService = this.googleApiHelper.getPeopleService(createdData.getApiCredentialId());
+
+		final Person profile = peopleService.people().get("people/me").setPersonFields("names,emailAddresses")
+				.execute();
+
+		final List<EmailAddress> emailsAdresses = profile.getEmailAddresses();
+		String mainAddressEmail = null;
+
+		if (null != emailsAdresses && emailsAdresses.size() > 0) {
+			for (final EmailAddress emailAdress : emailsAdresses) {
+				if (emailAdress.getMetadata().getPrimary()) {
+					mainAddressEmail = emailAdress.getValue();
+					break;
+				}
+			}
+		}
+
+		// add the meailAdress to the API
+		// final ApiFormData apiDataAfterCredentialStored =
+		// apiService.load(input);
+		// apiDataAfterCredentialStored.getAccountEmail().setValue(mainAddressEmail);
+		// apiService.store(apiDataAfterCredentialStored);
 
 		resp.getWriter().write("<html><head></head><body><b>");
 

@@ -236,9 +236,10 @@ public class Desktop extends AbstractDesktop {
 			@Override
 			public void handleNotification(final ApiCreatedNotification notification) {
 				try {
-					final ApiFormData eventForm = notification.getApiForm();
-					LOG.debug("Created Api prepare to modify desktop menus (" + this.getClass().getName() + ") : "
-							+ eventForm.getUserId());
+					// final ApiFormData eventForm = notification.getApiForm();
+					// LOG.debug("Created Api prepare to modify desktop menus ("
+					// + this.getClass().getName() + ") : "
+					// + eventForm.getUserId());
 					// Desktop.this.getMenu(AddGoogleCalendarMenu.class).setVisible(Boolean.FALSE);
 
 					LOG.info("Created Api prepare to autoConfigure Calendar's API");
