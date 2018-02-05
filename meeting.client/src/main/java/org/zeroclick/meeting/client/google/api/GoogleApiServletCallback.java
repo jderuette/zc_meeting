@@ -65,29 +65,10 @@ public class GoogleApiServletCallback extends HttpServlet {
 		final Credential credential = this.googleApiHelper.tryStoreCredential(req, resp,
 				createdData.getApiCredentialId());
 
-		final PeopleService peopleService = this.googleApiHelper.getPeopleService(createdData.getApiCredentialId());
-
-		final Person profile = peopleService.people().get("people/me").setPersonFields("emailAddresses").execute();
-
-		final ApiFormData apiDataAfterCredentialStored = apiService.load(createdData);
-
-		final List<EmailAddress> emailsAdresses = profile.getEmailAddresses();
-		String mainAddressEmail = null;
-
-		if (null != emailsAdresses && emailsAdresses.size() > 0) {
-			for (final EmailAddress emailAdress : emailsAdresses) {
-				if (emailAdress.getMetadata().getPrimary()) {
-					mainAddressEmail = emailAdress.getValue();
-					LOG.info("Primary email adress for api ID : " + apiDataAfterCredentialStored.getApiCredentialId()
-							+ ", user : " + apiDataAfterCredentialStored.getUserId() + " : " + mainAddressEmail);
-					break;
-				}
-			}
-		}
+		final String mainAddressEmail = this.getAccountEmail(createdData.getApiCredentialId(), createdData.getUserId());
 
 		// add the meailAdress to the API
-		apiDataAfterCredentialStored.getAccountEmail().setValue(mainAddressEmail);
-		apiService.store(apiDataAfterCredentialStored);
+		this.storeEmailAccount(createdData.getApiCredentialId(), mainAddressEmail);
 
 		resp.getWriter().write("<html><head></head><body><b>");
 
@@ -118,6 +99,37 @@ public class GoogleApiServletCallback extends HttpServlet {
 				this.displayNextEvent(service.getCalendar(), "primary", 10);
 			}
 		}
+	}
+
+	private String getAccountEmail(final Long apiCredentialId, final Long userId) throws IOException {
+		final PeopleService peopleService = this.googleApiHelper.getPeopleService(apiCredentialId);
+		final Person profile = peopleService.people().get("people/me").setPersonFields("emailAddresses").execute();
+		//
+
+		final List<EmailAddress> emailsAdresses = profile.getEmailAddresses();
+		String mainAddressEmail = null;
+
+		if (null != emailsAdresses && emailsAdresses.size() > 0) {
+			for (final EmailAddress emailAdress : emailsAdresses) {
+				if (emailAdress.getMetadata().getPrimary()) {
+					mainAddressEmail = emailAdress.getValue();
+					LOG.info("Primary email adress for api ID : " + apiCredentialId + ", user : " + userId + " : "
+							+ mainAddressEmail);
+					break;
+				}
+			}
+		}
+
+		return mainAddressEmail;
+	}
+
+	private ApiFormData storeEmailAccount(final Long apiCredentialId, final String accountEmail) {
+		final IApiService apiService = BEANS.get(IApiService.class);
+		final ApiFormData apiDataAfterCredentialStored = apiService.load(apiCredentialId);
+
+		apiDataAfterCredentialStored.getAccountEmail().setValue(accountEmail);
+
+		return apiService.store(apiDataAfterCredentialStored);
 	}
 
 	private void displayCalendarList(final Calendar service) throws IOException {

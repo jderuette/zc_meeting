@@ -153,6 +153,8 @@ public interface SQLs {
 	String OAUHTCREDENTIAL_SELECT_API_ID = "SELECT api_credential_id FROM OAUHTCREDENTIAL WHERE 1=1";
 	String OAUHTCREDENTIAL_SELECT_GOOGLE_DATA = "SELECT google_data FROM OAUHTCREDENTIAL WHERE provider=1";
 
+	String OAUHTCREDENTIAL_SELECT_BY_ACCOUNT_EMAIL = "SELECT api_credential_id FROM OAUHTCREDENTIAL WHERE user_id=:userId AND account_email=:accountEmail";
+
 	String OAUHTCREDENTIAL_SELECT_INTO = " INTO :apiCredentialId, :accessToken, :expirationTimeMilliseconds, :refreshToken, :userId, :provider, :repositoryId, :providerData, :accountEmail";
 	String OAUHTCREDENTIAL_SELECT_INTO_API_ID = " INTO :apiCredentialId";
 

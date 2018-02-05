@@ -224,7 +224,21 @@ public class ApiService extends AbstractCommonService implements IApiService {
 				+ formData.getProvider().getValue());
 
 		if (this.isAfterCreateAddAccountEmailPatch()) {
+			final Object[][] duplicateApiByEmailAccount = SQL.select(SQLs.OAUHTCREDENTIAL_SELECT_BY_ACCOUNT_EMAIL,
+					formData);
 			SQL.update(SQLs.OAUHTCREDENTIAL_UPDATE, formData);
+
+			if (null != duplicateApiByEmailAccount && duplicateApiByEmailAccount.length > 0) {
+				LOG.warn("Duplicate API id found for user : " + formData.getUserId() + "  with account's email : "
+						+ formData.getAccountEmail().getValue() + " removing " + duplicateApiByEmailAccount.length
+						+ " olds ones keys");
+				for (final Object[] apiCredentialIdRow : duplicateApiByEmailAccount) {
+					if (null != apiCredentialIdRow && apiCredentialIdRow.length > 0 && null != apiCredentialIdRow[0]) {
+						final Long apiCredentialId = (long) apiCredentialIdRow[0];
+						this.delete(apiCredentialId);
+					}
+				}
+			}
 		} else {
 			SQL.update(SQLs.OAUHTCREDENTIAL_UPDATE_WITHOUT_ACCOUNT_EMAIL, formData);
 		}
@@ -250,6 +264,14 @@ public class ApiService extends AbstractCommonService implements IApiService {
 
 		// the formData BEFORE deletion
 		this.sendDeletedNotifications(dataBeforeDeletion);
+	}
+
+	private void delete(final Long apiCredentialId) {
+		final ApiFormData input = new ApiFormData();
+
+		input.setApiCredentialId(apiCredentialId);
+
+		this.delete(input);
 	}
 
 	private Long getApiId(final Long userId) {
