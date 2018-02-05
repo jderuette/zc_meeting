@@ -20,6 +20,10 @@ public class ApiFormData extends AbstractFormData {
 		return getFieldByClass(AccessToken.class);
 	}
 
+	public AccountEmail getAccountEmail() {
+		return getFieldByClass(AccountEmail.class);
+	}
+
 	/**
 	 * access method for property ApiCredentialId.
 	 */
@@ -105,6 +109,11 @@ public class ApiFormData extends AbstractFormData {
 	}
 
 	public static class AccessToken extends AbstractValueFieldData<String> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class AccountEmail extends AbstractValueFieldData<String> {
 
 		private static final long serialVersionUID = 1L;
 	}

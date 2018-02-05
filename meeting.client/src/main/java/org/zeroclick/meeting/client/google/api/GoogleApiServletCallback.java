@@ -67,8 +67,9 @@ public class GoogleApiServletCallback extends HttpServlet {
 
 		final PeopleService peopleService = this.googleApiHelper.getPeopleService(createdData.getApiCredentialId());
 
-		final Person profile = peopleService.people().get("people/me").setPersonFields("names,emailAddresses")
-				.execute();
+		final Person profile = peopleService.people().get("people/me").setPersonFields("emailAddresses").execute();
+
+		final ApiFormData apiDataAfterCredentialStored = apiService.load(createdData);
 
 		final List<EmailAddress> emailsAdresses = profile.getEmailAddresses();
 		String mainAddressEmail = null;
@@ -77,16 +78,16 @@ public class GoogleApiServletCallback extends HttpServlet {
 			for (final EmailAddress emailAdress : emailsAdresses) {
 				if (emailAdress.getMetadata().getPrimary()) {
 					mainAddressEmail = emailAdress.getValue();
+					LOG.info("Primary email adress for api ID : " + apiDataAfterCredentialStored.getApiCredentialId()
+							+ ", user : " + apiDataAfterCredentialStored.getUserId() + " : " + mainAddressEmail);
 					break;
 				}
 			}
 		}
 
 		// add the meailAdress to the API
-		// final ApiFormData apiDataAfterCredentialStored =
-		// apiService.load(input);
-		// apiDataAfterCredentialStored.getAccountEmail().setValue(mainAddressEmail);
-		// apiService.store(apiDataAfterCredentialStored);
+		apiDataAfterCredentialStored.getAccountEmail().setValue(mainAddressEmail);
+		apiService.store(apiDataAfterCredentialStored);
 
 		resp.getWriter().write("<html><head></head><body><b>");
 

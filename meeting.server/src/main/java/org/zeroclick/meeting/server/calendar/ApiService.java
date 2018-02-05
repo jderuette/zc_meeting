@@ -21,7 +21,9 @@ import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
 import org.zeroclick.configuration.shared.api.ApiDeletedNotification;
 import org.zeroclick.configuration.shared.api.ApiTablePageData;
 import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
+import org.zeroclick.meeting.server.sql.DatabaseHelper;
 import org.zeroclick.meeting.server.sql.SQLs;
+import org.zeroclick.meeting.server.sql.migrate.data.PatchAddEmailToApi;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CreateApiPermission;
 import org.zeroclick.meeting.shared.calendar.DeleteApiPermission;
@@ -154,6 +156,10 @@ public class ApiService extends AbstractCommonService implements IApiService {
 
 	@Override
 	public ApiFormData load(final ApiFormData formData) {
+		return this.load(formData, Boolean.TRUE);
+	}
+
+	private ApiFormData load(final ApiFormData formData, final Boolean loadProviderData) {
 		final Long userId = formData.getUserIdProperty().getValue();
 		Long oAuthId = formData.getApiCredentialIdProperty().getValue();
 		final String accesToken = formData.getAccessToken().getValue();
@@ -189,7 +195,7 @@ public class ApiService extends AbstractCommonService implements IApiService {
 				SQLs.OAUHTCREDENTIAL_SELECT + SQLs.OAUHTCREDENTIAL_FILTER_OAUTH_ID + SQLs.OAUHTCREDENTIAL_SELECT_INTO,
 				formData);
 
-		if (null == formData.getProviderData()) {
+		if (loadProviderData && null == formData.getProviderData()) {
 			// force load BLOB data
 			final Object[][] apiProvierData = SQL.select(
 					SQLs.OAUHTCREDENTIAL_SELECT_PROVIDER_DATA_ONLY + SQLs.OAUHTCREDENTIAL_FILTER_OAUTH_ID,
@@ -203,12 +209,26 @@ public class ApiService extends AbstractCommonService implements IApiService {
 	}
 
 	@Override
+	public ApiFormData load(final Long apiId) {
+		final ApiFormData input = new ApiFormData();
+		input.setApiCredentialId(apiId);
+
+		return this.load(input, Boolean.FALSE);
+	}
+
+	@Override
 	public ApiFormData store(final ApiFormData formData) {
 		super.checkPermission(new UpdateApiPermission(formData.getApiCredentialId()));
 
 		LOG.debug("Storing API in DB for user : " + formData.getUserIdProperty().getValue() + " for provider : "
 				+ formData.getProvider().getValue());
-		SQL.update(SQLs.OAUHTCREDENTIAL_UPDATE, formData);
+
+		if (this.isAfterCreateAddAccountEmailPatch()) {
+			SQL.update(SQLs.OAUHTCREDENTIAL_UPDATE, formData);
+		} else {
+			SQL.update(SQLs.OAUHTCREDENTIAL_UPDATE_WITHOUT_ACCOUNT_EMAIL, formData);
+		}
+
 		return formData;
 	}
 
@@ -308,6 +328,11 @@ public class ApiService extends AbstractCommonService implements IApiService {
 		SQL.selectInto(SQLs.OAUHTCREDENTIAL_SELECT_OWNER, formData);
 
 		return formData.getUserId();
+	}
+
+	private Boolean isAfterCreateAddAccountEmailPatch() {
+		return DatabaseHelper.get().isColumnExists(PatchAddEmailToApi.PATCHED_TABLE,
+				PatchAddEmailToApi.PATCHED_ADDED_COLUMN);
 	}
 
 	@Override

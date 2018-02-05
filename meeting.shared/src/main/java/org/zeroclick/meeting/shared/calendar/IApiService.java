@@ -21,6 +21,8 @@ public interface IApiService extends IService {
 
 	ApiFormData load(ApiFormData formData);
 
+	ApiFormData load(Long apiId);
+
 	ApiFormData store(ApiFormData formData);
 
 	void delete(ApiFormData formData);

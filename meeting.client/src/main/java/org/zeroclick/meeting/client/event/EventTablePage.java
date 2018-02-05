@@ -44,7 +44,6 @@ import org.zeroclick.configuration.shared.duration.DurationCodeType;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper.SubscriptionHelperData;
 import org.zeroclick.configuration.shared.user.IUserService;
-import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationEnvProperty;
 import org.zeroclick.meeting.client.NotificationHelper;
 import org.zeroclick.meeting.client.calendar.GoogleEventStartComparator;
@@ -56,11 +55,13 @@ import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper.ApiCalendar;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
+import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationCreatedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationModifiedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationCreatedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationModifiedNotification;
+import org.zeroclick.meeting.shared.calendar.IApiService;
 import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.event.AbstractEventNotification;
 import org.zeroclick.meeting.shared.event.CreateEventPermission;
@@ -729,16 +730,18 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		private List<Event> getEvents(final ZonedDateTime startDate, final ZonedDateTime endDate, final Long userId)
 				throws IOException {
 			final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+			final IApiService apiService = BEANS.get(IApiService.class);
 
 			// getEvent from start to End for each calendar
 			final Set<AbstractCalendarConfigurationTableRowData> activatedEventCalendars = this
 					.getUserUsedEventCalendar(userId);
 			// final List<CalendarListEntry> userGCalendars = CollectionUtility
 			// .arrayList(gCalendarService.calendarList().get(readEventCalendarId).execute());
-
-			final IUserService userService = BEANS.get(IUserService.class);
-			final UserFormData userDetails = userService.getUserDetails(userId);
-			final String myEmail = userDetails.getEmail().getValue();
+			//
+			// final IUserService userService = BEANS.get(IUserService.class);
+			// final UserFormData userDetails =
+			// userService.getUserDetails(userId);
+			// final String myEmail = userDetails.getEmail().getValue();
 
 			final DateTime googledStartDate = googleHelper.toDateTime(startDate);
 			final DateTime googledEndDate = googleHelper.toDateTime(endDate);
@@ -746,6 +749,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			final List<Event> allConcurentEvent = new ArrayList<>();
 			for (final AbstractCalendarConfigurationTableRowData calendar : activatedEventCalendars) {
 				Calendar gCalendarService = null;
+
 				try {
 					gCalendarService = googleHelper.getCalendarService(calendar.getOAuthCredentialId());
 				} catch (final UserAccessRequiredException uare) {
@@ -777,23 +781,26 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 						// event registred on
 						if (!processNotRegisteredOn) {
+							final ApiFormData apiConfg = apiService.load(calendar.getOAuthCredentialId());
+							final String apiAccontEmail = apiConfg.getAccountEmail().getValue();
+
 							final String eventCreator = event.getCreator().getEmail();
 							final List<EventAttendee> attendees = event.getAttendees();
 							Boolean iAmRegistred = Boolean.FALSE;
 							if (null != attendees && attendees.size() > 0) {
 								for (final EventAttendee attendee : attendees) {
-									if (myEmail.equalsIgnoreCase(attendee.getEmail())) {
+									if (apiAccontEmail.equalsIgnoreCase(attendee.getEmail())) {
 										if ("accepted".equals(attendee.getResponseStatus())) {
 											iAmRegistred = Boolean.TRUE;
 										}
 									}
 								}
 							}
-							if (!(myEmail.equalsIgnoreCase(eventCreator) || iAmRegistred)) {
+							if (!(apiAccontEmail.equalsIgnoreCase(eventCreator) || iAmRegistred)) {
 								LOG.info("Event : " + event.getSummary() + " (" + event.getId()
 										+ ") is ignored because processNotRegisteredOn is False in this calendar Configuration ("
 										+ calendar.getCalendarConfigurationId() + " from " + events.getSummary()
-										+ ") and " + myEmail
+										+ ") and " + apiAccontEmail
 										+ " isn't organizer or hasen't accepted the event from calendar : "
 										+ calendarId);
 								continue;

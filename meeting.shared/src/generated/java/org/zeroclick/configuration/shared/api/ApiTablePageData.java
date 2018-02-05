@@ -58,12 +58,14 @@ public class ApiTablePageData extends AbstractTablePageData {
 		public static final String expirationTimeMilliseconds = "expirationTimeMilliseconds";
 		public static final String refreshToken = "refreshToken";
 		public static final String userId = "userId";
+		public static final String accountEmail = "accountEmail";
 		private Long m_apiCredentialId;
 		private Long m_provider;
 		private String m_accessToken;
 		private Long m_expirationTimeMilliseconds;
 		private String m_refreshToken;
 		private Long m_userId;
+		private String m_accountEmail;
 
 		public Long getApiCredentialId() {
 			return m_apiCredentialId;
@@ -111,6 +113,14 @@ public class ApiTablePageData extends AbstractTablePageData {
 
 		public void setUserId(Long newUserId) {
 			m_userId = newUserId;
+		}
+
+		public String getAccountEmail() {
+			return m_accountEmail;
+		}
+
+		public void setAccountEmail(String newAccountEmail) {
+			m_accountEmail = newAccountEmail;
 		}
 	}
 }

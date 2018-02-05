@@ -134,7 +134,7 @@ public class GoogleApiHelper {
 			LOG.debug("Initilazing Google API Flow");
 		}
 		final Collection<String> scopes = CollectionUtility.arrayList(CalendarScopes.CALENDAR,
-				PeopleServiceScopes.USERINFO_PROFILE, PeopleServiceScopes.PLUS_LOGIN);
+				PeopleServiceScopes.USERINFO_PROFILE, PeopleServiceScopes.USER_EMAILS_READ);
 		// Collections.singleton();
 
 		return new GoogleAuthorizationCodeFlow.Builder(new NetHttpTransport(), JacksonFactory.getDefaultInstance(),

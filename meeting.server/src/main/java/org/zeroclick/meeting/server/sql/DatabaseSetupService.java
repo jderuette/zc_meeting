@@ -145,7 +145,7 @@ public class DatabaseSetupService implements IDataStoreService {
 			LOG.info("Database table 'OAUHTCREDENTIAL' created");
 
 			if (CONFIG.getPropertyValue(DatabaseProperties.DatabaseAutoPopulateProperty.class)) {
-				SQL.insert(SQLs.OAUHTCREDENTIAL_INSERT_SAMPLE + SQLs.OAUHTCREDENTIAL_VALUES_01);
+				SQL.insert(SQLs.OAUHTCREDENTIAL_INSERT_SAMPLE_WITHOUT_ACCOUNT_EMAIL + SQLs.OAUHTCREDENTIAL_VALUES_01);
 				LOG.info("Database table 'OAUHTCREDENTIAL' populated with sample data");
 			}
 		} else {
