@@ -27,6 +27,7 @@ import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
 import org.eclipse.scout.rt.client.ui.basic.table.ITableRow;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractBooleanColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractLongColumn;
+import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractSmartColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractStringColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.IColumn;
 import org.eclipse.scout.rt.client.ui.form.FormEvent;
@@ -40,8 +41,10 @@ import org.eclipse.scout.rt.platform.html.internal.HtmlPlainBuilder;
 import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
+import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.configuration.shared.api.ApiLookupCall;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
@@ -591,15 +594,20 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 	}
 
 	@Order(11000)
-	public class OAuthCredentialIdColumn extends AbstractLongColumn {
+	public class OAuthCredentialIdColumn extends AbstractSmartColumn<Long> {
 		@Override
 		protected String getConfiguredHeaderText() {
 			return TEXTS.get("zc.meeting.calendar.OAuthCredentialId");
 		}
 
 		@Override
-		protected boolean getConfiguredVisible() {
-			return Boolean.FALSE;
+		protected Class<? extends ILookupCall<Long>> getConfiguredLookupCall() {
+			return ApiLookupCall.class;
+		}
+
+		@Override
+		protected int getConfiguredSortIndex() {
+			return 0;
 		}
 
 		@Override
@@ -608,7 +616,7 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 		}
 	}
 
-	@Order(11000)
+	@Order(12000)
 	public class UserIdColumn extends AbstractLongColumn {
 		@Override
 		protected String getConfiguredHeaderText() {

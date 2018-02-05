@@ -309,7 +309,8 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 	private Long getCalendarConfigId(final CalendarConfigurationFormData formData) {
 		Long calendarConfigId = null;
 		final String sql = SQLs.CALENDAR_CONFIG_SELECT_ID + SQLs.GENERIC_WHERE_FOR_SECURE_AND
-				+ SQLs.CALENDAR_CONFIG_FILTER_USER_ID + SQLs.CALENDAR_CONFIG_FILTER_EXTERNAL_ID;
+				+ SQLs.CALENDAR_CONFIG_FILTER_USER_ID + SQLs.CALENDAR_CONFIG_FILTER_EXTERNAL_ID
+				+ SQLs.CALENDAR_CONFIG_FILTER_OAUTH_CREDENTIAL_ID_ID;
 
 		final Object[][] data = SQL.select(sql, formData);
 		if (null != data && data.length > 0 && data[0] != null && data[0].length > 0) {

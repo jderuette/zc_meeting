@@ -166,6 +166,10 @@ public interface SQLs {
 
 	String OAUHTCREDENTIAL_SELECT_ALL_USER_IDS = "select user_id FROM OAUHTCREDENTIAL";
 
+	String OAUHTCREDENTIAL_LOOKUP = "SELECT DISTINCT api_credential_id, " + PatchAddEmailToApi.PATCHED_ADDED_COLUMN
+			+ " FROM OAUHTCREDENTIAL WHERE 1=1 " + "<key>   AND api_credential_id = :key </key>" + " <text> AND UPPER("
+			+ PatchAddEmailToApi.PATCHED_ADDED_COLUMN + ") LIKE UPPER('%'||:text||'%') </text> <all> </all>";
+
 	String OAUHTCREDENTIAL_INSERT_SAMPLE_WITHOUT_ACCOUNT_EMAIL = "INSERT INTO OAUHTCREDENTIAL (api_credential_id, user_id, access_token, expiration_time_milliseconds, refresh_token, provider, repository_id, provider_data)";
 	String OAUHTCREDENTIAL_INSERT_SAMPLE = "INSERT INTO OAUHTCREDENTIAL (api_credential_id, user_id, access_token, expiration_time_milliseconds, refresh_token, provider, repository_id, provider_data, "
 			+ PatchAddEmailToApi.PATCHED_ADDED_COLUMN + ")";
@@ -717,6 +721,7 @@ public interface SQLs {
 	String CALENDAR_CONFIG_FILTER_CURRENT_USER = " AND user_id = :currentUser";
 	String CALENDAR_CONFIG_FILTER_USER_ID = " AND user_id = :userId";
 	String CALENDAR_CONFIG_FILTER_EXTERNAL_ID = " AND external_id = :externalId";
+	String CALENDAR_CONFIG_FILTER_OAUTH_CREDENTIAL_ID_ID = "  AND oAuth_credential_id = :oAuthCredentialId";
 	String CALENDAR_CONFIG_FILTER_ADD_EVENT = " AND add_event_to_calendar='true'";
 	String CALENDAR_CONFIG_FILTER_PROCESSED = " AND process = 'true'";
 

@@ -33,6 +33,7 @@ import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.eclipse.scout.rt.shared.services.common.security.IAccessControlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.comon.user.AppUserHelper;
 import org.zeroclick.configuration.client.ConfigurationOutline;
 import org.zeroclick.configuration.client.administration.AdministrationOutline;
 import org.zeroclick.configuration.client.api.ApiCreatedNotificationHandler;
@@ -206,6 +207,11 @@ public class Desktop extends AbstractDesktop {
 		}
 	}
 
+	protected Boolean isMySelf(final Long userId) {
+		final Long currentUser = BEANS.get(AppUserHelper.class).getCurrentUserId();
+		return currentUser.equals(userId);
+	}
+
 	public void addNotification(final Integer severity, final Long duration, final Boolean closable,
 			final String messageKey) {
 		final IStatus status = new Status(TEXTS.get(messageKey), severity);
@@ -236,20 +242,28 @@ public class Desktop extends AbstractDesktop {
 			@Override
 			public void handleNotification(final ApiCreatedNotification notification) {
 				try {
-					// final ApiFormData eventForm = notification.getApiForm();
+					final ApiFormData apiForm = notification.getApiForm();
 					// LOG.debug("Created Api prepare to modify desktop menus ("
 					// + this.getClass().getName() + ") : "
 					// + eventForm.getUserId());
 					// Desktop.this.getMenu(AddGoogleCalendarMenu.class).setVisible(Boolean.FALSE);
 
 					LOG.info("Created Api prepare to autoConfigure Calendar's API");
-					final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
-					final Map<String, AbstractCalendarConfigurationTableRowData> calendars = googleHelper
-							.getCalendars();
+					if (Desktop.this.isMySelf(apiForm.getUserId())) {
+						final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 
-					final ICalendarConfigurationService calendarConfigurationService = BEANS
-							.get(ICalendarConfigurationService.class);
-					calendarConfigurationService.autoConfigure(calendars);
+						notificationHelper.addProccessedNotification("zc.api.added");
+						final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+						final Map<String, AbstractCalendarConfigurationTableRowData> calendars = googleHelper
+								.getCalendars();
+
+						final ICalendarConfigurationService calendarConfigurationService = BEANS
+								.get(ICalendarConfigurationService.class);
+						calendarConfigurationService.autoConfigure(calendars);
+
+						notificationHelper
+								.addProccessedNotification("zc.meeting.calendar.notification.createdCalendarsConfig");
+					}
 
 				} catch (final RuntimeException e) {
 					LOG.error("Could not handle new api. (" + this.getClass().getName() + ")", e);
