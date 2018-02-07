@@ -60,7 +60,8 @@ public class GoogleApiServletCallback extends HttpServlet {
 		input.setUserId(Long.valueOf(currentUsderId));
 		input.getProvider().setValue(ProviderCodeType.GoogleCode.ID);
 
-		final ApiFormData createdData = apiService.create(input);
+		// Not propagate creation (yet) because no accesToken, ... yet
+		final ApiFormData createdData = apiService.create(input, Boolean.FALSE);
 
 		final Credential credential = this.googleApiHelper.tryStoreCredential(req, resp,
 				createdData.getApiCredentialId());
@@ -68,7 +69,7 @@ public class GoogleApiServletCallback extends HttpServlet {
 		final String mainAddressEmail = this.getAccountEmail(createdData.getApiCredentialId(), createdData.getUserId());
 
 		// add the meailAdress to the API
-		this.storeEmailAccount(createdData.getApiCredentialId(), mainAddressEmail);
+		this.storeEmailAccount(createdData.getApiCredentialId(), currentUsderId, mainAddressEmail);
 
 		resp.getWriter().write("<html><head></head><body><b>");
 
@@ -96,7 +97,7 @@ public class GoogleApiServletCallback extends HttpServlet {
 			for (final ApiCalendar service : services) {
 				this.displayCalendarList(service.getCalendar());
 				// List the next 10 events from the primary calendar.
-				this.displayNextEvent(service.getCalendar(), "primary", 10);
+				this.displayNextEvent(service.getCalendar(), "primary", 5);
 			}
 		}
 	}
@@ -123,13 +124,21 @@ public class GoogleApiServletCallback extends HttpServlet {
 		return mainAddressEmail;
 	}
 
-	private ApiFormData storeEmailAccount(final Long apiCredentialId, final String accountEmail) {
+	private ApiFormData storeEmailAccount(final Long apiCredentialId, final Long userId, final String accountEmail)
+			throws IOException {
 		final IApiService apiService = BEANS.get(IApiService.class);
+
 		final ApiFormData apiDataAfterCredentialStored = apiService.load(apiCredentialId);
-
 		apiDataAfterCredentialStored.getAccountEmail().setValue(accountEmail);
+		final ApiFormData storedData = apiService.storeAccountEmail(apiDataAfterCredentialStored, userId, accountEmail);
 
-		return apiService.store(apiDataAfterCredentialStored);
+		if (!apiCredentialId.equals(apiDataAfterCredentialStored.getApiCredentialId())) {
+			// An update Occur, the "newly" stored credential must be discarded
+			final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+			googleHelper.removeCredential(apiCredentialId);
+		}
+
+		return storedData;
 	}
 
 	private void displayCalendarList(final Calendar service) throws IOException {

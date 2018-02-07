@@ -1446,9 +1446,14 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 						final ZonedDateTime currentStartDate = EventTablePage.this.getDateHelper().getZonedValue(
 								EventTablePage.this.getAppUserHelper().getUserZoneId(guestId),
 								Table.this.getStartDateColumn().getValue(row.getRowIndex()));
-						final ZonedDateTime newStartDate = currentStartDate.plusDays(1).withHour(0).withMinute(0)
-								.withSecond(0).withNano(0);
-						Table.this.changeDatesNext(newStartDate);
+						if (null == currentStartDate) {
+							// a simple next because, there is no existing start
+							Table.this.changeDatesNext();
+						} else {
+							final ZonedDateTime newStartDate = currentStartDate.plusDays(1).withHour(0).withMinute(0)
+									.withSecond(0).withNano(0);
+							Table.this.changeDatesNext(newStartDate);
+						}
 						Table.this.reloadMenus(Table.this.getSelectedRow());
 					} catch (final IOException e) {
 						LOG.error("Error while getting (Google) calendar details", e);

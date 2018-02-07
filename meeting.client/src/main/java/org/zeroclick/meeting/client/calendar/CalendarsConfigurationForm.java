@@ -99,7 +99,7 @@ public class CalendarsConfigurationForm extends AbstractForm implements IPageFor
 
 			@Override
 			protected double getConfiguredGridWeightY() {
-				return 0.4;
+				return 0.3;
 			}
 		}
 

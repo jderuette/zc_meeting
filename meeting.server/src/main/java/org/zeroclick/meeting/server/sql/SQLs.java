@@ -163,6 +163,8 @@ public interface SQLs {
 	String OAUHTCREDENTIAL_FILTER_OAUTH_ID = " AND api_credential_id = :apiCredentialId";
 	String OAUHTCREDENTIAL_FILTER_USER_ID = " AND user_id= :userId";
 	String OAUHTCREDENTIAL_FILTER_ACESS_TOKEN = " AND access_token= :accessToken";
+	String OAUHTCREDENTIAL_FILTER_ACCOUNTS_EMAIL = " AND " + PatchAddEmailToApi.PATCHED_ADDED_COLUMN
+			+ "= :accountEmail";
 
 	String OAUHTCREDENTIAL_SELECT_ALL_USER_IDS = "select user_id FROM OAUHTCREDENTIAL";
 

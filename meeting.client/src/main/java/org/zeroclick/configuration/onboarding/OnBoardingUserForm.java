@@ -265,7 +265,7 @@ public class OnBoardingUserForm extends AbstractForm {
 			@Override
 			public void handleNotification(final ApiCreatedNotification notification) {
 				try {
-					final ApiFormData eventForm = notification.getApiForm();
+					final ApiFormData eventForm = notification.getFormData();
 					LOG.debug("Created Api prepare to modify OnBoardingForm state : " + eventForm.getUserId());
 					OnBoardingUserForm.this.getOkButton().setActive();
 				} catch (final RuntimeException e) {
@@ -282,7 +282,7 @@ public class OnBoardingUserForm extends AbstractForm {
 			@Override
 			public void handleNotification(final ApiDeletedNotification notification) {
 				try {
-					final ApiFormData eventForm = notification.getApiForm();
+					final ApiFormData eventForm = notification.getFormData();
 					LOG.debug("Deleted Api prepare to modify OnBoardingForm state : " + eventForm.getUserId());
 					OnBoardingUserForm.this.getOkButton().setInactive();
 				} catch (final RuntimeException e) {

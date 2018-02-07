@@ -29,8 +29,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -61,8 +63,10 @@ import org.zeroclick.meeting.client.common.CallTrackerService;
 import org.zeroclick.meeting.client.common.UserAccessRequiredException;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
+import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationTablePageData.CalendarConfigurationTableRowData;
+import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationFormData.CalendarConfigTable.CalendarConfigTableRowData;
 import org.zeroclick.meeting.shared.calendar.IApiService;
 import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.security.AccessControlService;
@@ -449,6 +453,19 @@ public class GoogleApiHelper {
 
 	}
 
+	public void autoConfigureCalendars() {
+		this.autoConfigureCalendars(this.getCurrentUserId());
+	}
+
+	public void autoConfigureCalendars(final Long userId) {
+		final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+		final Map<String, AbstractCalendarConfigurationTableRowData> calendars = googleHelper.getCalendars(userId);
+
+		final ICalendarConfigurationService calendarConfigurationService = BEANS
+				.get(ICalendarConfigurationService.class);
+		calendarConfigurationService.autoConfigure(calendars);
+	}
+
 	public Map<String, AbstractCalendarConfigurationTableRowData> getCalendars() {
 		return this.getCalendars(this.getCurrentUserId());
 	}
@@ -512,6 +529,34 @@ public class GoogleApiHelper {
 				+ ", UserId : " + calendarConfigData.getUserId() + ", OAuthCredentialId : "
 				+ calendarConfigData.getOAuthCredentialId());
 		return calendarConfigData;
+	}
+
+	public String getAccountsEmail(final CalendarConfigTableRowData[] calendarsConfigurationRows) {
+		final StringBuilder accountsEmails = new StringBuilder();
+		final IApiService apiService = BEANS.get(IApiService.class);
+
+		if (null != calendarsConfigurationRows && calendarsConfigurationRows.length > 0) {
+
+			final Set<Long> modifiedOAuthIds = new HashSet<>();
+			for (final CalendarConfigTableRowData calendarConfig : calendarsConfigurationRows) {
+				if (null != calendarConfig.getOAuthCredentialId()) {
+					modifiedOAuthIds.add(calendarConfig.getOAuthCredentialId());
+				}
+			}
+
+			if (null != modifiedOAuthIds && modifiedOAuthIds.size() > 0) {
+				final String separator = ", ";
+				for (final Long modifiedOAuthId : modifiedOAuthIds) {
+					final ApiFormData apiData = apiService.load(modifiedOAuthId);
+					accountsEmails.append(apiData.getAccountEmail().getValue()).append(separator);
+				}
+				if (accountsEmails.length() >= separator.length()) {
+					accountsEmails.delete(accountsEmails.length() - separator.length(), accountsEmails.length());
+				}
+			}
+		}
+
+		return accountsEmails.toString();
 	}
 
 	public String getPrimaryToCalendarId(final Long userId) {

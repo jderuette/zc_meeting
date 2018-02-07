@@ -15,25 +15,19 @@ limitations under the License.
  */
 package org.zeroclick.configuration.shared.api;
 
-import java.io.Serializable;
-
+import org.zeroclick.meeting.shared.AbstractNotification;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 
 /**
  * @author djer
  *
  */
-public abstract class AbstractApiNotification implements Serializable {
+public class ApiModifiedNotification extends AbstractNotification<ApiFormData> {
 
-	private static final long serialVersionUID = 7138478047755190548L;
+	private static final long serialVersionUID = 8544085972608024550L;
 
-	private final ApiFormData apiForm;
-
-	public AbstractApiNotification(final ApiFormData apiForm) {
-		this.apiForm = apiForm;
+	public ApiModifiedNotification(final ApiFormData apiForm) {
+		super(apiForm);
 	}
 
-	public ApiFormData getApiForm() {
-		return this.apiForm;
-	}
 }
