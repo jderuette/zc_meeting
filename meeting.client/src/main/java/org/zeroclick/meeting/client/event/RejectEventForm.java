@@ -2,6 +2,7 @@ package org.zeroclick.meeting.client.event;
 
 import java.io.IOException;
 import java.time.ZonedDateTime;
+import java.util.List;
 
 import org.eclipse.scout.rt.client.context.ClientRunContexts;
 import org.eclipse.scout.rt.client.dto.FormData;
@@ -37,14 +38,13 @@ import org.zeroclick.meeting.client.event.RejectEventForm.MainBox.ReasonField;
 import org.zeroclick.meeting.client.event.RejectEventForm.MainBox.SubjectField;
 import org.zeroclick.meeting.client.event.RejectEventForm.MainBox.VenueField;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
+import org.zeroclick.meeting.client.google.api.GoogleApiHelper.ApiCalendar;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.RejectEventFormData;
 import org.zeroclick.meeting.shared.event.StateCodeType;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
-
-import com.google.api.services.calendar.Calendar;
 
 @FormData(value = RejectEventFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class RejectEventForm extends AbstractForm {
@@ -394,8 +394,8 @@ public class RejectEventForm extends AbstractForm {
 	}
 
 	public class ModifyHandler extends AbstractFormHandler {
-		Calendar attendeeGCalSrv;
-		Calendar hostGCalSrv;
+		List<ApiCalendar> attendeeGCalSrv;
+		List<ApiCalendar> hostGCalSrv;
 
 		@Override
 		protected void execLoad() {
@@ -435,12 +435,12 @@ public class RejectEventForm extends AbstractForm {
 			}
 		}
 
-		private Calendar getCalendarService(final Long userId) throws IOException {
-			Calendar gCalendarSrv = null;
+		private List<ApiCalendar> getCalendarService(final Long userId) throws IOException {
+			List<ApiCalendar> gCalendarSrv = null;
 			final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
 			try {
 				if (null != userId) {
-					gCalendarSrv = googleHelper.getCalendarService(userId);
+					gCalendarSrv = googleHelper.getCalendarsServices(userId);
 				}
 			} catch (final UserAccessRequiredException uare) {
 				LOG.debug("No calendar provider for user " + userId);
@@ -461,23 +461,33 @@ public class RejectEventForm extends AbstractForm {
 					final RejectEventFormData formData = new RejectEventFormData();
 					RejectEventForm.this.exportFormData(formData);
 
-					if (null != RejectEventForm.this.getExternalIdOrganizer()
-							&& null != ModifyHandler.this.hostGCalSrv) {
-						try {
-							LOG.info(this.buildRejectLog("Deleting", RejectEventForm.this.getEventId(),
+					if (null != RejectEventForm.this.getExternalIdOrganizer() && null != ModifyHandler.this.hostGCalSrv
+							&& ModifyHandler.this.hostGCalSrv.size() > 0) {
+
+						LOG.info(this.buildRejectLog("Deleting", RejectEventForm.this.getEventId(),
+								RejectEventForm.this.getExternalIdOrganizer(), RejectEventForm.this.getOrganizer()));
+						final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+						Boolean eventDeleted = Boolean.FALSE;
+
+						for (final ApiCalendar hostGCalSrv : ModifyHandler.this.hostGCalSrv) {
+							try {
+								hostGCalSrv.getCalendar().events()
+										.delete(googleHelper
+												.getUserCreateEventCalendar(RejectEventForm.this.getOrganizer()),
+												RejectEventForm.this.getExternalIdOrganizer())
+										.execute();
+								eventDeleted = Boolean.TRUE;
+							} catch (final IOException e) {
+								LOG.warn(this.buildRejectLog("Error while deleting", RejectEventForm.this.getEventId(),
+										RejectEventForm.this.getExternalIdOrganizer(),
+										RejectEventForm.this.getOrganizer()), e);
+							}
+						}
+
+						if (!eventDeleted) {
+							LOG.warn(this.buildRejectLog("Error while deleting", RejectEventForm.this.getEventId(),
 									RejectEventForm.this.getExternalIdOrganizer(),
 									RejectEventForm.this.getOrganizer()));
-							final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
-
-							ModifyHandler.this.hostGCalSrv.events()
-									.delete(googleHelper
-											.getUserCreateEventCalendar(RejectEventForm.this.getOrganizer()),
-											RejectEventForm.this.getExternalIdOrganizer())
-									.execute();
-						} catch (final IOException e) {
-							LOG.error(this.buildRejectLog("Error while deleting", RejectEventForm.this.getEventId(),
-									RejectEventForm.this.getExternalIdOrganizer(), RejectEventForm.this.getOrganizer()),
-									e);
 							throw new VetoException(TEXTS.get("zc.meeting.error.deletingEvent"));
 						}
 					}

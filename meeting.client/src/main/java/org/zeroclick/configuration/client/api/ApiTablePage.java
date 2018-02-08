@@ -92,6 +92,10 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 			}
 		}
 
+		public AccountEmailColumn getAccountEmailColumn() {
+			return this.getColumnSet().getColumnByClass(AccountEmailColumn.class);
+		}
+
 		public ProviderColumn getProviderColumn() {
 			return this.getColumnSet().getColumnByClass(ProviderColumn.class);
 		}
@@ -225,9 +229,22 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 
 			@Override
 			protected Long getConfiguredMaxValue() {
-				// TODO Auto-generated method stub
 				return Long.MAX_VALUE;
 			}
 		}
+
+		@Order(7000)
+		public class AccountEmailColumn extends AbstractStringColumn {
+			@Override
+			protected String getConfiguredHeaderText() {
+				return TEXTS.get("zc.api.accountEmail");
+			}
+
+			@Override
+			protected int getConfiguredWidth() {
+				return 128;
+			}
+		}
+
 	}
 }

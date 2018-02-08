@@ -25,12 +25,14 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -48,18 +50,23 @@ import org.eclipse.scout.rt.platform.config.AbstractStringConfigProperty;
 import org.eclipse.scout.rt.platform.config.CONFIG;
 import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.status.IStatus;
+import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.onboarding.OnBoardingUserForm;
+import org.zeroclick.configuration.shared.api.ApiTablePageData;
+import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
 import org.zeroclick.meeting.client.common.CallTrackerService;
 import org.zeroclick.meeting.client.common.UserAccessRequiredException;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
+import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationTablePageData.CalendarConfigurationTableRowData;
+import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationFormData.CalendarConfigTable.CalendarConfigTableRowData;
 import org.zeroclick.meeting.shared.calendar.IApiService;
 import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.security.AccessControlService;
@@ -82,6 +89,8 @@ import com.google.api.services.calendar.model.CalendarList;
 import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
+import com.google.api.services.people.v1.PeopleService;
+import com.google.api.services.people.v1.PeopleServiceScopes;
 
 /**
  * @author djer
@@ -128,7 +137,9 @@ public class GoogleApiHelper {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Initilazing Google API Flow");
 		}
-		final Collection<String> scopes = Collections.singleton(CalendarScopes.CALENDAR);
+		final Collection<String> scopes = CollectionUtility.arrayList(CalendarScopes.CALENDAR,
+				PeopleServiceScopes.USERINFO_PROFILE, PeopleServiceScopes.USER_EMAILS_READ);
+		// Collections.singleton();
 
 		return new GoogleAuthorizationCodeFlow.Builder(new NetHttpTransport(), JacksonFactory.getDefaultInstance(),
 				this.getClientSecret(), scopes).setDataStoreFactory(this.dataStoreFactory).setAccessType("offline")
@@ -201,9 +212,23 @@ public class GoogleApiHelper {
 		}
 	}
 
-	public Credential getCredential(final Long userId) throws IOException {
+	public List<ApiCredential> getCredentials(final Long userId) throws IOException {
+		final IApiService apiService = BEANS.get(IApiService.class);
+		final List<ApiCredential> credentials = new ArrayList<>();
+
+		final ApiTablePageData userApis = apiService.getApis(userId);
+
+		if (null != userApis && userApis.getRowCount() > 0) {
+			for (final ApiTableRowData aUserApi : userApis.getRows()) {
+				credentials.add(new ApiCredential(this.getCredential(aUserApi.getApiCredentialId()), aUserApi));
+			}
+		}
+		return credentials;
+	}
+
+	public Credential getCredential(final Long oAuthCredentialId) throws IOException {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("Searching for Credential for user : " + userId);
+			LOG.debug("Searching for Credential for oAuthCredentialId : " + oAuthCredentialId);
 		}
 
 		Credential exitingCredential = null;
@@ -211,11 +236,11 @@ public class GoogleApiHelper {
 			this.flow = this.initializeFlow();
 		}
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("Loading Credential from Google Flow for user : " + userId);
+			LOG.debug("Loading Credential from Google Flow for oAuthCredentialId : " + oAuthCredentialId);
 		}
-		exitingCredential = this.flow.loadCredential(userId.toString());
+		exitingCredential = this.flow.loadCredential(oAuthCredentialId.toString());
 		if (null == exitingCredential) {
-			LOG.warn("No save credential (Google) for user : " + userId);
+			LOG.warn("No save credential (Google) for oAuthCredentialId : " + oAuthCredentialId);
 		}
 		return exitingCredential;
 
@@ -229,11 +254,11 @@ public class GoogleApiHelper {
 	 * javax.servlet.http.HttpServletResponse, java.lang.String)
 	 */
 	public Credential tryStoreCredential(final HttpServletRequest req, final HttpServletResponse resp,
-			final Long userId) throws ServletException, IOException {
+			final Long oAuthCredentialId) throws ServletException, IOException {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("Trying to store credential for user : " + userId);
+			LOG.debug("Trying to store credential for oAuthCredentialId : " + oAuthCredentialId);
 		}
-		this.callTracker.validateCanCall(userId);
+		this.callTracker.validateCanCall(oAuthCredentialId);
 		Credential result = null;
 		final StringBuffer buf = req.getRequestURL();
 		if (req.getQueryString() != null) {
@@ -244,11 +269,12 @@ public class GoogleApiHelper {
 		if (responseUrl.getError() != null) {
 			// onError(req, resp, responseUrl);
 			// DO nothing default return is false;
-			LOG.warn("Google response contain error : " + responseUrl.getError() + " for userId : " + userId);
+			LOG.warn("Google response contain error : " + responseUrl.getError() + " for oAuthCredentialId : "
+					+ oAuthCredentialId);
 		} else if (code == null) {
 			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			LOG.warn("Missing authorization code");
-			resp.getWriter().print("Missing authorization code for userId : " + userId);
+			resp.getWriter().print("Missing authorization code for oAuthCredentialId : " + oAuthCredentialId);
 		} else {
 			this.lock.lock();
 			try {
@@ -257,12 +283,12 @@ public class GoogleApiHelper {
 				}
 				final String redirectUri = this.getRedirectUri();
 				final TokenResponse response = this.flow.newTokenRequest(code).setRedirectUri(redirectUri).execute();
-				result = this.flow.createAndStoreCredential(response, userId.toString());
+				result = this.flow.createAndStoreCredential(response, oAuthCredentialId.toString());
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("Credential Stored in default dataStore for : " + userId);
+					LOG.debug("Credential Stored in default dataStore for oAuthCredentialId : " + oAuthCredentialId);
 				}
 
-				this.callTracker.resetNbCall(userId);
+				this.callTracker.resetNbCall(oAuthCredentialId);
 
 				// onSuccess(req, resp, credential);
 			} finally {
@@ -272,11 +298,11 @@ public class GoogleApiHelper {
 		return result;
 	}
 
-	public void removeCredential(final Long userId) throws IOException {
+	public void removeCredential(final Long oAuthCredentialId) throws IOException {
 		if (this.flow == null) {
 			this.flow = this.initializeFlow();
 		}
-		this.flow.getCredentialDataStore().delete(String.valueOf(userId));
+		this.flow.getCredentialDataStore().delete(String.valueOf(oAuthCredentialId));
 	}
 
 	/**
@@ -362,8 +388,8 @@ public class GoogleApiHelper {
 	 * @throws UserAccessRequiredException
 	 *             when no credential can be found for the user
 	 */
-	public Calendar getCalendarService(final Long userId) throws IOException {
-		final Credential credential = this.getCredential(userId);
+	public Calendar getCalendarService(final Long apiCredentialId) throws IOException {
+		final Credential credential = this.getCredential(apiCredentialId);
 		if (null != credential) {
 			return new Calendar.Builder(new NetHttpTransport(), JacksonFactory.getDefaultInstance(), credential)
 					.setApplicationName("0Click Meeting").build();
@@ -371,11 +397,52 @@ public class GoogleApiHelper {
 		throw new UserAccessRequiredException();
 	}
 
+	/**
+	 * Build and return an authorized Calendar client service.
+	 *
+	 * @return an authorized Calendar client service
+	 * @throws IOException
+	 * @throws UserAccessRequiredException
+	 *             when no credential can be found for the user
+	 */
+	public PeopleService getPeopleService(final Long apiCredentialId) throws IOException {
+		final Credential credential = this.getCredential(apiCredentialId);
+		if (null != credential) {
+			return new PeopleService.Builder(new NetHttpTransport(), JacksonFactory.getDefaultInstance(), credential)
+					.setApplicationName("0Click Meeting").build();
+		}
+		throw new UserAccessRequiredException();
+	}
+
+	/**
+	 * Build and return an authorized Calendar client service.
+	 *
+	 * @return an authorized Calendar client service
+	 * @throws IOException
+	 * @throws UserAccessRequiredException
+	 *             when no credential can be found for the user
+	 */
+	public List<ApiCalendar> getCalendarsServices(final Long userId) throws IOException {
+		final List<ApiCalendar> calendarsServices = new ArrayList<>();
+		final List<ApiCredential> apiCredentials = this.getCredentials(userId);
+		if (null != apiCredentials && apiCredentials.size() > 0) {
+			for (final ApiCredential apiCredential : apiCredentials) {
+				final Calendar gcalendarService = new Calendar.Builder(new NetHttpTransport(),
+						JacksonFactory.getDefaultInstance(), apiCredential.getCredential())
+								.setApplicationName("0Click Meeting").build();
+				calendarsServices.add(new ApiCalendar(gcalendarService, apiCredential));
+			}
+			return calendarsServices;
+		}
+		throw new UserAccessRequiredException();
+	}
+
 	@SuppressWarnings("PMD.EmptyCatchBlock")
 	public Boolean isCalendarConfigured(final Long userId) {
 		Boolean isConfigured = Boolean.FALSE;
+
 		try {
-			this.getCalendarService(userId);
+			this.getCalendarsServices(userId);
 			isConfigured = Boolean.TRUE;
 		} catch (final UserAccessRequiredException uare) {
 			// Do nothing default is FALSE
@@ -384,6 +451,19 @@ public class GoogleApiHelper {
 		}
 		return isConfigured;
 
+	}
+
+	public void autoConfigureCalendars() {
+		this.autoConfigureCalendars(this.getCurrentUserId());
+	}
+
+	public void autoConfigureCalendars(final Long userId) {
+		final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+		final Map<String, AbstractCalendarConfigurationTableRowData> calendars = googleHelper.getCalendars(userId);
+
+		final ICalendarConfigurationService calendarConfigurationService = BEANS
+				.get(ICalendarConfigurationService.class);
+		calendarConfigurationService.autoConfigure(calendars);
 	}
 
 	public Map<String, AbstractCalendarConfigurationTableRowData> getCalendars() {
@@ -400,26 +480,41 @@ public class GoogleApiHelper {
 	public Map<String, AbstractCalendarConfigurationTableRowData> getCalendars(final Long userId) {
 		LOG.info("Retireving all (Google) calendar for user : " + userId);
 		final Map<String, AbstractCalendarConfigurationTableRowData> calendars = new HashMap<>();
-		try {
-			final Calendar calendarService = this.getCalendarService(userId);
-			final CalendarList calendarsList = calendarService.calendarList().list().execute();
 
-			final List<CalendarListEntry> calendarItems = calendarsList.getItems();
-			for (final CalendarListEntry calendarItem : calendarItems) {
-				// final com.google.api.services.calendar.model.Calendar cal =
-				// calendarService.calendars().get(calendarKey)
-				// .execute();
-				calendars.put(calendarItem.getId(), this.toCalendarConfig(calendarItem, userId));
-			}
-		} catch (final IOException e) {
-			LOG.warn("Cannot get (Google) calendar Service for user : " + userId, e);
-			throw new VetoException("Cannot get your Google calendar Data");
+		List<ApiCalendar> calendarsServices;
+		try {
+			calendarsServices = this.getCalendarsServices(userId);
+		} catch (final IOException e1) {
+			LOG.warn("Cannot get calendars lists for user : " + userId);
+			return calendars;
 		}
+
+		if (null != calendarsServices && calendarsServices.size() > 0) {
+			for (final ApiCalendar calendarService : calendarsServices) {
+				try {
+					final CalendarList calendarsList = calendarService.getCalendar().calendarList().list().execute();
+
+					final List<CalendarListEntry> calendarItems = calendarsList.getItems();
+					for (final CalendarListEntry calendarItem : calendarItems) {
+						final StringBuilder calendarId = new StringBuilder();
+						calendarId.append(userId).append("_").append(calendarItem.getId()).append("_")
+								.append(calendarService.getMetaData().getApiCredentialId());
+						calendars.put(calendarId.toString(), this.toCalendarConfig(calendarItem, userId,
+								calendarService.getMetaData().getApiCredentialId()));
+					}
+
+				} catch (final IOException e) {
+					LOG.warn("Cannot get (Google) calendar Service for user : " + userId, e);
+					throw new VetoException("Cannot get your Google calendar Data");
+				}
+			}
+		}
+
 		return calendars;
 	}
 
-	private AbstractCalendarConfigurationTableRowData toCalendarConfig(final CalendarListEntry cal, final Long userId)
-			throws IOException {
+	private AbstractCalendarConfigurationTableRowData toCalendarConfig(final CalendarListEntry cal, final Long userId,
+			final Long apiCredentialId) throws IOException {
 		LOG.debug("Creating model data for (Google) calendar data : " + cal);
 		final CalendarConfigurationTableRowData calendarConfigData = new CalendarConfigurationTableRowData();
 		final String accessRole = cal.getAccessRole();
@@ -429,11 +524,39 @@ public class GoogleApiHelper {
 		calendarConfigData.setMain(cal.isPrimary());
 		calendarConfigData.setReadOnly(!isWritable);
 		calendarConfigData.setUserId(userId);
-		calendarConfigData.setOAuthCredentialId(this.getOAuthCredentialId(userId));
+		calendarConfigData.setOAuthCredentialId(apiCredentialId);
 		LOG.debug("Calendar Config model created with externalId : " + calendarConfigData.getExternalId()
 				+ ", UserId : " + calendarConfigData.getUserId() + ", OAuthCredentialId : "
 				+ calendarConfigData.getOAuthCredentialId());
 		return calendarConfigData;
+	}
+
+	public String getAccountsEmail(final CalendarConfigTableRowData[] calendarsConfigurationRows) {
+		final StringBuilder accountsEmails = new StringBuilder();
+		final IApiService apiService = BEANS.get(IApiService.class);
+
+		if (null != calendarsConfigurationRows && calendarsConfigurationRows.length > 0) {
+
+			final Set<Long> modifiedOAuthIds = new HashSet<>();
+			for (final CalendarConfigTableRowData calendarConfig : calendarsConfigurationRows) {
+				if (null != calendarConfig.getOAuthCredentialId()) {
+					modifiedOAuthIds.add(calendarConfig.getOAuthCredentialId());
+				}
+			}
+
+			if (null != modifiedOAuthIds && modifiedOAuthIds.size() > 0) {
+				final String separator = ", ";
+				for (final Long modifiedOAuthId : modifiedOAuthIds) {
+					final ApiFormData apiData = apiService.load(modifiedOAuthId);
+					accountsEmails.append(apiData.getAccountEmail().getValue()).append(separator);
+				}
+				if (accountsEmails.length() >= separator.length()) {
+					accountsEmails.delete(accountsEmails.length() - separator.length(), accountsEmails.length());
+				}
+			}
+		}
+
+		return accountsEmails.toString();
 	}
 
 	public String getPrimaryToCalendarId(final Long userId) {
@@ -474,19 +597,6 @@ public class GoogleApiHelper {
 		LOG.debug("Event will be store in : " + calendarId + " for user : " + userId);
 
 		return calendarId;
-	}
-
-	private Long getOAuthCredentialId() throws IOException {
-		return this.getOAuthCredentialId(this.getCurrentUserId());
-	}
-
-	private Long getOAuthCredentialId(final Long userId) throws IOException {
-		final Credential credential = this.getCredential(userId);
-
-		final IApiService apiService = BEANS.get(IApiService.class);
-		final Long oAuthCredentialId = apiService.getApiIdByAccessToken(userId, credential.getAccessToken());
-
-		return oAuthCredentialId;
 	}
 
 	/**
@@ -604,6 +714,64 @@ public class GoogleApiHelper {
 		@Override
 		public String getKey() {
 			return "contacts.api.google.user.storage.dir";
+		}
+	}
+
+	public class ApiCredential {
+		Credential credential;
+		ApiTableRowData metaData;
+
+		public ApiCredential() {
+			super();
+			this.credential = null;
+			this.metaData = null;
+		}
+
+		public ApiCredential(final Credential credential, final ApiTableRowData metaData) {
+			super();
+			this.credential = credential;
+			this.metaData = metaData;
+		}
+
+		public Credential getCredential() {
+			return this.credential;
+		}
+
+		public void setCredential(final Credential credential) {
+			this.credential = credential;
+		}
+
+		public ApiTableRowData getMetaData() {
+			return this.metaData;
+		}
+
+		public void setMetaData(final ApiTableRowData metaData) {
+			this.metaData = metaData;
+		}
+	}
+
+	public class ApiCalendar {
+		final Calendar calendar;
+		final Credential credential;
+		final ApiTableRowData metaData;
+
+		public ApiCalendar(final Calendar calendar, final ApiCredential apiCredential) {
+			super();
+			this.calendar = calendar;
+			this.credential = apiCredential.getCredential();
+			this.metaData = apiCredential.getMetaData();
+		}
+
+		public Calendar getCalendar() {
+			return this.calendar;
+		}
+
+		public Credential getCredential() {
+			return this.credential;
+		}
+
+		public ApiTableRowData getMetaData() {
+			return this.metaData;
 		}
 	}
 

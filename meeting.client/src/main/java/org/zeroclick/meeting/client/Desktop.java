@@ -3,7 +3,6 @@ package org.zeroclick.meeting.client;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.scout.rt.client.context.ClientRunContexts;
@@ -33,10 +32,12 @@ import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.eclipse.scout.rt.shared.services.common.security.IAccessControlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.comon.user.AppUserHelper;
 import org.zeroclick.configuration.client.ConfigurationOutline;
 import org.zeroclick.configuration.client.administration.AdministrationOutline;
 import org.zeroclick.configuration.client.api.ApiCreatedNotificationHandler;
 import org.zeroclick.configuration.client.api.ApiDeletedNotificationHandler;
+import org.zeroclick.configuration.client.api.ApiModifiedNotificationHandler;
 import org.zeroclick.configuration.client.user.UserForm;
 import org.zeroclick.configuration.client.user.UserModifiedNotificationHandler;
 import org.zeroclick.configuration.client.user.ValidateCpsForm;
@@ -44,6 +45,7 @@ import org.zeroclick.configuration.client.user.ViewCpsForm;
 import org.zeroclick.configuration.onboarding.OnBoardingUserForm;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
 import org.zeroclick.configuration.shared.api.ApiDeletedNotification;
+import org.zeroclick.configuration.shared.api.ApiModifiedNotification;
 import org.zeroclick.configuration.shared.role.ReadPermissionPermission;
 import org.zeroclick.configuration.shared.role.ReadRolePermission;
 import org.zeroclick.configuration.shared.user.IUserService;
@@ -55,7 +57,6 @@ import org.zeroclick.meeting.client.calendar.CalendarsConfigurationForm;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
 import org.zeroclick.meeting.client.meeting.MeetingOutline;
 import org.zeroclick.meeting.shared.Icons;
-import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationFormData;
@@ -76,6 +77,7 @@ public class Desktop extends AbstractDesktop {
 
 	protected INotificationListener<ApiCreatedNotification> apiCreatedListener;
 	private INotificationListener<ApiDeletedNotification> apiDeletedListener;
+	private INotificationListener<ApiModifiedNotification> apiModifiedListener;
 	private INotificationListener<UserModifiedNotification> userModifiedListener;
 
 	@Override
@@ -113,6 +115,10 @@ public class Desktop extends AbstractDesktop {
 		final ApiDeletedNotificationHandler apiDeletedNotificationHandler = BEANS
 				.get(ApiDeletedNotificationHandler.class);
 		apiDeletedNotificationHandler.addListener(this.createApiDeletedListener());
+
+		final ApiModifiedNotificationHandler apiModifiedNotificationHandler = BEANS
+				.get(ApiModifiedNotificationHandler.class);
+		apiModifiedNotificationHandler.addListener(this.createApiModifiedListener());
 
 		final UserModifiedNotificationHandler userModifiedNotificationHandler = BEANS
 				.get(UserModifiedNotificationHandler.class);
@@ -167,9 +173,7 @@ public class Desktop extends AbstractDesktop {
 
 			try {
 				final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
-				final Map<String, AbstractCalendarConfigurationTableRowData> calendars = googleHelper.getCalendars();
-
-				calendarConfigurationService.autoConfigure(calendars);
+				googleHelper.autoConfigureCalendars();
 			} catch (final Exception ex) {
 				LOG.error("Error while importing (Google) calendar for user Id : " + currentUserId, ex);
 			}
@@ -190,6 +194,12 @@ public class Desktop extends AbstractDesktop {
 			apiDeletedNotificationHandler.removeListener(this.apiDeletedListener);
 		}
 
+		if (null != this.apiModifiedListener) {
+			final ApiModifiedNotificationHandler apiModifiedNotificationHandler = BEANS
+					.get(ApiModifiedNotificationHandler.class);
+			apiModifiedNotificationHandler.removeListener(this.apiModifiedListener);
+		}
+
 		if (null != this.userModifiedListener) {
 			final UserModifiedNotificationHandler userModifiedNotificationHandler = BEANS
 					.get(UserModifiedNotificationHandler.class);
@@ -204,6 +214,11 @@ public class Desktop extends AbstractDesktop {
 				break;
 			}
 		}
+	}
+
+	protected Boolean isMySelf(final Long userId) {
+		final Long currentUser = BEANS.get(AppUserHelper.class).getCurrentUserId();
+		return currentUser.equals(userId);
 	}
 
 	public void addNotification(final Integer severity, final Long duration, final Boolean closable,
@@ -236,10 +251,22 @@ public class Desktop extends AbstractDesktop {
 			@Override
 			public void handleNotification(final ApiCreatedNotification notification) {
 				try {
-					final ApiFormData eventForm = notification.getApiForm();
-					LOG.debug("Created Api prepare to modify desktop menus (" + this.getClass().getName() + ") : "
-							+ eventForm.getUserId());
-					Desktop.this.getMenu(AddGoogleCalendarMenu.class).setVisible(Boolean.FALSE);
+					final ApiFormData apiForm = notification.getFormData();
+
+					if (Desktop.this.isMySelf(apiForm.getUserId())) {
+						LOG.info(
+								"Created Api prepare to autoConfigure Calendar's API id " + apiForm.getApiCredentialId()
+										+ " with email : " + apiForm.getAccountEmail().getValue());
+						final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+
+						notificationHelper.addProccessedNotification("zc.api.added");
+						final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+						googleHelper.autoConfigureCalendars();
+
+						notificationHelper.addProccessedNotification(
+								"zc.meeting.calendar.notification.createdCalendarsConfig",
+								apiForm.getAccountEmail().getValue());
+					}
 
 				} catch (final RuntimeException e) {
 					LOG.error("Could not handle new api. (" + this.getClass().getName() + ")", e);
@@ -250,12 +277,41 @@ public class Desktop extends AbstractDesktop {
 		return this.apiCreatedListener;
 	}
 
+	private INotificationListener<ApiModifiedNotification> createApiModifiedListener() {
+		this.apiModifiedListener = new INotificationListener<ApiModifiedNotification>() {
+			@Override
+			public void handleNotification(final ApiModifiedNotification notification) {
+				try {
+					final ApiFormData apiForm = notification.getFormData();
+					LOG.info("Modified Api prepare to autoConfigure Calendar's API id " + apiForm.getApiCredentialId()
+							+ " with email : " + apiForm.getAccountEmail().getValue());
+					if (Desktop.this.isMySelf(apiForm.getUserId())) {
+						final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+
+						notificationHelper.addProccessedNotification("zc.api.modified");
+						final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+						googleHelper.autoConfigureCalendars();
+
+						notificationHelper.addProccessedNotification(
+								"zc.meeting.calendar.notification.modifiedCalendarsConfig",
+								apiForm.getAccountEmail().getValue());
+					}
+
+				} catch (final RuntimeException e) {
+					LOG.error("Could not handle modified api. (" + this.getClass().getName() + ")", e);
+				}
+			}
+		};
+
+		return this.apiModifiedListener;
+	}
+
 	private INotificationListener<ApiDeletedNotification> createApiDeletedListener() {
 		this.apiDeletedListener = new INotificationListener<ApiDeletedNotification>() {
 			@Override
 			public void handleNotification(final ApiDeletedNotification notification) {
 				try {
-					final ApiFormData eventForm = notification.getApiForm();
+					final ApiFormData eventForm = notification.getFormData();
 					LOG.debug("Deleted Api prepare to modify desktop menus (" + this.getClass().getName() + ") : "
 							+ eventForm.getUserId());
 					Desktop.this.getMenu(AddGoogleCalendarMenu.class).setVisible(Boolean.TRUE);
@@ -329,7 +385,7 @@ public class Desktop extends AbstractDesktop {
 		protected void execInitAction() {
 			super.execInitAction();
 			this.setVisiblePermission(new CreateApiPermission());
-			this.setVisible(!BEANS.get(GoogleApiHelper.class).isCalendarConfigured());
+			// this.setVisible(!BEANS.get(GoogleApiHelper.class).isCalendarConfigured());
 		}
 	}
 

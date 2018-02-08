@@ -62,6 +62,7 @@ public class CalendarsConfigurationFormData extends AbstractFormData {
 
 			private static final long serialVersionUID = 1L;
 			public static final String calendarConfigurationId = "calendarConfigurationId";
+			public static final String oAuthCredentialId = "oAuthCredentialId";
 			public static final String externalId = "externalId";
 			public static final String name = "name";
 			public static final String readOnly = "readOnly";
@@ -71,9 +72,9 @@ public class CalendarsConfigurationFormData extends AbstractFormData {
 			public static final String processFullDayEvent = "processFullDayEvent";
 			public static final String processFreeEvent = "processFreeEvent";
 			public static final String processNotRegistredOnEvent = "processNotRegistredOnEvent";
-			public static final String oAuthCredentialId = "oAuthCredentialId";
 			public static final String userId = "userId";
 			private Long m_calendarConfigurationId;
+			private Long m_oAuthCredentialId;
 			private String m_externalId;
 			private String m_name;
 			private Boolean m_readOnly;
@@ -83,7 +84,6 @@ public class CalendarsConfigurationFormData extends AbstractFormData {
 			private Boolean m_processFullDayEvent;
 			private Boolean m_processFreeEvent;
 			private Boolean m_processNotRegistredOnEvent;
-			private Long m_oAuthCredentialId;
 			private Long m_userId;
 
 			public Long getCalendarConfigurationId() {
@@ -92,6 +92,14 @@ public class CalendarsConfigurationFormData extends AbstractFormData {
 
 			public void setCalendarConfigurationId(Long newCalendarConfigurationId) {
 				m_calendarConfigurationId = newCalendarConfigurationId;
+			}
+
+			public Long getOAuthCredentialId() {
+				return m_oAuthCredentialId;
+			}
+
+			public void setOAuthCredentialId(Long newOAuthCredentialId) {
+				m_oAuthCredentialId = newOAuthCredentialId;
 			}
 
 			public String getExternalId() {
@@ -164,14 +172,6 @@ public class CalendarsConfigurationFormData extends AbstractFormData {
 
 			public void setProcessNotRegistredOnEvent(Boolean newProcessNotRegistredOnEvent) {
 				m_processNotRegistredOnEvent = newProcessNotRegistredOnEvent;
-			}
-
-			public Long getOAuthCredentialId() {
-				return m_oAuthCredentialId;
-			}
-
-			public void setOAuthCredentialId(Long newOAuthCredentialId) {
-				m_oAuthCredentialId = newOAuthCredentialId;
 			}
 
 			public Long getUserId() {

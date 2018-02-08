@@ -13,21 +13,16 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.zeroclick.configuration.shared.api;
+package org.zeroclick.configuration.client.api;
 
-import org.zeroclick.meeting.shared.AbstractNotification;
-import org.zeroclick.meeting.shared.calendar.ApiFormData;
+import org.zeroclick.configuration.shared.api.ApiModifiedNotification;
+import org.zeroclick.meeting.client.clientnotification.AbstractObservableModelNotificationHandler;
 
 /**
  * @author djer
  *
  */
-public class ApiCreatedNotification extends AbstractNotification<ApiFormData> {
-
-	private static final long serialVersionUID = 1291791661924835564L;
-
-	public ApiCreatedNotification(final ApiFormData apiForm) {
-		super(apiForm);
-	}
+public class ApiModifiedNotificationHandler
+		extends AbstractObservableModelNotificationHandler<ApiModifiedNotification> {
 
 }

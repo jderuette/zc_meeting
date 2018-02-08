@@ -241,6 +241,7 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 
 		for (final String calendarKey : calendars.keySet()) {
 			final AbstractCalendarConfigurationTableRowData calendarData = calendars.get(calendarKey);
+
 			final CalendarConfigurationFormData data = new CalendarConfigurationFormData();
 			data.getUserId().setValue(calendarData.getUserId());
 			data.getExternalId().setValue(calendarData.getExternalId());
@@ -248,7 +249,8 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 			data.getProcess().setValue(calendarData.getMain());
 			data.getMain().setValue(calendarData.getMain());
 			data.getReadOnly().setValue(calendarData.getReadOnly());
-			data.getAddEventToCalendar().setValue(calendarData.getMain());
+			data.getAddEventToCalendar()
+					.setValue(calendarData.getMain() && !this.hasCreateEventCalendar(calendarData.getUserId()));
 			data.getOAuthCredentialId().setValue(calendarData.getOAuthCredentialId());
 			data.getProcessFullDayEvent().setValue(Boolean.TRUE);
 			data.getProcessFreeEvent().setValue(Boolean.FALSE);
@@ -316,6 +318,15 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		}
 	}
 
+	private Boolean hasCreateEventCalendar(final Long userId) {
+		Boolean alreadyHasAddEventToCalendar = Boolean.FALSE;
+		final CalendarConfigurationFormData currentUserCreateCalendar = this.getCalendarToStoreEvents(userId);
+		if (null != currentUserCreateCalendar && null != currentUserCreateCalendar.getExternalId().getValue()) {
+			alreadyHasAddEventToCalendar = Boolean.TRUE;
+		}
+		return alreadyHasAddEventToCalendar;
+	}
+
 	private boolean isCalendarCondifgRequiredModification(
 			final AbstractCalendarConfigurationTableRowData newCalendarData,
 			final CalendarConfigurationFormData existingCalendarConfig) {
@@ -331,7 +342,8 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 	private Long getCalendarConfigId(final CalendarConfigurationFormData formData) {
 		Long calendarConfigId = null;
 		final String sql = SQLs.CALENDAR_CONFIG_SELECT_ID + SQLs.GENERIC_WHERE_FOR_SECURE_AND
-				+ SQLs.CALENDAR_CONFIG_FILTER_USER_ID + SQLs.CALENDAR_CONFIG_FILTER_EXTERNAL_ID;
+				+ SQLs.CALENDAR_CONFIG_FILTER_USER_ID + SQLs.CALENDAR_CONFIG_FILTER_EXTERNAL_ID
+				+ SQLs.CALENDAR_CONFIG_FILTER_OAUTH_CREDENTIAL_ID_ID;
 
 		final Object[][] data = SQL.select(sql, formData);
 		if (null != data && data.length > 0 && data[0] != null && data[0].length > 0) {

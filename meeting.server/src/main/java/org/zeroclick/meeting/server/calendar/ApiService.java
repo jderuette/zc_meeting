@@ -2,6 +2,7 @@ package org.zeroclick.meeting.server.calendar;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -18,8 +19,12 @@ import org.slf4j.LoggerFactory;
 import org.zeroclick.common.AbstractCommonService;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
 import org.zeroclick.configuration.shared.api.ApiDeletedNotification;
+import org.zeroclick.configuration.shared.api.ApiModifiedNotification;
 import org.zeroclick.configuration.shared.api.ApiTablePageData;
+import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
+import org.zeroclick.meeting.server.sql.DatabaseHelper;
 import org.zeroclick.meeting.server.sql.SQLs;
+import org.zeroclick.meeting.server.sql.migrate.data.PatchAddEmailToApi;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CreateApiPermission;
 import org.zeroclick.meeting.shared.calendar.DeleteApiPermission;
@@ -28,7 +33,6 @@ import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.calendar.ReadApiPermission;
 import org.zeroclick.meeting.shared.calendar.UpdateApiPermission;
 import org.zeroclick.meeting.shared.event.IEventService;
-import org.zeroclick.meeting.shared.event.ReadEventPermission;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
 public class ApiService extends AbstractCommonService implements IApiService {
@@ -44,19 +48,55 @@ public class ApiService extends AbstractCommonService implements IApiService {
 	public ApiTablePageData getApiTableData(final SearchFilter filter) {
 		final ApiTablePageData pageData = new ApiTablePageData();
 
-		Long currentConnectedUserId = 0L;
+		Long userId = null;
+
+		if (null != filter && null != filter.getFormData() && null != filter.getFormData().getPropertyById("userId")) {
+			userId = (Long) filter.getFormData().getPropertyById("userId").getValue();
+		}
+
 		final StringBuilder sql = new StringBuilder();
 		sql.append(SQLs.OAUHTCREDENTIAL_PAGE_SELECT);
 
-		if (ACCESS.getLevel(new ReadEventPermission((Long) null)) != ReadEventPermission.LEVEL_ALL) {
+		if (null == userId && ACCESS.getLevel(new ReadApiPermission((Long) null)) != ReadApiPermission.LEVEL_ALL) {
+			userId = super.userHelper.getCurrentUserId();
+		}
+
+		if (null != userId) {
 			sql.append(SQLs.OAUHTCREDENTIAL_PAGE_SELECT_FILTER_USER);
-			currentConnectedUserId = super.userHelper.getCurrentUserId();
 		}
 
 		sql.append(SQLs.OAUHTCREDENTIAL_PAGE_DATA_SELECT_INTO);
-		SQL.selectInto(sql.toString(), new NVPair("page", pageData), new NVPair("currentUser", currentConnectedUserId));
+		SQL.selectInto(sql.toString(), new NVPair("page", pageData), new NVPair("currentUser", userId));
+
+		if (pageData.getRowCount() > 0) {
+			// Local cache to avoid multiple validation of same apiCredentialId
+			final Map<Long, Boolean> alreadyCheckReadAcces = new HashMap<>();
+			// Post check permission base on OAuthId
+			for (final ApiTableRowData row : pageData.getRows()) {
+				if (null == alreadyCheckReadAcces.get(row.getApiCredentialId())) {
+					final Boolean canRead = ACCESS.check(new ReadApiPermission(row.getApiCredentialId()));
+					alreadyCheckReadAcces.put(row.getApiCredentialId(), canRead);
+				}
+				if (!alreadyCheckReadAcces.get(row.getApiCredentialId())) {
+					LOG.warn("User : " + super.userHelper.getCurrentUserId() + " try to access UserApi : "
+							+ row.getApiCredentialId() + " belonging to user : " + row.getUserId()
+							+ " but hasen't acces. Silently removing this (api) row");
+					pageData.removeRow(row);
+				}
+			}
+		}
 
 		return pageData;
+	}
+
+	@Override
+	public ApiTablePageData getApis(final Long userId) {
+		final SearchFilter filter = new SearchFilter();
+		final ApiFormData apiSearchFilterForm = new ApiFormData();
+		apiSearchFilterForm.setUserId(userId);
+		filter.setFormData(apiSearchFilterForm);
+
+		return this.getApiTableData(filter);
 	}
 
 	@Override
@@ -68,12 +108,20 @@ public class ApiService extends AbstractCommonService implements IApiService {
 
 	@Override
 	public ApiFormData create(final ApiFormData formData) {
+		return this.create(formData, Boolean.TRUE);
+	}
+
+	@Override
+	public ApiFormData create(final ApiFormData formData, final Boolean sendNotification) {
 		super.checkPermission(new CreateApiPermission());
 
 		Boolean isNew = Boolean.FALSE;
 
-		if (!this.checkAlreadyExists(formData)) {
-			LOG.info("Creating new API in DB for user : " + formData.getUserIdProperty().getValue() + " for provider : "
+		final Object[][] duplicateApiByEmailAccount = SQL.select(SQLs.OAUHTCREDENTIAL_SELECT_BY_ACCOUNT_EMAIL,
+				formData);
+		if (null == duplicateApiByEmailAccount || duplicateApiByEmailAccount.length == 0) {
+			LOG.info("Creating new API in DB for user : " + formData.getUserIdProperty().getValue()
+					+ " with account email : " + formData.getAccountEmail().getValue() + " for provider : "
 					+ formData.getProvider().getValue());
 			isNew = Boolean.TRUE;
 			// add a unique id if necessary
@@ -82,14 +130,13 @@ public class ApiService extends AbstractCommonService implements IApiService {
 			}
 			SQL.insert(SQLs.OAUHTCREDENTIAL_INSERT, formData);
 		} else {
-			final Long existingApiId = this.getApiId(formData.getUserId());
-			LOG.warn("Trying to create a new API for user " + formData.getUserId()
-					+ " and this user already has a configured API Key with ID : " + existingApiId);
-			formData.setApiCredentialId(existingApiId);
+			LOG.warn("Duplicate API id found for user : " + formData.getUserId() + "  with account's email : "
+					+ formData.getAccountEmail().getValue() + " Not created only perform umpdate");
 		}
-		final ApiFormData apiFormCreated = this.store(formData);
 
-		if (isNew) {
+		final ApiFormData apiFormCreated = this.store(formData, sendNotification || !isNew);
+
+		if (sendNotification && isNew) {
 			this.sendCreatedNotifications(apiFormCreated);
 		}
 
@@ -108,31 +155,44 @@ public class ApiService extends AbstractCommonService implements IApiService {
 				new ApiDeletedNotification(formData));
 	}
 
-	private boolean checkAlreadyExists(final ApiFormData formData) {
-		final Long existingApiId = this.getApiId(formData.getUserId());
-		return existingApiId != null;
+	private void sendMoifiedNotifications(final ApiFormData formData) {
+		final AccessControlService acs = BEANS.get(AccessControlService.class);
+		BEANS.get(ClientNotificationRegistry.class).putForUsers(acs.getUserNotificationIds(formData.getUserId()),
+				new ApiModifiedNotification(formData));
 	}
 
 	@Override
 	public ApiFormData load(final ApiFormData formData) {
+		return this.load(formData, Boolean.TRUE);
+	}
+
+	private ApiFormData load(final ApiFormData formData, final Boolean loadProviderData) {
 		final Long userId = formData.getUserIdProperty().getValue();
 		Long oAuthId = formData.getApiCredentialIdProperty().getValue();
 		final String accesToken = formData.getAccessToken().getValue();
+		final String accountsEmail = formData.getAccountEmail().getValue();
 
 		LOG.debug("Loading credential by ID : " + oAuthId + ", and UserId : " + userId + " and accesToken : "
 				+ accesToken);
 
 		if (null == oAuthId && null != accesToken && !accesToken.isEmpty()) {
-			LOG.debug("No API ID but an accessTOken, using accessToken to load api Data");
+			LOG.debug("No API ID but an accessToken, using accessToken to load api Data");
 			oAuthId = this.getApiIdByAccessToken(userId, accesToken);
 		}
 
-		if (null == oAuthId) {
-			oAuthId = this.getApiId(userId);
+		if (null == oAuthId && null != accountsEmail && !accountsEmail.isEmpty()) {
+			LOG.debug("No API ID but an account's email found, using accountsEmail to load api Data");
+			oAuthId = this.getApiIdByAccountEmail(userId, accountsEmail);
 		}
+
+		// if (null == oAuthId) {
+		// oAuthId = this.getApiId(userId);
+		// }
 		if (null == oAuthId) {
 			LOG.debug("No API ID found for userId : " + userId);
 			return formData;
+		} else {
+			formData.setApiCredentialId(oAuthId);
 		}
 
 		LOG.debug("Loading credential by ID : " + oAuthId);
@@ -150,7 +210,7 @@ public class ApiService extends AbstractCommonService implements IApiService {
 				SQLs.OAUHTCREDENTIAL_SELECT + SQLs.OAUHTCREDENTIAL_FILTER_OAUTH_ID + SQLs.OAUHTCREDENTIAL_SELECT_INTO,
 				formData);
 
-		if (null == formData.getProviderData()) {
+		if (loadProviderData && null == formData.getProviderData()) {
 			// force load BLOB data
 			final Object[][] apiProvierData = SQL.select(
 					SQLs.OAUHTCREDENTIAL_SELECT_PROVIDER_DATA_ONLY + SQLs.OAUHTCREDENTIAL_FILTER_OAUTH_ID,
@@ -163,13 +223,97 @@ public class ApiService extends AbstractCommonService implements IApiService {
 		return formData;
 	}
 
+	private ApiFormData loadByAccountsEmail(final Long userId, final String accountEmail) {
+		final ApiFormData input = new ApiFormData();
+		input.setUserId(userId);
+		input.getAccountEmail().setValue(accountEmail);
+		return this.load(input, Boolean.FALSE);
+	}
+
+	@Override
+	public ApiFormData load(final Long apiId) {
+		final ApiFormData input = new ApiFormData();
+		input.setApiCredentialId(apiId);
+
+		return this.load(input, Boolean.FALSE);
+	}
+
 	@Override
 	public ApiFormData store(final ApiFormData formData) {
+		return this.store(formData, Boolean.FALSE);
+	}
+
+	/**
+	 * Store accont's email to the API. This method is call at the end of new
+	 * API configuration. If an api already exist in DB form this user and this
+	 * account's email, this api is refreshed.
+	 *
+	 * /!\ the original api created this the original ID, is deleted, and should
+	 * be discarded in UserCache (credential Cache)
+	 *
+	 * @param formData
+	 * @return
+	 */
+	@Override
+	public ApiFormData storeAccountEmail(final ApiFormData newDataForm, final Long userId, final String accountEmail) {
+		ApiFormData updatedData = null;
+		// if already an API with this Email for this user
+		final ApiFormData exstingCredentialId = this.loadByAccountsEmail(userId, accountEmail);
+
+		if (null != exstingCredentialId && null != exstingCredentialId.getApiCredentialId()
+				&& !exstingCredentialId.getApiCredentialId().equals(newDataForm.getApiCredentialId())) {
+			// User try to add an already existing API
+
+			// ==> refresh the old one with the new Data form provider
+			// (accessToken, refreshToken, ....)
+			exstingCredentialId.setProviderData(newDataForm.getProviderData());
+			exstingCredentialId.setRepositoryId(newDataForm.getRepositoryId());
+			exstingCredentialId.setUserId(newDataForm.getUserId());
+			exstingCredentialId.getAccessToken().setValue(newDataForm.getAccessToken().getValue());
+			exstingCredentialId.getExpirationTimeMilliseconds()
+					.setValue(newDataForm.getExpirationTimeMilliseconds().getValue());
+			exstingCredentialId.getProvider().setValue(newDataForm.getProvider().getValue());
+
+			// ==> Only update existing API
+			updatedData = this.store(exstingCredentialId, Boolean.TRUE, Boolean.FALSE);
+
+			// ==> Remove the "new duplicate" credential
+			this.delete(newDataForm);
+		} else {
+			final ApiFormData apiDataAfterCredentialStored = this.load(newDataForm.getApiCredentialId());
+
+			apiDataAfterCredentialStored.getAccountEmail().setValue(accountEmail);
+			updatedData = this.store(apiDataAfterCredentialStored, Boolean.TRUE, Boolean.TRUE);
+		}
+
+		return updatedData;
+	}
+
+	private ApiFormData store(final ApiFormData formData, final Boolean sendNotifications) {
+		return this.store(formData, sendNotifications, Boolean.FALSE);
+	}
+
+	private ApiFormData store(final ApiFormData formData, final Boolean sendNotifications,
+			final Boolean useCreatedNotification) {
 		super.checkPermission(new UpdateApiPermission(formData.getApiCredentialId()));
 
-		LOG.debug("Storing API in DB for user : " + formData.getUserIdProperty().getValue() + " for provider : "
-				+ formData.getProvider().getValue());
-		SQL.update(SQLs.OAUHTCREDENTIAL_UPDATE, formData);
+		LOG.debug("Storing API (" + formData.getApiCredentialId() + ") in DB for user : "
+				+ formData.getUserIdProperty().getValue() + " for provider : " + formData.getProvider().getValue());
+
+		if (this.isAfterCreateAddAccountEmailPatch()) {
+			SQL.update(SQLs.OAUHTCREDENTIAL_UPDATE, formData);
+		} else {
+			SQL.update(SQLs.OAUHTCREDENTIAL_UPDATE_WITHOUT_ACCOUNT_EMAIL, formData);
+		}
+
+		if (sendNotifications) {
+			if (useCreatedNotification) {
+				this.sendCreatedNotifications(formData);
+			} else {
+				this.sendMoifiedNotifications(formData);
+			}
+		}
+
 		return formData;
 	}
 
@@ -177,10 +321,10 @@ public class ApiService extends AbstractCommonService implements IApiService {
 	public void delete(final ApiFormData formData) {
 		super.checkPermission(new DeleteApiPermission(formData.getApiCredentialId()));
 
-		final ApiFormData dataBeforeDeletion = this.load(formData);
-
 		LOG.debug("Deleting API in DB for api_id : " + formData.getApiCredentialId() + "(user : "
 				+ formData.getUserIdProperty().getValue() + ") for provider : " + formData.getProvider().getValue());
+
+		final ApiFormData dataBeforeDeletion = this.load(formData);
 
 		// delete related table data to maintain FK constraints
 		final ICalendarConfigurationService calendarConfigurationService = BEANS
@@ -192,6 +336,14 @@ public class ApiService extends AbstractCommonService implements IApiService {
 		// the formData BEFORE deletion
 		this.sendDeletedNotifications(dataBeforeDeletion);
 	}
+
+	// private void delete(final Long apiCredentialId) {
+	// final ApiFormData input = new ApiFormData();
+	//
+	// input.setApiCredentialId(apiCredentialId);
+	//
+	// this.delete(input);
+	// }
 
 	private Long getApiId(final Long userId) {
 		// Warning permission check at the end to allow "attendee" to check
@@ -228,6 +380,29 @@ public class ApiService extends AbstractCommonService implements IApiService {
 		} else {
 			LOG.debug("API id : " + formData.getApiCredentialId() + " for user :" + userId + " and accesToken : "
 					+ accessToken);
+		}
+		return formData.getApiCredentialId();
+	}
+
+	private Long getApiIdByAccountEmail(final Long userId, final String accountsEmail) {
+		LOG.debug("Searching API Id  : " + userId + " with account's email : " + accountsEmail);
+		final ApiFormData formData = new ApiFormData();
+		formData.setUserId(userId);
+		formData.getAccountEmail().setValue(accountsEmail);
+		SQL.selectInto(
+				SQLs.OAUHTCREDENTIAL_SELECT_API_ID + SQLs.OAUHTCREDENTIAL_FILTER_USER_ID
+						+ SQLs.OAUHTCREDENTIAL_FILTER_ACCOUNTS_EMAIL + SQLs.OAUHTCREDENTIAL_SELECT_INTO_API_ID,
+				formData);
+
+		if (null != formData.getApiCredentialId()
+				&& !ACCESS.check(new ReadApiPermission(formData.getApiCredentialId()))) {
+			super.throwAuthorizationFailed();
+		}
+		if (null == formData.getApiCredentialId()) {
+			LOG.warn("No API Id in DataBase for user :" + userId + " and account's email : " + accountsEmail);
+		} else {
+			LOG.debug("API id : " + formData.getApiCredentialId() + " for user :" + userId + " and account's email : "
+					+ accountsEmail);
 		}
 		return formData.getApiCredentialId();
 	}
@@ -269,6 +444,11 @@ public class ApiService extends AbstractCommonService implements IApiService {
 		SQL.selectInto(SQLs.OAUHTCREDENTIAL_SELECT_OWNER, formData);
 
 		return formData.getUserId();
+	}
+
+	private Boolean isAfterCreateAddAccountEmailPatch() {
+		return DatabaseHelper.get().isColumnExists(PatchAddEmailToApi.PATCHED_TABLE,
+				PatchAddEmailToApi.PATCHED_ADDED_COLUMN);
 	}
 
 	@Override

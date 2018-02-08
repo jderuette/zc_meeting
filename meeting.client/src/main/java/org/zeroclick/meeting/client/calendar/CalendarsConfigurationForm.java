@@ -32,6 +32,11 @@ public class CalendarsConfigurationForm extends AbstractForm implements IPageFor
 	}
 
 	@Override
+	protected boolean getConfiguredMaximizeEnabled() {
+		return true;
+	}
+
+	@Override
 	public void startPageForm() {
 		this.startInternal(new PageFormHandler());
 	}
@@ -99,11 +104,11 @@ public class CalendarsConfigurationForm extends AbstractForm implements IPageFor
 
 			@Override
 			protected double getConfiguredGridWeightY() {
-				return 0.4;
+				return 0.3;
 			}
 		}
 
-		@Order(3000)
+		@Order(2000)
 		public class CalendarConfigTableField extends AbstractTableField<AbstractCalendarConfigurationTable> {
 
 			@Override

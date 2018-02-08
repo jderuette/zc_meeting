@@ -589,7 +589,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				@Override
 				public void handleNotification(final ApiCreatedNotification notification) {
 					try {
-						final ApiFormData eventForm = notification.getApiForm();
+						final ApiFormData eventForm = notification.getFormData();
 						LOG.debug("Created Api prepare to modify menus (" + this.getClass().getName() + ") : "
 								+ eventForm.getUserId());
 						Table.this.reloadMenus();
@@ -669,9 +669,14 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 									+ this.getClass().getName() + ") : (first UserId)" + userId);
 
 							if (Table.this.isMySelf(userId)) {
+								final GoogleApiHelper googleApiHelper = BEANS.get(GoogleApiHelper.class);
+								googleApiHelper.autoConfigureCalendars();
+
 								final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 								notificationHelper.addProccessedNotification(
-										"zc.meeting.calendar.notification.modifiedCalendarsConfig");
+										"zc.meeting.calendar.notification.modifiedCalendarsConfig",
+										googleApiHelper.getAccountsEmail(
+												calendarsConfigurationFormData.getCalendarConfigTable().getRows()));
 							}
 
 							Table.this.refreshAutoFillDate();
@@ -703,6 +708,9 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 									+ calendarConfigurationFormData.getUserId().getValue());
 
 							if (Table.this.isMySelf(calendarConfigurationFormData.getUserId().getValue())) {
+								final GoogleApiHelper googleApiHelper = BEANS.get(GoogleApiHelper.class);
+								googleApiHelper.autoConfigureCalendars();
+
 								final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 								notificationHelper.addProccessedNotification(
 										"zc.meeting.calendar.notification.modifiedCalendarConfig",
@@ -739,12 +747,17 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 							}
 							LOG.debug("Calendars Configurations created prepare to refresh event ("
 									+ this.getClass().getName() + ") : " + userId);
-
-							if (Table.this.isMySelf(userId)) {
-								final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
-								notificationHelper.addProccessedNotification(
-										"zc.meeting.calendar.notification.createdCalendarsConfig");
-							}
+							//
+							// if (Table.this.isMySelf(userId)) {
+							// final GoogleApiHelper googleApiHelper =
+							// BEANS.get(GoogleApiHelper.class);
+							// final NotificationHelper notificationHelper =
+							// BEANS.get(NotificationHelper.class);
+							// notificationHelper.addProccessedNotification(
+							// "zc.meeting.calendar.notification.createdCalendarsConfig",
+							// googleApiHelper.getAccountsEmails(
+							// calendarsConfigurationFormData.getCalendarConfigTable().getRows()));
+							// }
 
 							Table.this.refreshAutoFillDate();
 
