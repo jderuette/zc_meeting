@@ -390,7 +390,7 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 
 		@Override
 		protected int getConfiguredWidth() {
-			return 100;
+			return 150;
 		}
 	}
 
@@ -421,7 +421,7 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 
 		@Override
 		protected int getConfiguredWidth() {
-			return 100;
+			return 150;
 		}
 	}
 
@@ -439,7 +439,7 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 
 		@Override
 		protected int getConfiguredWidth() {
-			return 100;
+			return 75;
 		}
 	}
 
@@ -457,7 +457,7 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 
 		@Override
 		protected int getConfiguredWidth() {
-			return 100;
+			return 75;
 		}
 	}
 
@@ -475,7 +475,7 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 
 		@Override
 		protected int getConfiguredWidth() {
-			return 100;
+			return 90;
 		}
 	}
 
@@ -503,7 +503,7 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 
 		@Override
 		protected int getConfiguredWidth() {
-			return 100;
+			return 90;
 		}
 
 		private void checkCanStoreNewEvent(final ITableRow row) {
@@ -555,7 +555,7 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 
 		@Override
 		protected int getConfiguredWidth() {
-			return 150;
+			return 90;
 		}
 
 		@Override
@@ -578,7 +578,7 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 
 		@Override
 		protected int getConfiguredWidth() {
-			return 150;
+			return 90;
 		}
 
 		@Override
@@ -601,7 +601,7 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 
 		@Override
 		protected int getConfiguredWidth() {
-			return 150;
+			return 90;
 		}
 
 		@Override
