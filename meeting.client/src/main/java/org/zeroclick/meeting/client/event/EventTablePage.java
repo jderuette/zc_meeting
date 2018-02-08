@@ -758,16 +758,53 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				}
 
 				final String calendarId = calendar.getExternalId();
-				final Boolean processFullDay = calendar.getProcessFullDayEvent();
-				final Boolean processFree = calendar.getProcessFreeEvent();
-				final Boolean processNotRegisteredOn = calendar.getProcessNotRegistredOnEvent();
 
 				final com.google.api.services.calendar.Calendar.Events.List eventQuery = gCalendarService.events()
 						.list(calendarId).setMaxResults(50).setTimeMin(googledStartDate).setTimeMax(googledEndDate)
 						.setSingleEvents(true).setOrderBy("startTime");
 
-				final Events events = eventQuery.execute();
-				if (null != events.getItems() && events.getItems().size() > 0) {
+				Events events = null;
+				try {
+					events = eventQuery.execute();
+				} catch (final GoogleJsonResponseException gjre) {
+					if (gjre.getStatusCode() == 404) {
+						LOG.warn("problem while geting user Event for user : " + userId
+								+ " trying to auto-Configure is calendars");
+						googleHelper.autoConfigureCalendars(userId);
+
+						if (this.isMySelf(userId)) {
+							final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+							notificationHelper.addProccessedNotification(
+									"zc.meeting.calendar.notification.modifiedCalendarsConfig",
+									TEXTS.get("zc.common.me"));
+						}
+
+						final ICalendarConfigurationService calendarConfigurationService = BEANS
+								.get(ICalendarConfigurationService.class);
+
+						@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
+						final CalendarConfigurationFormData formData = new CalendarConfigurationFormData();
+						formData.getCalendarConfigurationId().setValue(calendar.getCalendarConfigurationId());
+
+						final CalendarConfigurationFormData calendarAfterAutoConfigure = calendarConfigurationService
+								.load(formData);
+
+						if (null != calendarAfterAutoConfigure
+								&& null == calendarAfterAutoConfigure.getCalendarConfigurationId().getValue()) {
+							// calendar remove, so reconfigure resolve the
+							// problem
+							// we can continue without this calendar
+						} else {
+							throw gjre;
+						}
+					}
+				}
+
+				final Boolean processFullDay = calendar.getProcessFullDayEvent();
+				final Boolean processFree = calendar.getProcessFreeEvent();
+				final Boolean processNotRegisteredOn = calendar.getProcessNotRegistredOnEvent();
+
+				if (null != events && null != events.getItems() && events.getItems().size() > 0) {
 					for (final Event event : events.getItems()) {
 						// dispo/busy
 						if (!processFree && "transparent".equals(event.getTransparency())) {

@@ -302,7 +302,11 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		if (null != configuredCalendars && null != configuredCalendars.getCalendarConfigTable()
 				&& configuredCalendars.getCalendarConfigTable().getRowCount() > 0) {
 			for (final CalendarConfigTableRowData calendar : configuredCalendars.getCalendarConfigTable().getRows()) {
-				if (!calendars.keySet().contains(calendar.getExternalId())) {
+				final StringBuilder calendarId = new StringBuilder();
+				calendarId.append(calendar.getUserId()).append("_").append(calendar.getExternalId()).append("_")
+						.append(calendar.getOAuthCredentialId());
+
+				if (!calendars.keySet().contains(calendarId.toString())) {
 					LOG.info("Calendar : " + calendar.getExternalId()
 							+ " does not exist anymore in provider data, removing it from user config");
 					this.delete(calendar.getExternalId(), calendar.getOAuthCredentialId());
