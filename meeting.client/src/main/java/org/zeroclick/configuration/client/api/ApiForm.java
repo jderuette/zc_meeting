@@ -322,7 +322,7 @@ public class ApiForm extends AbstractForm {
 
 			// use GoolgleApiHelper to clean cache for this user
 			try {
-				BEANS.get(GoogleApiHelper.class).removeCredential(formData.getUserId());
+				BEANS.get(GoogleApiHelper.class).removeCredential(ApiForm.this.getApiCredentialId());
 			} catch (final IOException e) {
 				LOG.error("Error while trying to delete User (Google) Api credential", e);
 			}

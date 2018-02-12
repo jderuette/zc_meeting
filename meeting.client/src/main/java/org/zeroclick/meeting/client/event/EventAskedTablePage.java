@@ -7,6 +7,8 @@ import org.eclipse.scout.rt.platform.util.CompareUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.data.page.AbstractTablePageData;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
+import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
+import org.zeroclick.configuration.shared.api.ApiDeletedNotification;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationCreatedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationModifiedNotification;
@@ -82,6 +84,16 @@ public class EventAskedTablePage extends EventTablePage {
 	@Override
 	protected Boolean canHandle(final CalendarsConfigurationCreatedNotification notification) {
 		return Boolean.FALSE;
+	}
+
+	@Override
+	protected Boolean canHandle(final ApiCreatedNotification notification) {
+		return Boolean.TRUE;
+	}
+
+	@Override
+	protected Boolean canHandle(final ApiDeletedNotification notification) {
+		return Boolean.TRUE;
 	}
 
 	@Override

@@ -2,8 +2,10 @@ package org.zeroclick.configuration.shared.onboarding;
 
 import javax.annotation.Generated;
 
+import org.eclipse.scout.rt.shared.data.basic.table.AbstractTableRowData;
 import org.eclipse.scout.rt.shared.data.form.AbstractFormData;
 import org.eclipse.scout.rt.shared.data.form.fields.AbstractValueFieldData;
+import org.eclipse.scout.rt.shared.data.form.fields.tablefield.AbstractTableFieldBeanData;
 
 /**
  * <b>NOTE:</b><br>
@@ -17,6 +19,10 @@ public class OnBoardingUserFormData extends AbstractFormData {
 
 	public AddCalendar getAddCalendar() {
 		return getFieldByClass(AddCalendar.class);
+	}
+
+	public ApisTable getApisTable() {
+		return getFieldByClass(ApisTable.class);
 	}
 
 	public Language getLanguage() {
@@ -38,6 +44,120 @@ public class OnBoardingUserFormData extends AbstractFormData {
 	public static class AddCalendar extends AbstractValueFieldData<String> {
 
 		private static final long serialVersionUID = 1L;
+	}
+
+	public static class ApisTable extends AbstractTableFieldBeanData {
+
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public ApisTableRowData addRow() {
+			return (ApisTableRowData) super.addRow();
+		}
+
+		@Override
+		public ApisTableRowData addRow(int rowState) {
+			return (ApisTableRowData) super.addRow(rowState);
+		}
+
+		@Override
+		public ApisTableRowData createRow() {
+			return new ApisTableRowData();
+		}
+
+		@Override
+		public Class<? extends AbstractTableRowData> getRowType() {
+			return ApisTableRowData.class;
+		}
+
+		@Override
+		public ApisTableRowData[] getRows() {
+			return (ApisTableRowData[]) super.getRows();
+		}
+
+		@Override
+		public ApisTableRowData rowAt(int index) {
+			return (ApisTableRowData) super.rowAt(index);
+		}
+
+		public void setRows(ApisTableRowData[] rows) {
+			super.setRows(rows);
+		}
+
+		public static class ApisTableRowData extends AbstractTableRowData {
+
+			private static final long serialVersionUID = 1L;
+			public static final String apiCredentialId = "apiCredentialId";
+			public static final String provider = "provider";
+			public static final String accessToken = "accessToken";
+			public static final String expirationTimeMilliseconds = "expirationTimeMilliseconds";
+			public static final String refreshToken = "refreshToken";
+			public static final String userId = "userId";
+			public static final String accountEmail = "accountEmail";
+			private Long m_apiCredentialId;
+			private Long m_provider;
+			private String m_accessToken;
+			private Long m_expirationTimeMilliseconds;
+			private String m_refreshToken;
+			private Long m_userId;
+			private String m_accountEmail;
+
+			public Long getApiCredentialId() {
+				return m_apiCredentialId;
+			}
+
+			public void setApiCredentialId(Long newApiCredentialId) {
+				m_apiCredentialId = newApiCredentialId;
+			}
+
+			public Long getProvider() {
+				return m_provider;
+			}
+
+			public void setProvider(Long newProvider) {
+				m_provider = newProvider;
+			}
+
+			public String getAccessToken() {
+				return m_accessToken;
+			}
+
+			public void setAccessToken(String newAccessToken) {
+				m_accessToken = newAccessToken;
+			}
+
+			public Long getExpirationTimeMilliseconds() {
+				return m_expirationTimeMilliseconds;
+			}
+
+			public void setExpirationTimeMilliseconds(Long newExpirationTimeMilliseconds) {
+				m_expirationTimeMilliseconds = newExpirationTimeMilliseconds;
+			}
+
+			public String getRefreshToken() {
+				return m_refreshToken;
+			}
+
+			public void setRefreshToken(String newRefreshToken) {
+				m_refreshToken = newRefreshToken;
+			}
+
+			public Long getUserId() {
+				return m_userId;
+			}
+
+			public void setUserId(Long newUserId) {
+				m_userId = newUserId;
+			}
+
+			public String getAccountEmail() {
+				return m_accountEmail;
+			}
+
+			public void setAccountEmail(String newAccountEmail) {
+				m_accountEmail = newAccountEmail;
+			}
+		}
 	}
 
 	public static class Language extends AbstractValueFieldData<String> {

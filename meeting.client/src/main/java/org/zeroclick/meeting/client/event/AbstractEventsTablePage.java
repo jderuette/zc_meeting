@@ -46,6 +46,7 @@ import org.zeroclick.configuration.client.api.ApiCreatedNotificationHandler;
 import org.zeroclick.configuration.client.slot.DayDurationModifiedNotificationHandler;
 import org.zeroclick.configuration.client.user.UserModifiedNotificationHandler;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
+import org.zeroclick.configuration.shared.api.ApiDeletedNotification;
 import org.zeroclick.configuration.shared.duration.DurationCodeType;
 import org.zeroclick.configuration.shared.params.IAppParamsService;
 import org.zeroclick.configuration.shared.params.ParamCreatedNotification;
@@ -206,6 +207,28 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	 * @return true if this (sub) tablePage want handle the event
 	 */
 	protected Boolean canHandleModified(final AbstractEventNotification notification) {
+		return Boolean.FALSE;
+	}
+
+	/**
+	 * Allow subClass to defined if they want to handle notification for this
+	 * kind of event
+	 *
+	 * @param formdata
+	 * @return true if this (sub) tablePage want handle the event
+	 */
+	protected Boolean canHandle(final ApiCreatedNotification notification) {
+		return Boolean.FALSE;
+	}
+
+	/**
+	 * Allow subClass to defined if they want to handle notification for this
+	 * kind of event
+	 *
+	 * @param formdata
+	 * @return true if this (sub) tablePage want handle the event
+	 */
+	protected Boolean canHandle(final ApiDeletedNotification notification) {
 		return Boolean.FALSE;
 	}
 
@@ -588,6 +611,10 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			this.apiCreatedListener = new INotificationListener<ApiCreatedNotification>() {
 				@Override
 				public void handleNotification(final ApiCreatedNotification notification) {
+
+					if (!AbstractEventsTablePage.this.canHandle(notification)) {
+						return; // Early Break
+					}
 					try {
 						final ApiFormData eventForm = notification.getFormData();
 						LOG.debug("Created Api prepare to modify menus (" + this.getClass().getName() + ") : "

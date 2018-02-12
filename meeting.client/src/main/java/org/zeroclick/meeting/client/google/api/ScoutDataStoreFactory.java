@@ -102,7 +102,8 @@ public class ScoutDataStoreFactory extends AbstractDataStoreFactory {
 			final IApiService apiService = BEANS.get(IApiService.class);
 
 			final ApiFormData input = new ApiFormData();
-			input.setUserId(Long.valueOf(key));
+			// input.setUserId(Long.valueOf(key));
+			input.setApiCredentialId(Long.valueOf(key));
 
 			final ApiFormData data = apiService.load(input);
 			/*
