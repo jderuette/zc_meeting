@@ -38,6 +38,7 @@ import org.zeroclick.configuration.client.administration.AdministrationOutline;
 import org.zeroclick.configuration.client.api.ApiCreatedNotificationHandler;
 import org.zeroclick.configuration.client.api.ApiDeletedNotificationHandler;
 import org.zeroclick.configuration.client.api.ApiModifiedNotificationHandler;
+import org.zeroclick.configuration.client.slot.SlotsForm;
 import org.zeroclick.configuration.client.user.UserForm;
 import org.zeroclick.configuration.client.user.UserModifiedNotificationHandler;
 import org.zeroclick.configuration.client.user.ValidateCpsForm;
@@ -477,6 +478,25 @@ public class Desktop extends AbstractDesktop {
 		}
 
 		@Order(4000)
+		public class EditSlotsConfigMenu extends AbstractMenu {
+			@Override
+			protected String getConfiguredText() {
+				return TEXTS.get("zc.meeting.slot.configuration");
+			}
+
+			@Override
+			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+				return CollectionUtility.hashSet();
+			}
+
+			@Override
+			protected void execAction() {
+				final SlotsForm slotsFrom = new SlotsForm();
+				slotsFrom.startModify();
+			}
+		}
+
+		@Order(5000)
 		public class ContractSeparatorMenu extends AbstractMenuSeparator {
 			@Override
 			protected String getConfiguredText() {
@@ -489,7 +509,7 @@ public class Desktop extends AbstractDesktop {
 			}
 		}
 
-		@Order(5000)
+		@Order(6000)
 		public class ViewCpsMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {

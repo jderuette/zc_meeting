@@ -66,7 +66,7 @@ public class EventAdminNodePage extends AbstractPageWithNodes {
 
 		// TODO Djer13 try to directly use the "configuredTitle"'s form
 		final FormPage slotForm = new FormPage(SlotForm.class, Boolean.TRUE,
-				TEXTS.get("zc.meeting.slot.config") + " (tree)");
+				TEXTS.get("zc.meeting.slot.configuration") + " (tree)");
 		slotForm.setVisible(false);
 		slotForm.setVisibleGranted(isSlotAdmin);
 		slotForm.setLeaf(true);

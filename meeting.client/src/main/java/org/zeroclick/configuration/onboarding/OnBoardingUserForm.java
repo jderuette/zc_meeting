@@ -6,6 +6,7 @@ import java.beans.PropertyChangeListener;
 import org.eclipse.scout.rt.client.dto.FormData;
 import org.eclipse.scout.rt.client.ui.form.AbstractForm;
 import org.eclipse.scout.rt.client.ui.form.AbstractFormHandler;
+import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractButton;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractOkButton;
 import org.eclipse.scout.rt.client.ui.form.fields.groupbox.AbstractGroupBox;
 import org.eclipse.scout.rt.client.ui.form.fields.htmlfield.AbstractHtmlField;
@@ -17,8 +18,10 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.client.api.AbstractApiTable;
+import org.zeroclick.configuration.client.slot.SlotsForm;
 import org.zeroclick.configuration.onboarding.OnBoardingUserForm.MainBox.AddCalendarField;
 import org.zeroclick.configuration.onboarding.OnBoardingUserForm.MainBox.ApisTableField;
+import org.zeroclick.configuration.onboarding.OnBoardingUserForm.MainBox.EditSlotConfigButton;
 import org.zeroclick.configuration.onboarding.OnBoardingUserForm.MainBox.LanguageField;
 import org.zeroclick.configuration.onboarding.OnBoardingUserForm.MainBox.LoginField;
 import org.zeroclick.configuration.onboarding.OnBoardingUserForm.MainBox.OkButton;
@@ -34,8 +37,6 @@ public class OnBoardingUserForm extends AbstractForm {
 
 	private static final Logger LOG = LoggerFactory.getLogger(OnBoardingUserForm.class);
 
-	// private INotificationListener<ApiCreatedNotification> apiCreatedListener;
-	// private INotificationListener<ApiDeletedNotification> apiDeletedListener;
 	private PropertyChangeListener apiEmptynessChangeListener;
 
 	private static final String COLOR_WARNING_BACKGROUND = "FF9D00";
@@ -80,6 +81,14 @@ public class OnBoardingUserForm extends AbstractForm {
 
 	public ApisTableField getApisTableField() {
 		return this.getFieldByClass(ApisTableField.class);
+	}
+
+	// public SlotConfigField getSlotConfigField() {
+	// return this.getFieldByClass(SlotConfigField.class);
+	// }
+
+	public EditSlotConfigButton getEditSlotConfigButton() {
+		return this.getFieldByClass(EditSlotConfigButton.class);
 	}
 
 	public OkButton getOkButton() {
@@ -141,6 +150,48 @@ public class OnBoardingUserForm extends AbstractForm {
 		}
 
 		@Order(4000)
+		public class EditSlotConfigButton extends AbstractButton {
+			@Override
+			protected String getConfiguredLabel() {
+				return TEXTS.get("zc.meeting.slot.configuration");
+			}
+
+			@Override
+			protected boolean getConfiguredProcessButton() {
+				return false;
+			}
+
+			@Override
+			protected String getConfiguredTooltipText() {
+				return TEXTS.get("zc.meeting.slot.configuration.description.short");
+			}
+
+			@Override
+			protected void execClickAction() {
+				final SlotsForm slotsForm = new SlotsForm();
+				slotsForm.startModify();
+			}
+		}
+
+		// @Order(4000)
+		// public class SlotConfigField extends
+		// AbstractTableField<SlotConfigField.Table> {
+		//
+		// @Override
+		// protected String getConfiguredLabel() {
+		// return TEXTS.get("zc.meeting.slot.configuration");
+		// }
+		//
+		// @Override
+		// protected int getConfiguredGridH() {
+		// return 6;
+		// }
+		//
+		// public class Table extends AbstractSlotTable {
+		// }
+		// }
+
+		@Order(5000)
 		public class AddCalendarField extends AbstractHtmlField {
 			@Override
 			protected String getConfiguredLabel() {
@@ -160,7 +211,7 @@ public class OnBoardingUserForm extends AbstractForm {
 			}
 		}
 
-		@Order(5000)
+		@Order(6000)
 		public class ApisTableField extends AbstractTableField<AbstractApiTable> {
 
 			@Override
@@ -233,33 +284,12 @@ public class OnBoardingUserForm extends AbstractForm {
 
 		this.apiEmptynessChangeListener = new EmptynessPropertyChangeListener();
 		this.getApisTableField().addPropertyChangeListener("empty", this.apiEmptynessChangeListener);
-
-		// final ApiCreatedNotificationHandler apiCreatedNotificationHandler =
-		// BEANS
-		// .get(ApiCreatedNotificationHandler.class);
-		// apiCreatedNotificationHandler.addListener(this.createApiCreatedListener());
-		//
-		// final ApiDeletedNotificationHandler apiDeletedNotificationHandler =
-		// BEANS
-		// .get(ApiDeletedNotificationHandler.class);
-		// apiDeletedNotificationHandler.addListener(this.createApiDeletedListener());
 	}
 
 	@Override
 	protected void execDisposeForm() {
 
 		this.getApisTableField().removePropertyChangeListener("empty", this.apiEmptynessChangeListener);
-
-		// final ApiCreatedNotificationHandler apiCreatedNotificationHandler =
-		// BEANS
-		// .get(ApiCreatedNotificationHandler.class);
-		// apiCreatedNotificationHandler.removeListener(this.apiCreatedListener);
-		//
-		// final ApiDeletedNotificationHandler apiDeletedNotificationHandler =
-		// BEANS
-		// .get(ApiDeletedNotificationHandler.class);
-		// apiDeletedNotificationHandler.removeListener(this.apiDeletedListener);
-
 	}
 
 	private class EmptynessPropertyChangeListener implements PropertyChangeListener {
@@ -308,59 +338,7 @@ public class OnBoardingUserForm extends AbstractForm {
 					OnBoardingUserForm.this.setAskIfNeedSave(Boolean.FALSE);
 				}
 				OnBoardingUserForm.this.getLanguageField().askToReloadSession();
-
 			}
 		}
 	}
-
-	// private INotificationListener<ApiCreatedNotification>
-	// createApiCreatedListener() {
-	// this.apiCreatedListener = new
-	// INotificationListener<ApiCreatedNotification>() {
-	// @Override
-	// public void handleNotification(final ApiCreatedNotification notification)
-	// {
-	// try {
-	// final ApiFormData eventForm = notification.getFormData();
-	// LOG.debug("Created Api prepare to modify OnBoardingForm state : " +
-	// eventForm.getUserId());
-	// OnBoardingUserForm.this.getOkButton().setActive();
-	// OnBoardingUserForm.this.getApisTableField().setVisible(true);
-	// } catch (final RuntimeException e) {
-	// LOG.error("Could not handle new api. (" + this.getClass().getName() +
-	// ")", e);
-	// }
-	// }
-	// };
-	//
-	// return this.apiCreatedListener;
-	// }
-	//
-	// private INotificationListener<ApiDeletedNotification>
-	// createApiDeletedListener() {
-	// this.apiDeletedListener = new
-	// INotificationListener<ApiDeletedNotification>() {
-	// @Override
-	// public void handleNotification(final ApiDeletedNotification notification)
-	// {
-	// try {
-	// final ApiFormData eventForm = notification.getFormData();
-	// LOG.debug("Deleted Api prepare to modify OnBoardingForm state : " +
-	// eventForm.getUserId());
-	// if (OnBoardingUserForm.this.getApisTableField().getTable().getRowCount()
-	// == 0) {
-	// OnBoardingUserForm.this.getOkButton().setInactive();
-	// }
-	// OnBoardingUserForm.this.getApisTableField()
-	// .setVisible(OnBoardingUserForm.this.getApisTableField().getTable().getRowCount()
-	// > 0);
-	// } catch (final RuntimeException e) {
-	// LOG.error("Could not handle new api. (" + this.getClass().getName() +
-	// ")", e);
-	// }
-	// }
-	// };
-	//
-	// return this.apiDeletedListener;
-	// }
 }

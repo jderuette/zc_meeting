@@ -7,7 +7,6 @@ import org.eclipse.scout.rt.client.ui.desktop.outline.pages.IPage;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
-import org.zeroclick.configuration.client.slot.SlotTablePage;
 import org.zeroclick.configuration.shared.slot.ReadSlotPermission;
 import org.zeroclick.meeting.client.admin.EventAdminNodePage;
 import org.zeroclick.meeting.client.event.EventAskedTablePage;
@@ -35,7 +34,8 @@ public class MeetingOutline extends AbstractOutline {
 		final Boolean isEventAdmin = currentUserEventLevel == ReadEventPermission.LEVEL_ALL;
 
 		final int currentUserSlotLevel = ACCESS.getLevel(new ReadSlotPermission((Long) null));
-		final Boolean isSlotUser = currentUserSlotLevel >= ReadSlotPermission.LEVEL_OWN;
+		// final Boolean isSlotUser = currentUserSlotLevel >=
+		// ReadSlotPermission.LEVEL_OWN;
 		final Boolean isSlotAdmin = currentUserSlotLevel == ReadSlotPermission.LEVEL_ALL;
 
 		final int currentUserCalendarConfigLevel = ACCESS
@@ -52,16 +52,12 @@ public class MeetingOutline extends AbstractOutline {
 		eventAskedTablePage.load();
 		eventAskedTablePage.setVisibleGranted(isEventUser);
 
-		final SlotTablePage slotTablePage = new SlotTablePage();
-		slotTablePage.setVisibleGranted(isSlotUser);
-
 		final EventAdminNodePage eventAdminNodePage = new EventAdminNodePage();
 		eventAdminNodePage.setVisibleGranted(isEventAdmin || isSlotAdmin || iscalendarConfigAdmin);
 
 		pageList.add(eventTablePage);
 		pageList.add(eventAskedTablePage);
 		pageList.add(eventProcessedTablePage);
-		pageList.add(slotTablePage);
 		pageList.add(eventAdminNodePage);
 	}
 
