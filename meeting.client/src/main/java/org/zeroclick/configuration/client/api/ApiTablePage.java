@@ -4,12 +4,10 @@ import org.eclipse.scout.rt.client.dto.Data;
 import org.eclipse.scout.rt.client.ui.desktop.outline.pages.AbstractPageWithTable;
 import org.eclipse.scout.rt.client.ui.form.FormEvent;
 import org.eclipse.scout.rt.client.ui.form.FormListener;
-import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.zeroclick.configuration.client.api.ApiTablePage.ApisTable;
 import org.zeroclick.configuration.shared.api.ApiTablePageData;
-import org.zeroclick.meeting.shared.calendar.IApiService;
 
 @Data(ApiTablePageData.class)
 public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
@@ -21,7 +19,8 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 
 	@Override
 	protected void execLoadData(final SearchFilter filter) {
-		this.importPageData(BEANS.get(IApiService.class).getApiTableData(filter));
+		// manual load, to allow correct handle of refresh (F5)
+		this.getTable().loadData();
 	}
 
 	@Override
@@ -39,6 +38,11 @@ public class ApiTablePage extends AbstractPageWithTable<ApisTable> {
 		@Override
 		protected boolean getConfiguredDisplayAllUsers() {
 			return true;
+		}
+
+		@Override
+		protected boolean getConfiguredAutoLoad() {
+			return false;
 		}
 	}
 

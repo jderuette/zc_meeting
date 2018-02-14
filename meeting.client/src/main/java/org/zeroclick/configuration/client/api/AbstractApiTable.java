@@ -35,6 +35,7 @@ import org.zeroclick.configuration.shared.provider.ProviderCodeType;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.DeleteApiPermission;
 import org.zeroclick.meeting.shared.calendar.IApiService;
+import org.zeroclick.meeting.shared.calendar.ReadApiPermission;
 import org.zeroclick.meeting.shared.calendar.UpdateApiPermission;
 import org.zeroclick.ui.action.menu.AbstractDeleteMenu;
 import org.zeroclick.ui.action.menu.AbstractEditMenu;
@@ -69,9 +70,23 @@ public abstract class AbstractApiTable extends AbstractTable {
 		return false;
 	}
 
+	protected boolean getConfiguredAutoLoad() {
+		return true;
+	}
+
 	@Override
 	protected String getConfiguredTitle() {
 		return TEXTS.get("zc.api.list.title");
+	}
+
+	@Override
+	protected boolean getConfiguredHeaderEnabled() {
+		return this.isApiAdmin();
+	}
+
+	private boolean isApiAdmin() {
+		final int currentUserLevel = ACCESS.getLevel(new ReadApiPermission((Long) null));
+		return currentUserLevel == ReadApiPermission.LEVEL_ALL;
 	}
 
 	@Override
@@ -104,6 +119,10 @@ public abstract class AbstractApiTable extends AbstractTable {
 				deleteMenu.setVisible(false);
 			}
 		}
+
+		if (this.getConfiguredAutoLoad()) {
+			this.loadData();
+		}
 	}
 
 	@Override
@@ -120,7 +139,7 @@ public abstract class AbstractApiTable extends AbstractTable {
 	}
 
 	protected void loadData() {
-		this.importFromTableBeanData(BEANS.get(IApiService.class).getApiTableData(null));
+		this.importFromTableBeanData(BEANS.get(IApiService.class).getApiTableData(this.displayAllUsers));
 	}
 
 	private INotificationListener<ApiCreatedNotification> createApiCreatedListener() {

@@ -173,24 +173,6 @@ public class OnBoardingUserForm extends AbstractForm {
 			}
 		}
 
-		// @Order(4000)
-		// public class SlotConfigField extends
-		// AbstractTableField<SlotConfigField.Table> {
-		//
-		// @Override
-		// protected String getConfiguredLabel() {
-		// return TEXTS.get("zc.meeting.slot.configuration");
-		// }
-		//
-		// @Override
-		// protected int getConfiguredGridH() {
-		// return 6;
-		// }
-		//
-		// public class Table extends AbstractSlotTable {
-		// }
-		// }
-
 		@Order(5000)
 		public class AddCalendarField extends AbstractHtmlField {
 			@Override

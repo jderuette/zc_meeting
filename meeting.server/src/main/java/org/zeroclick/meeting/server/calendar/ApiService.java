@@ -46,6 +46,10 @@ public class ApiService extends AbstractCommonService implements IApiService {
 
 	@Override
 	public ApiTablePageData getApiTableData(final SearchFilter filter) {
+		return this.getApiTableData(filter, false);
+	}
+
+	private ApiTablePageData getApiTableData(final SearchFilter filter, final boolean displayAllForAdmin) {
 		final ApiTablePageData pageData = new ApiTablePageData();
 
 		Long userId = null;
@@ -57,7 +61,8 @@ public class ApiService extends AbstractCommonService implements IApiService {
 		final StringBuilder sql = new StringBuilder();
 		sql.append(SQLs.OAUHTCREDENTIAL_PAGE_SELECT);
 
-		if (null == userId && ACCESS.getLevel(new ReadApiPermission((Long) null)) != ReadApiPermission.LEVEL_ALL) {
+		if (!displayAllForAdmin || null == userId
+				&& ACCESS.getLevel(new ReadApiPermission((Long) null)) != ReadApiPermission.LEVEL_ALL) {
 			userId = super.userHelper.getCurrentUserId();
 		}
 
@@ -87,6 +92,11 @@ public class ApiService extends AbstractCommonService implements IApiService {
 		}
 
 		return pageData;
+	}
+
+	@Override
+	public ApiTablePageData getApiTableData(final boolean displayAllForAdmin) {
+		return this.getApiTableData(null, displayAllForAdmin);
 	}
 
 	@Override
