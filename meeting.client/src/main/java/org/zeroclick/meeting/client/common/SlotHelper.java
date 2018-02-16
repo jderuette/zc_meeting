@@ -346,12 +346,31 @@ public class SlotHelper {
 		// long for this period.
 		// FIXME perpetual should be managed for the LIST, assuming here all
 		// periods have same perpetuality of the first one
-		if (periods.get(0).isWeeklyerpetual()) {
-			return periods.get(0);
+		// if (periods.get(0).isWeeklyerpetual()) {
+		// return periods.get(0);
+		// } else {
+		// return null;
+		// }
+
+		final DayDuration nextPeriod = this.getNextDayOfWeek(periods, checkedDate);
+		if (null != nextPeriod && nextPeriod.isWeeklyerpetual()) {
+			return nextPeriod;
 		} else {
 			return null;
 		}
+	}
 
+	private DayDuration getNextDayOfWeek(final List<DayDuration> periods, final ZonedDateTime checkedDate) {
+		DayOfWeek nextDayOfWeek = null;
+		DayDuration closestPeriod = null;
+		for (final DayDuration period : periods) {
+			final DayOfWeek periodDayOfWeek = this.getNextDayOfWeek(period, checkedDate);
+			if (null == nextDayOfWeek || periodDayOfWeek.getValue() < nextDayOfWeek.getValue()) {
+				nextDayOfWeek = periodDayOfWeek;
+				closestPeriod = period;
+			}
+		}
+		return closestPeriod;
 	}
 
 	private DayOfWeek getNextDayOfWeek(final DayDuration period, final ZonedDateTime checkedDate) {
