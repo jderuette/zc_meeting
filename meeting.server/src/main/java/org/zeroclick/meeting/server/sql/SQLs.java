@@ -568,8 +568,8 @@ public interface SQLs {
 	// PatchSlotTable.SLOT_ID_SEQ + "'), 'zc.meeting.slot.4', 1)";
 
 	String DAY_DURATION_PAGE_SELECT = "SELECT DAY_DURATION.day_duration_id, DAY_DURATION.name, slot_start, slot_end, SLOT.slot_code, SLOT.slot_id, order_in_slot, SLOT.user_id, "
-			+ "monday, tuesday, wednesday, thursday, friday, saturday, sunday FROM DAY_DURATION INNER JOIN SLOT ON DAY_DURATION.slot_id = SLOT.slot_id";
-	String DAY_DURATION_PAGE_SELECT_INTO = " INTO :{page.dayDurationId}, :{page.name}, :{page.start}, :{page.end}, :{page.slot}, :{page.slotId}, :{page.orderInSlot}, :{page.userId}, :{page.monday}, :{page.tuesday}, :{page.wednesday}, :{page.thursday}, :{page.friday}, :{page.saturday}, :{page.sunday}";
+			+ "monday, tuesday, wednesday, thursday, friday, saturday, sunday, weekly_perpetual FROM DAY_DURATION INNER JOIN SLOT ON DAY_DURATION.slot_id = SLOT.slot_id";
+	String DAY_DURATION_PAGE_SELECT_INTO = " INTO :{page.dayDurationId}, :{page.name}, :{page.slotStart}, :{page.slotEnd}, :{page.slot}, :{page.slotId}, :{page.orderInSlot}, :{page.userId}, :{page.monday}, :{page.tuesday}, :{page.wednesday}, :{page.thursday}, :{page.friday}, :{page.saturday}, :{page.sunday}, :{page.weeklyPerpetual}";
 
 	String DAY_DURATION_SELECT = "SELECT DAY_DURATION.day_duration_id, DAY_DURATION.name, slot_start, slot_end, "
 			+ "monday, tuesday, wednesday, thursday, friday, saturday, sunday, weekly_perpetual, order_in_slot, DAY_DURATION.slot_id, SLOT.slot_code";

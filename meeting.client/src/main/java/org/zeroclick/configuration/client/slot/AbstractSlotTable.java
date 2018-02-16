@@ -31,6 +31,7 @@ import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractLongColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractSmartColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractStringColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractTimeColumn;
+import org.eclipse.scout.rt.client.ui.basic.table.columns.IColumn;
 import org.eclipse.scout.rt.client.ui.desktop.IDesktop;
 import org.eclipse.scout.rt.client.ui.form.IForm;
 import org.eclipse.scout.rt.platform.BEANS;
@@ -57,7 +58,16 @@ public abstract class AbstractSlotTable extends AbstractTable {
 
 	private static final Logger LOG = LoggerFactory.getLogger(AbstractSlotTable.class);
 
+	private boolean displayAllUsers;
 	protected INotificationListener<DayDurationModifiedNotification> dayDurationModifiedListener;
+
+	public boolean isDisplayAllUsers() {
+		return this.displayAllUsers;
+	}
+
+	public void setDisplayAllUsers(final boolean displayAllUsers) {
+		this.displayAllUsers = displayAllUsers;
+	}
 
 	@Override
 	protected boolean getConfiguredHeaderEnabled() {
@@ -79,13 +89,18 @@ public abstract class AbstractSlotTable extends AbstractTable {
 		return Boolean.TRUE;
 	}
 
-	private void load() {
+	protected boolean getConfiguredDisplayAllUsers() {
+		return false;
+	}
+
+	private void loadData() {
 		this.importFromTableBeanData(BEANS.get(ISlotService.class).getDayDurationTableData(null));
 		this.sort();
 	}
 
 	@Override
 	protected void initConfig() {
+		this.displayAllUsers = this.getConfiguredDisplayAllUsers();
 		super.initConfig();
 		this.setRowIconVisible(Boolean.FALSE);
 
@@ -93,7 +108,16 @@ public abstract class AbstractSlotTable extends AbstractTable {
 				.get(DayDurationModifiedNotificationHandler.class);
 		createDayDurationModifiedHandler.addListener(this.createDayDurationModifiedListener());
 
-		this.load();
+		if (this.displayAllUsers) {
+			final List<IColumn<?>> columns = this.getColumns();
+
+			if (null != columns && columns.size() > 0) {
+				for (final IColumn<?> column : columns) {
+					column.setEditable(false);
+				}
+			}
+		}
+		this.loadData();
 	}
 
 	@Override
@@ -243,8 +267,24 @@ public abstract class AbstractSlotTable extends AbstractTable {
 		dayDurationForm.startModify();
 	}
 
-	public EndColumn getEndColumn() {
-		return this.getColumnSet().getColumnByClass(EndColumn.class);
+	public DayDurationIdColumn getDayDurationIdColumn() {
+		return this.getColumnSet().getColumnByClass(DayDurationIdColumn.class);
+	}
+
+	public WeeklyPerpetualColumn getWeeklyPerpetualColumn() {
+		return this.getColumnSet().getColumnByClass(WeeklyPerpetualColumn.class);
+	}
+
+	public NameColumn getNameColumn() {
+		return this.getColumnSet().getColumnByClass(NameColumn.class);
+	}
+
+	public SlotStartColumn getSlotStartColumn() {
+		return this.getColumnSet().getColumnByClass(SlotStartColumn.class);
+	}
+
+	public SlotEndColumn getSlotEndColumn() {
+		return this.getColumnSet().getColumnByClass(SlotEndColumn.class);
 	}
 
 	public MondayColumn getMondayColumn() {
@@ -267,6 +307,10 @@ public abstract class AbstractSlotTable extends AbstractTable {
 		return this.getColumnSet().getColumnByClass(FridayColumn.class);
 	}
 
+	public SaturdayColumn getSaturdayColumn() {
+		return this.getColumnSet().getColumnByClass(SaturdayColumn.class);
+	}
+
 	public SundayColumn getSundayColumn() {
 		return this.getColumnSet().getColumnByClass(SundayColumn.class);
 	}
@@ -283,24 +327,8 @@ public abstract class AbstractSlotTable extends AbstractTable {
 		return this.getColumnSet().getColumnByClass(OrderInSlotColumn.class);
 	}
 
-	public NameColumn getNameColumn() {
-		return this.getColumnSet().getColumnByClass(NameColumn.class);
-	}
-
-	public SaturdayColumn getSaturdayColumn() {
-		return this.getColumnSet().getColumnByClass(SaturdayColumn.class);
-	}
-
 	public SlotColumn getSlotColumn() {
 		return this.getColumnSet().getColumnByClass(SlotColumn.class);
-	}
-
-	public StartColumn getStartColumn() {
-		return this.getColumnSet().getColumnByClass(StartColumn.class);
-	}
-
-	public DayDurationIdColumn getDayDurationIdColumn() {
-		return this.getColumnSet().getColumnByClass(DayDurationIdColumn.class);
 	}
 
 	@Order(1000)
@@ -359,23 +387,34 @@ public abstract class AbstractSlotTable extends AbstractTable {
 	}
 
 	@Order(3000)
-	public class StartColumn extends AbstractTimeColumn {
+	public class SlotStartColumn extends AbstractTimeColumn {
 		@Override
 		protected String getConfiguredHeaderText() {
 			return TEXTS.get("zc.meeting.dayDuration.hour.start");
 		}
 
 		@Override
+		protected boolean getConfiguredEditable() {
+			return true;
+		}
+
+		@Override
 		protected int getConfiguredWidth() {
 			return 75;
 		}
+
 	}
 
 	@Order(4000)
-	public class EndColumn extends AbstractTimeColumn {
+	public class SlotEndColumn extends AbstractTimeColumn {
 		@Override
 		protected String getConfiguredHeaderText() {
 			return TEXTS.get("zc.meeting.dayDuration.hour.end");
+		}
+
+		@Override
+		protected boolean getConfiguredEditable() {
+			return true;
 		}
 
 		@Override
@@ -520,6 +559,11 @@ public abstract class AbstractSlotTable extends AbstractTable {
 		}
 
 		@Override
+		protected boolean getConfiguredEditable() {
+			return true;
+		}
+
+		@Override
 		protected int getConfiguredWidth() {
 			return 35;
 		}
@@ -530,6 +574,11 @@ public abstract class AbstractSlotTable extends AbstractTable {
 		@Override
 		protected String getConfiguredHeaderText() {
 			return TEXTS.get("zc.meeting.dayDuration.tuesday");
+		}
+
+		@Override
+		protected boolean getConfiguredEditable() {
+			return true;
 		}
 
 		@Override
@@ -546,6 +595,11 @@ public abstract class AbstractSlotTable extends AbstractTable {
 		}
 
 		@Override
+		protected boolean getConfiguredEditable() {
+			return true;
+		}
+
+		@Override
 		protected int getConfiguredWidth() {
 			return 35;
 		}
@@ -556,6 +610,11 @@ public abstract class AbstractSlotTable extends AbstractTable {
 		@Override
 		protected String getConfiguredHeaderText() {
 			return TEXTS.get("zc.meeting.dayDuration.thursday");
+		}
+
+		@Override
+		protected boolean getConfiguredEditable() {
+			return true;
 		}
 
 		@Override
@@ -572,6 +631,11 @@ public abstract class AbstractSlotTable extends AbstractTable {
 		}
 
 		@Override
+		protected boolean getConfiguredEditable() {
+			return true;
+		}
+
+		@Override
 		protected int getConfiguredWidth() {
 			return 35;
 		}
@@ -582,6 +646,11 @@ public abstract class AbstractSlotTable extends AbstractTable {
 		@Override
 		protected String getConfiguredHeaderText() {
 			return TEXTS.get("zc.meeting.dayDuration.saturday");
+		}
+
+		@Override
+		protected boolean getConfiguredEditable() {
+			return true;
 		}
 
 		@Override
@@ -598,8 +667,31 @@ public abstract class AbstractSlotTable extends AbstractTable {
 		}
 
 		@Override
+		protected boolean getConfiguredEditable() {
+			return true;
+		}
+
+		@Override
 		protected int getConfiguredWidth() {
 			return 35;
+		}
+	}
+
+	@Order(16000)
+	public class WeeklyPerpetualColumn extends AbstractBooleanColumn {
+		@Override
+		protected String getConfiguredHeaderText() {
+			return TEXTS.get("zc.meeting.dayDuration.weeklyPerpetual");
+		}
+
+		@Override
+		protected boolean getConfiguredVisible() {
+			return false;
+		}
+
+		@Override
+		protected int getConfiguredWidth() {
+			return 100;
 		}
 	}
 

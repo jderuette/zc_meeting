@@ -17,6 +17,8 @@ public interface ISlotService extends IService {
 
 	SlotFormData store(SlotFormData formData);
 
+	SlotsFormData store(SlotsFormData formData);
+
 	SlotTablePageData getSlotTableData(SearchFilter filter);
 
 	SlotTablePageData getDayDurationTableData(SearchFilter filter);
@@ -66,12 +68,4 @@ public interface ISlotService extends IService {
 	 */
 	void updateDayDurationsByTemplate(String slotName, String requiredStart, String requiredEnd, String newStart,
 			String newEnd);
-	//
-	// /**
-	// * Migration : DO not use Correct the DayDuration start and end hours.
-	// From
-	// * User timeZone to UTC. TimeZone isn't stored in DataBase so assume ALL
-	// * User have their current TimeZone in DB.
-	// */
-	// void migrateDayDurationTimeToUtc(String slotName);
 }

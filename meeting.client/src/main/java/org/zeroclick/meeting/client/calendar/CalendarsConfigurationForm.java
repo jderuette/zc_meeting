@@ -192,12 +192,6 @@ public class CalendarsConfigurationForm extends AbstractForm implements IPageFor
 				}
 
 				calendarConfigurationService.store(formData);
-
-				// for (final ITableRow row : modifiedRows) {
-				//
-				// calendarConfigurationService.store(CalendarsConfigurationForm.this.getCalendarConfigTableField()
-				// .getTable().getRowAsFormData(row));
-				// }
 			}
 		}
 

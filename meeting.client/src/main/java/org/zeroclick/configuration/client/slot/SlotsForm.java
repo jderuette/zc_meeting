@@ -1,6 +1,9 @@
 package org.zeroclick.configuration.client.slot;
 
+import java.util.List;
+
 import org.eclipse.scout.rt.client.dto.FormData;
+import org.eclipse.scout.rt.client.ui.basic.table.ITableRow;
 import org.eclipse.scout.rt.client.ui.form.AbstractForm;
 import org.eclipse.scout.rt.client.ui.form.AbstractFormHandler;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractCancelButton;
@@ -9,13 +12,18 @@ import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractOkButton;
 import org.eclipse.scout.rt.client.ui.form.fields.groupbox.AbstractGroupBox;
 import org.eclipse.scout.rt.client.ui.form.fields.htmlfield.AbstractHtmlField;
 import org.eclipse.scout.rt.client.ui.form.fields.tablefield.AbstractTableField;
+import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.zeroclick.configuration.client.slot.SlotsForm.MainBox.CancelButton;
 import org.zeroclick.configuration.client.slot.SlotsForm.MainBox.OkButton;
 import org.zeroclick.configuration.client.slot.SlotsForm.MainBox.SlotsDescriptionField;
 import org.zeroclick.configuration.client.slot.SlotsForm.MainBox.SlotsTableField;
+import org.zeroclick.configuration.shared.slot.ISlotService;
+import org.zeroclick.configuration.shared.slot.SlotsFormData;
+import org.zeroclick.configuration.shared.slot.SlotsFormData.SlotsTable.SlotsTableRowData;
 
+@FormData(value = SlotsFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class SlotsForm extends AbstractForm {
 
 	@Override
@@ -118,30 +126,26 @@ public class SlotsForm extends AbstractForm {
 			}
 
 			public class Table extends AbstractSlotTable {
+
 			}
 
 		}
 
 		@Order(100000)
 		public class OkButton extends AbstractOkButton {
-			
-			@Override
-			protected boolean getConfiguredVisible() {
-				return false;
-			}
+
 		}
 
 		@Order(101000)
 		public class CancelButton extends AbstractCancelButton {
-			
+		}
+
+		@Order(102000)
+		public class CloseButton extends AbstractCloseButton {
 			@Override
 			protected boolean getConfiguredVisible() {
 				return false;
 			}
-		}
-		
-		@Order(102000)
-		public class CloseButton extends AbstractCloseButton {
 		}
 	}
 
@@ -155,6 +159,37 @@ public class SlotsForm extends AbstractForm {
 
 		@Override
 		protected void execStore() {
+
+			final SlotsFormData formData = new SlotsFormData();
+			SlotsForm.this.exportFormData(formData);
+
+			final List<ITableRow> modifiedRows = SlotsForm.this.getSlotsTableField().getTable().getUpdatedRows();
+			if (modifiedRows.size() > 0) {
+				final ISlotService slotService = BEANS.get(ISlotService.class);
+				// remove unmodified rows, to avoid useless work on server side
+				final SlotsTableRowData[] exportedRows = formData.getSlotsTable().getRows();
+				for (final SlotsTableRowData row : exportedRows) {
+					if (!this.isModified(row, modifiedRows)) {
+						formData.getSlotsTable().removeRow(row);
+					}
+				}
+				slotService.store(formData);
+			}
+		}
+
+		private Boolean isModified(final SlotsTableRowData row, final List<ITableRow> modifiedRows) {
+			final Long dayDurationId = row.getDayDurationId();
+			return this.contains(dayDurationId, modifiedRows);
+		}
+
+		private Boolean contains(final Long dayDurationId, final List<ITableRow> modifiedRows) {
+			for (final ITableRow row : modifiedRows) {
+				if (SlotsForm.this.getSlotsTableField().getTable().getDayDurationIdColumn()
+						.getValue(row) == dayDurationId) {
+					return Boolean.TRUE;
+				}
+			}
+			return Boolean.FALSE;
 		}
 	}
 }

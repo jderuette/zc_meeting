@@ -27,6 +27,8 @@ import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.configuration.shared.slot.ReadSlotPermission;
 import org.zeroclick.configuration.shared.slot.SlotFormData;
 import org.zeroclick.configuration.shared.slot.SlotTablePageData;
+import org.zeroclick.configuration.shared.slot.SlotsFormData;
+import org.zeroclick.configuration.shared.slot.SlotsFormData.SlotsTable.SlotsTableRowData;
 import org.zeroclick.configuration.shared.slot.UpdateSlotPermission;
 import org.zeroclick.meeting.server.sql.DatabaseHelper;
 import org.zeroclick.meeting.server.sql.SQLs;
@@ -123,11 +125,59 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 		return formData;
 	}
 
+	@Override
+	public SlotsFormData store(final SlotsFormData formData) {
+		final SlotsTableRowData[] rows = formData.getSlotsTable().getRows();
+
+		for (final SlotsTableRowData row : rows) {
+			this.checkPermission(new UpdateSlotPermission());
+			SQL.insert(SQLs.DAY_DURATION_UPDATE, row);
+		}
+
+		this.sendModifiedNotifications(formData);
+
+		return formData;
+	}
+
 	private void sendModifiedNotifications(final DayDurationFormData formData) {
-		final String sltoCode = this.getSlotCode(formData.getSlotId());
-		final Set<String> notifiedUsers = this.buildNotifiedUsers(formData.getUserId(), Boolean.TRUE);
+		this.sendModifiedNotifications(formData.getUserId(), formData.getSlotId(), formData);
+	}
+
+	private void sendModifiedNotifications(final Long userId, final Long slotId, final DayDurationFormData formData) {
+		final String sltoCode = this.getSlotCode(slotId);
+		final Set<String> notifiedUsers = this.buildNotifiedUsers(userId, Boolean.TRUE);
 		BEANS.get(ClientNotificationRegistry.class).putForUsers(notifiedUsers,
 				new DayDurationModifiedNotification(formData, sltoCode));
+	}
+
+	private void sendModifiedNotifications(final SlotsFormData formData) {
+		if (formData.getSlotsTable().getRowCount() > 0) {
+			for (final SlotsTableRowData row : formData.getSlotsTable().getRows()) {
+				this.sendModifiedNotifications(row.getUserId(), row.getSlotId(), this.toDayDurationForm(row));
+			}
+		} else {
+			LOG.warn(
+					"Cannot send user CalendarsConfigurationModifiedNotification because no User ID (no calendars modified)");
+		}
+	}
+
+	private DayDurationFormData toDayDurationForm(final SlotsTableRowData row) {
+		final DayDurationFormData dayDurationFormData = new DayDurationFormData();
+		dayDurationFormData.setDayDurationId(row.getDayDurationId());
+		dayDurationFormData.setName(row.getName());
+		dayDurationFormData.setSlotCode(String.valueOf(row.getSlot()));
+		dayDurationFormData.setSlotId(row.getSlotId());
+		dayDurationFormData.setUserId(row.getUserId());
+		dayDurationFormData.getMonday().setValue(row.getMonday());
+		dayDurationFormData.getTuesday().setValue(row.getTuesday());
+		dayDurationFormData.getWednesday().setValue(row.getWednesday());
+		dayDurationFormData.getTuesday().setValue(row.getTuesday());
+		dayDurationFormData.getFriday().setValue(row.getFriday());
+		dayDurationFormData.getSaturday().setValue(row.getSaturday());
+		dayDurationFormData.getSunday().setValue(row.getSunday());
+		dayDurationFormData.getWeeklyPerpetual().setValue(row.getWednesday());
+		dayDurationFormData.getOrderInSlot().setValue(Long.valueOf(row.getOrderInSlot()));
+		return dayDurationFormData;
 	}
 
 	private SlotTablePageData getSlotData(final SearchFilter filter, final Boolean displayAllForAdmin) {
