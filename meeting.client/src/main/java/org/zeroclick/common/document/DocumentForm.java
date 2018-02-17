@@ -386,12 +386,7 @@ public class DocumentForm extends AbstractForm {
 
 						@Override
 						protected void execDecorateCell(final Cell view, final ITableRow row, final IColumn<?> col) {
-							if (this.getRoleIdColumn().equals(col)) {
-								if (null != view.getValue() || "".equals(view.getValue())) {
-									view.setEditable(Boolean.FALSE);
-								}
-							}
-							if (this.getDocumentIdColumn().equals(col)) {
+							if (this.getRoleIdColumn().equals(col) || this.getDocumentIdColumn().equals(col)) {
 								if (null != view.getValue() || "".equals(view.getValue())) {
 									view.setEditable(Boolean.FALSE);
 								}

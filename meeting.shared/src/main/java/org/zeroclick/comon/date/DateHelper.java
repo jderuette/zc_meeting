@@ -104,9 +104,7 @@ public class DateHelper {
 	public Date toUtcDate(final Date dateFromUser) {
 		final int dateMinutOeffsetFromUtc = dateFromUser.getTimezoneOffset();
 		Date utcDate = dateFromUser;
-		if (dateMinutOeffsetFromUtc == 0) {
-			// Already UTC Time
-		} else {
+		if (dateMinutOeffsetFromUtc != 0) {
 			final ZonedDateTime zdt = ZonedDateTime.from(dateFromUser.toInstant());
 			zdt.plusMinutes(dateMinutOeffsetFromUtc);
 			utcDate = Date.from(zdt.toInstant());
@@ -257,6 +255,7 @@ public class DateHelper {
 		return this.getRelativeDay(zonedValue, userLcoale, Boolean.FALSE, Boolean.FALSE);
 	}
 
+	@SuppressWarnings("PMD.EmptyIfStmt")
 	public String getRelativeDay(final ZonedDateTime zonedValue, final Locale userLcoale,
 			final Boolean emptyForAbsolute, final Boolean addParenthesis) {
 		final String key = this.getRelativeDateKey(zonedValue, Boolean.TRUE);

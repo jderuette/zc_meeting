@@ -85,10 +85,12 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 		return true;
 	}
 
+	@SuppressWarnings("PMD.BooleanGetMethodName")
 	protected boolean getConfiguredDisplayAllUsers() {
 		return false;
 	}
 
+	@SuppressWarnings("PMD.BooleanGetMethodName")
 	protected boolean getConfiguredAutoLoad() {
 		return true;
 	}
@@ -206,8 +208,8 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 			form.addFormListener(new FormListener() {
 
 				@Override
-				public void formChanged(final FormEvent e) {
-					if (FormEvent.TYPE_CLOSED == e.getType() && form.isFormStored()) {
+				public void formChanged(final FormEvent fromEvent) {
+					if (FormEvent.TYPE_CLOSED == fromEvent.getType() && form.isFormStored()) {
 						AbstractCalendarConfigurationTable.this.loadData();
 					}
 				}

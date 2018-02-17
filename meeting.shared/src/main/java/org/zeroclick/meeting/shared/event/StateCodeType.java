@@ -7,6 +7,7 @@ import org.eclipse.scout.rt.shared.services.common.code.AbstractCodeType;
 import org.zeroclick.meeting.shared.Icons;
 
 @IgnoreBean
+@SuppressWarnings("PMD.ShortVariable")
 public class StateCodeType extends AbstractCodeType<Long, String> {
 
 	private static final long serialVersionUID = 1L;

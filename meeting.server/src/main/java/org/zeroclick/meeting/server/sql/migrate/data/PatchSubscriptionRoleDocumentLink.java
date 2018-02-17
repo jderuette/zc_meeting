@@ -82,6 +82,7 @@ public class PatchSubscriptionRoleDocumentLink extends AbstractDataPatcher {
 		return structureAltered;
 	}
 
+	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 	private void migrateData() {
 		LOG.info("Modify Subscription's link between role and document upgraing default data");
 
@@ -97,6 +98,7 @@ public class PatchSubscriptionRoleDocumentLink extends AbstractDataPatcher {
 				final Date startDate = (Date) existingUserWithRole[row][2];
 
 				// check if subscription metaData exists
+				@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 				final Object[][] subscriptionMetadata = SQL.select(
 						SQLs.SUBSCRIPTION_SELECT_ALL + SQLs.USER_ROLE_FILTER_USER_ID
 								+ SQLs.USER_ROLE_FILTER_SUBSCRIPTION_ID + SQLs.USER_ROLE_FILTER_START_DATE,

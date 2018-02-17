@@ -106,15 +106,15 @@ public class RoleService extends AbstractCommonService implements IRoleService {
 		super.checkPermission(new UpdateRolePermission());
 		LOG.info("Deleting Role (and link to documents, and link to Users and link to permissions) for Role ID : "
 				+ formData.getRoleId());
-		/** 3 = "free" @see SQLS.ROLE_VALUES_SUB_FREE */
-		final Long defaultReassignRole = 3L;
-
 		if (null == formData.getRoleId()) {
 			this.loadByRoleName(formData);
 			if (null == formData.getRoleId()) {
 				throw new VetoException("Role Id (or valid roleName) required");
 			}
 		}
+
+		/** 3 = "free" @see SQLS.ROLE_VALUES_SUB_FREE */
+		final Long defaultReassignRole = 3L;
 
 		if (formData.getRoleId() == defaultReassignRole) {
 			throw new VetoException("Cannot delete role ID " + defaultReassignRole + " because it's the default one !");

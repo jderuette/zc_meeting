@@ -61,13 +61,13 @@ public class DocumentTablePage extends AbstractPageWithTable<Table> {
 		protected void initConfig() {
 			super.initConfig();
 
-			final DocumentCreatedNotificationHandler documentCreatedNotificationHandler = BEANS
+			final DocumentCreatedNotificationHandler documentCreatedNotifHand = BEANS
 					.get(DocumentCreatedNotificationHandler.class);
-			documentCreatedNotificationHandler.addListener(this.createDocumentCreatedListener());
+			documentCreatedNotifHand.addListener(this.createDocumentCreatedListener());
 
-			final DocumentModifiedNotificationHandler documentModifiedNotificationHandler = BEANS
+			final DocumentModifiedNotificationHandler documentModifiedNotifHand = BEANS
 					.get(DocumentModifiedNotificationHandler.class);
-			documentModifiedNotificationHandler.addListener(this.createDocumentModifiedListener());
+			documentModifiedNotifHand.addListener(this.createDocumentModifiedListener());
 
 		}
 
@@ -172,13 +172,13 @@ public class DocumentTablePage extends AbstractPageWithTable<Table> {
 
 		@Override
 		protected void execDisposeTable() {
-			final DocumentCreatedNotificationHandler documentCreatedNotificationHandler = BEANS
+			final DocumentCreatedNotificationHandler documentCreatedNotifHand = BEANS
 					.get(DocumentCreatedNotificationHandler.class);
-			documentCreatedNotificationHandler.removeListener(this.documentCreatedListener);
+			documentCreatedNotifHand.removeListener(this.documentCreatedListener);
 
-			final DocumentModifiedNotificationHandler documentModifiedNotificationHandler = BEANS
+			final DocumentModifiedNotificationHandler documentModifiedNotifHand = BEANS
 					.get(DocumentModifiedNotificationHandler.class);
-			documentModifiedNotificationHandler.removeListener(this.documentModifiedListener);
+			documentModifiedNotifHand.removeListener(this.documentModifiedListener);
 
 			super.execDisposeTable();
 		}

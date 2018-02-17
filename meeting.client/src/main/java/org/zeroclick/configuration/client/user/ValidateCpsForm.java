@@ -22,7 +22,6 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
-import org.zeroclick.comon.user.AppUserHelper;
 import org.zeroclick.configuration.client.user.ValidateCpsForm.MainBox.BottomBox;
 import org.zeroclick.configuration.client.user.ValidateCpsForm.MainBox.BottomBox.AcceptConditionBox;
 import org.zeroclick.configuration.client.user.ValidateCpsForm.MainBox.BottomBox.AcceptConditionBox.AcceptCpsField;
@@ -185,11 +184,6 @@ public class ValidateCpsForm extends AbstractForm {
 
 	private Boolean isSubscriptionPaymentValid() {
 		return null != this.getAcceptedWithdrawalDateField().getValue();
-	}
-
-	private Date getNowUserDate() {
-		final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
-		return appUserHelper.getUserNowInHisTimeZone(this.getUserIdField().getValue());
 	}
 
 	private void loadCpsText(final Long subscriptionId) {
@@ -416,12 +410,10 @@ public class ValidateCpsForm extends AbstractForm {
 					final String url = subscriptionHelper.getSubscriptionPaymentURL(subscriptionId);
 					this.setValue(url);
 
-					if (!ValidateCpsForm.this.subscriptionPaymentValid) {
-						if (null != url) {
-							// payment required if payment URL configured
-							this.setVisible(Boolean.TRUE);
-							ValidateCpsForm.this.getOkButton().setPayementRequired();
-						}
+					if (null != url && !ValidateCpsForm.this.subscriptionPaymentValid) {
+						// payment required if payment URL configured
+						this.setVisible(Boolean.TRUE);
+						ValidateCpsForm.this.getOkButton().setPayementRequired();
 					}
 				}
 

@@ -131,13 +131,13 @@ public class PatchCreateSuperUser extends AbstractDataPatcher {
 			}
 
 			// manual add "ReadRolePermission"
-			final AssignToRoleFormData readPermissionPermissionFormData = new AssignToRoleFormData();
-			readPermissionPermissionFormData.getRoleId().setValue(this.superUserRoleId);
+			final AssignToRoleFormData readPermissionPermFormData = new AssignToRoleFormData();
+			readPermissionPermFormData.getRoleId().setValue(this.superUserRoleId);
 			final List<String> readPermissionList = new ArrayList<>();
 			readPermissionList.add("org.zeroclick.configuration.shared.role.ReadPermissionPermission");
-			readPermissionPermissionFormData.setPermission(readPermissionList);
-			readPermissionPermissionFormData.getLevel().setValue(100l);
-			SQL.insert(SQLs.ROLE_PERMISSION_INSERT, readPermissionPermissionFormData);
+			readPermissionPermFormData.setPermission(readPermissionList);
+			readPermissionPermFormData.getLevel().setValue(100l);
+			SQL.insert(SQLs.ROLE_PERMISSION_INSERT, readPermissionPermFormData);
 			// Clear user Cache
 			BEANS.get(ServerAccessControlService.class)
 					.clearCacheOfUsersIds(CollectionUtility.arrayList(firstSuperUserPrincipal));

@@ -66,10 +66,12 @@ public abstract class AbstractApiTable extends AbstractTable {
 		return null;
 	}
 
+	@SuppressWarnings("PMD.BooleanGetMethodName")
 	protected boolean getConfiguredDisplayAllUsers() {
 		return false;
 	}
 
+	@SuppressWarnings("PMD.BooleanGetMethodName")
 	protected boolean getConfiguredAutoLoad() {
 		return true;
 	}

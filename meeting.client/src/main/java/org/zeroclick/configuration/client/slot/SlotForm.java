@@ -316,9 +316,9 @@ public class SlotForm extends AbstractForm implements IPageForm {
 						}
 
 						@Override
-						public void treeChanged(final TreeEvent e) {
-							if (TreeEvent.TYPE_NODE_ACTION == e.getType()) {
-								final ITreeNode clickedNode = e.getNode();
+						public void treeChanged(final TreeEvent treeChangedEvt) {
+							if (TreeEvent.TYPE_NODE_ACTION == treeChangedEvt.getType()) {
+								final ITreeNode clickedNode = treeChangedEvt.getNode();
 								// only leaf node can be edited
 								if (clickedNode.isLeaf()) {
 									SlotForm.this.loadDayDurationForm((Long) clickedNode.getPrimaryKey());

@@ -6,6 +6,7 @@ import org.eclipse.scout.rt.shared.services.common.code.AbstractCode;
 import org.eclipse.scout.rt.shared.services.common.code.AbstractCodeType;
 import org.eclipse.scout.rt.shared.services.common.code.ICode;
 
+@SuppressWarnings("PMD.ShortVariable")
 public class DurationCodeType extends AbstractCodeType<Long, Long> {
 
 	private static final long serialVersionUID = 1L;
@@ -38,7 +39,7 @@ public class DurationCodeType extends AbstractCodeType<Long, Long> {
 
 	public static String getText(final Double nbMinutes) {
 		final StringBuilder builder = new StringBuilder();
-		builder.append(convertMinuteToHours(nbMinutes)).append(" ").append(getTimeUnit(nbMinutes));
+		builder.append(convertMinuteToHours(nbMinutes)).append(' ').append(getTimeUnit(nbMinutes));
 		return builder.toString();
 	}
 

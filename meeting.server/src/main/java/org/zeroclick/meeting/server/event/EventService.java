@@ -402,6 +402,7 @@ public class EventService extends AbstractCommonService implements IEventService
 	}
 
 	@Override
+	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 	public void migrateDurationlookupToCodeType() {
 		LOG.info("Updating Event duration from minutes to IDs");
 		final DurationCodeType durationCodeType = new DurationCodeType();

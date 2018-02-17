@@ -25,6 +25,7 @@ import org.eclipse.scout.rt.shared.data.form.AbstractFormData;
  */
 public abstract class AbstractNotication<T extends AbstractFormData> implements Serializable {
 
+	private static final long serialVersionUID = 4841773425368106907L;
 	private final T formData;
 
 	public AbstractNotication(final T formData) {

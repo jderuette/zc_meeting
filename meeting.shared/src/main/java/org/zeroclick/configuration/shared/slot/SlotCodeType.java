@@ -5,6 +5,7 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.code.AbstractCode;
 import org.eclipse.scout.rt.shared.services.common.code.AbstractCodeType;
 
+@SuppressWarnings("PMD.ShortVariable")
 public class SlotCodeType extends AbstractCodeType<Long, Long> {
 
 	private static final long serialVersionUID = 1L;

@@ -791,9 +791,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 						if (null != calendarAfterAutoConfigure
 								&& null == calendarAfterAutoConfigure.getCalendarConfigurationId().getValue()) {
-							// calendar remove, so reconfigure resolve the
-							// problem
-							// we can continue without this calendar
+							LOG.debug("Calendar was removed after synchro, continuing with the next one");
 						} else {
 							throw gjre;
 						}
@@ -1134,8 +1132,6 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 						validateCpsForm.setModal(Boolean.TRUE);
 						validateCpsForm.startNew();
 						validateCpsForm.waitFor();
-					} else {
-						// Do nothing
 					}
 					// if user subscribe to subscription witch give him access
 					final SubscriptionHelperData subscriptionAfterData = subHelper.canCreateEvent();

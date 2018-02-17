@@ -80,8 +80,8 @@ public class VersionHelper {
 			version = this.getMavenArchiverVersion();
 		}
 
-		version = null == version ? "" : version.trim();
-		return version.isEmpty() ? DEFAULT_UNKNOW_VERSION : version;
+		final String bestVersion = null == version ? "" : version.trim();
+		return bestVersion.isEmpty() ? DEFAULT_UNKNOW_VERSION : bestVersion;
 	}
 
 	/**

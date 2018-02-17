@@ -199,14 +199,12 @@ public class DayDuration {
 		final DateHelper dateHelper = BEANS.get(DateHelper.class);
 		final long nbMinsDiff = dateHelper.getRelativeTimeShift(startDate, endDate, Boolean.TRUE, ChronoUnit.MINUTES);
 
-		if (nbMinsDiff < durationInMinutes.intValue()) {
-			if (LOG.isDebugEnabled()) {
-				final StringBuilder builder = new StringBuilder(100);
-				builder.append("From ").append(startDate).append(" to ").append(endDate).append(" is to short for a ")
-						.append(durationInMinutes).append(" meeting only ").append(nbMinsDiff).append(" mins available")
-						.append(this);
-				LOG.debug(builder.toString());
-			}
+		if (LOG.isDebugEnabled() && nbMinsDiff < durationInMinutes.intValue()) {
+			final StringBuilder builder = new StringBuilder(100);
+			builder.append("From ").append(startDate).append(" to ").append(endDate).append(" is to short for a ")
+					.append(durationInMinutes).append(" meeting only ").append(nbMinsDiff).append(" mins available")
+					.append(this);
+			LOG.debug(builder.toString());
 		}
 
 		final Long minutesOverlaps = this.getTimeOverlap(startDate, endDate, durationInMinutes);
@@ -221,7 +219,7 @@ public class DayDuration {
 		} else {
 			if (LOG.isDebugEnabled()) {
 				final StringBuilder builder = new StringBuilder(100);
-				builder.append("From ").append(startDate).append(" to ").append(endDate).append(" ")
+				builder.append("From ").append(startDate).append(" to ").append(endDate).append(' ')
 						.append(minutesOverlaps).append(" are available for meetings ").append(this);
 				LOG.debug(builder.toString());
 			}
@@ -272,15 +270,13 @@ public class DayDuration {
 			final Boolean stopWhenMeetingPossible) {
 		final ChronoUnit unit = ChronoUnit.MINUTES;
 
-		if (null != duration) {
-			if (this.getDuration(unit) < duration) {
-				final StringBuilder builder = new StringBuilder();
-				builder.append("Period Duration (").append(this.getDuration(unit))
-						.append(") is less than meeting duration (").append(duration).append("), no Hours available")
-						.append(this);
-				LOG.info(builder.toString());
-				return 0L;// early Break
-			}
+		if (null != duration && this.getDuration(unit) < duration) {
+			final StringBuilder builder = new StringBuilder();
+			builder.append("Period Duration (").append(this.getDuration(unit))
+					.append(") is less than meeting duration (").append(duration).append("), no Hours available")
+					.append(this);
+			LOG.info(builder.toString());
+			return 0L;// early Break
 		}
 
 		Long timeOverlap = 0L;

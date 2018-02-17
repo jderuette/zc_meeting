@@ -76,7 +76,7 @@ public class SqlLookupConfiguration {
 		final StringBuilder builder = new StringBuilder(200);
 		builder.append("SqlLookupConfiguration [sql=").append(this.sql).append(", translatedColumn=")
 				.append(this.translatedColumn).append(", bindBase=").append(this.bindBase).append(", caseSensitive=")
-				.append(this.caseSensitive).append(", autoFirstWildcard=").append(this.autoFirstWildcard).append("]");
+				.append(this.caseSensitive).append(", autoFirstWildcard=").append(this.autoFirstWildcard).append(']');
 		return builder.toString();
 	}
 

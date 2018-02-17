@@ -67,11 +67,11 @@ public interface IZeroClickUTCDateField extends IValueField<UTCDate> {
 
 	boolean isHasDate();
 
-	void setHasDate(boolean b);
+	void setHasDate(boolean hasDate);
 
 	boolean isHasTime();
 
-	void setHasTime(boolean b);
+	void setHasTime(boolean hasTime);
 
 	/**
 	 * @param autoDate
@@ -101,7 +101,7 @@ public interface IZeroClickUTCDateField extends IValueField<UTCDate> {
 	 * Set the time value as a double in the range from [0..1[ for 00:00 -
 	 * 23:59:59.
 	 */
-	void setTimeValue(Double d);
+	void setTimeValue(Double time);
 
 	/**
 	 * Sets a list of allowed dates. When the given list is not empty or null

@@ -582,6 +582,7 @@ public class EventForm extends AbstractForm {
 											if (!EventForm.this.existEmail(importedEmail)) {
 												final ITableRow newRow = EventForm.this.getEmailsField().getTable()
 														.createRow();
+												@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 												final Cell cell = new Cell();
 												cell.setValue(importedEmail);
 												newRow.setCell(Table.this.getEmailColumn().getColumnIndex(), cell);

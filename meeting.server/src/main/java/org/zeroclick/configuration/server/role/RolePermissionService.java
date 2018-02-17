@@ -113,6 +113,7 @@ public class RolePermissionService extends AbstractCommonService implements IRol
 	}
 
 	@Override
+	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 	public void setDefaultStartDateToExistingUserRole() {
 		LOG.info("Adding default start date to All existing User_Role");
 

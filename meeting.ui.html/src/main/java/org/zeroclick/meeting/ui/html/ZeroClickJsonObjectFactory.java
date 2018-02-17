@@ -34,7 +34,6 @@ import org.zeroclick.ui.form.fields.datefield.IZeroClickUTCDateField;
 @Order(5600)
 public class ZeroClickJsonObjectFactory extends JsonObjectFactory {
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public IJsonAdapter<?> createJsonAdapter(final Object model, final IUiSession session, final String id,
 			final IJsonAdapter<?> parent) {
@@ -42,14 +41,12 @@ public class ZeroClickJsonObjectFactory extends JsonObjectFactory {
 
 		if (null == adapter) {
 			if (model instanceof IZeroClickUTCDateField) {
-				adapter = new JsonZeroClickUUTCDateField<>((IZeroClickUTCDateField) model,
-						session, id, parent);
+				adapter = new JsonZeroClickUUTCDateField<>((IZeroClickUTCDateField) model, session, id, parent);
 			}
 		}
 		return adapter;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public IJsonObject createJsonObject(final Object object) {
 		IJsonObject jsonObject = super.createJsonObject(object);

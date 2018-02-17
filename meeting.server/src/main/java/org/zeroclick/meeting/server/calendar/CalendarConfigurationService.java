@@ -158,6 +158,7 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 	}
 
 	@Override
+	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 	public CalendarsConfigurationFormData store(final CalendarsConfigurationFormData formData) {
 
 		final CalendarConfigTableRowData[] rows = formData.getCalendarConfigTable().getRows();
@@ -242,6 +243,7 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		for (final String calendarKey : calendars.keySet()) {
 			final AbstractCalendarConfigurationTableRowData calendarData = calendars.get(calendarKey);
 
+			@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 			final CalendarConfigurationFormData data = new CalendarConfigurationFormData();
 			data.getUserId().setValue(calendarData.getUserId());
 			data.getExternalId().setValue(calendarData.getExternalId());
@@ -263,15 +265,16 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 				this.create(data, Boolean.FALSE);
 				atLeastOneCalendarConfigAdded = Boolean.TRUE;
 			} else {
-				final CalendarConfigurationFormData formData = new CalendarConfigurationFormData();
+				@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
+				final CalendarConfigurationFormData calendarConfigInput = new CalendarConfigurationFormData();
 
 				LOG.info("Calendar Configuration already exists for API : " + calendarData.getOAuthCredentialId()
 						+ " for calendar key : " + calendarData.getExternalId() + "(" + calendarData.getName()
 						+ ") for User Id : " + calendarData.getUserId() + " Updating calendar Data");
 
-				formData.getCalendarConfigurationId().setValue(existingCalendarConfigId);
-				formData.getUserId().setValue(calendarData.getUserId());
-				final CalendarConfigurationFormData existingCalendarConfig = this.load(formData);
+				calendarConfigInput.getCalendarConfigurationId().setValue(existingCalendarConfigId);
+				calendarConfigInput.getUserId().setValue(calendarData.getUserId());
+				final CalendarConfigurationFormData existingCalendarConfig = this.load(calendarConfigInput);
 				if (this.isCalendarCondifgRequiredModification(calendarData, existingCalendarConfig)) {
 					atLeastOneCalendarConfigModified = Boolean.TRUE;
 					// override "provider specific" data
@@ -302,8 +305,9 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		if (null != configuredCalendars && null != configuredCalendars.getCalendarConfigTable()
 				&& configuredCalendars.getCalendarConfigTable().getRowCount() > 0) {
 			for (final CalendarConfigTableRowData calendar : configuredCalendars.getCalendarConfigTable().getRows()) {
+				@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 				final StringBuilder calendarId = new StringBuilder();
-				calendarId.append(calendar.getUserId()).append("_").append(calendar.getExternalId()).append("_")
+				calendarId.append(calendar.getUserId()).append('_').append(calendar.getExternalId()).append(' ')
 						.append(calendar.getOAuthCredentialId());
 
 				if (!calendars.keySet().contains(calendarId.toString())) {

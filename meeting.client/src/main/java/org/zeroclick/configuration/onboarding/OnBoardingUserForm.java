@@ -15,8 +15,6 @@ import org.eclipse.scout.rt.client.ui.form.fields.tablefield.AbstractTableField;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.client.api.AbstractApiTable;
 import org.zeroclick.configuration.client.slot.SlotsForm;
 import org.zeroclick.configuration.onboarding.OnBoardingUserForm.MainBox.AddCalendarField;
@@ -34,8 +32,6 @@ import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
 
 @FormData(value = OnBoardingUserFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class OnBoardingUserForm extends AbstractForm {
-
-	private static final Logger LOG = LoggerFactory.getLogger(OnBoardingUserForm.class);
 
 	private PropertyChangeListener apiEmptynessChangeListener;
 

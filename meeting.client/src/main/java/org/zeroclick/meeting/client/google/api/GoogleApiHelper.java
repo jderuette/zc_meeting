@@ -212,6 +212,7 @@ public class GoogleApiHelper {
 		}
 	}
 
+	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 	public List<ApiCredential> getCredentials(final Long userId) throws IOException {
 		final IApiService apiService = BEANS.get(IApiService.class);
 		final List<ApiCredential> credentials = new ArrayList<>();
@@ -422,6 +423,7 @@ public class GoogleApiHelper {
 	 * @throws UserAccessRequiredException
 	 *             when no credential can be found for the user
 	 */
+	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 	public List<ApiCalendar> getCalendarsServices(final Long userId) throws IOException {
 		final List<ApiCalendar> calendarsServices = new ArrayList<>();
 		final List<ApiCredential> apiCredentials = this.getCredentials(userId);
@@ -497,7 +499,7 @@ public class GoogleApiHelper {
 					final List<CalendarListEntry> calendarItems = calendarsList.getItems();
 					for (final CalendarListEntry calendarItem : calendarItems) {
 						final StringBuilder calendarId = new StringBuilder();
-						calendarId.append(userId).append("_").append(calendarItem.getId()).append("_")
+						calendarId.append(userId).append(' ').append(calendarItem.getId()).append(' ')
 								.append(calendarService.getMetaData().getApiCredentialId());
 						calendars.put(calendarId.toString(), this.toCalendarConfig(calendarItem, userId,
 								calendarService.getMetaData().getApiCredentialId()));

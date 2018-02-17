@@ -79,6 +79,7 @@ public class ApiService extends AbstractCommonService implements IApiService {
 			// Post check permission base on OAuthId
 			for (final ApiTableRowData row : pageData.getRows()) {
 				if (null == alreadyCheckReadAcces.get(row.getApiCredentialId())) {
+					@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 					final Boolean canRead = ACCESS.check(new ReadApiPermission(row.getApiCredentialId()));
 					alreadyCheckReadAcces.put(row.getApiCredentialId(), canRead);
 				}
@@ -195,9 +196,6 @@ public class ApiService extends AbstractCommonService implements IApiService {
 			oAuthId = this.getApiIdByAccountEmail(userId, accountsEmail);
 		}
 
-		// if (null == oAuthId) {
-		// oAuthId = this.getApiId(userId);
-		// }
 		if (null == oAuthId) {
 			LOG.debug("No API ID found for userId : " + userId);
 			return formData;
@@ -345,31 +343,6 @@ public class ApiService extends AbstractCommonService implements IApiService {
 
 		// the formData BEFORE deletion
 		this.sendDeletedNotifications(dataBeforeDeletion);
-	}
-
-	// private void delete(final Long apiCredentialId) {
-	// final ApiFormData input = new ApiFormData();
-	//
-	// input.setApiCredentialId(apiCredentialId);
-	//
-	// this.delete(input);
-	// }
-
-	private Long getApiId(final Long userId) {
-		// Warning permission check at the end to allow "attendee" to check
-		// "host" calendar
-		LOG.debug("Searching API Id for user : " + userId);
-
-		final ApiFormData formData = new ApiFormData();
-		formData.setUserId(userId);
-		SQL.selectInto(SQLs.OAUHTCREDENTIAL_SELECT_API_ID + SQLs.OAUHTCREDENTIAL_FILTER_USER_ID
-				+ SQLs.OAUHTCREDENTIAL_SELECT_INTO_API_ID, formData);
-
-		if (null != formData.getApiCredentialId()
-				&& !ACCESS.check(new ReadApiPermission(formData.getApiCredentialId()))) {
-			super.throwAuthorizationFailed();
-		}
-		return formData.getApiCredentialId();
 	}
 
 	@Override

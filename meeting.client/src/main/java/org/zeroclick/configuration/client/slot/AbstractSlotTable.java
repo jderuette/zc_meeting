@@ -89,6 +89,7 @@ public abstract class AbstractSlotTable extends AbstractTable {
 		return Boolean.TRUE;
 	}
 
+	@SuppressWarnings("PMD.BooleanGetMethodName")
 	protected boolean getConfiguredDisplayAllUsers() {
 		return false;
 	}
@@ -104,9 +105,9 @@ public abstract class AbstractSlotTable extends AbstractTable {
 		super.initConfig();
 		this.setRowIconVisible(Boolean.FALSE);
 
-		final DayDurationModifiedNotificationHandler createDayDurationModifiedHandler = BEANS
+		final DayDurationModifiedNotificationHandler dayDurationModifiedNotifHand = BEANS
 				.get(DayDurationModifiedNotificationHandler.class);
-		createDayDurationModifiedHandler.addListener(this.createDayDurationModifiedListener());
+		dayDurationModifiedNotifHand.addListener(this.createDayDurationModifiedListener());
 
 		if (this.displayAllUsers) {
 			final List<IColumn<?>> columns = this.getColumns();
@@ -122,9 +123,9 @@ public abstract class AbstractSlotTable extends AbstractTable {
 
 	@Override
 	protected void execDisposeTable() {
-		final DayDurationModifiedNotificationHandler createDayDurationModifiedHandler = BEANS
+		final DayDurationModifiedNotificationHandler dayDurationModifiedNotifHand = BEANS
 				.get(DayDurationModifiedNotificationHandler.class);
-		createDayDurationModifiedHandler.removeListener(this.dayDurationModifiedListener);
+		dayDurationModifiedNotifHand.removeListener(this.dayDurationModifiedListener);
 	}
 
 	private INotificationListener<DayDurationModifiedNotification> createDayDurationModifiedListener() {

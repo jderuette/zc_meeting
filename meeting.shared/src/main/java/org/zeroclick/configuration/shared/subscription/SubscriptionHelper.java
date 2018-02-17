@@ -267,12 +267,12 @@ public class SubscriptionHelper {
 
 		@Override
 		public String toString() {
-			final StringBuilder builder = new StringBuilder();
+			final StringBuilder builder = new StringBuilder(246);
 			builder.append("SubscriptionHelperData [userRequiredLevel=").append(this.userRequiredLevel)
 					.append(", userCurrentLevel=").append(this.userCurrentLevel).append(", userNbAskedEvent=")
 					.append(this.userNbAskedEvent).append(", subscriptionAllowedEvent=")
 					.append(this.subscriptionAllowedEvent).append(", accessAllowed=").append(this.accessAllowed)
-					.append(", messageKey=").append(this.messageKey).append("]");
+					.append(", messageKey=").append(this.messageKey).append(']');
 			return builder.toString();
 		}
 

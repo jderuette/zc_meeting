@@ -66,18 +66,18 @@ public abstract class AbstractCommonService {
 		throw new VetoException(TEXTS.get("AuthorizationFailed"));
 	}
 
-	public void throwAuthorizationFailed(final Permission p) throws VetoException {
-		this.getLog().warn("Permission denied, requested permisison : " + p.getName() + " ("
-				+ p.getClass().toGenericString() + ")");
+	public void throwAuthorizationFailed(final Permission permission) throws VetoException {
+		this.getLog().warn("Permission denied, requested permisison : " + permission.getName() + " ("
+				+ permission.getClass().toGenericString() + ")");
 		if (this.getLog().isDebugEnabled()) {
 			this.getLog().debug("Current users roles : " + BEANS.get(IAccessControlService.class).getPermissions());
 		}
 		this.throwAuthorizationFailed();
 	}
 
-	public void checkPermission(final Permission p) throws VetoException {
-		if (!ACCESS.check(p)) {
-			this.throwAuthorizationFailed(p);
+	public void checkPermission(final Permission permission) throws VetoException {
+		if (!ACCESS.check(permission)) {
+			this.throwAuthorizationFailed(permission);
 		}
 	}
 
@@ -100,7 +100,7 @@ public abstract class AbstractCommonService {
 
 	/**
 	 * Get all UserId having a pending event with current connected user
-	 * 
+	 *
 	 * @return
 	 */
 	protected Set<Long> getUserWithPendingEvent() {
@@ -172,6 +172,7 @@ public abstract class AbstractCommonService {
 		Jobs.schedule(new IRunnable() {
 
 			@Override
+			@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 			public void run() throws Exception {
 				SQL.insert(sql, bindBases);
 			}
@@ -182,6 +183,7 @@ public abstract class AbstractCommonService {
 		Jobs.schedule(new IRunnable() {
 
 			@Override
+			@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 			public void run() throws Exception {
 				SQL.update(sql, bindBases);
 			}
@@ -192,6 +194,7 @@ public abstract class AbstractCommonService {
 		Jobs.schedule(new IRunnable() {
 
 			@Override
+			@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 			public void run() throws Exception {
 				SQL.selectInto(sql, bindBases);
 			}

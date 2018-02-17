@@ -90,10 +90,12 @@ public abstract class AbstractCopyMenu extends AbstractMenu {
 	 *
 	 * @return
 	 */
+	@SuppressWarnings("PMD.BooleanGetMethodName")
 	protected boolean getConfiguredDefaultKeyStroke() {
 		return false;
 	}
 
+	@SuppressWarnings("PMD.BooleanGetMethodName")
 	protected boolean getConfiguredAddHeader() {
 		return true;
 	}

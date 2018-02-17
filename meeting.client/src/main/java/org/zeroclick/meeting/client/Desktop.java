@@ -115,21 +115,17 @@ public class Desktop extends AbstractDesktop {
 			this.activateFirstPage();
 		}
 
-		final ApiCreatedNotificationHandler apiCreatedNotificationHandler = BEANS
-				.get(ApiCreatedNotificationHandler.class);
-		apiCreatedNotificationHandler.addListener(this.createApiCreatedListener());
+		final ApiCreatedNotificationHandler apiCreatedNotifHand = BEANS.get(ApiCreatedNotificationHandler.class);
+		apiCreatedNotifHand.addListener(this.createApiCreatedListener());
 
-		final ApiDeletedNotificationHandler apiDeletedNotificationHandler = BEANS
-				.get(ApiDeletedNotificationHandler.class);
-		apiDeletedNotificationHandler.addListener(this.createApiDeletedListener());
+		final ApiDeletedNotificationHandler apiDeletedNotifHand = BEANS.get(ApiDeletedNotificationHandler.class);
+		apiDeletedNotifHand.addListener(this.createApiDeletedListener());
 
-		final ApiModifiedNotificationHandler apiModifiedNotificationHandler = BEANS
-				.get(ApiModifiedNotificationHandler.class);
-		apiModifiedNotificationHandler.addListener(this.createApiModifiedListener());
+		final ApiModifiedNotificationHandler apiModifiedNotifHand = BEANS.get(ApiModifiedNotificationHandler.class);
+		apiModifiedNotifHand.addListener(this.createApiModifiedListener());
 
-		final UserModifiedNotificationHandler userModifiedNotificationHandler = BEANS
-				.get(UserModifiedNotificationHandler.class);
-		userModifiedNotificationHandler.addListener(this.createUserModifiedListener());
+		final UserModifiedNotificationHandler userModifiedNotifHand = BEANS.get(UserModifiedNotificationHandler.class);
+		userModifiedNotifHand.addListener(this.createUserModifiedListener());
 
 		this.checkAndUpdateRequiredDatas();
 	}
@@ -146,34 +142,7 @@ public class Desktop extends AbstractDesktop {
 		final AccessControlService acs = BEANS.get(AccessControlService.class);
 		final Long currentUserId = acs.getZeroClickUserIdOfCurrentSubject();
 
-		// API connection for multiple account (link to email address, and store
-		// by API key instead of user Id key
-		final IApiService apiService = BEANS.get(IApiService.class);
-		final ApiTablePageData userApis = apiService.getApis(currentUserId);
-
-		if (null != userApis && userApis.getRowCount() > 0) {
-			for (final ApiTableRowData userApi : userApis.getRows()) {
-				if (StringUtility.isNullOrEmpty(userApi.getAccountEmail())) {
-					// User has old API system, so is API is store by UserId
-					try {
-						LOG.info("Invalid API detected (no email account) id : " + userApi.getApiCredentialId()
-								+ " removing it fro user : " + currentUserId);
-						googleHelper.removeCredential(currentUserId);
-						final ApiFormData apiFormData = new ApiFormData();
-						apiFormData.setApiCredentialId(userApi.getApiCredentialId());
-						apiFormData.setUserId(currentUserId);
-						apiFormData.getProvider().setValue(ProviderCodeType.GoogleCode.ID);
-						apiService.delete(apiFormData);
-
-					} catch (final IOException ioe) {
-						LOG.error(
-								"Error while removing 'old' (Google) API stored by UserId instead of apiCredentialId for user Id : "
-										+ currentUserId,
-								ioe);
-					}
-				}
-			}
-		}
+		this.cleanInvalid1ApiKey(currentUserId);
 
 		// default user timezone
 		final String currentUserTimeZone = userService.getUserTimeZone(currentUserId);
@@ -195,53 +164,91 @@ public class Desktop extends AbstractDesktop {
 			// User re-check
 		}
 
+		if (isCalendarConfigured) {
+			this.autoImportCalendars(currentUserId);
+		}
+
+	}
+
+	private void cleanInvalid1ApiKey(final Long userId) {
+		final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+
+		// API connection for multiple account (link to email address, and store
+		// by API key instead of user Id key
+		final IApiService apiService = BEANS.get(IApiService.class);
+		final ApiTablePageData userApis = apiService.getApis(userId);
+
+		if (null != userApis && userApis.getRowCount() > 0) {
+			for (final ApiTableRowData userApi : userApis.getRows()) {
+				if (StringUtility.isNullOrEmpty(userApi.getAccountEmail())) {
+					// User has old API system, so is API is store by UserId
+					try {
+						LOG.info("Invalid API detected (no email account) id : " + userApi.getApiCredentialId()
+								+ " removing it fro user : " + userId);
+						googleHelper.removeCredential(userId);
+						@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
+						final ApiFormData apiFormData = new ApiFormData();
+						apiFormData.setApiCredentialId(userApi.getApiCredentialId());
+						apiFormData.setUserId(userId);
+						apiFormData.getProvider().setValue(ProviderCodeType.GoogleCode.ID);
+						apiService.delete(apiFormData);
+
+					} catch (final IOException ioe) {
+						LOG.error(
+								"Error while removing 'old' (Google) API stored by UserId instead of apiCredentialId for user Id : "
+										+ userId,
+								ioe);
+					}
+				}
+			}
+		}
+	}
+
+	private void autoImportCalendars(final long userId) {
 		// Calendars configuration in 0Click
+		final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
 		final ICalendarConfigurationService calendarConfigurationService = BEANS
 				.get(ICalendarConfigurationService.class);
 
 		final CalendarConfigurationFormData formData = new CalendarConfigurationFormData();
-		formData.getUserId().setValue(currentUserId);
+		formData.getUserId().setValue(userId);
 		final CalendarsConfigurationFormData configuredCalendars = calendarConfigurationService
 				.getCalendarConfigurationTableData(false);
 
-		if (isCalendarConfigured && (null == configuredCalendars
+		if (null == configuredCalendars
 				|| null != configuredCalendars && configuredCalendars.getCalendarConfigTable() != null
-						&& configuredCalendars.getCalendarConfigTable().getRowCount() == 0)) {
-			LOG.info("Auto-importing user Calendars for user : " + currentUserId);
+						&& configuredCalendars.getCalendarConfigTable().getRowCount() == 0) {
+			LOG.info("Auto-importing user Calendars for user : " + userId);
 
 			try {
 				googleHelper.autoConfigureCalendars();
 			} catch (final Exception ex) {
-				LOG.error("Error while importing (Google) calendar for user Id : " + currentUserId, ex);
+				LOG.error("Error while importing (Google) calendar for user Id : " + userId, ex);
 			}
 		}
-
 	}
 
 	@Override
 	protected void execClosing() {
 		if (null != this.apiCreatedListener) {
-			final ApiCreatedNotificationHandler apiCreatedNotificationHandler = BEANS
-					.get(ApiCreatedNotificationHandler.class);
-			apiCreatedNotificationHandler.removeListener(this.apiCreatedListener);
+			final ApiCreatedNotificationHandler apiCreatedNotifHand = BEANS.get(ApiCreatedNotificationHandler.class);
+			apiCreatedNotifHand.removeListener(this.apiCreatedListener);
 		}
 
 		if (null != this.apiDeletedListener) {
-			final ApiDeletedNotificationHandler apiDeletedNotificationHandler = BEANS
-					.get(ApiDeletedNotificationHandler.class);
-			apiDeletedNotificationHandler.removeListener(this.apiDeletedListener);
+			final ApiDeletedNotificationHandler apiDeletedNotifHand = BEANS.get(ApiDeletedNotificationHandler.class);
+			apiDeletedNotifHand.removeListener(this.apiDeletedListener);
 		}
 
 		if (null != this.apiModifiedListener) {
-			final ApiModifiedNotificationHandler apiModifiedNotificationHandler = BEANS
-					.get(ApiModifiedNotificationHandler.class);
-			apiModifiedNotificationHandler.removeListener(this.apiModifiedListener);
+			final ApiModifiedNotificationHandler apiModifiedNotifHand = BEANS.get(ApiModifiedNotificationHandler.class);
+			apiModifiedNotifHand.removeListener(this.apiModifiedListener);
 		}
 
 		if (null != this.userModifiedListener) {
-			final UserModifiedNotificationHandler userModifiedNotificationHandler = BEANS
+			final UserModifiedNotificationHandler userModifiedNotifHand = BEANS
 					.get(UserModifiedNotificationHandler.class);
-			userModifiedNotificationHandler.removeListener(this.userModifiedListener);
+			userModifiedNotifHand.removeListener(this.userModifiedListener);
 		}
 	}
 

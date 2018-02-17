@@ -62,7 +62,13 @@ public class DateHelperTest {
 		final ZonedDateTime nowWithTime = dateHelper.getZonedValue(ZoneId.of(zoneId), Date.from(cal.toInstant()));
 
 		return nowWithTime;
+	}
 
+	private String displayRange(final ZonedDateTime start, final ZonedDateTime end) {
+		final StringBuilder builder = new StringBuilder();
+		builder.append(start).append(" - ").append(end);
+
+		return builder.toString();
 	}
 
 	@Test
@@ -209,7 +215,7 @@ public class DateHelperTest {
 		final Boolean inPeriod = dateHelper.isInPeriodInlcusiv(zonedStart, periodStart, periodEnd);
 
 		assertFalse("Tested date " + zonedStart + " should not be in period, because it's before period : "
-				+ periodStart + " - " + periodEnd, inPeriod);
+				+ this.displayRange(periodStart, periodEnd), inPeriod);
 	}
 
 	@Test
@@ -224,7 +230,7 @@ public class DateHelperTest {
 		final Boolean inPeriod = dateHelper.isInPeriodInlcusiv(zonedStart, periodStart, periodEnd);
 
 		assertTrue("Tested date " + zonedStart + " should be in period, because it has the same start of the period : "
-				+ periodStart + " - " + periodEnd, inPeriod);
+				+ this.displayRange(periodStart, periodEnd), inPeriod);
 	}
 
 	@Test
@@ -239,7 +245,7 @@ public class DateHelperTest {
 		final Boolean inPeriod = dateHelper.isInPeriodInlcusiv(zonedStart, periodStart, periodEnd);
 
 		assertTrue("Tested date " + zonedStart + " should be in period, because it between start/end of the period : "
-				+ periodStart + " - " + periodEnd, inPeriod);
+				+ this.displayRange(periodStart, periodEnd), inPeriod);
 	}
 
 	@Test
@@ -254,7 +260,7 @@ public class DateHelperTest {
 		final Boolean inPeriod = dateHelper.isInPeriodInlcusiv(zonedStart, periodStart, periodEnd);
 
 		assertTrue("Tested date " + zonedStart + " should be in period, because it the same end of the period : "
-				+ periodStart + " - " + periodEnd, inPeriod);
+				+ this.displayRange(periodStart, periodEnd), inPeriod);
 	}
 
 	@Test
@@ -269,7 +275,7 @@ public class DateHelperTest {
 		final Boolean inPeriod = dateHelper.isInPeriodInlcusiv(zonedStart, periodStart, periodEnd);
 
 		assertFalse("Tested date " + zonedStart + " should NOT be in period, because it after the period : "
-				+ periodStart + " - " + periodEnd, inPeriod);
+				+ this.displayRange(periodStart, periodEnd), inPeriod);
 	}
 
 	@Test
@@ -284,10 +290,9 @@ public class DateHelperTest {
 
 		final Boolean inPeriod = dateHelper.isPeriodOverlap(zonedStart, zonedEnd, periodStart, periodEnd);
 
-		assertFalse(
-				"Tested period " + zonedStart + " - " + zonedEnd
-						+ " should NOT be in period, because it before the period : " + periodStart + " - " + periodEnd,
-				inPeriod);
+		assertFalse("Tested period " + this.displayRange(zonedStart, zonedEnd)
+				+ " should NOT be in period, because it before the period : "
+				+ this.displayRange(periodStart, periodEnd), inPeriod);
 	}
 
 	@Test
@@ -302,9 +307,9 @@ public class DateHelperTest {
 
 		final Boolean inPeriod = dateHelper.isPeriodOverlap(zonedStart, zonedEnd, periodStart, periodEnd);
 
-		assertTrue("Tested period " + zonedStart + " - " + zonedEnd
-				+ " should be in period, because it end overlap the period : " + periodStart + " - " + periodEnd,
-				inPeriod);
+		assertTrue("Tested period " + this.displayRange(zonedStart, zonedEnd)
+				+ " should be in period, because it end overlap the period : "
+				+ this.displayRange(periodStart, periodEnd), inPeriod);
 	}
 
 	@Test
@@ -320,7 +325,7 @@ public class DateHelperTest {
 		final Boolean inPeriod = dateHelper.isPeriodOverlap(zonedStart, zonedEnd, periodStart, periodEnd);
 
 		assertTrue(
-				"Tested period " + zonedStart + " - " + zonedEnd
+				"Tested period " + this.displayRange(zonedStart, zonedEnd)
 						+ " should be in period, because it inside the period : " + periodStart + " - " + periodEnd,
 				inPeriod);
 	}
@@ -337,9 +342,9 @@ public class DateHelperTest {
 
 		final Boolean inPeriod = dateHelper.isPeriodOverlap(zonedStart, zonedEnd, periodStart, periodEnd);
 
-		assertTrue("Tested period " + zonedStart + " - " + zonedEnd
-				+ " should be in period, because it begin overlap the period : " + periodStart + " - " + periodEnd,
-				inPeriod);
+		assertTrue("Tested period " + this.displayRange(zonedStart, zonedEnd)
+				+ " should be in period, because it begin overlap the period : "
+				+ this.displayRange(periodStart, periodEnd), inPeriod);
 	}
 
 	@Test
@@ -354,9 +359,8 @@ public class DateHelperTest {
 
 		final Boolean inPeriod = dateHelper.isPeriodOverlap(zonedStart, zonedEnd, periodStart, periodEnd);
 
-		assertFalse(
-				"Tested period " + zonedStart + " - " + zonedEnd
-						+ " should NOT be in period, because it after the period : " + periodStart + " - " + periodEnd,
-				inPeriod);
+		assertFalse("Tested period " + zonedStart + " - " + zonedEnd
+				+ " should NOT be in period, because it after the period : "
+				+ this.displayRange(periodStart, periodEnd), inPeriod);
 	}
 }

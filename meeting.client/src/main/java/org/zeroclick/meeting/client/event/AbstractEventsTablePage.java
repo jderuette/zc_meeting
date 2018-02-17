@@ -98,8 +98,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	 * To avoid event processed twice, when no date available
 	 */
 	private final Set<Long> processedEventWithoutPossibleDates = new HashSet<>(3);
-	private Date processedEventLastModification;
-	private final Long processedEventTtl = 20000L; // millisecondes
 
 	private DateHelper dateHelper;
 	private AppUserHelper appUserHelper;
@@ -163,26 +161,24 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 		this.callTracker = new CallTrackerService<>(maxNbCall, Duration.ofMinutes(maxDuration), "Get calendar Events");
 
-		final ParamCreatedNotificationHandler paramCreatedNotificationHandler = BEANS
-				.get(ParamCreatedNotificationHandler.class);
-		paramCreatedNotificationHandler.addListener(this.createParamCreatedListener());
+		final ParamCreatedNotificationHandler paramCreatedNotifHand = BEANS.get(ParamCreatedNotificationHandler.class);
+		paramCreatedNotifHand.addListener(this.createParamCreatedListener());
 
-		final ParamModifiedNotificationHandler paramModifiedNotificationHandler = BEANS
+		final ParamModifiedNotificationHandler paramModifiedNotifHand = BEANS
 				.get(ParamModifiedNotificationHandler.class);
-		paramModifiedNotificationHandler.addListener(this.createParamModifiedListener());
+		paramModifiedNotifHand.addListener(this.createParamModifiedListener());
 
 		super.execInitPage();
 	}
 
 	@Override
 	protected void execDisposePage() {
-		final ParamCreatedNotificationHandler paramCreatedNotificationHandler = BEANS
-				.get(ParamCreatedNotificationHandler.class);
-		paramCreatedNotificationHandler.removeListener(this.paramCreatedListener);
+		final ParamCreatedNotificationHandler paramCreatedNotifHand = BEANS.get(ParamCreatedNotificationHandler.class);
+		paramCreatedNotifHand.removeListener(this.paramCreatedListener);
 
-		final ParamModifiedNotificationHandler paramModifiedNotificationHandler = BEANS
+		final ParamModifiedNotificationHandler paramModifiedNotifHand = BEANS
 				.get(ParamModifiedNotificationHandler.class);
-		paramModifiedNotificationHandler.removeListener(this.paramModifiedListener);
+		paramModifiedNotifHand.removeListener(this.paramModifiedListener);
 
 		super.execDisposePage();
 	}
@@ -347,18 +343,9 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 	protected void addEventProcessedWithoutDates(final Long eventId) {
 		this.processedEventWithoutPossibleDates.add(eventId);
-		this.processedEventLastModification = new Date();
 	}
 
 	private Boolean isEventProcessed(final Long eventId) {
-		// if (null != this.processedEventLastModification) {
-		// final Date oudatedDataTime = new Date(
-		// this.processedEventLastModification.getTime() +
-		// this.processedEventTtl);
-		// if (new Date().after(oudatedDataTime)) {
-		// this.processedEventWithoutPossibleDates.clear();
-		// }
-		// }
 		return this.processedEventWithoutPossibleDates.contains(eventId);
 	}
 
@@ -433,10 +420,10 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		protected INotificationListener<UserModifiedNotification> userModifiedListener;
 		protected INotificationListener<DayDurationModifiedNotification> dayDurationModifiedListener;
 
-		private INotificationListener<CalendarsConfigurationModifiedNotification> calendarsConfigurationModifiedNotificationListener;
-		private INotificationListener<CalendarsConfigurationCreatedNotification> calendarsConfigurationCreatedNotificationListener;
-		private INotificationListener<CalendarConfigurationModifiedNotification> calendarConfigurationModifiedNotificationListener;
-		private INotificationListener<CalendarConfigurationCreatedNotification> calendarConfigurationCreatedNotificationListener;
+		private INotificationListener<CalendarsConfigurationModifiedNotification> calendarsConfiModifiedListener;
+		private INotificationListener<CalendarsConfigurationCreatedNotification> calendarsConfiCreatedListener;
+		private INotificationListener<CalendarConfigurationModifiedNotification> calendarConfigModifiedListener;
+		private INotificationListener<CalendarConfigurationCreatedNotification> calendarConfiCreatedListener;
 
 		@Override
 		protected boolean getConfiguredHeaderEnabled() {
@@ -472,45 +459,40 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			this.getExternalIdOrganizerColumn().setVisiblePermission(new ReadEventExtendedPropsPermission());
 			this.getExternalIdRecipientColumn().setVisiblePermission(new ReadEventExtendedPropsPermission());
 
-			final EventCreatedNotificationHandler eventCreatedNotificationHandler = BEANS
+			final EventCreatedNotificationHandler eventCreatedNotifHand = BEANS
 					.get(EventCreatedNotificationHandler.class);
-			eventCreatedNotificationHandler.addListener(this.createEventCreatedListener());
+			eventCreatedNotifHand.addListener(this.createEventCreatedListener());
 
-			final EventModifiedNotificationHandler eventModifiedNotificationHandler = BEANS
+			final EventModifiedNotificationHandler eventModifiedNotifHand = BEANS
 					.get(EventModifiedNotificationHandler.class);
-			eventModifiedNotificationHandler.addListener(this.createEventModifiedListener());
+			eventModifiedNotifHand.addListener(this.createEventModifiedListener());
 
-			final ApiCreatedNotificationHandler apiCreatedNotificationHandler = BEANS
-					.get(ApiCreatedNotificationHandler.class);
-			apiCreatedNotificationHandler.addListener(this.createApiCreatedListener());
+			final ApiCreatedNotificationHandler apiCreatedNotifHand = BEANS.get(ApiCreatedNotificationHandler.class);
+			apiCreatedNotifHand.addListener(this.createApiCreatedListener());
 
-			final UserModifiedNotificationHandler userModifiedNotificationHandler = BEANS
+			final UserModifiedNotificationHandler userModifiedNotifHand = BEANS
 					.get(UserModifiedNotificationHandler.class);
-			userModifiedNotificationHandler.addListener(this.createUserModifiedListener());
+			userModifiedNotifHand.addListener(this.createUserModifiedListener());
 
-			final DayDurationModifiedNotificationHandler createDayDurationModifiedHandler = BEANS
+			final DayDurationModifiedNotificationHandler dayDurationModifiedNotifHand = BEANS
 					.get(DayDurationModifiedNotificationHandler.class);
-			createDayDurationModifiedHandler.addListener(this.createDayDurationModifiedListener());
+			dayDurationModifiedNotifHand.addListener(this.createDayDurationModifiedListener());
 
-			final CalendarsConfigurationModifiedNotificationHandler calendarsConfigurationModifiedNotificationHandler = BEANS
+			final CalendarsConfigurationModifiedNotificationHandler calendarsConfigModifiedNotifHand = BEANS
 					.get(CalendarsConfigurationModifiedNotificationHandler.class);
-			calendarsConfigurationModifiedNotificationHandler
-					.addListener(this.createCalendarsConfigrationModifiedListener());
+			calendarsConfigModifiedNotifHand.addListener(this.createCalendarsConfigrationModifiedListener());
 
-			final CalendarConfigurationModifiedNotificationHandler calendarConfigurationModifiedNotificationHandler = BEANS
+			final CalendarConfigurationModifiedNotificationHandler calendarConfiModifiedNotifHand = BEANS
 					.get(CalendarConfigurationModifiedNotificationHandler.class);
-			calendarConfigurationModifiedNotificationHandler
-					.addListener(this.createCalendarConfigrationModifiedListener());
+			calendarConfiModifiedNotifHand.addListener(this.createCalendarConfigrationModifiedListener());
 
-			final CalendarsConfigurationCreatedNotificationHandler calendarsConfigurationCreatedNotificationHandler = BEANS
+			final CalendarsConfigurationCreatedNotificationHandler calendarsConfigCreatedNotifHand = BEANS
 					.get(CalendarsConfigurationCreatedNotificationHandler.class);
-			calendarsConfigurationCreatedNotificationHandler
-					.addListener(this.createCalendarsConfigrationCreatedListener());
+			calendarsConfigCreatedNotifHand.addListener(this.createCalendarsConfigrationCreatedListener());
 
-			final CalendarConfigurationCreatedNotificationHandler calendarConfigurationCreatedNotificationHandler = BEANS
+			final CalendarConfigurationCreatedNotificationHandler calendarConfigCreatedNotifHand = BEANS
 					.get(CalendarConfigurationCreatedNotificationHandler.class);
-			calendarConfigurationCreatedNotificationHandler
-					.addListener(this.createCalendarConfigrationCreatedListener());
+			calendarConfigCreatedNotifHand.addListener(this.createCalendarConfigrationCreatedListener());
 
 		}
 
@@ -679,7 +661,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		}
 
 		private INotificationListener<CalendarsConfigurationModifiedNotification> createCalendarsConfigrationModifiedListener() {
-			this.calendarsConfigurationModifiedNotificationListener = new INotificationListener<CalendarsConfigurationModifiedNotification>() {
+			this.calendarsConfiModifiedListener = new INotificationListener<CalendarsConfigurationModifiedNotification>() {
 				@Override
 				public void handleNotification(final CalendarsConfigurationModifiedNotification notification) {
 					if (AbstractEventsTablePage.this.canHandle(notification)) {
@@ -718,11 +700,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				}
 			};
 
-			return this.calendarsConfigurationModifiedNotificationListener;
+			return this.calendarsConfiModifiedListener;
 		}
 
 		private INotificationListener<CalendarConfigurationModifiedNotification> createCalendarConfigrationModifiedListener() {
-			this.calendarConfigurationModifiedNotificationListener = new INotificationListener<CalendarConfigurationModifiedNotification>() {
+			this.calendarConfigModifiedListener = new INotificationListener<CalendarConfigurationModifiedNotification>() {
 				@Override
 				public void handleNotification(final CalendarConfigurationModifiedNotification notification) {
 					if (AbstractEventsTablePage.this.canHandle(notification)) {
@@ -756,11 +738,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				}
 			};
 
-			return this.calendarConfigurationModifiedNotificationListener;
+			return this.calendarConfigModifiedListener;
 		}
 
 		private INotificationListener<CalendarsConfigurationCreatedNotification> createCalendarsConfigrationCreatedListener() {
-			this.calendarsConfigurationCreatedNotificationListener = new INotificationListener<CalendarsConfigurationCreatedNotification>() {
+			this.calendarsConfiCreatedListener = new INotificationListener<CalendarsConfigurationCreatedNotification>() {
 				@Override
 				public void handleNotification(final CalendarsConfigurationCreatedNotification notification) {
 					if (AbstractEventsTablePage.this.canHandle(notification)) {
@@ -798,11 +780,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				}
 			};
 
-			return this.calendarsConfigurationCreatedNotificationListener;
+			return this.calendarsConfiCreatedListener;
 		}
 
 		private INotificationListener<CalendarConfigurationCreatedNotification> createCalendarConfigrationCreatedListener() {
-			this.calendarConfigurationCreatedNotificationListener = new INotificationListener<CalendarConfigurationCreatedNotification>() {
+			this.calendarConfiCreatedListener = new INotificationListener<CalendarConfigurationCreatedNotification>() {
 				@Override
 				public void handleNotification(final CalendarConfigurationCreatedNotification notification) {
 					if (AbstractEventsTablePage.this.canHandle(notification)) {
@@ -832,7 +814,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				}
 			};
 
-			return this.calendarConfigurationCreatedNotificationListener;
+			return this.calendarConfiCreatedListener;
 		}
 
 		protected void autoFillDates(final ITableRow row) {
@@ -896,10 +878,8 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		private void invalidateIfSlotMatch(final ITableRow row, final String slotCode) {
 			final Long rowSlotCode = this.getSlotColumn().getValue(row.getRowIndex());
 
-			if (null != rowSlotCode) {
-				if (rowSlotCode.equals(Long.valueOf(slotCode))) {
-					this.refreshAutoFillDate(row);
-				}
+			if (null != rowSlotCode && rowSlotCode.equals(Long.valueOf(slotCode))) {
+				this.refreshAutoFillDate(row);
 			}
 		}
 
@@ -963,44 +943,40 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 		@Override
 		protected void execDisposeTable() {
-			final EventCreatedNotificationHandler eventCreatedNotificationHandler = BEANS
+			final EventCreatedNotificationHandler eventCreatedNotifHand = BEANS
 					.get(EventCreatedNotificationHandler.class);
-			eventCreatedNotificationHandler.removeListener(this.eventCreatedListener);
-			final EventModifiedNotificationHandler eventModifiedNotificationHandler = BEANS
+			eventCreatedNotifHand.removeListener(this.eventCreatedListener);
+			final EventModifiedNotificationHandler eventModifiedNotifHand = BEANS
 					.get(EventModifiedNotificationHandler.class);
-			eventModifiedNotificationHandler.removeListener(this.eventModifiedListener);
+			eventModifiedNotifHand.removeListener(this.eventModifiedListener);
 
 			final ApiCreatedNotificationHandler apiCreatedNotificationHandler = BEANS
 					.get(ApiCreatedNotificationHandler.class);
 			apiCreatedNotificationHandler.removeListener(this.apiCreatedListener);
 
-			final UserModifiedNotificationHandler userModifeidNotificationHandler = BEANS
+			final UserModifiedNotificationHandler userModifeidNotifHand = BEANS
 					.get(UserModifiedNotificationHandler.class);
-			userModifeidNotificationHandler.removeListener(this.userModifiedListener);
+			userModifeidNotifHand.removeListener(this.userModifiedListener);
 
-			final DayDurationModifiedNotificationHandler dayDurationModifiedNotificationHandler = BEANS
+			final DayDurationModifiedNotificationHandler dayDurationModifiedNotifHand = BEANS
 					.get(DayDurationModifiedNotificationHandler.class);
-			dayDurationModifiedNotificationHandler.removeListener(this.dayDurationModifiedListener);
+			dayDurationModifiedNotifHand.removeListener(this.dayDurationModifiedListener);
 
-			final CalendarsConfigurationModifiedNotificationHandler calendarsConfigurationModifiedNotificationHandler = BEANS
+			final CalendarsConfigurationModifiedNotificationHandler calendarsConfigModifiedNotifHand = BEANS
 					.get(CalendarsConfigurationModifiedNotificationHandler.class);
-			calendarsConfigurationModifiedNotificationHandler
-					.removeListener(this.calendarsConfigurationModifiedNotificationListener);
+			calendarsConfigModifiedNotifHand.removeListener(this.calendarsConfiModifiedListener);
 
-			final CalendarConfigurationModifiedNotificationHandler calendarConfigurationModifiedNotificationHandler = BEANS
+			final CalendarConfigurationModifiedNotificationHandler calendarConfigModifiedNotifHand = BEANS
 					.get(CalendarConfigurationModifiedNotificationHandler.class);
-			calendarConfigurationModifiedNotificationHandler
-					.removeListener(this.calendarConfigurationModifiedNotificationListener);
+			calendarConfigModifiedNotifHand.removeListener(this.calendarConfigModifiedListener);
 
-			final CalendarsConfigurationCreatedNotificationHandler calendarsConfigurationCreatedNotificationHandler = BEANS
+			final CalendarsConfigurationCreatedNotificationHandler calendarsConfiCreatedNotifHand = BEANS
 					.get(CalendarsConfigurationCreatedNotificationHandler.class);
-			calendarsConfigurationCreatedNotificationHandler
-					.removeListener(this.calendarsConfigurationCreatedNotificationListener);
+			calendarsConfiCreatedNotifHand.removeListener(this.calendarsConfiCreatedListener);
 
-			final CalendarConfigurationCreatedNotificationHandler calendarConfigurationCreatedNotificationHandler = BEANS
+			final CalendarConfigurationCreatedNotificationHandler calendarConfigCreatedNotifHand = BEANS
 					.get(CalendarConfigurationCreatedNotificationHandler.class);
-			calendarConfigurationCreatedNotificationHandler
-					.removeListener(this.calendarConfigurationCreatedNotificationListener);
+			calendarConfigCreatedNotifHand.removeListener(this.calendarConfiCreatedListener);
 
 			super.execDisposeTable();
 		}

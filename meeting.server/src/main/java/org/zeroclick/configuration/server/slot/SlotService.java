@@ -126,6 +126,7 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 	}
 
 	@Override
+	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 	public SlotsFormData store(final SlotsFormData formData) {
 		final SlotsTableRowData[] rows = formData.getSlotsTable().getRows();
 
@@ -443,6 +444,7 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 	}
 
 	@Override
+	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 	public void addDefaultCodeToExistingSlot() {
 		// "isCurrentUserSuperUser" Ugly but required to allow datamigration
 		// BEFORE super userCreated
