@@ -284,7 +284,10 @@ public class Desktop extends AbstractDesktop {
 			@Override
 			@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 			public void run() throws Exception {
-				LOG.debug("Adding desktop notification : " + status.getMessage() + "(" + status.getClass() + ")");
+				if (LOG.isDebugEnabled()) {
+					LOG.debug(new StringBuilder().append("Adding desktop notification : ").append(status.getMessage())
+							.append("(").append(status.getClass()).append(")").toString());
+				}
 				final DesktopNotification desktopNotification = new DesktopNotification(status, duration, closable);
 				ClientSession.get().getDesktop().addNotification(desktopNotification);
 			}
@@ -299,9 +302,9 @@ public class Desktop extends AbstractDesktop {
 					final ApiFormData apiForm = notification.getFormData();
 
 					if (Desktop.this.isMySelf(apiForm.getUserId())) {
-						LOG.info(
-								"Created Api prepare to autoConfigure Calendar's API id " + apiForm.getApiCredentialId()
-										+ " with email : " + apiForm.getAccountEmail().getValue());
+						LOG.info(new StringBuilder().append("Created Api prepare to autoConfigure Calendar's API id ")
+								.append(apiForm.getApiCredentialId()).append(" with email : ")
+								.append(apiForm.getAccountEmail().getValue()).toString());
 						final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 
 						notificationHelper.addProccessedNotification("zc.api.added");
@@ -328,8 +331,9 @@ public class Desktop extends AbstractDesktop {
 			public void handleNotification(final ApiModifiedNotification notification) {
 				try {
 					final ApiFormData apiForm = notification.getFormData();
-					LOG.info("Modified Api prepare to autoConfigure Calendar's API id " + apiForm.getApiCredentialId()
-							+ " with email : " + apiForm.getAccountEmail().getValue());
+					LOG.info(new StringBuilder().append("Modified Api prepare to autoConfigure Calendar's API id ")
+							.append(apiForm.getApiCredentialId()).append(" with email : ")
+							.append(apiForm.getAccountEmail().getValue()).toString());
 					if (Desktop.this.isMySelf(apiForm.getUserId())) {
 						final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 
@@ -357,8 +361,11 @@ public class Desktop extends AbstractDesktop {
 			public void handleNotification(final ApiDeletedNotification notification) {
 				try {
 					final ApiFormData eventForm = notification.getFormData();
-					LOG.debug("Deleted Api prepare to modify desktop menus (" + this.getClass().getName() + ") : "
-							+ eventForm.getUserId());
+					if (LOG.isDebugEnabled()) {
+						LOG.debug(new StringBuilder().append("Deleted Api prepare to modify desktop menus (")
+								.append(this.getClass().getName()).append(") : ").append(eventForm.getUserId())
+								.toString().toString());
+					}
 					Desktop.this.getMenu(AddGoogleCalendarMenu.class).setVisible(Boolean.TRUE);
 
 				} catch (final RuntimeException e) {
@@ -376,8 +383,11 @@ public class Desktop extends AbstractDesktop {
 			public void handleNotification(final UserModifiedNotification notification) {
 				try {
 					final UserFormData userForm = notification.getUserForm();
-					LOG.debug("User modified prepare to update locale (" + this.getClass().getName() + ") : "
-							+ userForm.getUserId());
+					if (LOG.isDebugEnabled()) {
+						LOG.debug(new StringBuilder().append("User modified prepare to update locale (")
+								.append(this.getClass().getName()).append(") : ").append(userForm.getUserId())
+								.toString());
+					}
 
 					final Locale currentLocale = NlsLocale.get();
 

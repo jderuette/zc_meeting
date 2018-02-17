@@ -425,7 +425,9 @@ public class RejectEventForm extends AbstractForm {
 			try {
 				this.attendeeGCalSrv = this.getCalendarService(formData.getGuestId());
 			} catch (final IOException e) {
-				LOG.debug("No calendar service configured for user Id : " + formData.getGuestId(), e);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("No calendar service configured for user Id : " + formData.getGuestId(), e);
+				}
 			}
 			try {
 				this.hostGCalSrv = this.getCalendarService(formData.getOrganizer());
@@ -443,7 +445,9 @@ public class RejectEventForm extends AbstractForm {
 					gCalendarSrv = googleHelper.getCalendarsServices(userId);
 				}
 			} catch (final UserAccessRequiredException uare) {
-				LOG.debug("No calendar provider for user " + userId);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("No calendar provider for user " + userId);
+				}
 			}
 
 			return gCalendarSrv;

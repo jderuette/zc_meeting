@@ -150,7 +150,9 @@ public abstract class AbstractApiTable extends AbstractTable {
 			public void handleNotification(final ApiCreatedNotification notification) {
 				try {
 					final ApiFormData eventForm = notification.getFormData();
-					LOG.debug("Created Api prepare to modify apiTable List: " + eventForm.getUserId());
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Created Api prepare to modify apiTable List: " + eventForm.getUserId());
+					}
 					AbstractApiTable.this.loadData();
 				} catch (final RuntimeException e) {
 					LOG.error("Could not handle new api. (" + this.getClass().getName() + ")", e);
@@ -167,7 +169,9 @@ public abstract class AbstractApiTable extends AbstractTable {
 			public void handleNotification(final ApiDeletedNotification notification) {
 				try {
 					final ApiFormData eventForm = notification.getFormData();
-					LOG.debug("Deleted Api prepare to modify apiTable List : " + eventForm.getUserId());
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Deleted Api prepare to modify apiTable List : " + eventForm.getUserId());
+					}
 					AbstractApiTable.this.loadData();
 				} catch (final RuntimeException e) {
 					LOG.error("Could not handle new api. (" + this.getClass().getName() + ")", e);

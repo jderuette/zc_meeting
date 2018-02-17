@@ -376,9 +376,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	private void updateEventCallTracker(final AppParamsFormData paramForm) {
 		final String appParamKey = paramForm.getKey().getValue();
 		final String appParamValue = paramForm.getValue().getValue();
-		LOG.debug("New Param prepare to update Event Configuration (in "
-				+ AbstractEventsTablePage.this.getConfiguredTitle() + ") for param Id : " + paramForm.getParamId()
-				+ " with key : " + appParamKey);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuilder().append("New Param prepare to update Event Configuration (in ")
+					.append(AbstractEventsTablePage.this.getConfiguredTitle()).append(") for param Id : ")
+					.append(paramForm.getParamId()).append(" with key : ").append(appParamKey).toString());
+		}
 		try {
 
 			if (null != appParamKey) {
@@ -506,8 +508,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 					}
 
 					final EventFormData eventForm = notification.getEventForm();
-					LOG.debug("New event prepare to add to table (in " + Table.this.getTitle() + ") for event Id : "
-							+ eventForm.getEventId());
+					if (LOG.isDebugEnabled()) {
+						LOG.debug(new StringBuffer().append("New event prepare to add to table (in ")
+								.append(Table.this.getTitle()).append(") for event Id : ")
+								.append(eventForm.getEventId()).toString());
+					}
 					try {
 						final ITableRow newRow = AbstractEventsTablePage.this.getTable()
 								.addRow(AbstractEventsTablePage.this.getTable().createTableRowFromForm(eventForm));
@@ -539,8 +544,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 						// remove row if exists
 						final ITableRow row = AbstractEventsTablePage.this.getTable().getRow(eventForm.getEventId());
 						if (null != row) {
-							LOG.debug("Modified event prepare to remove table row (in " + Table.this.getTitle()
-									+ ") for event Id : " + eventForm.getEventId());
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(new StringBuffer().append("Modified event prepare to remove table row (in ")
+										.append(Table.this.getTitle()).append(") for event Id : ")
+										.append(eventForm.getEventId()).toString());
+							}
 							AbstractEventsTablePage.this.getTable().deleteRow(row);
 
 							// TODO Djer13 not really a "modified" event, just a
@@ -553,14 +561,20 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 					try {
 						ITableRow row = AbstractEventsTablePage.this.getTable().getRow(eventForm.getEventId());
 						if (null == row) {
-							LOG.debug("Modified event prepare to ADD table row (in " + Table.this.getTitle()
-									+ ") for event Id : " + eventForm.getEventId());
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(new StringBuffer().append("Modified event prepare to ADD table row (in ")
+										.append(Table.this.getTitle()).append(") for event Id : ")
+										.append(eventForm.getEventId()).toString());
+							}
 							row = AbstractEventsTablePage.this.getTable()
 									.addRow(AbstractEventsTablePage.this.getTable().createTableRowFromForm(eventForm));
 						}
 						if (null != row) {
-							LOG.debug("Modified event prepare to modify table row (in " + Table.this.getTitle()
-									+ ") for event Id : " + eventForm.getEventId());
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(new StringBuffer().append("Modified event prepare to modify table row (in ")
+										.append(Table.this.getTitle()).append(") for event Id : ")
+										.append(eventForm.getEventId()).toString());
+							}
 							// if row is null, this table instance should not
 							// handle this event. We can safely ignore.
 							final String previousStateRow = eventForm.getPreviousState();
@@ -576,8 +590,12 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 											.buildValuesForLocaleMessages(eventForm, Table.this.getCurrentUserId()));
 
 						} else {
-							LOG.debug("Modified event ignored because it's not a current table row (in "
-									+ Table.this.getTitle() + ") for event Id : " + eventForm.getEventId());
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(new StringBuffer()
+										.append("Modified event ignored because it's not a current table row (in ")
+										.append(Table.this.getTitle()).append(") for event Id : ")
+										.append(eventForm.getEventId()).toString());
+							}
 						}
 
 					} catch (final RuntimeException e) {
@@ -599,12 +617,18 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 					}
 					try {
 						final ApiFormData eventForm = notification.getFormData();
-						LOG.debug("Created Api prepare to modify menus (" + this.getClass().getName() + ") : "
-								+ eventForm.getUserId());
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(new StringBuffer().append("Created Api prepare to modify menus (")
+									.append(this.getClass().getName()).append(") : ").append(eventForm.getUserId())
+									.toString());
+						}
 						Table.this.reloadMenus();
 						// calculate start/end meeting
-						LOG.debug("Created Api prepare to calculate start/end date (" + this.getClass().getName()
-								+ ") : " + eventForm.getUserId());
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(new StringBuffer().append("Created Api prepare to calculate start/end date (")
+									.append(this.getClass().getName()).append(") : ").append(eventForm.getUserId())
+									.toString());
+						}
 						final List<ITableRow> rows = Table.this.getRows();
 						for (final ITableRow row : rows) {
 							Table.this.refreshAutoFillDate(row);
@@ -624,8 +648,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				public void handleNotification(final UserModifiedNotification notification) {
 					try {
 						final UserFormData userForm = notification.getUserForm();
-						LOG.debug("User modified prepare to reset cached TimeZone (" + Table.this.getTitle() + ") : "
-								+ userForm.getUserId());
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(new StringBuffer().append("User modified prepare to reset cached TimeZone (")
+									.append(Table.this.getTitle()).append(") : ").append(userForm.getUserId())
+									.toString());
+						}
 						final List<ITableRow> rows = Table.this.getRows();
 						for (final ITableRow row : rows) {
 							Table.this.refreshAutoFillDate(row);
@@ -645,10 +672,13 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				public void handleNotification(final DayDurationModifiedNotification notification) {
 					try {
 						final DayDurationFormData dayDurationForm = notification.getDayDurationForm();
-						LOG.debug(
-								"Day Duration modified prepare to reset invalid date proposal (" + Table.this.getTitle()
-										+ ") for slotCode : " + notification.getDayDurationForm().getSlotCode()
-										+ " ( ID " + dayDurationForm.getDayDurationId() + ")");
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(new StringBuffer()
+									.append("Day Duration modified prepare to reset invalid date proposal (")
+									.append(Table.this.getTitle()).append(") for slotCode : ")
+									.append(notification.getDayDurationForm().getSlotCode())
+									.append(" ( ID " + dayDurationForm.getDayDurationId()).append(")").toString());
+						}
 						Table.this.resetInvalidatesEvent(notification.getDayDurationForm().getSlotCode());
 
 					} catch (final RuntimeException e) {
@@ -674,8 +704,12 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 								userId = calendarsConfigurationFormData.getCalendarConfigTable().getRows()[0]
 										.getUserId();
 							}
-							LOG.debug("Calendars Configurations modified prepare to refresh event ("
-									+ this.getClass().getName() + ") : (first UserId)" + userId);
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(new StringBuffer()
+										.append("Calendars Configurations modified prepare to refresh event (")
+										.append(this.getClass().getName()).append(") : (first UserId)").append(userId)
+										.toString());
+							}
 
 							if (Table.this.isMySelf(userId)) {
 								final GoogleApiHelper googleApiHelper = BEANS.get(GoogleApiHelper.class);
@@ -695,7 +729,10 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 									+ this.getClass().getName() + ")", e);
 						}
 					} else {
-						LOG.debug(this.getClass().getName() + " don't handle notification : " + notification);
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(new StringBuffer().append(this.getClass().getName())
+									.append(" don't handle notification : ").append(notification).toString());
+						}
 					}
 				}
 			};
@@ -711,10 +748,13 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 						try {
 							final CalendarConfigurationFormData calendarConfigurationFormData = notification
 									.getFormData();
-							LOG.debug("Calendar Configuration modified prepare to refresh event ("
-									+ this.getClass().getName() + "), modified calendar : "
-									+ calendarConfigurationFormData.getName().getValue() + " : "
-									+ calendarConfigurationFormData.getUserId().getValue());
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(new StringBuffer()
+										.append("Calendar Configuration modified prepare to refresh event (")
+										.append(this.getClass().getName()).append("), modified calendar : ")
+										.append(calendarConfigurationFormData.getName().getValue()).append(" : ")
+										.append(calendarConfigurationFormData.getUserId().getValue()).toString());
+							}
 
 							if (Table.this.isMySelf(calendarConfigurationFormData.getUserId().getValue())) {
 								final GoogleApiHelper googleApiHelper = BEANS.get(GoogleApiHelper.class);
@@ -733,7 +773,10 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 									+ ")", e);
 						}
 					} else {
-						LOG.debug(this.getClass().getName() + " don't handle notification : " + notification);
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(new StringBuffer().append(this.getClass().getName())
+									.append(" don't handle notification : ").append(notification).toString());
+						}
 					}
 				}
 			};
@@ -754,19 +797,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 								userId = calendarsConfigurationFormData.getCalendarConfigTable().getRows()[0]
 										.getUserId();
 							}
-							LOG.debug("Calendars Configurations created prepare to refresh event ("
-									+ this.getClass().getName() + ") : " + userId);
-							//
-							// if (Table.this.isMySelf(userId)) {
-							// final GoogleApiHelper googleApiHelper =
-							// BEANS.get(GoogleApiHelper.class);
-							// final NotificationHelper notificationHelper =
-							// BEANS.get(NotificationHelper.class);
-							// notificationHelper.addProccessedNotification(
-							// "zc.meeting.calendar.notification.createdCalendarsConfig",
-							// googleApiHelper.getAccountsEmails(
-							// calendarsConfigurationFormData.getCalendarConfigTable().getRows()));
-							// }
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(new StringBuffer()
+										.append("Calendars Configurations created prepare to refresh event (")
+										.append(this.getClass().getName()).append(") : ").append(userId).toString());
+							}
 
 							Table.this.refreshAutoFillDate();
 
@@ -775,7 +810,10 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 									+ ")", e);
 						}
 					} else {
-						LOG.debug(this.getClass().getName() + " don't handle notification : " + notification);
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(new StringBuffer().append(this.getClass().getName())
+									.append(" don't handle notification : ").append(notification).toString());
+						}
 					}
 				}
 			};
@@ -791,9 +829,12 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 						try {
 							final CalendarConfigurationFormData calendarConfigurationFormData = notification
 									.getFormData();
-							LOG.debug("Calendar Configuration created prepare to refresh event ("
-									+ this.getClass().getName() + ") : "
-									+ calendarConfigurationFormData.getUserId().getValue());
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(new StringBuffer()
+										.append("Calendar Configuration created prepare to refresh event (")
+										.append(this.getClass().getName()).append(") : ")
+										.append(calendarConfigurationFormData.getUserId().getValue()).toString());
+							}
 
 							if (Table.this.isMySelf(calendarConfigurationFormData.getUserId().getValue())) {
 								final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
@@ -809,7 +850,10 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 									+ ")", e);
 						}
 					} else {
-						LOG.debug(this.getClass().getName() + " don't handle notification : " + notification);
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(new StringBuffer().append(this.getClass().getName())
+									.append(" don't handle notification : ").append(notification).toString());
+						}
 					}
 				}
 			};
@@ -863,7 +907,9 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 					this.getStartDateColumn().setValue(row.getRowIndex(), (Date) null);
 					this.getEndDateColumn().setValue(row.getRowIndex(), (Date) null);
 				} else {
-					LOG.debug("No reset needed for event id : " + rowEventId);
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("No reset needed for event id : " + rowEventId);
+					}
 				}
 			}
 		}

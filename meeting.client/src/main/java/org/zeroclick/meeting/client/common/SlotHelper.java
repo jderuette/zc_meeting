@@ -318,8 +318,8 @@ public class SlotHelper {
 	private DayDuration getClosestForwardDayDuration(final List<DayDuration> periods, final ZonedDateTime checkedDate,
 			final ZonedDateTime endDate) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("Searching for closest forward period from : " + checkedDate + " to " + endDate + " in periods : "
-					+ periods);
+			LOG.debug(new StringBuilder().append("Searching for closest forward period from : ").append(checkedDate)
+					.append(" to ").append(endDate).append(" in periods : ").append(periods).toString());
 		}
 		if (periods.size() == 1) {
 			if (periods.get(0).isWeeklyerpetual()) {

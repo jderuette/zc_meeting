@@ -89,8 +89,11 @@ public class AppParamsTablePage extends AbstractPageWithTable<Table> {
 									.addRow(AppParamsTablePage.this.getTable().createTableRowFromForm(paramForm));
 						}
 						if (null != row) {
-							LOG.debug("Modified param prepare to modify table row (in " + Table.this.getTitle()
-									+ ") for event Id : " + paramForm.getParamId().getValue());
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(new StringBuilder().append("Modified param prepare to modify table row (in ")
+										.append(Table.this.getTitle()).append(") for event Id : ")
+										.append(paramForm.getParamId().getValue()).toString());
+							}
 
 							Table.this.updateTableRowFromForm(row, paramForm);
 
@@ -100,8 +103,12 @@ public class AppParamsTablePage extends AbstractPageWithTable<Table> {
 							notificationHelper.addProccessedNotification("zc.params.modified");
 
 						} else {
-							LOG.debug("Modified param ignored because it's not a current table row (in "
-									+ Table.this.getTitle() + ") for param Id : " + paramForm.getParamId().getValue());
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(new StringBuilder()
+										.append("Modified param ignored because it's not a current table row (in ")
+										.append(Table.this.getTitle()).append(") for param Id : ")
+										.append(paramForm.getParamId().getValue()).toString());
+							}
 						}
 
 					} catch (final RuntimeException e) {
@@ -119,8 +126,11 @@ public class AppParamsTablePage extends AbstractPageWithTable<Table> {
 				public void handleNotification(final ParamCreatedNotification notification) {
 
 					final AppParamsFormData paramForm = notification.getParamForm();
-					LOG.debug("New param prepare to add to table (in " + Table.this.getTitle() + ") for param Id : "
-							+ paramForm.getParamId().getValue());
+					if (LOG.isDebugEnabled()) {
+						LOG.debug(new StringBuilder().append("New param prepare to add to table (in ")
+								.append(Table.this.getTitle() + ") for param Id : ")
+								.append(paramForm.getParamId().getValue()).toString());
+					}
 					try {
 						AppParamsTablePage.this.getTable()
 								.addRow(AppParamsTablePage.this.getTable().createTableRowFromForm(paramForm));

@@ -534,8 +534,10 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 							.getValue(aRow);
 
 					if (aRowCalendarConfigId != checkedCalendarId && aRowUserId.equals(userId) && isRowChecked) {
-						LOG.debug("Unchecking addEventToCalendar for calendar configuration ID : "
-								+ aRowCalendarConfigId);
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("Unchecking addEventToCalendar for calendar configuration ID : "
+									+ aRowCalendarConfigId);
+						}
 						AbstractCalendarConfigurationTable.this.getAddEventToCalendarColumn().setValue(aRow, false);
 					}
 				}

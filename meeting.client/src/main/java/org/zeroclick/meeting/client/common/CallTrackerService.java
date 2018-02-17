@@ -87,10 +87,8 @@ public class CallTrackerService<K> {
 		// check for auto reset
 		if (this.alreadyAsk.get(key).getLastCall().plus(this.timeToLive).isBefore(LocalDateTime.now())) {
 			if (LOG.isDebugEnabled()) {
-				final StringBuilder builder = new StringBuilder(50);
-				builder.append(this.context).append(" Last call was more than ").append(this.timeToLive.toMinutes())
-						.append(" minutes reseting the call Tracker");
-				LOG.debug(builder.toString());
+				LOG.debug(new StringBuilder(50).append(this.context).append(" Last call was more than ")
+						.append(this.timeToLive.toMinutes()).append(" minutes reseting the call Tracker").toString());
 			}
 			this.alreadyAsk.get(key).reset();
 		}
@@ -106,11 +104,9 @@ public class CallTrackerService<K> {
 		// increment for the next check
 		this.alreadyAsk.put(key, this.alreadyAsk.get(key).increment());
 		if (LOG.isDebugEnabled()) {
-			final StringBuilder builder = new StringBuilder(50);
-			builder.append(this.context).append(" Tracker state ").append(this.alreadyAsk.get(key))
-					.append(" (max configured : ").append(this.maxSuccessiveCall).append(", ttl : ")
-					.append(this.timeToLive.toMinutes());
-			LOG.debug(builder.toString());
+			LOG.debug(new StringBuilder(50).append(this.context).append(" Tracker state ")
+					.append(this.alreadyAsk.get(key)).append(" (max configured : ").append(this.maxSuccessiveCall)
+					.append(", ttl : ").append(this.timeToLive.toMinutes()).toString());
 		}
 
 		return Boolean.TRUE;

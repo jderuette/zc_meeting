@@ -134,9 +134,12 @@ public abstract class AbstractSlotTable extends AbstractTable {
 			public void handleNotification(final DayDurationModifiedNotification notification) {
 				try {
 					final DayDurationFormData dayDurationForm = notification.getDayDurationForm();
-					LOG.debug("Day Duration modified prepare modify row values (" + AbstractSlotTable.this.getTitle()
-							+ ") for slotCode : " + notification.getSlotCode() + " ("
-							+ dayDurationForm.getDayDurationId() + ")");
+					if (LOG.isDebugEnabled()) {
+						LOG.debug(new StringBuilder().append("Day Duration modified prepare modify row values (")
+								.append(AbstractSlotTable.this.getTitle()).append(") for slotCode : ")
+								.append(notification.getSlotCode()).append(" (")
+								.append(dayDurationForm.getDayDurationId()).append(")").toString());
+					}
 
 					final ITableRow row = AbstractSlotTable.this.getRow(dayDurationForm.getDayDurationId());
 					AbstractSlotTable.this.updateTableRowFromForm(row, dayDurationForm);
