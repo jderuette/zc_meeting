@@ -1,5 +1,6 @@
 package org.zeroclick.meeting.client;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -24,6 +25,7 @@ import org.eclipse.scout.rt.platform.nls.NlsLocale;
 import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.platform.status.Status;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
+import org.eclipse.scout.rt.platform.util.StringUtility;
 import org.eclipse.scout.rt.platform.util.concurrent.IRunnable;
 import org.eclipse.scout.rt.shared.AbstractIcons;
 import org.eclipse.scout.rt.shared.TEXTS;
@@ -47,6 +49,9 @@ import org.zeroclick.configuration.onboarding.OnBoardingUserForm;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
 import org.zeroclick.configuration.shared.api.ApiDeletedNotification;
 import org.zeroclick.configuration.shared.api.ApiModifiedNotification;
+import org.zeroclick.configuration.shared.api.ApiTablePageData;
+import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
+import org.zeroclick.configuration.shared.provider.ProviderCodeType;
 import org.zeroclick.configuration.shared.role.ReadPermissionPermission;
 import org.zeroclick.configuration.shared.role.ReadRolePermission;
 import org.zeroclick.configuration.shared.user.IUserService;
@@ -62,6 +67,7 @@ import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.CreateApiPermission;
+import org.zeroclick.meeting.shared.calendar.IApiService;
 import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.calendar.ReadApiPermission;
 import org.zeroclick.meeting.shared.event.ReadEventPermission;
@@ -135,12 +141,43 @@ public class Desktop extends AbstractDesktop {
 	}
 
 	private void checkAndUpdateRequiredDatas() {
-		// default user timezone
+		final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
 		final IUserService userService = BEANS.get(IUserService.class);
 		final AccessControlService acs = BEANS.get(AccessControlService.class);
 		final Long currentUserId = acs.getZeroClickUserIdOfCurrentSubject();
+
+		// API connection for multiple account (link to email address, and store
+		// by API key instead of user Id key
+		final IApiService apiService = BEANS.get(IApiService.class);
+		final ApiTablePageData userApis = apiService.getApis(currentUserId);
+
+		if (null != userApis && userApis.getRowCount() > 0) {
+			for (final ApiTableRowData userApi : userApis.getRows()) {
+				if (StringUtility.isNullOrEmpty(userApi.getAccountEmail())) {
+					// User has old API system, so is API is store by UserId
+					try {
+						LOG.info("Invalid API detected (no email account) id : " + userApi.getApiCredentialId()
+								+ " removing it fro user : " + currentUserId);
+						googleHelper.removeCredential(currentUserId);
+						final ApiFormData apiFormData = new ApiFormData();
+						apiFormData.setApiCredentialId(userApi.getApiCredentialId());
+						apiFormData.setUserId(currentUserId);
+						apiFormData.getProvider().setValue(ProviderCodeType.GoogleCode.ID);
+						apiService.delete(apiFormData);
+
+					} catch (final IOException ioe) {
+						LOG.error(
+								"Error while removing 'old' (Google) API stored by UserId instead of apiCredentialId for user Id : "
+										+ currentUserId,
+								ioe);
+					}
+				}
+			}
+		}
+
+		// default user timezone
 		final String currentUserTimeZone = userService.getUserTimeZone(currentUserId);
-		final Boolean isCalendarConfigured = BEANS.get(GoogleApiHelper.class).isCalendarConfigured();
+		final Boolean isCalendarConfigured = googleHelper.isCalendarConfigured();
 		if (null == currentUserTimeZone || !isCalendarConfigured) {
 			final OnBoardingUserForm form = new OnBoardingUserForm();
 			form.getUserIdField().setValue(currentUserId);
@@ -173,12 +210,12 @@ public class Desktop extends AbstractDesktop {
 			LOG.info("Auto-importing user Calendars for user : " + currentUserId);
 
 			try {
-				final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
 				googleHelper.autoConfigureCalendars();
 			} catch (final Exception ex) {
 				LOG.error("Error while importing (Google) calendar for user Id : " + currentUserId, ex);
 			}
 		}
+
 	}
 
 	@Override
