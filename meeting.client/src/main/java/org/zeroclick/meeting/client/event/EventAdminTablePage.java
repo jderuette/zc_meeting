@@ -7,8 +7,9 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.zeroclick.meeting.client.event.EventAdminTablePage.Table;
 import org.zeroclick.meeting.shared.Icons;
-import org.zeroclick.meeting.shared.event.AbstractEventNotification;
 import org.zeroclick.meeting.shared.event.EventAdminTablePageData;
+import org.zeroclick.meeting.shared.event.EventCreatedNotification;
+import org.zeroclick.meeting.shared.event.EventModifiedNotification;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
 import org.zeroclick.meeting.shared.security.AccessControlService;
@@ -33,12 +34,12 @@ public class EventAdminTablePage extends AbstractEventsTablePage<Table> {
 	}
 
 	@Override
-	protected Boolean canHandleNew(final AbstractEventNotification notification) {
+	protected Boolean canHandle(final EventCreatedNotification notification) {
 		return Boolean.FALSE;
 	}
 
 	@Override
-	protected Boolean canHandleModified(final AbstractEventNotification notification) {
+	protected Boolean canHandle(final EventModifiedNotification notification) {
 		return Boolean.FALSE;
 	}
 

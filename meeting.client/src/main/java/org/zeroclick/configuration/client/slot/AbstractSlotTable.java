@@ -133,7 +133,7 @@ public abstract class AbstractSlotTable extends AbstractTable {
 			@Override
 			public void handleNotification(final DayDurationModifiedNotification notification) {
 				try {
-					final DayDurationFormData dayDurationForm = notification.getDayDurationForm();
+					final DayDurationFormData dayDurationForm = notification.getFormData();
 					if (LOG.isDebugEnabled()) {
 						LOG.debug(new StringBuilder().append("Day Duration modified prepare modify row values (")
 								.append(AbstractSlotTable.this.getTitle()).append(") for slotCode : ")

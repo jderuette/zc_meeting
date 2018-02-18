@@ -37,11 +37,15 @@ public abstract class AbstractNotification<V extends AbstractFormData> implement
 		return this.formData;
 	}
 
-	@Override
-	public String toString() {
+	protected StringBuilder toStringBuilder() {
 		final StringBuilder builder = new StringBuilder(100);
 		builder.append(this.getClass()).append(" [FormData=").append(this.getFormData()).append(']');
-		return builder.toString();
+		return builder;
+	}
+
+	@Override
+	public String toString() {
+		return this.toStringBuilder().toString();
 	}
 
 }

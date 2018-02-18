@@ -81,7 +81,7 @@ public class AppParamsTablePage extends AbstractPageWithTable<Table> {
 			this.paramModifiedListener = new INotificationListener<ParamModifiedNotification>() {
 				@Override
 				public void handleNotification(final ParamModifiedNotification notification) {
-					final AppParamsFormData paramForm = notification.getParamForm();
+					final AppParamsFormData paramForm = notification.getFormData();
 					try {
 						ITableRow row = AppParamsTablePage.this.getTable().getRow(paramForm.getParamId().getValue());
 						if (null == row) {
@@ -125,7 +125,7 @@ public class AppParamsTablePage extends AbstractPageWithTable<Table> {
 				@Override
 				public void handleNotification(final ParamCreatedNotification notification) {
 
-					final AppParamsFormData paramForm = notification.getParamForm();
+					final AppParamsFormData paramForm = notification.getFormData();
 					if (LOG.isDebugEnabled()) {
 						LOG.debug(new StringBuilder().append("New param prepare to add to table (in ")
 								.append(Table.this.getTitle() + ") for param Id : ")

@@ -73,7 +73,6 @@ import org.zeroclick.meeting.shared.calendar.CalendarConfigurationModifiedNotifi
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationCreatedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationModifiedNotification;
-import org.zeroclick.meeting.shared.event.AbstractEventNotification;
 import org.zeroclick.meeting.shared.event.EventCreatedNotification;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.EventModifiedNotification;
@@ -190,7 +189,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	 * @param formdata
 	 * @return true if this (sub) tablePage want handle the event
 	 */
-	protected Boolean canHandleNew(final AbstractEventNotification notification) {
+	protected Boolean canHandle(final EventCreatedNotification notification) {
 		return Boolean.FALSE;
 	}
 
@@ -202,7 +201,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	 * @param previousStateRow
 	 * @return true if this (sub) tablePage want handle the event
 	 */
-	protected Boolean canHandleModified(final AbstractEventNotification notification) {
+	protected Boolean canHandle(final EventModifiedNotification notification) {
 		return Boolean.FALSE;
 	}
 
@@ -354,7 +353,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			@Override
 			public void handleNotification(final ParamCreatedNotification notification) {
 
-				final AppParamsFormData paramForm = notification.getParamForm();
+				final AppParamsFormData paramForm = notification.getFormData();
 				AbstractEventsTablePage.this.updateEventCallTracker(paramForm);
 			}
 		};
@@ -366,7 +365,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			@Override
 			public void handleNotification(final ParamModifiedNotification notification) {
 
-				final AppParamsFormData paramForm = notification.getParamForm();
+				final AppParamsFormData paramForm = notification.getFormData();
 				AbstractEventsTablePage.this.updateEventCallTracker(paramForm);
 			}
 		};
@@ -503,11 +502,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				@Override
 				public void handleNotification(final EventCreatedNotification notification) {
 
-					if (!AbstractEventsTablePage.this.canHandleNew(notification)) {
+					if (!AbstractEventsTablePage.this.canHandle(notification)) {
 						return; // Early Break
 					}
 
-					final EventFormData eventForm = notification.getEventForm();
+					final EventFormData eventForm = notification.getFormData();
 					if (LOG.isDebugEnabled()) {
 						LOG.debug(new StringBuffer().append("New event prepare to add to table (in ")
 								.append(Table.this.getTitle()).append(") for event Id : ")
@@ -539,8 +538,8 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			this.eventModifiedListener = new INotificationListener<EventModifiedNotification>() {
 				@Override
 				public void handleNotification(final EventModifiedNotification notification) {
-					final EventFormData eventForm = notification.getEventForm();
-					if (!AbstractEventsTablePage.this.canHandleModified(notification)) {
+					final EventFormData eventForm = notification.getFormData();
+					if (!AbstractEventsTablePage.this.canHandle(notification)) {
 						// remove row if exists
 						final ITableRow row = AbstractEventsTablePage.this.getTable().getRow(eventForm.getEventId());
 						if (null != row) {
@@ -647,7 +646,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				@Override
 				public void handleNotification(final UserModifiedNotification notification) {
 					try {
-						final UserFormData userForm = notification.getUserForm();
+						final UserFormData userForm = notification.getFormData();
 						if (LOG.isDebugEnabled()) {
 							LOG.debug(new StringBuffer().append("User modified prepare to reset cached TimeZone (")
 									.append(Table.this.getTitle()).append(") : ").append(userForm.getUserId())
@@ -671,15 +670,15 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				@Override
 				public void handleNotification(final DayDurationModifiedNotification notification) {
 					try {
-						final DayDurationFormData dayDurationForm = notification.getDayDurationForm();
+						final DayDurationFormData dayDurationForm = notification.getFormData();
 						if (LOG.isDebugEnabled()) {
 							LOG.debug(new StringBuffer()
 									.append("Day Duration modified prepare to reset invalid date proposal (")
 									.append(Table.this.getTitle()).append(") for slotCode : ")
-									.append(notification.getDayDurationForm().getSlotCode())
+									.append(notification.getFormData().getSlotCode())
 									.append(" ( ID " + dayDurationForm.getDayDurationId()).append(")").toString());
 						}
-						Table.this.resetInvalidatesEvent(notification.getDayDurationForm().getSlotCode());
+						Table.this.resetInvalidatesEvent(notification.getFormData().getSlotCode());
 
 					} catch (final RuntimeException e) {
 						LOG.error("Could not handle modified DayDuration. (" + Table.this.getTitle() + ")", e);

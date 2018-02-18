@@ -7,8 +7,9 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.zeroclick.meeting.client.event.EventProcessedTablePage.Table;
 import org.zeroclick.meeting.shared.Icons;
-import org.zeroclick.meeting.shared.event.AbstractEventNotification;
+import org.zeroclick.meeting.shared.event.EventCreatedNotification;
 import org.zeroclick.meeting.shared.event.EventFormData;
+import org.zeroclick.meeting.shared.event.EventModifiedNotification;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.StateCodeType;
 import org.zeroclick.meeting.shared.eventb.EventsTablePageData;
@@ -32,13 +33,13 @@ public class EventProcessedTablePage extends AbstractEventsTablePage<Table> {
 	}
 
 	@Override
-	protected Boolean canHandleNew(final AbstractEventNotification notification) {
+	protected Boolean canHandle(final EventCreatedNotification notification) {
 		return Boolean.FALSE;
 	}
 
 	@Override
-	protected Boolean canHandleModified(final AbstractEventNotification notification) {
-		final EventFormData formData = notification.getEventForm();
+	protected Boolean canHandle(final EventModifiedNotification notification) {
+		final EventFormData formData = notification.getFormData();
 		return CompareUtility.isOneOf(formData.getState().getValue(), StateCodeType.AcceptedCode.ID,
 				StateCodeType.RefusededCode.ID);
 	}

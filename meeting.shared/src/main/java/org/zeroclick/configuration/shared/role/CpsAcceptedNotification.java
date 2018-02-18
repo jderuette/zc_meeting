@@ -15,14 +15,14 @@ limitations under the License.
  */
 package org.zeroclick.configuration.shared.role;
 
-import org.zeroclick.configuration.shared.user.AbstractCpsNotification;
 import org.zeroclick.configuration.shared.user.ValidateCpsFormData;
+import org.zeroclick.meeting.shared.AbstractNotification;
 
 /**
  * @author djer
  *
  */
-public class CpsAcceptedNotification extends AbstractCpsNotification {
+public class CpsAcceptedNotification extends AbstractNotification<ValidateCpsFormData> {
 
 	/**
 	 * serialVersionUID

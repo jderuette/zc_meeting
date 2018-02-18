@@ -29,5 +29,4 @@ public class ApiModifiedNotification extends AbstractNotification<ApiFormData> {
 	public ApiModifiedNotification(final ApiFormData apiForm) {
 		super(apiForm);
 	}
-
 }

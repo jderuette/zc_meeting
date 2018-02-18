@@ -382,7 +382,7 @@ public class Desktop extends AbstractDesktop {
 			@Override
 			public void handleNotification(final UserModifiedNotification notification) {
 				try {
-					final UserFormData userForm = notification.getUserForm();
+					final UserFormData userForm = notification.getFormData();
 					if (LOG.isDebugEnabled()) {
 						LOG.debug(new StringBuilder().append("User modified prepare to update locale (")
 								.append(this.getClass().getName()).append(") : ").append(userForm.getUserId())

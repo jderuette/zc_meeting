@@ -15,22 +15,17 @@ limitations under the License.
  */
 package org.zeroclick.meeting.shared.event;
 
+import org.zeroclick.meeting.shared.AbstractNotification;
+
 /**
  * @author djer
  *
  */
-public class EventCreatedNotification extends AbstractEventNotification {
-
-	public EventCreatedNotification(final EventFormData newEvent) {
-		super(newEvent);
-	}
+public class EventCreatedNotification extends AbstractNotification<EventFormData> {
 
 	private static final long serialVersionUID = 2548055966915176806L;
 
-	@Override
-	public String toString() {
-		final StringBuilder builder = new StringBuilder(50);
-		builder.append("EventCreatedNotification [eventForm=").append(super.getEventForm()).append(']');
-		return builder.toString();
+	public EventCreatedNotification(final EventFormData newEvent) {
+		super(newEvent);
 	}
 }

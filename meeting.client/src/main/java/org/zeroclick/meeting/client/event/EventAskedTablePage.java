@@ -14,9 +14,10 @@ import org.zeroclick.meeting.shared.calendar.CalendarConfigurationCreatedNotific
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationModifiedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationCreatedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationModifiedNotification;
-import org.zeroclick.meeting.shared.event.AbstractEventNotification;
 import org.zeroclick.meeting.shared.event.EventAskedTablePageData;
+import org.zeroclick.meeting.shared.event.EventCreatedNotification;
 import org.zeroclick.meeting.shared.event.EventFormData;
+import org.zeroclick.meeting.shared.event.EventModifiedNotification;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.StateCodeType;
 
@@ -53,15 +54,15 @@ public class EventAskedTablePage extends EventTablePage {
 	}
 
 	@Override
-	protected Boolean canHandleNew(final AbstractEventNotification notification) {
-		final EventFormData formData = notification.getEventForm();
+	protected Boolean canHandle(final EventCreatedNotification notification) {
+		final EventFormData formData = notification.getFormData();
 		return super.getEventMessageHelper().isHeldByCurrentUser(formData)
 				&& CompareUtility.equals(StateCodeType.AskedCode.ID, formData.getState().getValue());
 	}
 
 	@Override
-	protected Boolean canHandleModified(final AbstractEventNotification notification) {
-		final EventFormData formData = notification.getEventForm();
+	protected Boolean canHandle(final EventModifiedNotification notification) {
+		final EventFormData formData = notification.getFormData();
 		return super.getEventMessageHelper().isHeldByCurrentUser(formData)
 				&& CompareUtility.equals(StateCodeType.AskedCode.ID, formData.getState().getValue());
 	}

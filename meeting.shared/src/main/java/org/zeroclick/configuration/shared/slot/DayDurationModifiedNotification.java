@@ -15,22 +15,29 @@ limitations under the License.
  */
 package org.zeroclick.configuration.shared.slot;
 
+import org.zeroclick.meeting.shared.AbstractNotification;
+
 /**
  * @author djer
  *
  */
-public class DayDurationModifiedNotification extends AbstractDayDurationNotification {
+public class DayDurationModifiedNotification extends AbstractNotification<DayDurationFormData> {
 
 	private static final long serialVersionUID = -2546211635305638271L;
 
+	private final String slotCode;
+
 	public DayDurationModifiedNotification(final DayDurationFormData modifiedDayDuration, final String slotCode) {
-		super(modifiedDayDuration, slotCode);
+		super(modifiedDayDuration);
+		this.slotCode = slotCode;
+	}
+
+	public String getSlotCode() {
+		return this.slotCode;
 	}
 
 	@Override
 	public String toString() {
-		final StringBuilder builder = new StringBuilder(50);
-		builder.append("DayDurationModifiedNotification [eventForm=").append(super.getDayDurationForm()).append(']');
-		return builder.toString();
+		return this.toStringBuilder().append(" slotCode ").append(this.getSlotCode()).toString();
 	}
 }
