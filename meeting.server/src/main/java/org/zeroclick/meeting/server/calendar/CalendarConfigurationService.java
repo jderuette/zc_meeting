@@ -94,9 +94,10 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 
 	private CalendarConfigurationFormData create(final CalendarConfigurationFormData formData,
 			final Boolean sendNotification) {
-		LOG.info("Creating new Calendar Configuration for API Id : " + formData.getOAuthCredentialId().getValue()
-				+ " for calendar Key : " + formData.getExternalId().getValue() + " for User ID : "
-				+ formData.getUserId().getValue());
+		LOG.info(new StringBuffer().append("Creating new Calendar Configuration for API Id : ")
+				.append(formData.getOAuthCredentialId().getValue()).append(" for calendar Key : ")
+				.append(formData.getExternalId().getValue()).append(" for User ID : ")
+				.append(formData.getUserId().getValue()).toString());
 		if (!ACCESS.check(new CreateCalendarConfigurationPermission(formData.getOAuthCredentialId().getValue()))) {
 			super.throwAuthorizationFailed();
 		}
@@ -210,12 +211,15 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		// permission based on API permissions (not calendar permissions)
 		this.checkPermission(new DeleteApiPermission(apiCredentialId));
 
-		LOG.info("Deleting calendars configuration with API ID : " + apiCredentialId);
+		LOG.info(new StringBuffer().append("Deleting calendars configuration with API ID : ").append(apiCredentialId)
+				.toString());
 
 		final int nbDeletedRows = SQL.delete(SQLs.CALENDAR_CONFIG_DELETE_BY_API_ID,
 				new NVPair("oAuthCredentialId", apiCredentialId));
-
-		LOG.debug(nbDeletedRows + " deleteted in calendars configuration with API ID : " + apiCredentialId);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuffer().append(nbDeletedRows)
+					.append(" deleteted in calendars configuration with API ID : ").append(apiCredentialId).toString());
+		}
 	}
 
 	private void delete(final String externalId, final Long apiCredentialId) {
@@ -228,12 +232,13 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 				new NVPair("externalId", externalId), new NVPair("oAuthCredentialId", apiCredentialId));
 
 		if (nbDeletedRows == 0) {
-			LOG.warn(
-					"No row deleted calendars configuration : " + apiCredentialId + " for API ID : " + apiCredentialId);
+			LOG.warn(new StringBuffer().append("No row deleted calendars configuration : ").append(apiCredentialId)
+					.append(" for API ID : ").append(apiCredentialId).toString());
 		}
 	}
 
 	@Override
+	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 	public void autoConfigure(final Map<String, AbstractCalendarConfigurationTableRowData> calendars) {
 		LOG.info("Auto importing calendars for User");
 		Long lastUserId = null;
@@ -268,9 +273,11 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 				@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 				final CalendarConfigurationFormData calendarConfigInput = new CalendarConfigurationFormData();
 
-				LOG.info("Calendar Configuration already exists for API : " + calendarData.getOAuthCredentialId()
-						+ " for calendar key : " + calendarData.getExternalId() + "(" + calendarData.getName()
-						+ ") for User Id : " + calendarData.getUserId() + " Updating calendar Data");
+				LOG.info(new StringBuffer().append("Calendar Configuration already exists for API : ")
+						.append(calendarData.getOAuthCredentialId()).append(" for calendar key : ")
+						.append(calendarData.getExternalId()).append("(" + calendarData.getName())
+						.append(") for User Id : ").append(calendarData.getUserId()).append(" Updating calendar Data")
+						.toString());
 
 				calendarConfigInput.getCalendarConfigurationId().setValue(existingCalendarConfigId);
 				calendarConfigInput.getUserId().setValue(calendarData.getUserId());
@@ -282,9 +289,12 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 					existingCalendarConfig.getName().setValue(calendarData.getName());
 					existingCalendarConfig.getReadOnly().setValue(calendarData.getReadOnly());
 					if (calendarData.getReadOnly() && existingCalendarConfig.getAddEventToCalendar().getValue()) {
-						LOG.warn("The calendar " + existingCalendarConfig.getCalendarConfigurationId() + "("
-								+ existingCalendarConfig.getName() + ") for User " + existingCalendarConfig.getUserId()
-								+ " is (became ?) readOnly and is configured to store event. Disabling addEventToCalendar for this calendar.");
+						LOG.warn(new StringBuffer().append("The calendar ")
+								.append(existingCalendarConfig.getCalendarConfigurationId()).append("(")
+								.append(existingCalendarConfig.getName()).append(") for User ")
+								.append(existingCalendarConfig.getUserId())
+								.append(" is (became ?) readOnly and is configured to store event. Disabling addEventToCalendar for this calendar.")
+								.toString());
 						existingCalendarConfig.getAddEventToCalendar().setValue(Boolean.FALSE);
 					}
 
@@ -292,8 +302,9 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 					this.store(existingCalendarConfig, Boolean.TRUE);
 
 				} else {
-					LOG.info("Calendar configuration : " + existingCalendarConfigId + "(name : "
-							+ existingCalendarConfig.getName() + ") don't need to be save during sync");
+					LOG.info(new StringBuffer().append("Calendar configuration : ")
+							.append(existingCalendarConfigId + "(name : ").append(existingCalendarConfig.getName())
+							.append(") don't need to be save during sync").toString());
 				}
 			}
 		}
@@ -311,8 +322,9 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 						.append(calendar.getOAuthCredentialId());
 
 				if (!calendars.keySet().contains(calendarId.toString())) {
-					LOG.info("Calendar : " + calendar.getExternalId()
-							+ " does not exist anymore in provider data, removing it from user config");
+					LOG.info(new StringBuffer().append("Calendar : ").append(calendar.getExternalId())
+							.append(" does not exist anymore in provider data, removing it from user config")
+							.toString());
 					this.delete(calendar.getExternalId(), calendar.getOAuthCredentialId());
 				}
 			}
@@ -377,6 +389,7 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 	}
 
 	@Override
+	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 	public Set<AbstractCalendarConfigurationTableRowData> getUsedCalendars(final Long userId) {
 		final CalendarConfigurationTablePageData pageData = new CalendarConfigurationTablePageData();
 		final Set<AbstractCalendarConfigurationTableRowData> configuredCalendars = new HashSet<>();
@@ -460,7 +473,8 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		final Long apiCredentialOwner = this.getOwner(apiCredentailId);
 
 		if (null == apiCredentialOwner) {
-			LOG.error("apiCredentailId " + apiCredentailId + " as NO owner (user_id) on his OAuth related data ");
+			LOG.error(new StringBuffer().append("apiCredentailId ").append(apiCredentailId)
+					.append(" as NO owner (user_id) on his OAuth related data").toString());
 			return false;
 		} else if (apiCredentialOwner.equals(super.userHelper.getCurrentUserId())) {
 			return true;
@@ -474,7 +488,8 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		final Long apiCredentialOwner = this.getOwner(apiCredentailId);
 
 		if (null == apiCredentialOwner) {
-			LOG.error("apiCredentailId " + apiCredentailId + " as NO owner (user_id) on his OAuth related data ");
+			LOG.error(new StringBuffer().append("apiCredentailId ").append(apiCredentailId)
+					.append(" as NO owner (user_id) on his OAuth related data").toString());
 			return false;
 		}
 		final Set<Long> relatedUserId = this.getUserWithPendingEvent();

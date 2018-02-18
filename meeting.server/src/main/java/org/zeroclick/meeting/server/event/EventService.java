@@ -121,7 +121,10 @@ public class EventService extends AbstractCommonService implements IEventService
 			this.checkPermission(new ReadEventPermission(userId));
 		}
 
-		LOG.debug("Loading pending meeting users with : " + userId + " (Only as organizer : " + onlyAsOrganizer + ")");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuffer().append("Loading pending meeting users with : ").append(userId)
+					.append(" (Only as organizer : ").append(onlyAsOrganizer).append(")").toString());
+		}
 
 		if (!onlyAsOrganizer) {
 			final Object[][] pendingOrganizer = this.getEventsByUser(SQLs.EVENT_SELECT_USERS_EVENT_GUEST, state,
@@ -150,9 +153,10 @@ public class EventService extends AbstractCommonService implements IEventService
 				users.put(pendingUserAttendee, ++currentNbEvent);
 			}
 		}
-
-		LOG.debug("List of pending meeting (Only as organizer : " + onlyAsOrganizer + ") users with : " + userId + " : "
-				+ users);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuffer().append("List of pending meeting (Only as organizer : ").append(onlyAsOrganizer)
+					.append(") users with : ").append(userId).append(" : ").append(users).toString());
+		}
 		return users;
 	}
 
@@ -194,7 +198,9 @@ public class EventService extends AbstractCommonService implements IEventService
 		if (!subscriptionData.isAccessAllowed()) {
 			super.throwAuthorizationFailed();
 		}
-		LOG.debug("PrepareCreate for Event");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("PrepareCreate for Event");
+		}
 
 		formData.getState().setValue(StateCodeType.AskedCode.ID);
 		formData.getDuration().setValue(DurationCodeType.HalfHourCode.ID);
@@ -366,7 +372,8 @@ public class EventService extends AbstractCommonService implements IEventService
 		final Long eventOwner = this.getOwner(eventId);
 
 		if (null == eventOwner) {
-			LOG.error("Event " + eventId + " as NO owner (organizer)");
+			LOG.error(
+					new StringBuffer().append("Event ").append(eventId).append(" as NO owner (organizer)").toString());
 			isOwn = Boolean.FALSE;
 		} else if (eventOwner.equals(currentUserId)) {
 			isOwn = Boolean.TRUE;
@@ -380,7 +387,8 @@ public class EventService extends AbstractCommonService implements IEventService
 		Boolean isRecipient = Boolean.FALSE;
 		final String eventRecipient = this.getRecipient(eventId);
 		if (null == eventRecipient || "".equals(eventRecipient)) {
-			LOG.error("Event " + eventId + " as NO recipient (email)");
+			LOG.error(
+					new StringBuffer().append("Event ").append(eventId).append(" as NO recipient (email)").toString());
 			isRecipient = Boolean.FALSE;
 		} else if (eventRecipient.equalsIgnoreCase(this.getCurrentUserEmail())) {
 			isRecipient = Boolean.TRUE;
@@ -409,7 +417,10 @@ public class EventService extends AbstractCommonService implements IEventService
 		final List<? extends ICode<Long>> existingCodes = durationCodeType.getCodes(Boolean.FALSE);
 
 		for (final ICode<Long> code : existingCodes) {
-			LOG.debug("Updating event with durantion : " + code.getValue() + " with id : " + code.getId());
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(new StringBuffer().append("Updating event with durantion : ").append(code.getValue())
+						.append(" with id : ").append(code.getId()).toString());
+			}
 			final String sql = "UPDATE event set duration=:durationId where duration=:durationminutes";
 			SQL.update(sql, new NVPair("durationId", code.getId()),
 					new NVPair("durationminutes", code.getValue().intValue()));

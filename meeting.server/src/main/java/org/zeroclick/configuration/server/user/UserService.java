@@ -97,7 +97,9 @@ public class UserService extends AbstractCommonService implements IUserService {
 	@Override
 	public UserFormData prepareCreate(final UserFormData formData) {
 		super.checkPermission(new CreateUserPermission());
-		LOG.debug("PrepareCreate for User");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("PrepareCreate for User");
+		}
 		return formData;
 	}
 
@@ -127,18 +129,19 @@ public class UserService extends AbstractCommonService implements IUserService {
 			formData.getEmail().setValue(formData.getEmail().getValue().toLowerCase());
 		}
 
-		LOG.info("Create User with Id :" + formData.getUserId().getValue() + ", Login : "
-				+ formData.getLogin().getValue() + " and email : " + formData.getEmail().getValue());
+		LOG.info(new StringBuilder().append("Create User with Id :").append(formData.getUserId().getValue())
+				.append(", Login : ").append(formData.getLogin().getValue()).append(" and email : ")
+				.append(formData.getEmail().getValue()).toString());
 
 		if (null != formData.getLogin().getValue() && this.userAlreadyExists(formData.getLogin().getValue())) {
-			LOG.error("Trying to create User with an existing login (lowercase match) : "
-					+ formData.getLogin().getValue());
+			LOG.error(new StringBuilder().append("Trying to create User with an existing login (lowercase match) : ")
+					.append(formData.getLogin().getValue()).toString());
 			throw new VetoException(TEXTS.get("zc.user.userAlreadyExists"));
 		}
 
 		if (null != formData.getEmail().getValue() && this.isEmailAlreadyUsed(formData.getEmail().getValue())) {
-			LOG.error("Trying to create User with an existing email (lowercase match) : "
-					+ formData.getEmail().getValue());
+			LOG.error(new StringBuilder().append("Trying to create User with an existing email (lowercase match) : ")
+					.append(formData.getEmail().getValue()).toString());
 			throw new VetoException(TEXTS.get("zc.user.userAlreadyExists"));
 		}
 		SQL.insert(SQLs.USER_INSERT, formData);
@@ -152,7 +155,8 @@ public class UserService extends AbstractCommonService implements IUserService {
 	}
 
 	private boolean userAlreadyExists(final String userLogin) {
-		LOG.info("Checking if login : " + userLogin + " already Exists");
+		LOG.info(new StringBuilder().append("Checking if login : ").append(userLogin).append(" already Exists")
+				.toString());
 		final UserFormData input = new UserFormData();
 		input.getLogin().setValue(userLogin.toLowerCase());
 
@@ -179,8 +183,11 @@ public class UserService extends AbstractCommonService implements IUserService {
 
 	private UserFormData loadForCache(final UserFormData formData) {
 		// Permission must be checked outside cache loading !
-		LOG.debug("Load User with Id :" + formData.getUserId().getValue() + " and email : "
-				+ formData.getEmail().getValue() + " (login : " + formData.getLogin().getValue() + ")");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuilder().append("Load User with Id :").append(formData.getUserId().getValue())
+					.append(" and email : ").append(formData.getEmail().getValue()).append(" (login : ")
+					.append(formData.getLogin().getValue()).append(")").toString());
+		}
 
 		final Long currentSelectedUserId = formData.getUserId().getValue();
 
@@ -360,7 +367,9 @@ public class UserService extends AbstractCommonService implements IUserService {
 	private UserFormData loadUserIdByEmail(final UserFormData formData) {
 		// No permission check right now, will be done by standard "load" method
 		// when the userId of this email will be retrieved
-		LOG.debug("Searching userId with email : " + formData.getEmail().getValue());
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Searching userId with email : " + formData.getEmail().getValue());
+		}
 		SQL.selectInto(SQLs.USER_SELECT_ID_ONLY + SQLs.USER_SELECT_FILTER_EMAIL + SQLs.USER_SELECT_INTO_ID_ONLY,
 				formData);
 		return formData;
@@ -369,7 +378,9 @@ public class UserService extends AbstractCommonService implements IUserService {
 	private UserFormData loadUserIdByLogin(final UserFormData formData) {
 		// No permission check right now, will be done by standard "load" method
 		// when the userId of this email will be retrieved
-		LOG.debug("Searching userId with login : " + formData.getLogin().getValue());
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Searching userId with login : " + formData.getLogin().getValue());
+		}
 
 		if (NOTIFICATION_USER.equals(formData.getLogin().getValue())) {
 			// default notification user dosen't exist, because it don't need
@@ -391,8 +402,11 @@ public class UserService extends AbstractCommonService implements IUserService {
 		}
 		final AccessControlService acs = BEANS.get(AccessControlService.class);
 
-		LOG.debug("Store User with Id :" + formData.getUserId().getValue() + " and email : "
-				+ formData.getEmail().getValue() + " (Login : " + formData.getLogin().getValue() + ")");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuilder().append("Store User with Id :").append(formData.getUserId().getValue())
+					.append(" and email : ").append(formData.getEmail().getValue())
+					.append(" (Login : " + formData.getLogin().getValue()).append(")").toString());
+		}
 
 		final boolean isMySelf = acs.getZeroClickUserIdOfCurrentSubject().equals(formData.getUserId().getValue());
 
@@ -438,7 +452,8 @@ public class UserService extends AbstractCommonService implements IUserService {
 		// similar to Subscriptions ? (How to add a "role" which discard the old
 		// one ?)
 		if (!addedRoles.isEmpty()) {
-			LOG.info("Adding new roles : " + addedRoles + " for User " + formData.getUserId().getValue());
+			LOG.info(new StringBuilder().append("Adding new roles : ").append(addedRoles).append(" for User ")
+					.append(formData.getUserId().getValue()).toString());
 			SQL.update(SQLs.USER_ROLE_INSERT, new NVPair("userId", formData.getUserId().getValue()),
 					new NVPair("rolesBox", addedRoles));
 			acs.clearUserCache(this.buildNotifiedUsers(formData));
@@ -448,7 +463,8 @@ public class UserService extends AbstractCommonService implements IUserService {
 			}
 		}
 		if (!removedRoles.isEmpty()) {
-			LOG.info("Removing roles : " + removedRoles + " for User " + formData.getUserId().getValue());
+			LOG.info(new StringBuilder().append("Removing roles : ").append(removedRoles).append(" for User ")
+					.append(formData.getUserId().getValue()).toString());
 			SQL.update(SQLs.USER_ROLE_REMOVE, new NVPair("userId", formData.getUserId().getValue()),
 					new NVPair("rolesBox", removedRoles));
 			acs.clearUserCache(this.buildNotifiedUsers(formData));
@@ -468,8 +484,9 @@ public class UserService extends AbstractCommonService implements IUserService {
 		if (null == currentSubscription || !currentSubscription.equals(newSubscription)) {
 			// Only add the new one, the oldest will be discarded as a more
 			// recent exists
-			LOG.info("Siwtching user subscription from  : " + currentSubscription + " to " + newSubscription
-					+ " for User " + formData.getUserId().getValue());
+			LOG.info(new StringBuilder().append("Siwtching user subscription from  : ").append(currentSubscription)
+					.append(" to ").append(newSubscription).append(" for User ").append(formData.getUserId().getValue())
+					.toString());
 			this.addSubscriptionAsynch(formData.getUserId().getValue(), newSubscription);
 
 			acs.clearUserCache(this.buildNotifiedUsers(formData));
@@ -538,8 +555,9 @@ public class UserService extends AbstractCommonService implements IUserService {
 			super.throwAuthorizationFailed();
 		}
 
-		LOG.info("Deleting User by Id : " + userId + " (asked email : " + formData.getEmail().getValue() + ", login : "
-				+ formData.getLogin().getValue() + ")");
+		LOG.info(new StringBuilder().append("Deleting User by Id : ").append(userId).append(" (asked email : ")
+				.append(formData.getEmail().getValue()).append(", login : ").append(formData.getLogin().getValue())
+				.append(")").toString());
 
 		roleService.deleteSubscriptionMetaDataByUser(userId);
 		this.deleteUserRoleByUser(formData);
@@ -553,7 +571,8 @@ public class UserService extends AbstractCommonService implements IUserService {
 
 	private void deleteUserRoleByUser(final UserFormData formData) {
 		super.checkPermission(new UpdateAssignToRolePermission());
-		LOG.info("Deleting Link between Role and User by user Id : " + formData.getUserId().getValue());
+		LOG.info(new StringBuilder().append("Deleting Link between Role and User by user Id : ")
+				.append(formData.getUserId().getValue()).toString());
 		SQL.insert(SQLs.USER_ROLE_REMOVE_BY_USER, formData);
 	}
 
@@ -562,8 +581,8 @@ public class UserService extends AbstractCommonService implements IUserService {
 			super.throwAuthorizationFailed();
 		}
 		final long defaultInvitedBy = 1l;
-		LOG.info("Changing 'invited_by' for user : " + formData.getUserId().getValue() + " to the new User : "
-				+ defaultInvitedBy);
+		LOG.info(new StringBuilder().append("Changing 'invited_by' for user : ").append(formData.getUserId().getValue())
+				.append(" to the new User : ").append(defaultInvitedBy).toString());
 		SQL.insert(SQLs.USER_UPDATE_INVITED_BY_BY_USER, formData, new NVPair("invitedBy", defaultInvitedBy));
 		// reset local user cache for all User as many user may be affected by
 		// operation
@@ -573,8 +592,11 @@ public class UserService extends AbstractCommonService implements IUserService {
 	@Override
 	public OnBoardingUserFormData store(final OnBoardingUserFormData formData) {
 		super.checkPermission(new UpdateUserPermission(formData.getUserId().getValue()));
-		LOG.debug("Store OnBoarding User datas with Id :" + formData.getUserId().getValue() + " (Login : "
-				+ formData.getLogin().getValue() + ")");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuilder().append("Store OnBoarding User datas with Id :")
+					.append(formData.getUserId().getValue()).append(" (Login : ").append(formData.getLogin().getValue())
+					.append(")").toString());
+		}
 
 		/**
 		 * Collect user data BEFORE update, to allow login/email modifications
@@ -613,10 +635,12 @@ public class UserService extends AbstractCommonService implements IUserService {
 	public ValidateCpsFormData store(final ValidateCpsFormData formData) {
 		super.checkPermission(new CreateAssignSubscriptionToUserPermission(formData.getUserId().getValue()));
 		final AccessControlService acs = BEANS.get(AccessControlService.class);
-
-		LOG.debug("Store CPS User datas for user Id :" + formData.getUserId().getValue()
-				+ " for subscription (role) id : " + formData.getSubscriptionId().getValue() + " start at : "
-				+ formData.getStartDate().getValue());
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuilder().append("Store CPS User datas for user Id :")
+					.append(formData.getUserId().getValue()).append(" for subscription (role) id : ")
+					.append(formData.getSubscriptionId().getValue()).append(" start at : ")
+					.append(formData.getStartDate().getValue()).toString());
+		}
 
 		SQL.update(SQLs.USER_ROLE_UPDATE_CPS, formData);
 
@@ -725,13 +749,18 @@ public class UserService extends AbstractCommonService implements IUserService {
 		if (null != formData.getEmail().getValue() && !formData.getEmail().getValue().isEmpty()) {
 			notificationsIds.add(formData.getEmail().getValue());
 		}
-		LOG.debug("Notifications IDs for user : " + userId + " are : " + notificationsIds);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuilder().append("Notifications IDs for user : ").append(userId + " are : ")
+					.append(notificationsIds).toString());
+		}
 		return notificationsIds;
 	}
 
 	@Override
 	public UserFormData getPassword(final String username) {
-		LOG.debug("Retriving password for User " + username);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuilder().append("Retriving password for User ").append(username).toString());
+		}
 		final UserFormData formData = this.loadPassword(username);
 
 		return formData;
@@ -739,19 +768,27 @@ public class UserService extends AbstractCommonService implements IUserService {
 
 	@Override
 	public UserFormData getPassword(final UserFormData userPassFormData) {
-		LOG.debug("Retriving password for User " + userPassFormData.getLogin().getValue());
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuilder().append("Retriving password for User ")
+					.append(userPassFormData.getLogin().getValue()).toString());
+		}
 		final UserFormData formData = this.loadPassword(userPassFormData.getLogin().getValue());
 		return formData;
 	}
 
 	private UserFormData loadPassword(final String username) {
-		LOG.debug("Retriving password for User " + username);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuilder().append("Retriving password for User ").append(username).toString());
+		}
 		UserFormData formData = new UserFormData();
 		formData.getLogin().setValue(username.toLowerCase());
 		SQL.select(SQLs.USER_SELECT_PASSWORD_FILTER_LOGIN, formData);
 
 		if (null == formData.getPassword().getValue()) {
-			LOG.debug("No saved password with Login for user : " + username + ". Trying with email");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(new StringBuilder().append("No saved password with Login for user : ").append(username)
+						.append(". Trying with email").toString());
+			}
 			formData = this.loadPasswordByEmail(username);
 		}
 
@@ -759,13 +796,15 @@ public class UserService extends AbstractCommonService implements IUserService {
 	}
 
 	private UserFormData loadPasswordByEmail(final String email) {
-		LOG.debug("Retriving password with email " + email);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuilder().append("Retriving password with email ").append(email).toString());
+		}
 		final UserFormData formData = new UserFormData();
 		formData.getEmail().setValue(email.toLowerCase());
 		SQL.select(SQLs.USER_SELECT_PASSWORD_FILTER_EMAIL, formData);
 
-		if (null == formData.getPassword().getValue()) {
-			LOG.debug("No saved password with email for user : " + email);
+		if (LOG.isDebugEnabled() && null == formData.getPassword().getValue()) {
+			LOG.debug(new StringBuilder().append("No saved password with email for user : ").append(email).toString());
 		}
 		return formData;
 	}
@@ -828,8 +867,8 @@ public class UserService extends AbstractCommonService implements IUserService {
 	public UserFormData loggedIn(final UserFormData userData) {
 		// No permission check, because used during login
 		final Date now = new Date();
-		LOG.info("User " + userData.getEmail() + " (login : " + userData.getLogin()
-				+ ") juste logged in, updating stats data");
+		LOG.info(new StringBuilder().append("User " + userData.getEmail()).append(" (login : " + userData.getLogin())
+				.append(") juste logged in, updating stats data").toString());
 		SQL.insert(SQLs.USER_UPDATE_LAST_LOGIN, userData, new NVPair("currentDate", now));
 
 		this.dataCache.clearCache(userData.getUserId().getValue());
@@ -838,7 +877,8 @@ public class UserService extends AbstractCommonService implements IUserService {
 
 	@Override
 	public void clearCache(final Long userId) {
-		LOG.info("Clear cache (and server/UI permisison cache) for user ID : " + userId);
+		LOG.info(new StringBuilder().append("Clear cache (and server/UI permisison cache) for user ID : ")
+				.append(userId).toString());
 		this.dataCache.clearCache(userId);
 
 		final Set<String> userCacheKey = this.getUserNotificationIds(userId);
@@ -847,6 +887,7 @@ public class UserService extends AbstractCommonService implements IUserService {
 	}
 
 	@Override
+	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 	public void addSubFreeToAllUsers() {
 		LOG.info("Adding role 'subscription free' to All existing users");
 		final Long roleId = 3l;
@@ -860,8 +901,10 @@ public class UserService extends AbstractCommonService implements IUserService {
 					this.addSubscriptionAsynch(userId, 3l);
 					this.dataCache.clearCache(userId);
 				} catch (final Exception ex) {
-					LOG.warn("Error while trying to insert Role " + roleId + " to User :" + userId
-							+ " continuing to next User", ex);
+					LOG.warn(
+							new StringBuilder().append("Error while trying to insert Role ").append(roleId)
+									.append(" to User :").append(userId).append(" continuing to next User").toString(),
+							ex);
 				}
 			}
 		}

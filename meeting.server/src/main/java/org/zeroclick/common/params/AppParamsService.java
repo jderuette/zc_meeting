@@ -35,7 +35,10 @@ public class AppParamsService extends AbstractCommonService implements IAppParam
 	@Override
 	public void create(final String key, final String value) {
 		super.checkPermission(new CreateAppParamsPermission());
-		LOG.debug("Creating app_params with key : " + key + " and value : " + value);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuilder().append("Creating app_params with key : ").append(key + " and value : ")
+					.append(value).toString());
+		}
 
 		final Long paramId = this.getNextId();
 		SQL.update(SQLs.PARAMS_INSERT, new NVPair("paramId", paramId), new NVPair("key", key),
@@ -48,7 +51,10 @@ public class AppParamsService extends AbstractCommonService implements IAppParam
 	@Override
 	public void create(final String key, final String value, final String category) {
 		super.checkPermission(new CreateAppParamsPermission());
-		LOG.debug("Creating app_params with key : " + key + " and value : " + value + "(category : " + category + ")");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuilder().append("Creating app_params with key : ").append(key).append(" and value : ")
+					.append(value).append("(category : ").append(category).append(")").toString());
+		}
 		final Long paramId = this.getNextId();
 
 		SQL.update(SQLs.PARAMS_INSERT, new NVPair("paramId", paramId));
@@ -73,43 +79,56 @@ public class AppParamsService extends AbstractCommonService implements IAppParam
 	public Boolean isKeyExists(final String key) {
 		final Object[][] datas = this.getAppParamsData(key);
 		final boolean found = null != datas && datas.length > 1;
-		LOG.debug("App_params : " + key + " found ? " + found);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuilder().append("App_params : ").append(key + " found ? ").append(found).toString());
+		}
 		return found;
 	}
 
 	@Override
 	public void store(final String key, final String value) {
 		super.checkPermission(new UpdateAppParamsPermission());
-		LOG.debug("Storing app_params with key : " + key + " and value : " + value);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuilder().append("Storing app_params with key : ").append(key + " and value : ")
+					.append(value).toString());
+		}
 
 		final Long existingId = this.getId(key);
 		if (null == existingId) {
 			this.create(key, value);
 		} else {
-			LOG.debug("Updatting app_params with id : " + existingId + " with key : " + key + " and value : " + value);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(new StringBuilder().append("Updatting app_params with id : ").append(existingId)
+						.append(" with key : ").append(key).append(" and value : ").append(value).toString());
+			}
 			SQL.update(SQLs.PARAMS_UPDATE, new NVPair("key", key), new NVPair("value", value));
 		}
 	}
 
 	protected Object[][] getAppParamsData(final String key) {
 		// No permission check, public Data
-		LOG.debug("Searching app_params for key : " + key);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuilder().append("Searching app_params for key : ").append(key).toString());
+		}
 		return SQL.select(SQLs.PARAMS_SELECT + SQLs.PARAMS_SELECT_FILTER_KEY, new NVPair("key", key));
 	}
 
 	protected Object getData(final String key, final Integer columnNumber) {
 		// No permission check, public Data
-		LOG.debug("Searching app_params for key : " + key);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuilder().append("Searching app_params for key : ").append(key).toString());
+		}
 		Object paramValue = null;
 		final Object[][] datas = this.getAppParamsData(key);
 
 		if (null != datas && datas.length == 1) {
 			paramValue = datas[0][columnNumber];
 		} else if (null != datas && datas.length > 1) {
-			LOG.warn("Multiple values for key : " + key + ". Returning the first one");
+			LOG.warn(new StringBuilder().append("Multiple values for key : ").append(key)
+					.append(". Returning the first one").toString());
 			paramValue = datas[0][columnNumber];
 		} else {
-			LOG.warn("No value for key : " + key + ".");
+			LOG.warn(new StringBuilder().append("No value for key : ").append(key).toString());
 		}
 
 		return paramValue;
@@ -118,7 +137,9 @@ public class AppParamsService extends AbstractCommonService implements IAppParam
 	@Override
 	public void delete(final String key) {
 		super.checkPermission(new UpdateAppParamsPermission());
-		LOG.debug("Deleting app_params key : " + key);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuilder().append("Deleting app_params key : ").append(key).toString());
+		}
 		SQL.update(SQLs.PARAMS_DELETE, new NVPair("key", key));
 	}
 

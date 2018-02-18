@@ -111,8 +111,11 @@ public class PatchSubscriptionRoleDocumentLink extends AbstractDataPatcher {
 					SQL.insert(SQLs.SUBSCRIPTION_INSERT, new NVPair("userId", userId),
 							new NVPair("subscriptionId", roleId), new NVPair("startDate", startDate));
 				} else {
-					LOG.debug("Subscription metadata already created for userId : " + userId
-							+ ", subscriptionId (roleId) " + roleId + ", StartDate " + startDate);
+					if (LOG.isDebugEnabled()) {
+						LOG.debug(new StringBuilder().append("Subscription metadata already created for userId : ")
+								.append(userId).append(", subscriptionId (roleId) ").append(roleId)
+								.append(", StartDate ").append(startDate).toString());
+					}
 				}
 			}
 

@@ -183,33 +183,43 @@ public class ApiService extends AbstractCommonService implements IApiService {
 		final String accesToken = formData.getAccessToken().getValue();
 		final String accountsEmail = formData.getAccountEmail().getValue();
 
-		LOG.debug("Loading credential by ID : " + oAuthId + ", and UserId : " + userId + " and accesToken : "
-				+ accesToken);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuffer().append("Loading credential by ID : ").append(oAuthId).append(", and UserId : ")
+					.append(userId).append(" and accesToken : ").append(accesToken).toString());
+		}
 
 		if (null == oAuthId && null != accesToken && !accesToken.isEmpty()) {
-			LOG.debug("No API ID but an accessToken, using accessToken to load api Data");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("No API ID but an accessToken, using accessToken to load api Data");
+			}
 			oAuthId = this.getApiIdByAccessToken(userId, accesToken);
 		}
 
 		if (null == oAuthId && null != accountsEmail && !accountsEmail.isEmpty()) {
-			LOG.debug("No API ID but an account's email found, using accountsEmail to load api Data");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("No API ID but an account's email found, using accountsEmail to load api Data");
+			}
 			oAuthId = this.getApiIdByAccountEmail(userId, accountsEmail);
 		}
 
 		if (null == oAuthId) {
-			LOG.debug("No API ID found for userId : " + userId);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(new StringBuffer().append("No API ID found for userId : ").append(userId).toString());
+			}
 			return formData;
 		} else {
 			formData.setApiCredentialId(oAuthId);
 		}
-
-		LOG.debug("Loading credential by ID : " + oAuthId);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuffer().append("Loading credential by ID : ").append(oAuthId).toString());
+		}
 
 		if (!ACCESS.check(new ReadApiPermission(oAuthId))) {
 			final Long currentUserId = super.userHelper.getCurrentUserId();
-			LOG.error("User :" + currentUserId + " (id : " + currentUserId + " try to load Api Data with Id : "
-					+ oAuthId + " (user : " + userId + ") wich belong to User " + userId
-					+ " But haven't 'ALL'/'RELATED' read permission");
+			LOG.error(new StringBuffer().append("User :").append(currentUserId).append(" (id : ").append(currentUserId)
+					.append(" try to load Api Data with Id : ").append(oAuthId).append(" (user : ").append(userId)
+					.append(") wich belong to User ").append(userId)
+					.append(" But haven't 'ALL'/'RELATED' read permission").toString());
 
 			super.throwAuthorizationFailed();
 		}
@@ -304,9 +314,11 @@ public class ApiService extends AbstractCommonService implements IApiService {
 	private ApiFormData store(final ApiFormData formData, final Boolean sendNotifications,
 			final Boolean useCreatedNotification) {
 		super.checkPermission(new UpdateApiPermission(formData.getApiCredentialId()));
-
-		LOG.debug("Storing API (" + formData.getApiCredentialId() + ") in DB for user : "
-				+ formData.getUserIdProperty().getValue() + " for provider : " + formData.getProvider().getValue());
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuffer().append("Storing API (").append(formData.getApiCredentialId())
+					.append(") in DB for user : ").append(formData.getUserIdProperty().getValue())
+					.append(" for provider : ").append(formData.getProvider().getValue()).toString());
+		}
 
 		if (this.isAfterCreateAddAccountEmailPatch()) {
 			SQL.update(SQLs.OAUHTCREDENTIAL_UPDATE, formData);
@@ -328,9 +340,12 @@ public class ApiService extends AbstractCommonService implements IApiService {
 	@Override
 	public void delete(final ApiFormData formData) {
 		super.checkPermission(new DeleteApiPermission(formData.getApiCredentialId()));
-
-		LOG.debug("Deleting API in DB for api_id : " + formData.getApiCredentialId() + "(user : "
-				+ formData.getUserIdProperty().getValue() + ") for provider : " + formData.getProvider().getValue());
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(
+					new StringBuffer().append("Deleting API in DB for api_id : ").append(formData.getApiCredentialId())
+							.append("(user : ").append(formData.getUserIdProperty().getValue())
+							.append(") for provider : ").append(formData.getProvider().getValue()).toString());
+		}
 
 		final ApiFormData dataBeforeDeletion = this.load(formData);
 
@@ -347,7 +362,10 @@ public class ApiService extends AbstractCommonService implements IApiService {
 
 	@Override
 	public Long getApiIdByAccessToken(final Long userId, final String accessToken) {
-		LOG.debug("Searching API Id  : " + userId + " with Acces Token : " + accessToken);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuffer().append("Searching API Id  : ").append(userId).append(" with Acces Token : ")
+					.append(accessToken).toString());
+		}
 		final ApiFormData formData = new ApiFormData();
 		formData.setUserId(userId);
 		formData.getAccessToken().setValue(accessToken);
@@ -359,16 +377,22 @@ public class ApiService extends AbstractCommonService implements IApiService {
 			super.throwAuthorizationFailed();
 		}
 		if (null == formData.getApiCredentialId()) {
-			LOG.warn("No API Id in DataBase for user :" + userId + " and accesToken : " + accessToken);
+			LOG.warn(new StringBuffer().append("No API Id in DataBase for user :").append(userId)
+					.append(" and accesToken : ").append(accessToken).toString());
 		} else {
-			LOG.debug("API id : " + formData.getApiCredentialId() + " for user :" + userId + " and accesToken : "
-					+ accessToken);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(new StringBuffer().append("API id : ").append(formData.getApiCredentialId())
+						.append(" for user :" + userId).append(" and accesToken : ").append(accessToken).toString());
+			}
 		}
 		return formData.getApiCredentialId();
 	}
 
 	private Long getApiIdByAccountEmail(final Long userId, final String accountsEmail) {
-		LOG.debug("Searching API Id  : " + userId + " with account's email : " + accountsEmail);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuffer().append("Searching API Id  : ").append(userId)
+					.append(" with account's email : ").append(accountsEmail).toString());
+		}
 		final ApiFormData formData = new ApiFormData();
 		formData.setUserId(userId);
 		formData.getAccountEmail().setValue(accountsEmail);
@@ -382,10 +406,14 @@ public class ApiService extends AbstractCommonService implements IApiService {
 			super.throwAuthorizationFailed();
 		}
 		if (null == formData.getApiCredentialId()) {
-			LOG.warn("No API Id in DataBase for user :" + userId + " and account's email : " + accountsEmail);
+			LOG.warn(new StringBuffer().append("No API Id in DataBase for user :").append(userId)
+					.append(" and account's email : ").append(accountsEmail).toString());
 		} else {
-			LOG.debug("API id : " + formData.getApiCredentialId() + " for user :" + userId + " and account's email : "
-					+ accountsEmail);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(new StringBuffer().append("API id : ").append(formData.getApiCredentialId())
+						.append(" for user :").append(userId).append(" and account's email : ").append(accountsEmail)
+						.toString());
+			}
 		}
 		return formData.getApiCredentialId();
 	}
@@ -398,7 +426,9 @@ public class ApiService extends AbstractCommonService implements IApiService {
 		// }
 
 		final Set<String> result = new HashSet<>();
-		LOG.debug("Loading all userId");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Loading all userId");
+		}
 
 		final Object[][] queryResult = SQL.select(SQLs.OAUHTCREDENTIAL_SELECT_ALL_USER_IDS, new ApiFormData());
 
@@ -415,7 +445,9 @@ public class ApiService extends AbstractCommonService implements IApiService {
 		// throw new VetoException(TEXTS.get("AuthorizationFailed"));
 		// }
 		final List<ApiFormData> result = new ArrayList<>();
-		LOG.debug("Loading all datas (only Binary Google Data)");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Loading all datas (only Binary Google Data)");
+		}
 
 		SQL.selectInto(SQLs.OAUHTCREDENTIAL_SELECT_GOOGLE_DATA + SQLs.OAUHTCREDENTIAL_SELECT_INTO, result);
 		return result;
@@ -439,7 +471,8 @@ public class ApiService extends AbstractCommonService implements IApiService {
 		final Long apiCredentialOwner = this.getOwner(apiCredentialId);
 
 		if (null == apiCredentialOwner) {
-			LOG.error("ApiCrentialId " + apiCredentialId + " as NO owner (user_id)");
+			LOG.error(new StringBuffer().append("ApiCrentialId ").append(apiCredentialId)
+					.append(" as NO owner (user_id)").toString());
 			return false;
 		} else if (apiCredentialOwner.equals(super.userHelper.getCurrentUserId())) {
 			return true;

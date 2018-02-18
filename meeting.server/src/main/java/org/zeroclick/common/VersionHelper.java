@@ -102,13 +102,17 @@ public class VersionHelper {
 				if (version != null) {
 					version = version.trim();
 					if (!version.isEmpty()) {
-						LOG.debug("SourceCode version loaded from pom.xml file");
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("SourceCode version loaded from pom.xml file");
+						}
 						pomXmlVersion = version;
 					}
 				}
 			}
 		} catch (final Exception e) {
-			LOG.debug("Exception while searching version in pom.xml file", e);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Exception while searching version in pom.xml file", e);
+			}
 		}
 		return pomXmlVersion;
 	}
@@ -125,11 +129,15 @@ public class VersionHelper {
 				.getResourceAsStream("/META-INF/maven/" + MAVEN_PACKAGE + "/" + MAVEN_ARTIFACT + "/pom.properties")) {
 			final String version = this.searchVersionFromProps(pomPropertiesIs);
 			if (!version.isEmpty()) {
-				LOG.debug("SourceCode version loaded from pom.properties file");
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("SourceCode version loaded from pom.properties file");
+				}
 				pomPropertiesVersion = version;
 			}
 		} catch (final Exception e) {
-			LOG.debug("Exception while searching version in pom.properties file", e);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Exception while searching version in pom.properties file", e);
+			}
 		}
 
 		return pomPropertiesVersion;
@@ -147,7 +155,9 @@ public class VersionHelper {
 		if (pkg != null) {
 			version = pkg.getImplementationVersion();
 			if (version == null) {
-				LOG.debug("SourceCode version loaded from standard getImplementationVersion()");
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("SourceCode version loaded from standard getImplementationVersion()");
+				}
 				javaApiVersion = pkg.getSpecificationVersion();
 			}
 		}
@@ -163,12 +173,16 @@ public class VersionHelper {
 			try (InputStream mvnArchiverPropsIs = Files.newInputStream(mvnArchiverProps)) {
 				final String version = this.searchVersionFromProps(mvnArchiverPropsIs);
 				if (!version.isEmpty()) {
-					LOG.debug("SourceCode version loaded from maven archiver pom.properties file");
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("SourceCode version loaded from maven archiver pom.properties file");
+					}
 					mavenArchiverPomPropertiesVersion = version;
 				}
 			}
 		} catch (final Exception e) {
-			LOG.debug("Exception while searching version in maven archiver pom.properties file", e);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Exception while searching version in maven archiver pom.properties file", e);
+			}
 		}
 		return mavenArchiverPomPropertiesVersion;
 	}
@@ -191,7 +205,9 @@ public class VersionHelper {
 				}
 			}
 		} catch (final Exception e) {
-			LOG.debug("Exception while resolbving projectFolder to search version in pom.xml file", e);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Exception while resolving projectFolder to search version in pom.xml file", e);
+			}
 		}
 
 		return path;
@@ -207,11 +223,15 @@ public class VersionHelper {
 
 				final String version = allPropos.getProperty("version", "").trim();
 				if (!version.isEmpty()) {
-					LOG.debug("SourceCode version loaded from pom.properties file");
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("SourceCode version loaded from pom.properties file");
+					}
 					propertiesVersion = version;
 				}
 			} catch (final IOException e) {
-				LOG.debug("Exception while loading properties from InputTream :" + propsInputStream, e);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Exception while loading properties from InputTream :" + propsInputStream, e);
+				}
 			}
 		}
 		return propertiesVersion;
