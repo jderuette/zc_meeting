@@ -307,7 +307,7 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 			for (final CalendarConfigTableRowData calendar : configuredCalendars.getCalendarConfigTable().getRows()) {
 				@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 				final StringBuilder calendarId = new StringBuilder();
-				calendarId.append(calendar.getUserId()).append('_').append(calendar.getExternalId()).append(' ')
+				calendarId.append(calendar.getUserId()).append('_').append(calendar.getExternalId()).append('_')
 						.append(calendar.getOAuthCredentialId());
 
 				if (!calendars.keySet().contains(calendarId.toString())) {

@@ -499,7 +499,7 @@ public class GoogleApiHelper {
 					final List<CalendarListEntry> calendarItems = calendarsList.getItems();
 					for (final CalendarListEntry calendarItem : calendarItems) {
 						final StringBuilder calendarId = new StringBuilder();
-						calendarId.append(userId).append(' ').append(calendarItem.getId()).append(' ')
+						calendarId.append(userId).append('_').append(calendarItem.getId()).append('_')
 								.append(calendarService.getMetaData().getApiCredentialId());
 						calendars.put(calendarId.toString(), this.toCalendarConfig(calendarItem, userId,
 								calendarService.getMetaData().getApiCredentialId()));
