@@ -20,12 +20,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.AbstractCommonService;
 import org.zeroclick.comon.date.DateHelper;
-import org.zeroclick.configuration.shared.slot.CreateSlotPermission;
 import org.zeroclick.configuration.shared.slot.DayDurationFormData;
 import org.zeroclick.configuration.shared.slot.DayDurationModifiedNotification;
 import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.configuration.shared.slot.ReadSlotPermission;
-import org.zeroclick.configuration.shared.slot.SlotFormData;
 import org.zeroclick.configuration.shared.slot.SlotTablePageData;
 import org.zeroclick.configuration.shared.slot.SlotsFormData;
 import org.zeroclick.configuration.shared.slot.SlotsFormData.SlotsTable.SlotsTableRowData;
@@ -41,32 +39,6 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 	@Override
 	protected Logger getLog() {
 		return LOG;
-	}
-
-	@Override
-	public SlotFormData prepareCreate(final SlotFormData formData) {
-		super.checkPermission(new CreateSlotPermission());
-		// TODO [djer] add business logic here.
-		return formData;
-	}
-
-	@Override
-	public SlotFormData create(final SlotFormData formData) {
-		super.checkPermission(new CreateSlotPermission());
-		// TODO [djer] add business logic here.
-		return formData;
-	}
-
-	@Override
-	public SlotFormData load(final SlotFormData formData) {
-		// Filter in select (currentUser) check if user can at least read own
-		if (ACCESS.getLevel(new ReadSlotPermission((Long) null)) >= ReadSlotPermission.LEVEL_OWN) {
-			super.throwAuthorizationFailed();
-		}
-
-		SQL.selectInto(SQLs.SLOT_SELECT + SQLs.SLOT_SELECT_FILTER_USER_ID + SQLs.SLOT_PAGE_SELECT_INTO, formData,
-				new NVPair("node", formData), new NVPair("currentUser", this.userHelper.getCurrentUserId()));
-		return formData;
 	}
 
 	private String getSlotCode(final Long slotId) {
@@ -105,13 +77,6 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 		// formData, new NVPair("dayDurationId", formData.getDayDurationId()));
 
 		SQL.selectInto(sqlBuilder.toString(), formData, new NVPair("dayDurationId", formData.getDayDurationId()));
-		return formData;
-	}
-
-	@Override
-	public SlotFormData store(final SlotFormData formData) {
-		super.checkPermission(new UpdateSlotPermission());
-		// TODO [djer] add business logic here.
 		return formData;
 	}
 

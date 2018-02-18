@@ -9,14 +9,6 @@ import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 @TunnelToServer
 public interface ISlotService extends IService {
 
-	SlotFormData prepareCreate(SlotFormData formData);
-
-	SlotFormData create(SlotFormData formData);
-
-	SlotFormData load(SlotFormData formData);
-
-	SlotFormData store(SlotFormData formData);
-
 	SlotsFormData store(SlotsFormData formData);
 
 	SlotTablePageData getSlotTableData(SearchFilter filter);
@@ -34,14 +26,6 @@ public interface ISlotService extends IService {
 	Object[][] getDayDurations(Long slotId);
 
 	Object[][] getDayDurationsLight(Long slotId);
-
-	// /**
-	// * retrieve CURRENT USER list of daySuration for the Slot name
-	// *
-	// * @param slotName
-	// * @return
-	// */
-	// Object[][] getDayDurations(String slotName);
 
 	List<DayDurationFormData> getDayDurations(String slotName, Long userId);
 
