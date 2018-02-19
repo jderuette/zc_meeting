@@ -501,7 +501,8 @@ public interface SQLs {
 	String PARAMS_SELECT_FILTER_LOOKUP = " <key> AND key=:key</key><text> AND value LIKE :text</text> <all></all>";
 	String PARAMS_SELECT_FILTER_LOOKUP_CATEGORY = " <key> AND category=:key</key><text> AND category LIKE :text</text> <all></all>";
 
-	String PARAMS_SELECT_INTO = " INTO :paramId, :key, :category, :value";
+	String PARAMS_SELECT_INTO_WITH_CATEGORY = " INTO :paramId, :key, :category, :value";
+	String PARAMS_SELECT_INTO = " INTO :paramId, :key, :value";
 
 	String PARAMS_INSERT = "INSERT INTO APP_PARAMS (param_id) VALUES (:paramId)";
 
@@ -513,7 +514,7 @@ public interface SQLs {
 	String PARAMS_INSERT_VALUES_DATAVERSION = " VALUES(nextval('" + PatchCreateParamsTable.APP_PARAMS_ID_SEQ
 			+ "'), 'dataVersion', '1.0.0')";
 
-	String PARAMS_DELETE = "DELETE FROM APP_PARAMS WHERE key=:key";
+	String PARAMS_DELETE = "DELETE FROM APP_PARAMS WHERE param_id=:paramId";
 
 	String PARAMS_DROP_TABLE = "DROP TABLE APP_PARAMS";
 
