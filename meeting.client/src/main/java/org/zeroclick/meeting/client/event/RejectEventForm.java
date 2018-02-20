@@ -468,29 +468,24 @@ public class RejectEventForm extends AbstractForm {
 					if (null != RejectEventForm.this.getExternalIdOrganizer() && null != ModifyHandler.this.hostGCalSrv
 							&& ModifyHandler.this.hostGCalSrv.size() > 0) {
 
-						LOG.info(this.buildRejectLog("Deleting", RejectEventForm.this.getEventId(),
-								RejectEventForm.this.getExternalIdOrganizer(), RejectEventForm.this.getOrganizer()));
 						final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+						final String organizerCalendarId = googleHelper
+								.getUserCreateEventCalendar(RejectEventForm.this.getOrganizer());
+
+						LOG.info(this.buildRejectLog("Deleting", RejectEventForm.this.getEventId(),
+								RejectEventForm.this.getExternalIdOrganizer(), organizerCalendarId,
+								RejectEventForm.this.getOrganizer()));
+
 						Boolean eventDeleted = Boolean.FALSE;
 
 						for (final ApiCalendar hostGCalSrv : ModifyHandler.this.hostGCalSrv) {
-							try {
-								hostGCalSrv.getCalendar().events()
-										.delete(googleHelper
-												.getUserCreateEventCalendar(RejectEventForm.this.getOrganizer()),
-												RejectEventForm.this.getExternalIdOrganizer())
-										.execute();
-								eventDeleted = Boolean.TRUE;
-							} catch (final IOException e) {
-								LOG.warn(this.buildRejectLog("Error while deleting", RejectEventForm.this.getEventId(),
-										RejectEventForm.this.getExternalIdOrganizer(),
-										RejectEventForm.this.getOrganizer()), e);
-							}
+							eventDeleted = googleHelper.delete(organizerCalendarId,
+									RejectEventForm.this.getExternalIdOrganizer(), hostGCalSrv);
 						}
 
 						if (!eventDeleted) {
 							LOG.warn(this.buildRejectLog("Error while deleting", RejectEventForm.this.getEventId(),
-									RejectEventForm.this.getExternalIdOrganizer(),
+									RejectEventForm.this.getExternalIdOrganizer(), organizerCalendarId,
 									RejectEventForm.this.getOrganizer()));
 							throw new VetoException(TEXTS.get("zc.meeting.error.deletingEvent"));
 						}
@@ -505,10 +500,11 @@ public class RejectEventForm extends AbstractForm {
 				}
 
 				private String buildRejectLog(final String prefix, final Long eventId, final String externalId,
-						final Long userId) {
+						final String calendarId, final Long userId) {
 					final StringBuilder builder = new StringBuilder(75);
 					builder.append(prefix).append(" (Google) event : Id ").append(eventId).append(", external ID : ")
-							.append(externalId).append("for user : ").append(userId);
+							.append(externalId).append(" In Calendar :").append(calendarId).append(" for user : ")
+							.append(userId);
 					return builder.toString();
 				}
 			}, Jobs.newInput().withName("Refusing event {}", RejectEventForm.this.getEventId())

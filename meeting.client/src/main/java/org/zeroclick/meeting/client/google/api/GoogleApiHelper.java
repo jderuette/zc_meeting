@@ -78,6 +78,7 @@ import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
@@ -624,6 +625,28 @@ public class GoogleApiHelper {
 			form.startModify();
 			form.waitFor();
 		}
+	}
+
+	public Boolean delete(final String calendarId, final String eventId, final ApiCalendar apiCredential) {
+		Boolean eventDeleted = Boolean.FALSE;
+		try {
+			apiCredential.getCalendar().events().delete(calendarId, eventId).execute();
+			eventDeleted = Boolean.TRUE;
+
+		} catch (final GoogleJsonResponseException gjre) {
+			if (gjre.getStatusCode() == 410) { // 410 = Resource has been
+												// deleted
+				LOG.info("Trying to delete an already deleted Event : " + eventId + " in calendar : " + eventId);
+				eventDeleted = Boolean.TRUE;
+			} else {
+				LOG.error("Error while deleting event", gjre);
+				eventDeleted = Boolean.FALSE;
+			}
+		} catch (final IOException ioe) {
+			LOG.error("Error while deleting event", ioe);
+			eventDeleted = Boolean.FALSE;
+		}
+		return eventDeleted;
 	}
 
 	public String aslog(final Event event) {

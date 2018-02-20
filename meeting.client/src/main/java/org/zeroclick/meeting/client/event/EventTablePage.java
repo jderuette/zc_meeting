@@ -953,13 +953,16 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		private Event createEvent(final ZonedDateTime startDate, final ZonedDateTime endDate, final Long forUserId,
 				final String withEmail, final String subject, final String location,
 				final Boolean guestAutoAcceptMeeting) throws IOException {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug(new StringBuilder().append("Creating (Google) Event from : ").append(startDate).append(" to ")
-						.append(endDate).append(", for :").append(forUserId).append(" (attendee :").append(withEmail)
-						.append(", autoAccept? ").append(guestAutoAcceptMeeting).append(")").toString());
-			}
 
 			final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+			final String createdEventCalendarId = googleHelper.getUserCreateEventCalendar(forUserId);
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(new StringBuilder().append("Creating (Google) Event from : ").append(startDate).append(" to ")
+						.append(endDate).append(", for :").append(forUserId).append("in Calendar : ")
+						.append(createdEventCalendarId).append(" (attendee :").append(withEmail)
+						.append(", autoAccept? ").append(guestAutoAcceptMeeting).append(")").toString());
+			}
 
 			Calendar googleCalendarService;
 
@@ -978,7 +981,6 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			}
 
 			final String EnvDisplay = new ApplicationEnvProperty().displayAsText();
-			final String createdEventCalendarId = googleHelper.getUserCreateEventCalendar(forUserId);
 
 			final Event newEvent = new Event();
 			newEvent.setStart(googleHelper.toEventDateTime(startDate));

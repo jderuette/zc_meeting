@@ -16,13 +16,12 @@ limitations under the License.
 package org.zeroclick.common;
 
 import org.eclipse.scout.rt.platform.exception.ProcessingException;
-import org.eclipse.scout.rt.shared.data.form.AbstractFormData;
 
 /**
  * @author djer
  *
  */
-public interface IDataCache<K, V extends AbstractFormData> {
+public interface IDataCache<K, V> {
 
 	public V loadForCache(K key);
 

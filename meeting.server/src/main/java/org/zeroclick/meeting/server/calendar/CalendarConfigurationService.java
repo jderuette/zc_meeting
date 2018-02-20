@@ -9,11 +9,14 @@ import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.holders.NVPair;
 import org.eclipse.scout.rt.server.clientnotification.ClientNotificationRegistry;
 import org.eclipse.scout.rt.server.jdbc.SQL;
+import org.eclipse.scout.rt.shared.cache.ICache;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.AbstractCommonService;
+import org.zeroclick.common.AbstractDataCache;
+import org.zeroclick.common.AbstractPageDataDataCache;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationCreatedNotification;
@@ -38,6 +41,49 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 	@Override
 	protected Logger getLog() {
 		return LOG;
+	}
+
+	private final AbstractDataCache<Long, CalendarConfigurationFormData> dataCache = new AbstractDataCache<Long, CalendarConfigurationFormData>() {
+		@Override
+		public CalendarConfigurationFormData loadForCache(final Long calendarConfigId) {
+			final CalendarConfigurationFormData calendarConfigurationFormData = new CalendarConfigurationFormData();
+			calendarConfigurationFormData.getCalendarConfigurationId().setValue(calendarConfigId);
+			return CalendarConfigurationService.this.loadForCache(calendarConfigurationFormData);
+		}
+	};
+
+	private final AbstractPageDataDataCache<Long, CalendarConfigurationTablePageData> dataCacheByUserId = new AbstractPageDataDataCache<Long, CalendarConfigurationTablePageData>() {
+		@Override
+		public CalendarConfigurationTablePageData loadForCache(final Long userId) {
+			return CalendarConfigurationService.this.loadForCacheByUserId(userId);
+		}
+	};
+
+	private ICache<Long, CalendarConfigurationFormData> getDataCache() {
+		return this.dataCache.getCache();
+	}
+
+	private ICache<Long, CalendarConfigurationTablePageData> getDataCacheByUser() {
+		return this.dataCacheByUserId.getCache();
+	}
+
+	protected CalendarConfigurationTablePageData loadForCacheByUserId(final Long userId) {
+		final CalendarConfigurationTablePageData pageData = new CalendarConfigurationTablePageData();
+
+		final String sql = SQLs.CALENDAR_CONFIG_PAGE_SELECT + SQLs.CALENDAR_CONFIG_FILTER_USER_ID
+				+ SQLs.CALENDAR_CONFIG_PAGE_SELECT_INTO;
+
+		SQL.selectInto(sql, new NVPair("page", pageData), new NVPair("userId", userId));
+
+		return pageData;
+	}
+
+	protected CalendarConfigurationFormData loadForCache(final CalendarConfigurationFormData formData) {
+		// permission check done by Load
+		final String sql = SQLs.CALENDAR_CONFIG_SELECT + SQLs.GENERIC_WHERE_FOR_SECURE_AND
+				+ SQLs.CALENDAR_CONFIG_FILTER_ID + SQLs.CALENDAR_CONFIG_SELECT_INTO;
+		SQL.selectInto(sql, formData);
+		return formData;
 	}
 
 	@Override
@@ -140,22 +186,13 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 
 	@Override
 	public CalendarConfigurationFormData load(final CalendarConfigurationFormData formData) {
-		final Long apiId = formData.getOAuthCredentialId().getValue();
-		// apiId is optional, if provided check permission BEFORE request
-		if (null != formData.getOAuthCredentialId().getValue()) {
-			this.checkPermission(new ReadCalendarConfigurationPermission(apiId));
+		CalendarConfigurationFormData cachedData = this.getDataCache()
+				.get(formData.getCalendarConfigurationId().getValue());
+		if (null == cachedData) {
+			// avoid NPE
+			cachedData = formData;
 		}
-
-		final String sql = SQLs.CALENDAR_CONFIG_SELECT + SQLs.GENERIC_WHERE_FOR_SECURE_AND
-				+ SQLs.CALENDAR_CONFIG_FILTER_ID + SQLs.CALENDAR_CONFIG_SELECT_INTO;
-
-		SQL.selectInto(sql, formData);
-
-		// check permission, required if no apiId provided in input data, else
-		// double check (also required if apiId provided is not the one to the
-		// clalendarConfigId)
-		this.checkPermission(new ReadCalendarConfigurationPermission(formData.getOAuthCredentialId().getValue()));
-		return formData;
+		return cachedData;
 	}
 
 	@Override
@@ -189,6 +226,9 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		if (!duringCreate) {
 			this.sendModifiedNotifications(formData);
 		}
+
+		this.dataCache.clearCache(formData.getCalendarConfigurationId().getValue());
+		this.dataCacheByUserId.clearCache(formData.getUserId().getValue());
 
 		return formData;
 	}
@@ -361,28 +401,41 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 
 	private Long getCalendarConfigId(final CalendarConfigurationFormData formData) {
 		Long calendarConfigId = null;
-		final String sql = SQLs.CALENDAR_CONFIG_SELECT_ID + SQLs.GENERIC_WHERE_FOR_SECURE_AND
-				+ SQLs.CALENDAR_CONFIG_FILTER_USER_ID + SQLs.CALENDAR_CONFIG_FILTER_EXTERNAL_ID
-				+ SQLs.CALENDAR_CONFIG_FILTER_OAUTH_CREDENTIAL_ID_ID;
+		final CalendarConfigurationTablePageData pageData = this.getDataCacheByUser()
+				.get(formData.getUserId().getValue());
 
-		final Object[][] data = SQL.select(sql, formData);
-		if (null != data && data.length > 0 && data[0] != null && data[0].length > 0) {
-			calendarConfigId = (Long) data[0][0];
+		if (pageData.getRowCount() > 0) {
+			for (final CalendarConfigurationTableRowData calendarConfig : pageData.getRows()) {
+				if (ACCESS.check(new ReadCalendarConfigurationPermission(calendarConfig.getOAuthCredentialId()))) {
+					if (calendarConfig.getExternalId().equals(formData.getExternalId().getValue())) {
+						calendarConfigId = calendarConfig.getCalendarConfigurationId();
+						break;
+					}
+				} else {
+					LOG.warn("Calendar configuration : " + calendarConfig.getCalendarConfigurationId()
+							+ " ignored in configured list because current user don't have Read permission");
+				}
+			}
 		}
 		return calendarConfigId;
 	}
 
 	protected Long getCalendarIdToStoreEvents(final Long userId) {
 		Long calendarConfigId = null;
-		final CalendarConfigurationFormData formData = new CalendarConfigurationFormData();
-		formData.getUserId().setValue(userId);
+		final CalendarConfigurationTablePageData pageData = this.getDataCacheByUser().get(userId);
 
-		final String sql = SQLs.CALENDAR_CONFIG_SELECT_ID + SQLs.GENERIC_WHERE_FOR_SECURE_AND
-				+ SQLs.CALENDAR_CONFIG_FILTER_USER_ID + SQLs.CALENDAR_CONFIG_FILTER_ADD_EVENT;
-
-		final Object[][] data = SQL.select(sql, formData);
-		if (null != data && data.length > 0 && data[0] != null && data[0].length > 0) {
-			calendarConfigId = (Long) data[0][0];
+		if (pageData.getRowCount() > 0) {
+			for (final CalendarConfigurationTableRowData calendarConfig : pageData.getRows()) {
+				if (ACCESS.check(new ReadCalendarConfigurationPermission(calendarConfig.getOAuthCredentialId()))) {
+					if (calendarConfig.getAddEventToCalendar()) {
+						calendarConfigId = calendarConfig.getCalendarConfigurationId();
+						break;
+					}
+				} else {
+					LOG.warn("Calendar configuration : " + calendarConfig.getCalendarConfigurationId()
+							+ " ignored in configured list because current user don't have Read permission");
+				}
+			}
 		}
 
 		return calendarConfigId;
@@ -391,18 +444,16 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 	@Override
 	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 	public Set<AbstractCalendarConfigurationTableRowData> getUsedCalendars(final Long userId) {
-		final CalendarConfigurationTablePageData pageData = new CalendarConfigurationTablePageData();
 		final Set<AbstractCalendarConfigurationTableRowData> configuredCalendars = new HashSet<>();
 
-		final String sql = SQLs.CALENDAR_CONFIG_PAGE_SELECT + SQLs.CALENDAR_CONFIG_FILTER_CURRENT_USER
-				+ SQLs.CALENDAR_CONFIG_FILTER_PROCESSED + SQLs.CALENDAR_CONFIG_PAGE_SELECT_INTO;
-
-		SQL.selectInto(sql, new NVPair("page", pageData), new NVPair("currentUser", userId));
+		final CalendarConfigurationTablePageData pageData = this.getDataCacheByUser().get(userId);
 
 		if (pageData.getRowCount() > 0) {
 			for (final CalendarConfigurationTableRowData calendarConfig : pageData.getRows()) {
 				if (ACCESS.check(new ReadCalendarConfigurationPermission(calendarConfig.getOAuthCredentialId()))) {
-					configuredCalendars.add(calendarConfig);
+					if (calendarConfig.getProcess()) {
+						configuredCalendars.add(calendarConfig);
+					}
 				} else {
 					LOG.warn("Calendar configuration : " + calendarConfig.getCalendarConfigurationId()
 							+ " ignored in configured list because current user don't have Read permission");

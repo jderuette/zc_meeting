@@ -61,8 +61,15 @@ public class ApiService extends AbstractCommonService implements IApiService {
 		final StringBuilder sql = new StringBuilder();
 		sql.append(SQLs.OAUHTCREDENTIAL_PAGE_SELECT);
 
-		if (!displayAllForAdmin || null == userId
-				&& ACCESS.getLevel(new ReadApiPermission((Long) null)) != ReadApiPermission.LEVEL_ALL) {
+		final Boolean isAdmin = ACCESS.getLevel(new ReadApiPermission((Long) null)) == ReadApiPermission.LEVEL_ALL;
+		final Boolean standardUserCanAccesUserId = ACCESS
+				.getLevel(new ReadApiPermission(userId)) >= ReadApiPermission.LEVEL_RELATED;
+
+		if (isAdmin) {
+			if (null == userId && !displayAllForAdmin) {
+				userId = super.userHelper.getCurrentUserId();
+			}
+		} else if (!standardUserCanAccesUserId) {
 			userId = super.userHelper.getCurrentUserId();
 		}
 
