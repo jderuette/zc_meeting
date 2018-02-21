@@ -28,14 +28,13 @@ import org.eclipse.scout.rt.shared.cache.ICache;
 import org.eclipse.scout.rt.shared.cache.ICacheBuilder;
 import org.eclipse.scout.rt.shared.cache.ICacheValueResolver;
 import org.eclipse.scout.rt.shared.cache.KeyCacheEntryFilter;
-import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData;
+import org.eclipse.scout.rt.shared.data.page.AbstractTablePageData;
 
 /**
  * @author djer
  *
  */
-public abstract class AbstractPageDataDataCache<K, V extends AbstractCalendarConfigurationTablePageData>
-		implements IDataCache<K, V> {
+public abstract class AbstractPageDataDataCache<K, V extends AbstractTablePageData> implements IDataCache<K, V> {
 
 	protected ICache<K, V> dataCache;
 

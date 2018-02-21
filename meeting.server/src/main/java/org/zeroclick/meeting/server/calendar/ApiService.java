@@ -12,11 +12,14 @@ import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.holders.NVPair;
 import org.eclipse.scout.rt.server.clientnotification.ClientNotificationRegistry;
 import org.eclipse.scout.rt.server.jdbc.SQL;
+import org.eclipse.scout.rt.shared.cache.ICache;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.AbstractCommonService;
+import org.zeroclick.common.AbstractDataCache;
+import org.zeroclick.common.AbstractPageDataDataCache;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
 import org.zeroclick.configuration.shared.api.ApiDeletedNotification;
 import org.zeroclick.configuration.shared.api.ApiModifiedNotification;
@@ -44,22 +47,76 @@ public class ApiService extends AbstractCommonService implements IApiService {
 		return LOG;
 	}
 
+	private final AbstractDataCache<Long, ApiFormData> dataCache = new AbstractDataCache<Long, ApiFormData>() {
+		@Override
+		public ApiFormData loadForCache(final Long apiCredentailId) {
+			final ApiFormData apiFormData = new ApiFormData();
+			apiFormData.setApiCredentialId(apiCredentailId);
+			return ApiService.this.loadForCache(apiFormData);
+		}
+	};
+
+	private final AbstractPageDataDataCache<Long, ApiTablePageData> dataCacheByUserId = new AbstractPageDataDataCache<Long, ApiTablePageData>() {
+		@Override
+		public ApiTablePageData loadForCache(final Long userId) {
+			return ApiService.this.loadForCacheByUserId(userId);
+		}
+	};
+
+	private ICache<Long, ApiFormData> getDataCache() {
+		return this.dataCache.getCache();
+	}
+
+	private ICache<Long, ApiTablePageData> getDataCacheByUser() {
+		return this.dataCacheByUserId.getCache();
+	}
+
+	protected ApiFormData loadForCache(final ApiFormData apiFormData) {
+		final ApiFormData result = new ApiFormData();
+		result.setApiCredentialId(apiFormData.getApiCredentialId());
+		SQL.selectInto(
+				SQLs.OAUHTCREDENTIAL_SELECT + SQLs.OAUHTCREDENTIAL_FILTER_OAUTH_ID + SQLs.OAUHTCREDENTIAL_SELECT_INTO,
+				result);
+
+		if (null == result.getProviderData()) {
+			// force load BLOB data
+			final Object[][] apiProvierData = SQL.select(
+					SQLs.OAUHTCREDENTIAL_SELECT_PROVIDER_DATA_ONLY + SQLs.OAUHTCREDENTIAL_FILTER_OAUTH_ID,
+					new NVPair("apiCredentialId", apiFormData.getApiCredentialId()));
+			if (apiProvierData.length == 1) {
+				result.setProviderData((byte[]) apiProvierData[0][0]);
+			}
+		}
+		return result;
+	}
+
+	protected ApiTablePageData loadForCacheByUserId(final Long userId) {
+		final ApiTablePageData pageData = new ApiTablePageData();
+
+		final StringBuilder sql = new StringBuilder();
+		sql.append(SQLs.OAUHTCREDENTIAL_PAGE_SELECT);
+
+		if (null != userId) {
+			sql.append(SQLs.OAUHTCREDENTIAL_PAGE_SELECT_FILTER_USER);
+		}
+
+		sql.append(SQLs.OAUHTCREDENTIAL_PAGE_DATA_SELECT_INTO);
+		SQL.selectInto(sql.toString(), new NVPair("page", pageData), new NVPair("currentUser", userId));
+
+		return pageData;
+	}
+
 	@Override
 	public ApiTablePageData getApiTableData(final SearchFilter filter) {
 		return this.getApiTableData(filter, false);
 	}
 
 	private ApiTablePageData getApiTableData(final SearchFilter filter, final boolean displayAllForAdmin) {
-		final ApiTablePageData pageData = new ApiTablePageData();
-
 		Long userId = null;
 
 		if (null != filter && null != filter.getFormData() && null != filter.getFormData().getPropertyById("userId")) {
 			userId = (Long) filter.getFormData().getPropertyById("userId").getValue();
 		}
-
-		final StringBuilder sql = new StringBuilder();
-		sql.append(SQLs.OAUHTCREDENTIAL_PAGE_SELECT);
 
 		final Boolean isAdmin = ACCESS.getLevel(new ReadApiPermission((Long) null)) == ReadApiPermission.LEVEL_ALL;
 		final Boolean standardUserCanAccesUserId = ACCESS
@@ -73,18 +130,25 @@ public class ApiService extends AbstractCommonService implements IApiService {
 			userId = super.userHelper.getCurrentUserId();
 		}
 
-		if (null != userId) {
-			sql.append(SQLs.OAUHTCREDENTIAL_PAGE_SELECT_FILTER_USER);
+		if (!isAdmin && !displayAllForAdmin && null == userId) {
+			LOG.warn("Trying to get APIs of null userId from a non admin or not listing ALL API (as admin) ");
+			userId = super.userHelper.getCurrentUserId();
 		}
 
-		sql.append(SQLs.OAUHTCREDENTIAL_PAGE_DATA_SELECT_INTO);
-		SQL.selectInto(sql.toString(), new NVPair("page", pageData), new NVPair("currentUser", userId));
+		ApiTablePageData apis = null;
 
-		if (pageData.getRowCount() > 0) {
+		if (null == userId) {
+			// load for admin. Cached does not handle null "key"
+			apis = this.loadForCacheByUserId(null);
+		} else {
+			apis = this.getDataCacheByUser().get(userId);
+		}
+
+		if (apis.getRowCount() > 0) {
 			// Local cache to avoid multiple validation of same apiCredentialId
 			final Map<Long, Boolean> alreadyCheckReadAcces = new HashMap<>();
 			// Post check permission base on OAuthId
-			for (final ApiTableRowData row : pageData.getRows()) {
+			for (final ApiTableRowData row : apis.getRows()) {
 				if (null == alreadyCheckReadAcces.get(row.getApiCredentialId())) {
 					@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 					final Boolean canRead = ACCESS.check(new ReadApiPermission(row.getApiCredentialId()));
@@ -94,12 +158,12 @@ public class ApiService extends AbstractCommonService implements IApiService {
 					LOG.warn("User : " + super.userHelper.getCurrentUserId() + " try to access UserApi : "
 							+ row.getApiCredentialId() + " belonging to user : " + row.getUserId()
 							+ " but hasen't acces. Silently removing this (api) row");
-					pageData.removeRow(row);
+					apis.removeRow(row);
 				}
 			}
 		}
 
-		return pageData;
+		return apis;
 	}
 
 	@Override
@@ -135,9 +199,10 @@ public class ApiService extends AbstractCommonService implements IApiService {
 
 		Boolean isNew = Boolean.FALSE;
 
-		final Object[][] duplicateApiByEmailAccount = SQL.select(SQLs.OAUHTCREDENTIAL_SELECT_BY_ACCOUNT_EMAIL,
-				formData);
-		if (null == duplicateApiByEmailAccount || duplicateApiByEmailAccount.length == 0) {
+		final Long existingApiByEmailAccount = this.getApiIdByAccountEmail(formData.getUserId(),
+				formData.getAccountEmail().getValue());
+
+		if (null == existingApiByEmailAccount) {
 			LOG.info("Creating new API in DB for user : " + formData.getUserIdProperty().getValue()
 					+ " with account email : " + formData.getAccountEmail().getValue() + " for provider : "
 					+ formData.getProvider().getValue());
@@ -231,21 +296,13 @@ public class ApiService extends AbstractCommonService implements IApiService {
 			super.throwAuthorizationFailed();
 		}
 
-		SQL.selectInto(
-				SQLs.OAUHTCREDENTIAL_SELECT + SQLs.OAUHTCREDENTIAL_FILTER_OAUTH_ID + SQLs.OAUHTCREDENTIAL_SELECT_INTO,
-				formData);
-
-		if (loadProviderData && null == formData.getProviderData()) {
-			// force load BLOB data
-			final Object[][] apiProvierData = SQL.select(
-					SQLs.OAUHTCREDENTIAL_SELECT_PROVIDER_DATA_ONLY + SQLs.OAUHTCREDENTIAL_FILTER_OAUTH_ID,
-					new NVPair("apiCredentialId", oAuthId));
-			if (apiProvierData.length == 1) {
-				formData.setProviderData((byte[]) apiProvierData[0][0]);
-			}
+		ApiFormData cachedData = this.getDataCache().get(formData.getApiCredentialId());
+		if (null == cachedData) {
+			// avoid NPE
+			cachedData = formData;
 		}
 
-		return formData;
+		return cachedData;
 	}
 
 	private ApiFormData loadByAccountsEmail(final Long userId, final String accountEmail) {
@@ -298,17 +355,19 @@ public class ApiService extends AbstractCommonService implements IApiService {
 			exstingCredentialId.getExpirationTimeMilliseconds()
 					.setValue(newDataForm.getExpirationTimeMilliseconds().getValue());
 			exstingCredentialId.getProvider().setValue(newDataForm.getProvider().getValue());
+			exstingCredentialId.getAccountEmail().setValue(accountEmail);
 
 			// ==> Only update existing API
 			updatedData = this.store(exstingCredentialId, Boolean.TRUE, Boolean.FALSE);
 
-			// ==> Remove the "new duplicate" credential
+			// ==> Remove the "new duplicate" credential (created during "init"
+			// of googleStore.savecCredential
 			this.delete(newDataForm);
 		} else {
-			final ApiFormData apiDataAfterCredentialStored = this.load(newDataForm.getApiCredentialId());
+			final ApiFormData existingCredentialStored = this.load(newDataForm.getApiCredentialId());
 
-			apiDataAfterCredentialStored.getAccountEmail().setValue(accountEmail);
-			updatedData = this.store(apiDataAfterCredentialStored, Boolean.TRUE, Boolean.TRUE);
+			existingCredentialStored.getAccountEmail().setValue(accountEmail);
+			updatedData = this.store(existingCredentialStored, Boolean.TRUE, Boolean.TRUE);
 		}
 
 		return updatedData;
@@ -341,6 +400,8 @@ public class ApiService extends AbstractCommonService implements IApiService {
 			}
 		}
 
+		this.clearCaches(formData);
+
 		return formData;
 	}
 
@@ -365,6 +426,8 @@ public class ApiService extends AbstractCommonService implements IApiService {
 
 		// the formData BEFORE deletion
 		this.sendDeletedNotifications(dataBeforeDeletion);
+
+		this.clearCaches(formData);
 	}
 
 	@Override
@@ -373,26 +436,22 @@ public class ApiService extends AbstractCommonService implements IApiService {
 			LOG.debug(new StringBuffer().append("Searching API Id  : ").append(userId).append(" with Acces Token : ")
 					.append(accessToken).toString());
 		}
-		final ApiFormData formData = new ApiFormData();
-		formData.setUserId(userId);
-		formData.getAccessToken().setValue(accessToken);
-		SQL.selectInto(SQLs.OAUHTCREDENTIAL_SELECT_API_ID + SQLs.OAUHTCREDENTIAL_FILTER_USER_ID
-				+ SQLs.OAUHTCREDENTIAL_FILTER_ACESS_TOKEN + SQLs.OAUHTCREDENTIAL_SELECT_INTO_API_ID, formData);
 
-		if (null != formData.getApiCredentialId()
-				&& !ACCESS.check(new ReadApiPermission(formData.getApiCredentialId()))) {
-			super.throwAuthorizationFailed();
-		}
-		if (null == formData.getApiCredentialId()) {
-			LOG.warn(new StringBuffer().append("No API Id in DataBase for user :").append(userId)
-					.append(" and accesToken : ").append(accessToken).toString());
-		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug(new StringBuffer().append("API id : ").append(formData.getApiCredentialId())
-						.append(" for user :" + userId).append(" and accesToken : ").append(accessToken).toString());
+		final ApiTablePageData cachedData = this.getDataCacheByUser().get(userId);
+
+		ApiTableRowData matchingApi = null;
+		if (null != cachedData && cachedData.getRowCount() > 0) {
+			for (final ApiTableRowData cachedApi : cachedData.getRows()) {
+				if (cachedApi.getAccessToken().equals(accessToken)) {
+					matchingApi = cachedApi;
+					break;
+				}
 			}
 		}
-		return formData.getApiCredentialId();
+
+		this.checkApiAcces(matchingApi);
+
+		return matchingApi.getApiCredentialId();
 	}
 
 	private Long getApiIdByAccountEmail(final Long userId, final String accountsEmail) {
@@ -400,29 +459,50 @@ public class ApiService extends AbstractCommonService implements IApiService {
 			LOG.debug(new StringBuffer().append("Searching API Id  : ").append(userId)
 					.append(" with account's email : ").append(accountsEmail).toString());
 		}
-		final ApiFormData formData = new ApiFormData();
-		formData.setUserId(userId);
-		formData.getAccountEmail().setValue(accountsEmail);
-		SQL.selectInto(
-				SQLs.OAUHTCREDENTIAL_SELECT_API_ID + SQLs.OAUHTCREDENTIAL_FILTER_USER_ID
-						+ SQLs.OAUHTCREDENTIAL_FILTER_ACCOUNTS_EMAIL + SQLs.OAUHTCREDENTIAL_SELECT_INTO_API_ID,
-				formData);
 
-		if (null != formData.getApiCredentialId()
-				&& !ACCESS.check(new ReadApiPermission(formData.getApiCredentialId()))) {
-			super.throwAuthorizationFailed();
-		}
-		if (null == formData.getApiCredentialId()) {
-			LOG.warn(new StringBuffer().append("No API Id in DataBase for user :").append(userId)
-					.append(" and account's email : ").append(accountsEmail).toString());
-		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug(new StringBuffer().append("API id : ").append(formData.getApiCredentialId())
-						.append(" for user :").append(userId).append(" and account's email : ").append(accountsEmail)
-						.toString());
+		final ApiTablePageData cachedData = this.getDataCacheByUser().get(userId);
+
+		ApiTableRowData matchingApi = null;
+		if (null != cachedData && cachedData.getRowCount() > 0) {
+			for (final ApiTableRowData cachedApi : cachedData.getRows()) {
+				if (null != cachedApi.getAccountEmail() && cachedApi.getAccountEmail().equals(accountsEmail)) {
+					matchingApi = cachedApi;
+					break;
+				}
 			}
 		}
-		return formData.getApiCredentialId();
+
+		if (null == matchingApi) {
+			// No api for this user
+			LOG.info(new StringBuilder().append("No Api for user : ").append(userId).append(" with email : ")
+					.append(accountsEmail).append(" in ").append(cachedData.getRowCount()).append(" api forthis user")
+					.toString());
+			return null; // early break;
+		}
+		this.checkApiAcces(matchingApi);
+
+		return matchingApi.getApiCredentialId();
+	}
+
+	private void checkApiAcces(final ApiTableRowData apiRow) {
+		if (null != apiRow.getApiCredentialId() && !ACCESS.check(new ReadApiPermission(apiRow.getApiCredentialId()))) {
+			super.throwAuthorizationFailed();
+		}
+		if (null == apiRow.getApiCredentialId()) {
+			LOG.warn(new StringBuffer().append("No API Id in DataBase for user :").append(apiRow.getUserId())
+					.append(" and account's email : ").append(apiRow.getAccountEmail()).toString());
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(new StringBuffer().append("API id : ").append(apiRow.getApiCredentialId())
+						.append(" for user :").append(apiRow.getUserId()).append(" and account's email : ")
+						.append(apiRow.getAccountEmail()).toString());
+			}
+		}
+	}
+
+	private void clearCaches(final ApiFormData formData) {
+		this.dataCache.clearCache(formData.getApiCredentialId());
+		this.dataCacheByUserId.clearCache(formData.getUserId());
 	}
 
 	@Override
