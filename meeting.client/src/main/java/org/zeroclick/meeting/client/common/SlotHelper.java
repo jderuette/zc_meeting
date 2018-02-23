@@ -16,21 +16,22 @@ limitations under the License.
 package org.zeroclick.meeting.client.common;
 
 import java.time.DayOfWeek;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.scout.rt.platform.BEANS;
@@ -261,51 +262,33 @@ public class SlotHelper {
 
 	public ZonedDateTime getNextValidDateTime(final List<DayDuration> periods, final ZonedDateTime checkedDate,
 			final ZonedDateTime endDate) {
-		DayDuration nextValidDayDuration = null;
+		LocalDateTime nextValidLocalDate = null;
 
 		for (final DayDuration period : periods) {
 			if (null == endDate) {
 				if (period.isInPeriod(checkedDate)) {
-					nextValidDayDuration = period;
+					nextValidLocalDate = period.getNextOrSameDate(checkedDate);
 					break;
 				}
 			} else {
 				if (period.isInPeriod(checkedDate, endDate)) {
-					nextValidDayDuration = period;
+					nextValidLocalDate = period.getNextOrSameDate(checkedDate);
 					break;
 				}
 			}
 		}
-		if (null == nextValidDayDuration) {
+		if (null == nextValidLocalDate) {
 			// this date isn't in a period, we try to found the next one
-			nextValidDayDuration = this.getClosestForwardDayDuration(periods, checkedDate, endDate);
+			nextValidLocalDate = this.getClosestForwardDate(periods, checkedDate, endDate);
 		}
-		if (null == nextValidDayDuration) {
+		if (null == nextValidLocalDate) {
 			return null;
 		}
 
-		// get the correct Day
-		final DayOfWeek nextDayOfWeek;
-		// if current time is before start we can use today else next valid day
-		if (checkedDate.toLocalTime().isBefore(nextValidDayDuration.getStart().toLocalTime())) {
-			nextDayOfWeek = this.getNextOrSameDayOfWeek(nextValidDayDuration, checkedDate);
-		} else {
-			nextDayOfWeek = this.getNextDayOfWeek(nextValidDayDuration, checkedDate);
-		}
+		final ZonedDateTime nextValidZonedDate = ZonedDateTime.of(nextValidLocalDate, checkedDate.getZone());
+		LOG.info("Next Valid Date : " + nextValidZonedDate);
 
-		final Boolean dayChanged = !checkedDate.getDayOfWeek().equals(nextDayOfWeek);
-
-		if (dayChanged) {
-			// we can use the first period in the periods as we are a new Day
-			nextValidDayDuration = periods.get(0);
-		}
-
-		final LocalDate day = checkedDate.with(TemporalAdjusters.nextOrSame(nextDayOfWeek)).toLocalDate();
-		final LocalDateTime nextValidLocalDate = LocalDateTime.of(day, nextValidDayDuration.getStart().toLocalTime());
-		final ZonedDateTime nextValidDate = ZonedDateTime.of(nextValidLocalDate, checkedDate.getZone());
-		LOG.info("Next Valid Date : " + nextValidDate);
-
-		return nextValidDate;
+		return nextValidZonedDate;
 	}
 
 	/**
@@ -315,7 +298,7 @@ public class SlotHelper {
 	 * @param checkedDate
 	 * @return a valid Day Duration or null if none available
 	 */
-	private DayDuration getClosestForwardDayDuration(final List<DayDuration> periods, final ZonedDateTime checkedDate,
+	private LocalDateTime getClosestForwardDate(final List<DayDuration> periods, final ZonedDateTime checkedDate,
 			final ZonedDateTime endDate) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(new StringBuilder().append("Searching for closest forward period from : ").append(checkedDate)
@@ -323,7 +306,7 @@ public class SlotHelper {
 		}
 		if (periods.size() == 1) {
 			if (periods.get(0).isWeeklyerpetual()) {
-				return periods.get(0);
+				return periods.get(0).getNextOrSameDate(checkedDate);
 			} else {
 				return null;
 			}
@@ -332,69 +315,50 @@ public class SlotHelper {
 		for (final DayDuration period : periods) {
 			if (null == endDate) {
 				if (period.isInValidFuture(checkedDate)) {
-					return period;
+					return period.getNextOrSameDate(checkedDate);
 				}
 			} else {
 				if (period.isInValidFuture(checkedDate, endDate)) {
-					return period;
+					return period.getNextOrSameDate(checkedDate);
 				}
 			}
 		}
-		// the current hour is after each period, so the first one (tomorrow) is
-		// the closest
-		// FIXME Djer13 the firstOne may not be the good one if event is too
-		// long for this period.
-		// FIXME perpetual should be managed for the LIST, assuming here all
-		// periods have same perpetuality of the first one
-		// if (periods.get(0).isWeeklyerpetual()) {
-		// return periods.get(0);
-		// } else {
-		// return null;
-		// }
 
-		final DayDuration nextPeriod = this.getNextDayOfWeek(periods, checkedDate);
-		if (null != nextPeriod && nextPeriod.isWeeklyerpetual()) {
-			return nextPeriod;
-		} else {
-			return null;
-		}
+		// No period are valid "today" searching for the closest next valid day
+		final LocalDateTime nextClosestsDate = this.getNextDate(periods, checkedDate);
+
+		return nextClosestsDate;
 	}
 
-	private DayDuration getNextDayOfWeek(final List<DayDuration> periods, final ZonedDateTime checkedDate) {
-		DayOfWeek nextDayOfWeek = null;
-		DayDuration closestPeriod = null;
-		for (final DayDuration period : periods) {
-			final DayOfWeek periodDayOfWeek = this.getNextDayOfWeek(period, checkedDate);
-			if (null == nextDayOfWeek || periodDayOfWeek.getValue() < nextDayOfWeek.getValue()) {
-				nextDayOfWeek = periodDayOfWeek;
-				closestPeriod = period;
-			}
+	private LocalDateTime getNextDate(final List<DayDuration> periods, final ZonedDateTime checkedDate) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuilder().append("Searching for closest forward date for : ").append(checkedDate)
+					.append(" in periods : ").append(periods).toString());
 		}
-		return closestPeriod;
-	}
+		LocalDateTime closestDate = null;
+		final Map<DayDuration, LocalDateTime> nextValidDates = new HashMap<>();
 
-	private DayOfWeek getNextDayOfWeek(final DayDuration period, final ZonedDateTime checkedDate) {
-		final DayOfWeek checkedDateDayOfWeek = checkedDate.getDayOfWeek();
-		// search if a next day in week is available
-		for (final DayOfWeek validDay : period.getValidDayOfWeek()) {
-			if (validDay.getValue() > checkedDateDayOfWeek.getValue()) {
-				return validDay;
-			}
-		}
-		// No Next Day in week, the first validDay (next week) is the closest
-		return period.getValidDayOfWeek().get(0);
-	}
+		final Iterator<DayDuration> itPeriod = periods.iterator();
 
-	private DayOfWeek getNextOrSameDayOfWeek(final DayDuration period, final ZonedDateTime checkedDate) {
-		final DayOfWeek checkedDateDayOfWeek = checkedDate.getDayOfWeek();
-		// search if a next day in week is available
-		for (final DayOfWeek validDay : period.getValidDayOfWeek()) {
-			if (validDay.getValue() >= checkedDateDayOfWeek.getValue()) {
-				return validDay;
+		while (itPeriod.hasNext()) {
+			final DayDuration period = itPeriod.next();
+			nextValidDates.put(period, period.getNextOrSameDate(checkedDate));
+		}
+
+		for (final DayDuration period : nextValidDates.keySet()) {
+			final LocalDateTime periodDate = nextValidDates.get(period);
+			if (null == closestDate || periodDate.isBefore(closestDate)) {
+				if (LOG.isDebugEnabled()) {
+					@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
+					final StringBuilder builder = new StringBuilder();
+					LOG.debug(builder.append(periodDate).append(" is Before ").append(closestDate)
+							.append(" in period : ").append(periodDate).toString());
+				}
+				closestDate = periodDate;
 			}
 		}
-		// No Next Day in week, the first validDay (next week) is the closest
-		return period.getValidDayOfWeek().get(0);
+
+		return closestDate;
 	}
 
 	/**

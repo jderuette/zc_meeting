@@ -24,6 +24,7 @@ import java.time.OffsetTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 import org.eclipse.scout.rt.platform.BEANS;
@@ -88,7 +89,7 @@ public class DayDuration {
 	}
 
 	@SuppressWarnings("PMD.CollapsibleIfStatements")
-	private Boolean isBeforeBegin(final LocalDateTime checkedDate) {
+	public Boolean isBeforeBegin(final LocalDateTime checkedDate) {
 		Boolean result = Boolean.FALSE;
 		if (this.validDayOfWeek.contains(checkedDate.getDayOfWeek())) {
 			// compare to NOT before instead of after to handle equals Dates
@@ -127,12 +128,12 @@ public class DayDuration {
 	}
 
 	@SuppressWarnings("PMD.CollapsibleIfStatements")
-	private Boolean isAfterEnd(final LocalDateTime checkedDate) {
+	public Boolean isAfterEnd(final LocalDateTime checkedDate) {
 		Boolean result = Boolean.FALSE;
 		if (this.validDayOfWeek.contains(checkedDate.getDayOfWeek())) {
 			// compare to NOT after instead of before to handle equals Dates
 			// (see : http://stackoverflow.com/a/13936632/8029150)
-			if (!checkedDate.toLocalTime().isAfter(this.end.toLocalTime())) {
+			if (!checkedDate.toLocalTime().isBefore(this.end.toLocalTime())) {
 				result = Boolean.TRUE;
 			}
 		}
@@ -397,6 +398,60 @@ public class DayDuration {
 
 	public Boolean isSameDay(final LocalDate startDate, final LocalDate endDate) {
 		return startDate.equals(endDate);
+	}
+
+	public DayOfWeek getClosestDayOfWeek(final ZonedDateTime checkedDate) {
+		final DayOfWeek nextDayOfWeek;
+		// if current time is before start we can use today else next valid day
+		if (checkedDate.toLocalTime().isBefore(this.getStart().toLocalTime())) {
+			nextDayOfWeek = this.getNextOrSameDayOfWeek(checkedDate);
+		} else {
+			nextDayOfWeek = this.getNextDayOfWeek(checkedDate);
+		}
+
+		return nextDayOfWeek;
+	}
+
+	public DayOfWeek getNextOrSameDayOfWeek(final ZonedDateTime checkedDate) {
+		final DayOfWeek checkedDateDayOfWeek = checkedDate.getDayOfWeek();
+		// search if a next day in week is available
+		for (final DayOfWeek validDay : this.getValidDayOfWeek()) {
+			if (validDay.getValue() >= checkedDateDayOfWeek.getValue()) {
+				return validDay;
+			}
+		}
+		// No Next Day in week, the first validDay (next week) is the closest
+		// FIXME if NO valid Day OfWeek for this period ?
+		return this.getValidDayOfWeek().get(0);
+	}
+
+	public DayOfWeek getNextDayOfWeek(final ZonedDateTime checkedDate) {
+		final DayOfWeek checkedDateDayOfWeek = checkedDate.getDayOfWeek();
+		// search if a next day in week is available
+		for (final DayOfWeek validDay : this.getValidDayOfWeek()) {
+			if (validDay.getValue() > checkedDateDayOfWeek.getValue()) {
+				return validDay;
+			}
+		}
+		// No Next Day in week, the first validDay (next week) is the closest
+		// FIXME if NO valid Day OfWeek for this period ?
+		return this.getValidDayOfWeek().get(0);
+	}
+
+	public LocalDateTime getNextOrSameDate(final ZonedDateTime checkedDate) {
+		final DayOfWeek nextDayOfWeek = this.getClosestDayOfWeek(checkedDate);
+
+		LocalDate day = null;
+
+		if (nextDayOfWeek == checkedDate.getDayOfWeek()) {
+			day = checkedDate.with(TemporalAdjusters.nextOrSame(nextDayOfWeek)).toLocalDate();
+		} else {
+			day = checkedDate.with(TemporalAdjusters.next(nextDayOfWeek)).toLocalDate();
+		}
+
+		final LocalDateTime nextValidLocalDate = LocalDateTime.of(day, this.getStart().toLocalTime());
+
+		return nextValidLocalDate;
 	}
 
 	/*
