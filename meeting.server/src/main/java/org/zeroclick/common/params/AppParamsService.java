@@ -9,7 +9,7 @@ import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.AbstractCommonService;
-import org.zeroclick.common.AbstractDataCache;
+import org.zeroclick.common.AbstractFormDataCache;
 import org.zeroclick.configuration.shared.params.CreateAppParamsPermission;
 import org.zeroclick.configuration.shared.params.IAppParamsService;
 import org.zeroclick.configuration.shared.params.ParamCreatedNotification;
@@ -27,7 +27,7 @@ public class AppParamsService extends AbstractCommonService implements IAppParam
 		return LOG;
 	}
 
-	private final AbstractDataCache<Long, AppParamsFormData> dataCache = new AbstractDataCache<Long, AppParamsFormData>() {
+	private final AbstractFormDataCache<Long, AppParamsFormData> dataCache = new AbstractFormDataCache<Long, AppParamsFormData>() {
 		@Override
 		public AppParamsFormData loadForCache(final Long paramId) {
 			final AppParamsFormData appParamsFormData = new AppParamsFormData();
@@ -36,7 +36,7 @@ public class AppParamsService extends AbstractCommonService implements IAppParam
 		}
 	};
 
-	private final AbstractDataCache<String, AppParamsFormData> dataCacheByKey = new AbstractDataCache<String, AppParamsFormData>() {
+	private final AbstractFormDataCache<String, AppParamsFormData> dataCacheByKey = new AbstractFormDataCache<String, AppParamsFormData>() {
 		@Override
 		public AppParamsFormData loadForCache(final String key) {
 			final AppParamsFormData appParamsFormData = new AppParamsFormData();

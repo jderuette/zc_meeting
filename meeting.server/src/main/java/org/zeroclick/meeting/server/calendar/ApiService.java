@@ -18,7 +18,7 @@ import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.AbstractCommonService;
-import org.zeroclick.common.AbstractDataCache;
+import org.zeroclick.common.AbstractFormDataCache;
 import org.zeroclick.common.AbstractPageDataDataCache;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
 import org.zeroclick.configuration.shared.api.ApiDeletedNotification;
@@ -47,7 +47,7 @@ public class ApiService extends AbstractCommonService implements IApiService {
 		return LOG;
 	}
 
-	private final AbstractDataCache<Long, ApiFormData> dataCache = new AbstractDataCache<Long, ApiFormData>() {
+	private final AbstractFormDataCache<Long, ApiFormData> dataCache = new AbstractFormDataCache<Long, ApiFormData>() {
 		@Override
 		public ApiFormData loadForCache(final Long apiCredentailId) {
 			final ApiFormData apiFormData = new ApiFormData();

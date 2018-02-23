@@ -13,14 +13,14 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.zeroclick.common;
+package org.zeroclick.configuration.server.slot;
 
-import org.eclipse.scout.rt.shared.data.form.AbstractFormData;
+import org.zeroclick.common.AbstractCompositeKey;
 
 /**
  * @author djer
  *
  */
-public abstract class AbstractFormDataCache<K, V extends AbstractFormData> extends AbstractDataCache<K, V> {
+public class SlotCompositeKeyByUser extends AbstractCompositeKey<String, Long> {
 
 }

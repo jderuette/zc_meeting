@@ -15,12 +15,15 @@ limitations under the License.
  */
 package org.zeroclick.common;
 
+import java.util.List;
+
 import org.eclipse.scout.rt.shared.data.form.AbstractFormData;
 
 /**
  * @author djer
  *
  */
-public abstract class AbstractFormDataCache<K, V extends AbstractFormData> extends AbstractDataCache<K, V> {
+public abstract class AbstractListFormDataCache<K, V extends List<? extends AbstractFormData>>
+		extends AbstractDataCache<K, V> {
 
 }

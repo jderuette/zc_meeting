@@ -20,7 +20,7 @@ import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.AbstractCommonService;
-import org.zeroclick.common.AbstractDataCache;
+import org.zeroclick.common.AbstractFormDataCache;
 import org.zeroclick.common.document.DocumentFormData;
 import org.zeroclick.common.document.DocumentFormData.LinkedRole.LinkedRoleRowData;
 import org.zeroclick.configuration.shared.onboarding.OnBoardingUserFormData;
@@ -60,7 +60,7 @@ public class UserService extends AbstractCommonService implements IUserService {
 		return LOG;
 	}
 
-	private final AbstractDataCache<Long, UserFormData> dataCache = new AbstractDataCache<Long, UserFormData>() {
+	private final AbstractFormDataCache<Long, UserFormData> dataCache = new AbstractFormDataCache<Long, UserFormData>() {
 		@Override
 		public UserFormData loadForCache(final Long key) {
 			final UserFormData formData = new UserFormData();

@@ -15,82 +15,12 @@ limitations under the License.
  */
 package org.zeroclick.common;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
-import org.eclipse.scout.rt.platform.BEANS;
-import org.eclipse.scout.rt.platform.exception.ProcessingException;
-import org.eclipse.scout.rt.shared.cache.AbstractCacheValueResolver;
-import org.eclipse.scout.rt.shared.cache.AllCacheEntryFilter;
-import org.eclipse.scout.rt.shared.cache.ICache;
-import org.eclipse.scout.rt.shared.cache.ICacheBuilder;
-import org.eclipse.scout.rt.shared.cache.ICacheValueResolver;
-import org.eclipse.scout.rt.shared.cache.KeyCacheEntryFilter;
 import org.eclipse.scout.rt.shared.data.page.AbstractTablePageData;
 
 /**
  * @author djer
  *
  */
-public abstract class AbstractPageDataDataCache<K, V extends AbstractTablePageData> implements IDataCache<K, V> {
+public abstract class AbstractPageDataDataCache<K, V extends AbstractTablePageData> extends AbstractDataCache<K, V> {
 
-	protected ICache<K, V> dataCache;
-
-	public AbstractPageDataDataCache() {
-		this.dataCache = this.createCacheDataBuilder().build();
-	}
-
-	/**
-	 * Can be overridden to customize the cache builder
-	 *
-	 * @return {@link ICacheBuilder} for the internal cache
-	 */
-	protected ICacheBuilder<K, V> createCacheDataBuilder() {
-		@SuppressWarnings("unchecked")
-		final ICacheBuilder<K, V> cacheBuilder = BEANS.get(ICacheBuilder.class);
-		return cacheBuilder.withCacheId(this.getCacheDataId()).withValueResolver(this.createCacheDataValueResolver())
-				.withShared(true).withClusterEnabled(true).withTransactional(true).withTransactionalFastForward(true)
-				.withTimeToLive(1L, TimeUnit.HOURS, false).withSizeBound(500);
-	}
-
-	protected ICacheValueResolver<K, V> createCacheDataValueResolver() {
-		return new AbstractCacheValueResolver<K, V>() {
-
-			@Override
-			public V resolve(final K key) {
-				return AbstractPageDataDataCache.this.loadForCache(key);
-			}
-		};
-	}
-
-	protected String getCacheDataId() {
-		return this.getClass().getName();
-	}
-
-	protected void clearDataCache(final Collection<? extends K> cacheKeys) throws ProcessingException {
-		if (cacheKeys != null && !cacheKeys.isEmpty()) {
-			this.getCache().invalidate(new KeyCacheEntryFilter<K, V>(cacheKeys), true);
-		}
-	}
-
-	@Override
-	public void clearCache() throws ProcessingException {
-		this.getCache().invalidate(new AllCacheEntryFilter<K, V>(), true);
-	}
-
-	@Override
-	public void clearCache(final K dataId) {
-		final Set<K> ids = new HashSet<>();
-		ids.add(dataId);
-		this.clearDataCache(ids);
-	}
-
-	@Override
-	public abstract V loadForCache(final K key);
-
-	public ICache<K, V> getCache() {
-		return this.dataCache;
-	}
 }

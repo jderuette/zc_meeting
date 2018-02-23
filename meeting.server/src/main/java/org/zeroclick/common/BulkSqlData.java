@@ -15,12 +15,23 @@ limitations under the License.
  */
 package org.zeroclick.common;
 
-import org.eclipse.scout.rt.shared.data.form.AbstractFormData;
-
 /**
  * @author djer
  *
  */
-public abstract class AbstractFormDataCache<K, V extends AbstractFormData> extends AbstractDataCache<K, V> {
+public class BulkSqlData {
+	Object[][] data;
 
+	public BulkSqlData(final Object[][] data) {
+		super();
+		this.data = data;
+	}
+
+	public Object[][] getData() {
+		return this.data;
+	}
+
+	public void setData(final Object[][] data) {
+		this.data = data;
+	}
 }

@@ -11,8 +11,6 @@ public interface ISlotService extends IService {
 
 	SlotsFormData store(SlotsFormData formData);
 
-	SlotTablePageData getSlotTableData(SearchFilter filter);
-
 	SlotTablePageData getDayDurationTableData(SearchFilter filter);
 
 	SlotTablePageData getDayDurationAdminTableData(SearchFilter filter);
@@ -22,10 +20,6 @@ public interface ISlotService extends IService {
 	DayDurationFormData load(DayDurationFormData formData);
 
 	Object[][] getSlots();
-
-	Object[][] getDayDurations(Long slotId);
-
-	Object[][] getDayDurationsLight(Long slotId);
 
 	List<DayDurationFormData> getDayDurations(String slotName, Long userId);
 

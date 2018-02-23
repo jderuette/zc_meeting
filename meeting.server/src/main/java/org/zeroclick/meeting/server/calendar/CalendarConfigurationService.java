@@ -15,7 +15,7 @@ import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.AbstractCommonService;
-import org.zeroclick.common.AbstractDataCache;
+import org.zeroclick.common.AbstractFormDataCache;
 import org.zeroclick.common.AbstractPageDataDataCache;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
@@ -43,7 +43,7 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		return LOG;
 	}
 
-	private final AbstractDataCache<Long, CalendarConfigurationFormData> dataCache = new AbstractDataCache<Long, CalendarConfigurationFormData>() {
+	private final AbstractFormDataCache<Long, CalendarConfigurationFormData> dataCache = new AbstractFormDataCache<Long, CalendarConfigurationFormData>() {
 		@Override
 		public CalendarConfigurationFormData loadForCache(final Long calendarConfigId) {
 			final CalendarConfigurationFormData calendarConfigurationFormData = new CalendarConfigurationFormData();
