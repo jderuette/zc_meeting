@@ -352,7 +352,7 @@ public class SlotHelper {
 					@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 					final StringBuilder builder = new StringBuilder();
 					LOG.debug(builder.append(periodDate).append(" is Before ").append(closestDate)
-							.append(" in period : ").append(periodDate).toString());
+							.append(" in period : ").append(period).toString());
 				}
 				closestDate = periodDate;
 			}

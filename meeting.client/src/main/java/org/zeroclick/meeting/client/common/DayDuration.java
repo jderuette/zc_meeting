@@ -444,7 +444,11 @@ public class DayDuration {
 		LocalDate day = null;
 
 		if (nextDayOfWeek == checkedDate.getDayOfWeek()) {
-			day = checkedDate.with(TemporalAdjusters.nextOrSame(nextDayOfWeek)).toLocalDate();
+			if (this.isBeforeBegin(checkedDate.toLocalDateTime())) {
+				day = checkedDate.with(TemporalAdjusters.nextOrSame(nextDayOfWeek)).toLocalDate();
+			} else {
+				day = checkedDate.with(TemporalAdjusters.next(nextDayOfWeek)).toLocalDate();
+			}
 		} else {
 			day = checkedDate.with(TemporalAdjusters.next(nextDayOfWeek)).toLocalDate();
 		}
