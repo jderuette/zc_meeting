@@ -220,6 +220,8 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 	private CalendarConfigurationFormData store(final CalendarConfigurationFormData formData,
 			final Boolean duringCreate) {
 		this.checkPermission(new UpdateCalendarConfigurationPermission(formData.getOAuthCredentialId().getValue()));
+		LOG.info(new StringBuilder().append("Storing calendarConfiguration, duringCreate : ").append(duringCreate)
+				.toString());
 		SQL.insert(SQLs.CALENDAR_CONFIG_UPDATE + SQLs.GENERIC_WHERE_FOR_SECURE_AND + SQLs.CALENDAR_CONFIG_FILTER_ID
 				+ SQLs.CALENDAR_CONFIG_FILTER_EXTERNAL_ID, formData);
 
@@ -258,7 +260,7 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 				new NVPair("oAuthCredentialId", apiCredentialId));
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(new StringBuffer().append(nbDeletedRows)
-					.append(" deleteted in calendars configuration with API ID : ").append(apiCredentialId).toString());
+					.append(" deleteted calendars configuration with API ID : ").append(apiCredentialId).toString());
 		}
 	}
 
@@ -266,13 +268,14 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		// permission based on API permissions (not calendar permissions)
 		this.checkPermission(new DeleteApiPermission(apiCredentialId));
 
-		LOG.info("Deleting calendars configuration : " + apiCredentialId + " for API ID : " + apiCredentialId);
+		LOG.info(new StringBuilder().append("Deleting calendars configuration : ").append(externalId)
+				.append(" for API ID : ").append(apiCredentialId).toString());
 
 		final int nbDeletedRows = SQL.delete(SQLs.CALENDAR_CONFIG_DELETE_BY_EXTERNAL_ID,
 				new NVPair("externalId", externalId), new NVPair("oAuthCredentialId", apiCredentialId));
 
 		if (nbDeletedRows == 0) {
-			LOG.warn(new StringBuffer().append("No row deleted calendars configuration : ").append(apiCredentialId)
+			LOG.warn(new StringBuffer().append("No row deleted calendars configuration : ").append(externalId)
 					.append(" for API ID : ").append(apiCredentialId).toString());
 		}
 	}
@@ -280,7 +283,8 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 	@Override
 	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 	public void autoConfigure(final Map<String, AbstractCalendarConfigurationTableRowData> calendars) {
-		LOG.info("Auto importing calendars for User");
+		LOG.info(new StringBuffer().append("Auto importing calendars for User with :")
+				.append(null == calendars ? "null" : calendars.size()).append(" existing calendars").toString());
 		Long lastUserId = null;
 		Boolean atLeastOneCalendarConfigModified = Boolean.FALSE;
 		Boolean atLeastOneCalendarConfigAdded = Boolean.FALSE;
@@ -314,10 +318,11 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 				final CalendarConfigurationFormData calendarConfigInput = new CalendarConfigurationFormData();
 
 				LOG.info(new StringBuffer().append("Calendar Configuration already exists for API : ")
-						.append(calendarData.getOAuthCredentialId()).append(" for calendar key : ")
+						.append(calendarData.getOAuthCredentialId()).append(" for calendarID : ")
+						.append(calendarData.getCalendarConfigurationId()).append(" key : ")
 						.append(calendarData.getExternalId()).append("(" + calendarData.getName())
-						.append(") for User Id : ").append(calendarData.getUserId()).append(" Updating calendar Data")
-						.toString());
+						.append(") for User Id : ").append(calendarData.getUserId())
+						.append(" Checking for updates calendar Data").toString());
 
 				calendarConfigInput.getCalendarConfigurationId().setValue(existingCalendarConfigId);
 				calendarConfigInput.getUserId().setValue(calendarData.getUserId());
@@ -344,7 +349,7 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 
 				} else {
 					LOG.info(new StringBuffer().append("Calendar configuration : ")
-							.append(existingCalendarConfigId + "(name : ").append(existingCalendarConfig.getName())
+							.append(existingCalendarConfigId + " (name : ").append(existingCalendarConfig.getName())
 							.append(") don't need to be save during sync").toString());
 				}
 			}
@@ -401,12 +406,10 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 
 		final Boolean requiredSave = externalIdChanged || nameChanged || readOnlyChanged || apiCredentialIdChanged;
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug(new StringBuilder().append("Calendar need change ? ").append(requiredSave)
-					.append(" (externalIdChanged : ").append(externalIdChanged).append(", nameChanged : ")
-					.append(nameChanged).append(" , readOnlyChanged : ").append(readOnlyChanged)
-					.append(" , apiCredentialIdCHanged : ").append(apiCredentialIdChanged).append(')').toString());
-		}
+		LOG.info(new StringBuilder().append("Calendar need change ? ").append(requiredSave)
+				.append(" (externalIdChanged : ").append(externalIdChanged).append(", nameChanged : ")
+				.append(nameChanged).append(" , readOnlyChanged : ").append(readOnlyChanged)
+				.append(" , apiCredentialIdCHanged : ").append(apiCredentialIdChanged).append(')').toString());
 
 		return requiredSave;
 	}
@@ -424,8 +427,10 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 						break;
 					}
 				} else {
-					LOG.warn("Calendar configuration : " + calendarConfig.getCalendarConfigurationId()
-							+ " ignored in configured list because current user don't have Read permission");
+					LOG.warn(new StringBuilder().append("Calendar configuration : ")
+							.append(calendarConfig.getCalendarConfigurationId())
+							.append(" ignored in configured list because current user don't have Read permission")
+							.toString());
 				}
 			}
 		}
@@ -444,8 +449,10 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 						break;
 					}
 				} else {
-					LOG.warn("Calendar configuration : " + calendarConfig.getCalendarConfigurationId()
-							+ " ignored in configured list because current user don't have Read permission");
+					LOG.warn(new StringBuilder().append("Calendar configuration : ")
+							.append(calendarConfig.getCalendarConfigurationId())
+							.append(" ignored in configured list because current user don't have Read permission")
+							.toString());
 				}
 			}
 		}
@@ -467,8 +474,10 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 						configuredCalendars.add(calendarConfig);
 					}
 				} else {
-					LOG.warn("Calendar configuration : " + calendarConfig.getCalendarConfigurationId()
-							+ " ignored in configured list because current user don't have Read permission");
+					LOG.warn(new StringBuilder().append("Calendar configuration : ")
+							.append(calendarConfig.getCalendarConfigurationId())
+							.append(" ignored in configured list because current user don't have Read permission")
+							.toString());
 				}
 			}
 		}
