@@ -142,7 +142,7 @@ public class Desktop extends AbstractDesktop {
 		final AccessControlService acs = BEANS.get(AccessControlService.class);
 		final Long currentUserId = acs.getZeroClickUserIdOfCurrentSubject();
 
-		this.cleanInvalid1ApiKey(currentUserId);
+		this.cleanInvalidApiKey(currentUserId);
 
 		// default user timezone
 		final String currentUserTimeZone = userService.getUserTimeZone(currentUserId);
@@ -170,7 +170,7 @@ public class Desktop extends AbstractDesktop {
 
 	}
 
-	private void cleanInvalid1ApiKey(final Long userId) {
+	private void cleanInvalidApiKey(final Long userId) {
 		final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
 
 		// API connection for multiple account (link to email address, and store
