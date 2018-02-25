@@ -328,7 +328,8 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 					existingCalendarConfig.getExternalId().setValue(calendarData.getExternalId());
 					existingCalendarConfig.getName().setValue(calendarData.getName());
 					existingCalendarConfig.getReadOnly().setValue(calendarData.getReadOnly());
-					if (calendarData.getReadOnly() && existingCalendarConfig.getAddEventToCalendar().getValue()) {
+					if (calendarData.getReadOnly() && null != existingCalendarConfig.getAddEventToCalendar().getValue()
+							&& existingCalendarConfig.getAddEventToCalendar().getValue()) {
 						LOG.warn(new StringBuffer().append("The calendar ")
 								.append(existingCalendarConfig.getCalendarConfigurationId()).append("(")
 								.append(existingCalendarConfig.getName()).append(") for User ")
@@ -390,13 +391,24 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 	private boolean isCalendarCondifgRequiredModification(
 			final AbstractCalendarConfigurationTableRowData newCalendarData,
 			final CalendarConfigurationFormData existingCalendarConfig) {
-		final Boolean externalIdChanged = newCalendarData.getExternalId()
+		final Boolean externalIdChanged = !newCalendarData.getExternalId()
 				.equals(existingCalendarConfig.getExternalId().getValue());
-		final Boolean nameChanged = newCalendarData.getName().equals(existingCalendarConfig.getName().getValue());
-		final Boolean readOnlyChanged = newCalendarData.getReadOnly()
+		final Boolean nameChanged = !newCalendarData.getName().equals(existingCalendarConfig.getName().getValue());
+		final Boolean readOnlyChanged = !newCalendarData.getReadOnly()
 				.equals(existingCalendarConfig.getReadOnly().getValue());
+		final Boolean apiCredentialIdChanged = !newCalendarData.getOAuthCredentialId()
+				.equals(existingCalendarConfig.getOAuthCredentialId().getValue());
 
-		return !externalIdChanged || !nameChanged || !readOnlyChanged;
+		final Boolean requiredSave = externalIdChanged || nameChanged || readOnlyChanged || apiCredentialIdChanged;
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuilder().append("Calendar need change ? ").append(requiredSave)
+					.append(" (externalIdChanged : ").append(externalIdChanged).append(", nameChanged : ")
+					.append(nameChanged).append(" , readOnlyChanged : ").append(readOnlyChanged)
+					.append(" , apiCredentialIdCHanged : ").append(apiCredentialIdChanged).append(')').toString());
+		}
+
+		return requiredSave;
 	}
 
 	private Long getCalendarConfigId(final CalendarConfigurationFormData formData) {
