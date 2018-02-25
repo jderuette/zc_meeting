@@ -283,8 +283,8 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 	@Override
 	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 	public void autoConfigure(final Map<String, AbstractCalendarConfigurationTableRowData> calendars) {
-		LOG.info(new StringBuffer().append("Auto importing calendars for User with :")
-				.append(null == calendars ? "null" : calendars.size()).append(" existing calendars").toString());
+		LOG.info(new StringBuffer().append("Auto importing calendars for User with : ")
+				.append(null == calendars ? "null" : calendars.size()).append(" calendars from provider").toString());
 		Long lastUserId = null;
 		Boolean atLeastOneCalendarConfigModified = Boolean.FALSE;
 		Boolean atLeastOneCalendarConfigAdded = Boolean.FALSE;
@@ -319,10 +319,9 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 
 				LOG.info(new StringBuffer().append("Calendar Configuration already exists for API : ")
 						.append(calendarData.getOAuthCredentialId()).append(" for calendarID : ")
-						.append(calendarData.getCalendarConfigurationId()).append(" key : ")
-						.append(calendarData.getExternalId()).append("(" + calendarData.getName())
-						.append(") for User Id : ").append(calendarData.getUserId())
-						.append(" Checking for updates calendar Data").toString());
+						.append(existingCalendarConfigId).append(" key : ").append(calendarData.getExternalId())
+						.append("(" + calendarData.getName()).append(") for User Id : ")
+						.append(calendarData.getUserId()).append(" Checking for updates calendar Data").toString());
 
 				calendarConfigInput.getCalendarConfigurationId().setValue(existingCalendarConfigId);
 				calendarConfigInput.getUserId().setValue(calendarData.getUserId());
@@ -333,6 +332,7 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 					existingCalendarConfig.getExternalId().setValue(calendarData.getExternalId());
 					existingCalendarConfig.getName().setValue(calendarData.getName());
 					existingCalendarConfig.getReadOnly().setValue(calendarData.getReadOnly());
+					existingCalendarConfig.getOAuthCredentialId().setValue(calendarData.getOAuthCredentialId());
 					if (calendarData.getReadOnly() && null != existingCalendarConfig.getAddEventToCalendar().getValue()
 							&& existingCalendarConfig.getAddEventToCalendar().getValue()) {
 						LOG.warn(new StringBuffer().append("The calendar ")
@@ -409,7 +409,7 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		LOG.info(new StringBuilder().append("Calendar need change ? ").append(requiredSave)
 				.append(" (externalIdChanged : ").append(externalIdChanged).append(", nameChanged : ")
 				.append(nameChanged).append(" , readOnlyChanged : ").append(readOnlyChanged)
-				.append(" , apiCredentialIdCHanged : ").append(apiCredentialIdChanged).append(')').toString());
+				.append(" , apiCredentialIdChanged : ").append(apiCredentialIdChanged).append(')').toString());
 
 		return requiredSave;
 	}
@@ -422,7 +422,11 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		if (pageData.getRowCount() > 0) {
 			for (final CalendarConfigurationTableRowData calendarConfig : pageData.getRows()) {
 				if (ACCESS.check(new ReadCalendarConfigurationPermission(calendarConfig.getOAuthCredentialId()))) {
-					if (calendarConfig.getExternalId().equals(formData.getExternalId().getValue())) {
+					// externalId are NOT by User in Google (ex :
+					// frenchHolydays), we NEED to use the OAuthID to get the
+					// good one (if exists)
+					if (calendarConfig.getExternalId().equals(formData.getExternalId().getValue()) && calendarConfig
+							.getOAuthCredentialId().equals(formData.getOAuthCredentialId().getValue())) {
 						calendarConfigId = calendarConfig.getCalendarConfigurationId();
 						break;
 					}
