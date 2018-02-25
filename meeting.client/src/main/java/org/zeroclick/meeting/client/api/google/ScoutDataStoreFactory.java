@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.zeroclick.meeting.client.google.api;
+package org.zeroclick.meeting.client.api.google;
 
 import java.io.IOException;
 import java.io.Serializable;

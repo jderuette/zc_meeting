@@ -26,6 +26,8 @@ import org.zeroclick.common.email.MailException;
 import org.zeroclick.comon.text.TextsHelper;
 import org.zeroclick.meeting.client.ClientSession;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
+import org.zeroclick.meeting.client.api.google.GoogleApiHelper;
+import org.zeroclick.meeting.client.api.google.GoogleApiHelper.ApiCalendar;
 import org.zeroclick.meeting.client.NotificationHelper;
 import org.zeroclick.meeting.client.common.UserAccessRequiredException;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.CancelButton;
@@ -37,8 +39,6 @@ import org.zeroclick.meeting.client.event.RejectEventForm.MainBox.OrganizerEmail
 import org.zeroclick.meeting.client.event.RejectEventForm.MainBox.ReasonField;
 import org.zeroclick.meeting.client.event.RejectEventForm.MainBox.SubjectField;
 import org.zeroclick.meeting.client.event.RejectEventForm.MainBox.VenueField;
-import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
-import org.zeroclick.meeting.client.google.api.GoogleApiHelper.ApiCalendar;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.IEventService;

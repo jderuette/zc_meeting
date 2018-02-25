@@ -27,7 +27,7 @@ import org.zeroclick.configuration.client.api.ApiForm.MainBox.OkButton;
 import org.zeroclick.configuration.client.api.ApiForm.MainBox.ProviderField;
 import org.zeroclick.configuration.client.api.ApiForm.MainBox.RefreshTokenField;
 import org.zeroclick.configuration.shared.provider.ProviderCodeType;
-import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
+import org.zeroclick.meeting.client.api.google.GoogleApiHelper;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CreateApiPermission;
 import org.zeroclick.meeting.shared.calendar.DeleteApiPermission;

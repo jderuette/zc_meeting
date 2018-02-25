@@ -28,7 +28,7 @@ import org.zeroclick.configuration.onboarding.OnBoardingUserForm.MainBox.UserIdF
 import org.zeroclick.configuration.shared.onboarding.OnBoardingUserFormData;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
-import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
+import org.zeroclick.meeting.client.api.google.GoogleApiHelper;
 
 @FormData(value = OnBoardingUserFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class OnBoardingUserForm extends AbstractForm {

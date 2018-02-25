@@ -54,7 +54,7 @@
   
    <servlet>
     <servlet-name>GoogleApiServletCallback</servlet-name>
-    <servlet-class>org.zeroclick.meeting.client.google.api.GoogleApiServletCallback</servlet-class>
+    <servlet-class>org.zeroclick.meeting.client.api.google.GoogleApiServletCallback</servlet-class>
   </servlet>
 
   <servlet-mapping>

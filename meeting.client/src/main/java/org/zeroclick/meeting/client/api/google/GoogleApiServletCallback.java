@@ -1,4 +1,4 @@
-package org.zeroclick.meeting.client.google.api;
+package org.zeroclick.meeting.client.api.google;
 
 import java.io.IOException;
 import java.util.List;
@@ -13,8 +13,8 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.shared.provider.ProviderCodeType;
+import org.zeroclick.meeting.client.api.google.GoogleApiHelper.ApiCalendar;
 import org.zeroclick.meeting.client.common.UserAccessRequiredException;
-import org.zeroclick.meeting.client.google.api.GoogleApiHelper.ApiCalendar;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.IApiService;
 
