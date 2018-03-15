@@ -15,19 +15,17 @@ limitations under the License.
  */
 package org.zeroclick.ui.form.fields.emailfield;
 
-import java.util.regex.Pattern;
-
 import org.eclipse.scout.rt.client.ui.form.fields.stringfield.AbstractStringField;
+import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.shared.TEXTS;
+import org.zeroclick.comon.text.StringHelper;
 
 /**
  * @author djer
  *
  */
 public class EmailField extends AbstractStringField {
-	private static final String EMAIL_PATTERN = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
-			+ "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
 
 	@Override
 	protected String getConfiguredLabel() {
@@ -46,7 +44,8 @@ public class EmailField extends AbstractStringField {
 
 	@Override
 	protected String execValidateValue(final String rawValue) {
-		if (rawValue != null && !Pattern.matches(EMAIL_PATTERN, rawValue)) {
+		final StringHelper stringHelper = BEANS.get(StringHelper.class);
+		if (rawValue != null && !stringHelper.isValidEmail(rawValue)) {
 			throw new VetoException(TEXTS.get("zc.common.badEmailAddress"));
 		}
 		return null == rawValue ? null : rawValue.toLowerCase();

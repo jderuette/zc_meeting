@@ -40,4 +40,6 @@ public interface ICalendarConfigurationService extends IService {
 
 	Set<AbstractCalendarConfigurationTableRowData> getUsedCalendars(Long userId);
 
+	Long getCalendarApiId(String calendarId, Long eventHeldBy);
+
 }

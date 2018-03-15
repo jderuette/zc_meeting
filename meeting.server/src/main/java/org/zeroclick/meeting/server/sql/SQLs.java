@@ -21,6 +21,7 @@ import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateSubscription;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateVenue;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchEventAddCreatedDate;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchEventRejectReason;
+import org.zeroclick.meeting.server.sql.migrate.data.PatchManageMicrosoftCalendars;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchSlotTable;
 import org.zeroclick.meeting.shared.event.StateCodeType;
 
@@ -139,6 +140,7 @@ public interface SQLs {
 	String OAUHTCREDENTIAL_PAGE_SELECT = "SELECT api_credential_id, access_token, expiration_time_milliseconds, refresh_token, user_id, provider, "
 			+ PatchAddEmailToApi.PATCHED_ADDED_COLUMN + " FROM OAUHTCREDENTIAL WHERE 1=1";
 	String OAUHTCREDENTIAL_PAGE_SELECT_FILTER_USER = " AND user_id = :currentUser";
+	String OAUHTCREDENTIAL_PAGE_SELECT_FILTER_API_CREDENTIAL_ID = " AND api_credential_id = :apiCredentialId";
 	String OAUHTCREDENTIAL_PAGE_DATA_SELECT_INTO = " INTO :{page.apiCredentialId}, :{page.accessToken}, :{page.expirationTimeMilliseconds}, :{page.refreshToken}, :{page.userId}, :{page.provider}, :{page.accountEmail}";
 
 	String OAUHTCREDENTIAL_INSERT = "INSERT INTO OAUHTCREDENTIAL (api_credential_id, user_id) VALUES (:apiCredentialId, :userId)";
@@ -184,6 +186,14 @@ public interface SQLs {
 
 	String OAUHTCREDENTIAL_PATCH_ADD_EMAIL_COLUMN = "ALTER TABLE " + PatchAddEmailToApi.PATCHED_TABLE + " ADD COLUMN "
 			+ PatchAddEmailToApi.PATCHED_ADDED_COLUMN + " VARCHAR(120)";
+
+	String OAUHTCREDENTIAL_PATCH_ALTER_ACCES_TOKEN_COLUMN_LENGHT = "ALTER TABLE "
+			+ PatchManageMicrosoftCalendars.PATCHED_TABLE + " ALTER COLUMN "
+			+ PatchManageMicrosoftCalendars.PATCHED_COLUMN + " TYPE VARCHAR(1500)";
+
+	String OAUHTCREDENTIAL_PATCH_ALTER_REFRESH_TOKEN_COLUMN_LENGHT = "ALTER TABLE "
+			+ PatchManageMicrosoftCalendars.PATCHED_TABLE + " ALTER COLUMN "
+			+ PatchManageMicrosoftCalendars.PATCHED_COLUMN_REFRESH_TOKEN + " TYPE VARCHAR(1500)";
 
 	/**
 	 * Roles and permissions

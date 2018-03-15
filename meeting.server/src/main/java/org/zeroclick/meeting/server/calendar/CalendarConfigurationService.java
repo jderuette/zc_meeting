@@ -489,6 +489,33 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		return configuredCalendars;
 	}
 
+	@Override
+	public Long getCalendarApiId(final String calendarId, final Long calendarOwnerId) {
+		Long calendarLinkedApiId = null;
+		final Set<AbstractCalendarConfigurationTableRowData> userCalendars = this.getUsedCalendars(calendarOwnerId);
+
+		if (null != userCalendars && userCalendars.size() > 0) {
+			for (final AbstractCalendarConfigurationTableRowData calendarConfig : userCalendars) {
+				if (calendarConfig.getExternalId().equals(calendarId)) {
+					calendarLinkedApiId = calendarConfig.getOAuthCredentialId();
+					break;
+				}
+			}
+		}
+
+		if (null == calendarLinkedApiId) {
+			Integer nbUserCalendars = 0;
+			if (null != userCalendars) {
+				nbUserCalendars = userCalendars.size();
+			}
+			LOG.warn(new StringBuilder().append("No Api Id found for calendar ID : ").append(calendarId)
+					.append(" for user ID : ").append(calendarOwnerId).append("(in ").append(nbUserCalendars)
+					.append(" calendars)").toString());
+		}
+
+		return calendarLinkedApiId;
+	}
+
 	private void sendModifiedNotifications(final CalendarsConfigurationFormData formData) {
 		if (formData.getCalendarConfigTable().getRowCount() > 0) {
 			this.sendModifiedNotifications(formData.getCalendarConfigTable().getRows()[0].getUserId(), formData);

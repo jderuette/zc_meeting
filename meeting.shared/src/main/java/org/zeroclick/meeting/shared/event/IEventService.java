@@ -26,6 +26,8 @@ public interface IEventService extends IService {
 
 	EventFormData load(EventFormData formData);
 
+	EventFormData load(Long eventId);
+
 	RejectEventFormData load(RejectEventFormData formData);
 
 	EventFormData store(EventFormData formData);

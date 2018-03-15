@@ -13,7 +13,8 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.shared.provider.ProviderCodeType;
-import org.zeroclick.meeting.client.api.google.GoogleApiHelper.ApiCalendar;
+import org.zeroclick.meeting.client.api.ApiCalendar;
+import org.zeroclick.meeting.client.api.ApiCredential;
 import org.zeroclick.meeting.client.common.UserAccessRequiredException;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.IApiService;
@@ -25,9 +26,6 @@ import com.google.api.services.calendar.model.CalendarList;
 import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Events;
-import com.google.api.services.people.v1.PeopleService;
-import com.google.api.services.people.v1.model.EmailAddress;
-import com.google.api.services.people.v1.model.Person;
 
 /**
  * Mapped to /oauth2callback
@@ -66,10 +64,10 @@ public class GoogleApiServletCallback extends HttpServlet {
 		final Credential credential = this.googleApiHelper.tryStoreCredential(req, resp,
 				createdData.getApiCredentialId());
 
-		final String mainAddressEmail = this.getAccountEmail(createdData.getApiCredentialId(), createdData.getUserId());
+		final String mainAddressEmail = this.googleApiHelper.getAccountEmail(createdData.getApiCredentialId());
 
 		// add the meailAdress to the API
-		this.storeEmailAccount(createdData.getApiCredentialId(), currentUsderId, mainAddressEmail);
+		this.storeEmailAccount(createdData.getApiCredentialId(), mainAddressEmail);
 
 		resp.getWriter().write("<html><head></head><body><b>");
 
@@ -86,7 +84,7 @@ public class GoogleApiServletCallback extends HttpServlet {
 
 		resp.getWriter().write("<b></body></html>");
 
-		List<ApiCalendar> services;
+		List<ApiCalendar<Calendar, ApiCredential<Credential>>> services;
 		try {
 			services = this.googleApiHelper.getCalendarsServices(this.googleApiHelper.getCurrentUserId());
 		} catch (final UserAccessRequiredException uare) {
@@ -94,7 +92,7 @@ public class GoogleApiServletCallback extends HttpServlet {
 		}
 
 		if (null != services && services.size() > 0) {
-			for (final ApiCalendar service : services) {
+			for (final ApiCalendar<Calendar, ApiCredential<Credential>> service : services) {
 				this.displayCalendarList(service.getCalendar());
 				// List the next 10 events from the primary calendar.
 				this.displayNextEvent(service.getCalendar(), "primary", 5);
@@ -102,35 +100,12 @@ public class GoogleApiServletCallback extends HttpServlet {
 		}
 	}
 
-	private String getAccountEmail(final Long apiCredentialId, final Long userId) throws IOException {
-		final PeopleService peopleService = this.googleApiHelper.getPeopleService(apiCredentialId);
-		final Person profile = peopleService.people().get("people/me").setPersonFields("emailAddresses").execute();
-		//
-
-		final List<EmailAddress> emailsAdresses = profile.getEmailAddresses();
-		String mainAddressEmail = null;
-
-		if (null != emailsAdresses && emailsAdresses.size() > 0) {
-			for (final EmailAddress emailAdress : emailsAdresses) {
-				if (emailAdress.getMetadata().getPrimary()) {
-					mainAddressEmail = emailAdress.getValue();
-					LOG.info("Primary email adress for api ID : " + apiCredentialId + ", user : " + userId + " : "
-							+ mainAddressEmail);
-					break;
-				}
-			}
-		}
-
-		return mainAddressEmail;
-	}
-
-	private ApiFormData storeEmailAccount(final Long apiCredentialId, final Long userId, final String accountEmail)
-			throws IOException {
+	private ApiFormData storeEmailAccount(final Long apiCredentialId, final String accountEmail) throws IOException {
 		final IApiService apiService = BEANS.get(IApiService.class);
 
 		final ApiFormData apiDataAfterCredentialStored = apiService.load(apiCredentialId);
 		apiDataAfterCredentialStored.getAccountEmail().setValue(accountEmail);
-		final ApiFormData storedData = apiService.storeAccountEmail(apiDataAfterCredentialStored, userId, accountEmail);
+		final ApiFormData storedData = apiService.storeAccountEmail(apiDataAfterCredentialStored, accountEmail);
 
 		if (!apiCredentialId.equals(apiDataAfterCredentialStored.getApiCredentialId())) {
 			// An update Occur, the "newly" stored credential must be discarded

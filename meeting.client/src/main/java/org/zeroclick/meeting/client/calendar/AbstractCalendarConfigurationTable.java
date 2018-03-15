@@ -45,6 +45,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.shared.api.ApiLookupCall;
 import org.zeroclick.meeting.client.api.google.GoogleApiHelper;
+import org.zeroclick.meeting.service.CalendarService;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
@@ -239,11 +240,12 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 		@Override
 		protected void execAction() {
 			final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+			final CalendarService calendarService = BEANS.get(CalendarService.class);
 
-			if (!googleHelper.isCalendarConfigured()) {
+			if (!calendarService.isCalendarConfigured()) {
 				googleHelper.askToAddApi(BEANS.get(AccessControlService.class).getZeroClickUserIdOfCurrentSubject());
 			}
-			if (!googleHelper.isCalendarConfigured()) {
+			if (!calendarService.isCalendarConfigured()) {
 				// User really won't provide required data
 				return; // early Break
 			}

@@ -274,6 +274,14 @@ public class EventService extends AbstractCommonService implements IEventService
 	}
 
 	@Override
+	public EventFormData load(final Long eventId) {
+		// permission check done by load(FormData)
+		final EventFormData formData = new EventFormData();
+		formData.setEventId(eventId);
+		return this.load(formData);
+	}
+
+	@Override
 	public RejectEventFormData load(final RejectEventFormData formData) {
 		super.checkPermission(new ReadEventPermission(formData.getEventId()));
 		SQL.selectInto(SQLs.EVENT_SELECT_REJECT, formData);

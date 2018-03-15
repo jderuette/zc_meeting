@@ -66,6 +66,7 @@ import org.zeroclick.meeting.client.calendar.CalendarsConfigurationCreatedNotifi
 import org.zeroclick.meeting.client.calendar.CalendarsConfigurationModifiedNotificationHandler;
 import org.zeroclick.meeting.client.common.CallTrackerService;
 import org.zeroclick.meeting.client.event.EventTablePage.Table.NewEventMenu;
+import org.zeroclick.meeting.service.CalendarService;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationCreatedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
@@ -109,11 +110,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	protected INotificationListener<ParamModifiedNotification> paramModifiedListener;
 
 	protected boolean isUserCalendarConfigured() {
-		return BEANS.get(GoogleApiHelper.class).isCalendarConfigured();
+		return BEANS.get(CalendarService.class).isCalendarConfigured();
 	}
 
 	protected boolean isOrganizerCalendarConfigured(final ITableRow row) {
-		return BEANS.get(GoogleApiHelper.class)
+		return BEANS.get(CalendarService.class)
 				.isCalendarConfigured(this.getTable().getOrganizerColumn().getValue(row));
 	}
 
@@ -980,7 +981,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			final String rowState = this.getStateColumn().getValue(row.getRowIndex());
 			final Boolean alreadyProcessed = AbstractEventsTablePage.this.isEventProcessed(eventId);
 			return null != row && !alreadyProcessed && CompareUtility.equals(StateCodeType.AskedCode.ID, rowState)
-					&& startDateEmpty && endDateEmpty && BEANS.get(GoogleApiHelper.class).isCalendarConfigured(hostId)
+					&& startDateEmpty && endDateEmpty && BEANS.get(CalendarService.class).isCalendarConfigured(hostId)
 					// &&
 					// BEANS.get(GoogleApiHelper.class).isCalendarConfigured(attendeeId)
 					&& this.isTimeZoneValid(attendeeId) && this.isTimeZoneValid(hostId) && this.isGuestCurrentUser(row);

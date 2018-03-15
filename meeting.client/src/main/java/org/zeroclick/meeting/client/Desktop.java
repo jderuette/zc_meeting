@@ -62,6 +62,7 @@ import org.zeroclick.configuration.shared.user.UserModifiedNotification;
 import org.zeroclick.meeting.client.api.google.GoogleApiHelper;
 import org.zeroclick.meeting.client.calendar.CalendarsConfigurationForm;
 import org.zeroclick.meeting.client.meeting.MeetingOutline;
+import org.zeroclick.meeting.service.CalendarService;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
@@ -137,7 +138,7 @@ public class Desktop extends AbstractDesktop {
 	}
 
 	private void checkAndUpdateRequiredDatas() {
-		final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+		final CalendarService calendarService = BEANS.get(CalendarService.class);
 		final IUserService userService = BEANS.get(IUserService.class);
 		final AccessControlService acs = BEANS.get(AccessControlService.class);
 		final Long currentUserId = acs.getZeroClickUserIdOfCurrentSubject();
@@ -146,7 +147,7 @@ public class Desktop extends AbstractDesktop {
 
 		// default user timezone
 		final String currentUserTimeZone = userService.getUserTimeZone(currentUserId);
-		final Boolean isCalendarConfigured = googleHelper.isCalendarConfigured();
+		final Boolean isCalendarConfigured = calendarService.isCalendarConfigured();
 		if (null == currentUserTimeZone || !isCalendarConfigured) {
 			final OnBoardingUserForm form = new OnBoardingUserForm();
 			form.getUserIdField().setValue(currentUserId);
@@ -445,6 +446,41 @@ public class Desktop extends AbstractDesktop {
 	}
 
 	@Order(3000)
+	public class AddMicrosoftCalendarMenu extends AbstractMenu {
+		@Override
+		protected String getConfiguredText() {
+			return TEXTS.get("zc.meeting.addMicrosftCalendar");
+		}
+
+		@Override
+		protected String getConfiguredTooltipText() {
+			return TEXTS.get("zc.meeting.addCalendar.tooltips");
+		}
+
+		@Override
+		protected String getConfiguredIconId() {
+			return Icons.Calendar;
+		}
+
+		@Override
+		protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+			return CollectionUtility.hashSet();
+		}
+
+		@Override
+		protected void execInitAction() {
+			super.execInitAction();
+			this.setVisiblePermission(new CreateApiPermission());
+			// this.setVisible(!BEANS.get(GoogleApiHelper.class).isCalendarConfigured());
+		}
+
+		@Override
+		protected void execAction() {
+			ClientSession.get().getDesktop().openUri("/api/microsot/addCalendar", OpenUriAction.NEW_WINDOW);
+		}
+	}
+
+	@Order(4000)
 	public class UserMenu extends AbstractMenu {
 
 		@Override

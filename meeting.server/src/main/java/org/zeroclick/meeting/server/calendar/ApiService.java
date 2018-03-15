@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.scout.rt.platform.BEANS;
+import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.holders.NVPair;
 import org.eclipse.scout.rt.server.clientnotification.ClientNotificationRegistry;
 import org.eclipse.scout.rt.server.jdbc.SQL;
@@ -182,6 +183,28 @@ public class ApiService extends AbstractCommonService implements IApiService {
 	}
 
 	@Override
+	public ApiTableRowData getApi(final Long apiCredentialId) {
+		if (null == apiCredentialId) {
+			throw new VetoException("Api Crendetail ID is required");
+		}
+		ApiTableRowData apiData = null;
+		final ApiTablePageData pageData = new ApiTablePageData();
+
+		final StringBuilder sql = new StringBuilder();
+		sql.append(SQLs.OAUHTCREDENTIAL_PAGE_SELECT).append(SQLs.OAUHTCREDENTIAL_PAGE_SELECT_FILTER_API_CREDENTIAL_ID)
+				.append(SQLs.OAUHTCREDENTIAL_PAGE_DATA_SELECT_INTO);
+		SQL.selectInto(sql.toString(), new NVPair("page", pageData), new NVPair("apiCredentialId", apiCredentialId));
+
+		if (pageData.getRowCount() == 1) {
+			apiData = pageData.getRows()[0];
+		} else {
+			LOG.error("No Api Data with apiCredentailID : " + apiCredentialId);
+		}
+
+		return apiData;
+	}
+
+	@Override
 	public ApiFormData prepareCreate(final ApiFormData formData) {
 		super.checkPermission(new CreateApiPermission());
 		LOG.warn("PrepareCreate for Api");
@@ -288,8 +311,8 @@ public class ApiService extends AbstractCommonService implements IApiService {
 
 		if (!ACCESS.check(new ReadApiPermission(oAuthId))) {
 			final Long currentUserId = super.userHelper.getCurrentUserId();
-			LOG.error(new StringBuffer().append("User :").append(currentUserId).append(" (id : ").append(currentUserId)
-					.append(" try to load Api Data with Id : ").append(oAuthId).append(" (user : ").append(userId)
+			LOG.error(new StringBuffer().append("User : ").append(currentUserId).append(" (id : ").append(currentUserId)
+					.append(") try to load Api Data with Id : ").append(oAuthId).append(" (user : ").append(userId)
 					.append(") wich belong to User ").append(userId)
 					.append(" But haven't 'ALL'/'RELATED' read permission").toString());
 
@@ -330,17 +353,17 @@ public class ApiService extends AbstractCommonService implements IApiService {
 	 * API configuration. If an api already exist in DB form this user and this
 	 * account's email, this api is refreshed.
 	 *
-	 * /!\ the original api created this the original ID, is deleted, and should
+	 * /!\ the original api created with the original ID, is deleted, and should
 	 * be discarded in UserCache (credential Cache)
 	 *
 	 * @param formData
 	 * @return
 	 */
 	@Override
-	public ApiFormData storeAccountEmail(final ApiFormData newDataForm, final Long userId, final String accountEmail) {
+	public ApiFormData storeAccountEmail(final ApiFormData newDataForm, final String accountEmail) {
 		ApiFormData updatedData = null;
 		// if already an API with this Email for this user
-		final ApiFormData exstingCredentialId = this.loadByAccountsEmail(userId, accountEmail);
+		final ApiFormData exstingCredentialId = this.loadByAccountsEmail(newDataForm.getUserId(), accountEmail);
 
 		if (null != exstingCredentialId && null != exstingCredentialId.getApiCredentialId()
 				&& !exstingCredentialId.getApiCredentialId().equals(newDataForm.getApiCredentialId())) {
