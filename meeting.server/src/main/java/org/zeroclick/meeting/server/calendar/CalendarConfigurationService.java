@@ -205,6 +205,9 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 			this.checkPermission(new UpdateCalendarConfigurationPermission(row.getOAuthCredentialId()));
 			SQL.insert(SQLs.CALENDAR_CONFIG_UPDATE + SQLs.GENERIC_WHERE_FOR_SECURE_AND + SQLs.CALENDAR_CONFIG_FILTER_ID
 					+ SQLs.CALENDAR_CONFIG_FILTER_EXTERNAL_ID, row);
+
+			this.dataCache.clearCache(row.getCalendarConfigurationId());
+			this.dataCacheByUserId.clearCache(row.getUserId());
 		}
 
 		this.sendModifiedNotifications(formData);
@@ -264,7 +267,7 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		}
 	}
 
-	private void delete(final String externalId, final Long apiCredentialId) {
+	private void delete(final String externalId, final Long apiCredentialId, final Long userId) {
 		// permission based on API permissions (not calendar permissions)
 		this.checkPermission(new DeleteApiPermission(apiCredentialId));
 
@@ -278,6 +281,9 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 			LOG.warn(new StringBuffer().append("No row deleted calendars configuration : ").append(externalId)
 					.append(" for API ID : ").append(apiCredentialId).toString());
 		}
+
+		this.dataCache.clearCache(apiCredentialId);
+		this.dataCacheByUserId.clearCache(userId);
 	}
 
 	@Override
@@ -349,7 +355,8 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 
 				} else {
 					LOG.info(new StringBuffer().append("Calendar configuration : ")
-							.append(existingCalendarConfigId + " (name : ").append(existingCalendarConfig.getName())
+							.append(existingCalendarConfigId + " (name : ")
+							.append(existingCalendarConfig.getName().getValue())
 							.append(") don't need to be save during sync").toString());
 				}
 			}
@@ -371,7 +378,7 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 					LOG.info(new StringBuffer().append("Calendar : ").append(calendar.getExternalId())
 							.append(" does not exist anymore in provider data, removing it from user config")
 							.toString());
-					this.delete(calendar.getExternalId(), calendar.getOAuthCredentialId());
+					this.delete(calendar.getExternalId(), calendar.getOAuthCredentialId(), calendar.getUserId());
 				}
 			}
 		}

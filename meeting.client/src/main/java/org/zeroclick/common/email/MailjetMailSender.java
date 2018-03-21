@@ -110,7 +110,9 @@ public class MailjetMailSender implements IMailSender {
 
 		final String mailBCC = new EmailBccProperty().getValue();
 		if (null != mailBCC && !"".equals(mailBCC)) {
-			email.property(Email.BCC, mailBCC);
+			// email.property(Email.BCC, mailBCC);
+			email.property(Email.BCC,
+					new JSONArray().put(new JSONObject().put("Email", mailBCC).put("Name", "0ClickSupport")));
 		}
 		try {
 			// trigger the API call

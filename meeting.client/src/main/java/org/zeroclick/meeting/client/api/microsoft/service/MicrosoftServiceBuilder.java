@@ -39,9 +39,16 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
  */
 @ApplicationScoped
 public class MicrosoftServiceBuilder {
+	/**
+	 * Create a request interceptor to add headers that belong on every request
+	 *
+	 * @param accessToken
+	 *            : accesToken to identify User doing request
+	 * @param userEmail
+	 *            : user email (mainly used to identify his mail box)
+	 * @return
+	 */
 	private Interceptor buildRequestInterceptor(final String accessToken, final String userEmail) {
-		// Create a request interceptor to add headers that belong on
-		// every request
 		final Interceptor requestInterceptor = new Interceptor() {
 			@Override
 			public Response intercept(final Interceptor.Chain chain) throws IOException {
@@ -103,6 +110,8 @@ public class MicrosoftServiceBuilder {
 	}
 
 	public OutlookService getOutlookService(final Long apiCredentialId, final String userEmail) {
+		final MicrosoftApiHelper microsoftApiHelper = BEANS.get(MicrosoftApiHelper.class);
+		microsoftApiHelper.ensureTokens(apiCredentialId);
 		final String accessToken = this.getToken(apiCredentialId);
 		final Retrofit retrofit = this.buildRetrofit("https://graph.microsoft.com",
 				this.buildClient(this.buildRequestInterceptor(accessToken, userEmail)));

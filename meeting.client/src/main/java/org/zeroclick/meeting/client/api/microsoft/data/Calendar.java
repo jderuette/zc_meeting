@@ -15,8 +15,6 @@ limitations under the License.
  */
 package org.zeroclick.meeting.client.api.microsoft.data;
 
-import java.security.acl.Owner;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**

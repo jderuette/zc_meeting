@@ -20,7 +20,9 @@ import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.scout.rt.platform.ApplicationScoped;
@@ -29,6 +31,7 @@ import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.comon.user.AppUserHelper;
 import org.zeroclick.configuration.shared.api.ApiTablePageData;
 import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationEnvProperty;
@@ -73,8 +76,8 @@ public class CalendarService {
 
 	public ZonedDateTime canCreateEvent(final ZonedDateTime startDate, final ZonedDateTime endDate, final Long userId,
 			final ZoneId userZoneId) {
-		LOG.info(new StringBuilder(150).append("Cheking for (Google) calendars events from : ").append(startDate)
-				.append(" to ").append(endDate).append(" for user : ").append(userId).toString());
+		LOG.info(new StringBuilder(150).append("Cheking for calendars events from : ").append(startDate).append(" to ")
+				.append(endDate).append(" for user : ").append(userId).toString());
 
 		if (!this.isCalendarConfigured(userId)) {
 			LOG.info("Cannot check user clendar because no API configured for user : " + userId);
@@ -298,7 +301,37 @@ public class CalendarService {
 				.getUsedCalendars(userId);
 
 		return usedCalendars;
+	}
 
+	public void autoConfigureCalendars() {
+		this.autoConfigureCalendars(this.getCurrentUserId());
+	}
+
+	public void autoConfigureCalendars(final Long userId) {
+		LOG.info("AutoConfiguring all Calendars for user : " + userId);
+
+		final IApiService apiService = BEANS.get(IApiService.class);
+		final ApiTablePageData userApis = apiService.getApis(userId);
+
+		final Map<String, AbstractCalendarConfigurationTableRowData> calendars = new HashMap<>();
+
+		if (null != userApis && userApis.getRowCount() > 0) {
+			for (final ApiTableRowData aUserApi : userApis.getRows()) {
+				final ApiHelper apiHelper = ApiHelperFactory.get(aUserApi);
+				calendars.putAll(apiHelper.getCalendars(aUserApi));
+				// apiHelper.autoConfigureCalendars(aUserApi);
+			}
+
+			final ICalendarConfigurationService calendarConfigurationService = BEANS
+					.get(ICalendarConfigurationService.class);
+			calendarConfigurationService.autoConfigure(calendars);
+		}
+	}
+
+	private Long getCurrentUserId() {
+		final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
+		final Long currentUser = appUserHelper.getCurrentUserId();
+		return currentUser;
 	}
 
 	public class EventIdentification {

@@ -16,9 +16,6 @@ limitations under the License.
 package org.zeroclick.meeting.client.api.google;
 
 import java.io.IOException;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
@@ -32,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.zeroclick.meeting.client.NotificationHelper;
 import org.zeroclick.meeting.client.api.ApiCalendar;
 import org.zeroclick.meeting.client.api.ApiCredential;
+import org.zeroclick.meeting.client.api.ProviderDateHelper;
 import org.zeroclick.meeting.client.api.event.AbstractEventHelper;
 import org.zeroclick.meeting.client.common.UserAccessRequiredException;
 import org.zeroclick.meeting.service.CalendarService.EventIdentification;
@@ -52,9 +50,19 @@ import com.google.api.services.calendar.model.Events;
  * @author djer
  *
  */
-public class GoogleEventHelper extends AbstractEventHelper<Event, DateTime> {
+public class GoogleEventHelper extends AbstractEventHelper<Event, EventDateTime> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(GoogleEventHelper.class);
+
+	private ProviderDateHelper<EventDateTime> googleDateHelper;
+
+	@Override
+	protected ProviderDateHelper<EventDateTime> getDateHelper() {
+		if (null == this.googleDateHelper) {
+			this.googleDateHelper = new GoogleDateHelper();
+		}
+		return this.googleDateHelper;
+	}
 
 	@Override
 	public List<Event> retrieveEvents(final ZonedDateTime startDate, final ZonedDateTime endDate, final Long userId,
@@ -84,11 +92,12 @@ public class GoogleEventHelper extends AbstractEventHelper<Event, DateTime> {
 						.setOrderBy("startTime");
 			} catch (final IOException e) {
 				// DO nothing, query is null and null query is handled after
+				eventQuery = null;
 			}
 		}
 
 		final Events events = this.loadEvents(eventQuery, userId, calendar);
-		return events.getItems();
+		return null == events ? null : events.getItems();
 	}
 
 	@Override
@@ -99,7 +108,8 @@ public class GoogleEventHelper extends AbstractEventHelper<Event, DateTime> {
 		if (null != attendees && attendees.size() > 0) {
 			for (final EventAttendee attendee : attendees) {
 				if (userEmail.equalsIgnoreCase(attendee.getEmail())) {
-					if ("accepted".equals(attendee.getResponseStatus())) {
+					final String attendeeResponseStatus = attendee.getResponseStatus();
+					if ("accepted".equals(attendeeResponseStatus)) {
 						iAmRegistred = Boolean.TRUE;
 					}
 				}
@@ -182,56 +192,34 @@ public class GoogleEventHelper extends AbstractEventHelper<Event, DateTime> {
 		return event;
 	}
 
-	public String getHmlLink(final EventIdentification eventIdentification, final Calendar googleCalendarService) {
+	@Override
+	public String getHmlLink(final Event event) {
 		String htmlLink = "unknow";
 
-		final Event event = this.getEvent(eventIdentification, googleCalendarService);
 		if (null != event) {
 			htmlLink = event.getHtmlLink();
 		}
 		return htmlLink;
 	}
 
-	/**
-	 * Convert a Google (Event) Date to a standard Java 8 LocalDateTime (JSR
-	 * 310)
-	 *
-	 * @param date
-	 * @return
-	 */
+	@Override
+	protected EventDateTime getEventStart(final Event event) {
+		return event.getStart();
+	}
+
+	@Override
+	protected EventDateTime getEventEnd(final Event event) {
+		return event.getEnd();
+	}
+
+	@Override
+	public void sort(final List<Event> events) {
+		events.sort(new GoogleEventStartComparator());
+	}
+
+	@Override
 	public ZonedDateTime fromEventDateTime(final EventDateTime date) {
-		if (null == date.getDateTime()) {
-			return this.fromDateTime(date.getDate(), this.timeOffset(date));
-		} else {
-			return this.fromDateTime(date.getDateTime(), this.timeOffset(date));
-		}
-	}
-
-	/**
-	 * Convert a offset from a google DateTime to a standard Java 8 ZoneOffset
-	 * (JSR 310)
-	 *
-	 * @param dateTime
-	 * @return
-	 */
-	public ZoneOffset timeOffset(final EventDateTime eventDateTime) {
-		Integer offsetHours = 0;
-		Integer offsetMinutes = 0;
-		if (null == eventDateTime.getDateTime()) {
-			offsetHours = eventDateTime.getDate().getTimeZoneShift() / 60;
-			offsetMinutes = eventDateTime.getDate().getTimeZoneShift() % 60;
-		} else {
-			offsetHours = eventDateTime.getDateTime().getTimeZoneShift() / 60;
-			offsetMinutes = eventDateTime.getDateTime().getTimeZoneShift() % 60;
-		}
-
-		return ZoneOffset.ofHoursMinutes(offsetHours, offsetMinutes);
-	}
-
-	private ZonedDateTime fromDateTime(final DateTime dateTime, final ZoneOffset zoneOffset) {
-		final ZonedDateTime localDate = ZonedDateTime.ofInstant(Instant.ofEpochMilli(dateTime.getValue()), zoneOffset);
-
-		return localDate;
+		return this.getDateHelper().fromEventDateTime(date);
 	}
 
 	@Override
@@ -245,16 +233,15 @@ public class GoogleEventHelper extends AbstractEventHelper<Event, DateTime> {
 			if (maximumDetails) {
 				builder.append(". ICalUID : ").append(event.getICalUID()).append(", link : ")
 						.append(event.getHtmlLink()).append(" with ").append(event.getAttendees().size())
-						.append(" attendee(s)").append(" at location : ").append(event.getLocation());
+						.append(" attendee(s) at location : ").append(event.getLocation());
 			}
 			return builder.toString();
 		}
 		return "";
 	}
 
-	@Override
-	public DateTime toDateTime(final ZonedDateTime dateTime, final ZoneId zoneId) {
-		return new DateTime(Date.from(dateTime.toInstant()), TimeZone.getTimeZone(zoneId));
+	public DateTime toDateTime(final ZonedDateTime dateTime) {
+		return new DateTime(Date.from(dateTime.toInstant()), TimeZone.getTimeZone(dateTime.getZone()));
 	}
 
 	public Event create(final Event newEvent, final CalendarConfigurationFormData calendarToStoreEvent,

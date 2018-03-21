@@ -13,29 +13,19 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.zeroclick.meeting.client.api.google;
+package org.zeroclick.meeting.client.api.microsoft;
 
 import org.zeroclick.meeting.client.api.AbstractDateComparator;
-
-import com.google.api.services.calendar.model.Event;
+import org.zeroclick.meeting.client.api.microsoft.data.Event;
 
 /**
- * @author djer13
+ * @author djer
  *
- *         Allow ordering of Google events from multiple calendars. Order is
- *         based on the start date of each events.
  */
-public class GoogleEventStartComparator extends AbstractDateComparator<Event> {
+public class MicrosoftEventStartComparator extends AbstractDateComparator<Event> {
 
 	@Override
-	protected Long extractDateAsLong(final Event event) {
-		Long startValue;
-		if (null == event.getStart().getDateTime()) {
-			startValue = event.getStart().getDate().getValue();
-		} else {
-			startValue = event.getStart().getDateTime().getValue();
-		}
-
-		return startValue;
+	protected Long extractDateAsLong(final Event objectContainingDate) {
+		return objectContainingDate.getStart().getDateTime().getTime();
 	}
 }

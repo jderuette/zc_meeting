@@ -32,6 +32,7 @@ public class PatchManageMicrosoftCalendars extends AbstractDataPatcher {
 	public static final String PATCHED_TABLE = "OAUHTCREDENTIAL";
 	public static final String PATCHED_COLUMN = "access_token";
 	public static final String PATCHED_COLUMN_REFRESH_TOKEN = "refresh_token";
+	public static final String PATCHED_ADDED_COLUMN_TENANT_ID = "tenant_id";
 
 	private static final Logger LOG = LoggerFactory.getLogger(PatchManageMicrosoftCalendars.class);
 
@@ -70,19 +71,27 @@ public class PatchManageMicrosoftCalendars extends AbstractDataPatcher {
 		LOG.info("Add Microsoft Apis upgrading data strcuture");
 		Boolean structureAltered = Boolean.FALSE;
 
-		if (this.getDatabaseHelper().existTable(PATCHED_TABLE)
-				&& this.getDatabaseHelper().isColumnExists(PATCHED_TABLE, PATCHED_COLUMN)) {
-			SQL.insert(SQLs.OAUHTCREDENTIAL_PATCH_ALTER_ACCES_TOKEN_COLUMN_LENGHT);
-			structureAltered = Boolean.TRUE;
-		}
-		if (this.getDatabaseHelper().existTable(PATCHED_TABLE)
-				&& this.getDatabaseHelper().isColumnExists(PATCHED_TABLE, PATCHED_COLUMN_REFRESH_TOKEN)) {
-			SQL.insert(SQLs.OAUHTCREDENTIAL_PATCH_ALTER_REFRESH_TOKEN_COLUMN_LENGHT);
-			structureAltered = Boolean.TRUE;
+		if (this.getDatabaseHelper().existTable(PATCHED_TABLE)) {
+			if (this.getDatabaseHelper().isColumnExists(PATCHED_TABLE, PATCHED_COLUMN)) {
+				SQL.insert(SQLs.OAUHTCREDENTIAL_PATCH_ALTER_ACCES_TOKEN_COLUMN_LENGHT);
+				structureAltered = Boolean.TRUE;
+			}
+
+			if (this.getDatabaseHelper().isColumnExists(PATCHED_TABLE, PATCHED_COLUMN_REFRESH_TOKEN)) {
+				SQL.insert(SQLs.OAUHTCREDENTIAL_PATCH_ALTER_REFRESH_TOKEN_COLUMN_LENGHT);
+				structureAltered = Boolean.TRUE;
+			}
+
+			if (!this.getDatabaseHelper().isColumnExists(PATCHED_TABLE, PATCHED_ADDED_COLUMN_TENANT_ID)) {
+				SQL.insert(SQLs.OAUHTCREDENTIAL_PATCH_ALTER_ADD_TENANT_ID_COLUMN);
+				structureAltered = Boolean.TRUE;
+			}
 		}
 
-		// as it create a Table force a refresh of Table Cache
-		this.getDatabaseHelper().resetExistingTablesCache();
+		if (structureAltered) {
+			// as it create a Table force a refresh of Table Cache
+			this.getDatabaseHelper().resetExistingTablesCache();
+		}
 
 		return structureAltered;
 	}

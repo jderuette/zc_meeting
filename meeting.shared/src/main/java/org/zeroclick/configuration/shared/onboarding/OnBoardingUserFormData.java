@@ -94,6 +94,7 @@ public class OnBoardingUserFormData extends AbstractFormData {
 			public static final String refreshToken = "refreshToken";
 			public static final String userId = "userId";
 			public static final String accountEmail = "accountEmail";
+			public static final String tenantId = "tenantId";
 			private Long m_apiCredentialId;
 			private Long m_provider;
 			private String m_accessToken;
@@ -101,6 +102,7 @@ public class OnBoardingUserFormData extends AbstractFormData {
 			private String m_refreshToken;
 			private Long m_userId;
 			private String m_accountEmail;
+			private String m_tenantId;
 
 			public Long getApiCredentialId() {
 				return m_apiCredentialId;
@@ -156,6 +158,14 @@ public class OnBoardingUserFormData extends AbstractFormData {
 
 			public void setAccountEmail(String newAccountEmail) {
 				m_accountEmail = newAccountEmail;
+			}
+
+			public String getTenantId() {
+				return m_tenantId;
+			}
+
+			public void setTenantId(String newTenantId) {
+				m_tenantId = newTenantId;
 			}
 		}
 	}

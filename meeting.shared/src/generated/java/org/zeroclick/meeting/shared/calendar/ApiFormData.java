@@ -90,6 +90,10 @@ public class ApiFormData extends AbstractFormData {
 		return getPropertyByClass(RepositoryIdProperty.class);
 	}
 
+	public TenantId getTenantId() {
+		return getFieldByClass(TenantId.class);
+	}
+
 	/**
 	 * access method for property UserId.
 	 */
@@ -144,6 +148,11 @@ public class ApiFormData extends AbstractFormData {
 	}
 
 	public static class RepositoryIdProperty extends AbstractPropertyData<String> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class TenantId extends AbstractValueFieldData<String> {
 
 		private static final long serialVersionUID = 1L;
 	}

@@ -50,13 +50,15 @@ public interface ApiHelper {
 
 	public Map<String, AbstractCalendarConfigurationTableRowData> getCalendars(final Long userId);
 
+	public Map<String, AbstractCalendarConfigurationTableRowData> getCalendars(final ApiTableRowData aUserApi);
+
 	public Boolean delete(final String calendarId, final String eventId, final Long apiCredentialId);
 
 	public String createEvent(ZonedDateTime startDate, ZonedDateTime endDate, String subject, Long forUserId,
 			String location, String withEmail, Boolean guestAutoAcceptMeeting, String envDisplay,
 			CalendarConfigurationFormData calendarToStoreEvent);
 
-	public String getEventHtmlLink(EventIdentification eventIdentification, Long eventHeldBy);
+	public String getEventHtmlLink(EventIdentification eventIdentification, Long apiCredentialId);
 
 	public Boolean acceptEvent(EventIdentification eventOrganizerIdentification, String attendeeEmail,
 			ApiTableRowData eventCreatorApi);

@@ -18,6 +18,9 @@ package org.zeroclick.meeting.client.api.microsoft.data;
 import java.util.Base64;
 import java.util.Date;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,6 +31,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class IdToken {
+
+	private static final Logger LOG = LoggerFactory.getLogger(IdToken.class);
 
 	// NOTE: This is just a subset of the claims returned in the
 	// ID token. For a full listing, see:
@@ -149,13 +154,14 @@ public class IdToken {
 		// Check expiration and not before times
 		if (now.after(this.getUnixEpochAsDate(this.expirationTime))
 				|| now.before(this.getUnixEpochAsDate(this.notBefore))) {
-			// Token is not within it's valid "time"
+			LOG.error(new StringBuilder().append("Token is not within it's valid 'time'. After : ")
+					.append(this.expirationTime).append(" Or before : ").append(this.notBefore).toString());
 			return false;
 		}
 
 		// Check nonce
 		if (!nonce.equals(this.getNonce())) {
-			// Nonce mismatch
+			LOG.error("Nonce mismatch, expected : " + nonce + ", sended value :" + this.getNonce());
 			return false;
 		}
 

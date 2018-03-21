@@ -16,13 +16,10 @@ limitations under the License.
 package org.zeroclick.meeting.client.api.microsoft;
 
 import java.io.IOException;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
 
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.exception.VetoException;
@@ -32,12 +29,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.meeting.client.api.ApiCalendar;
 import org.zeroclick.meeting.client.api.ApiCredential;
+import org.zeroclick.meeting.client.api.ProviderDateHelper;
 import org.zeroclick.meeting.client.api.event.AbstractEventHelper;
+import org.zeroclick.meeting.client.api.microsoft.data.Attendee;
 import org.zeroclick.meeting.client.api.microsoft.data.DateTimeTimeZone;
 import org.zeroclick.meeting.client.api.microsoft.data.Event;
 import org.zeroclick.meeting.client.api.microsoft.data.PagedResult;
 import org.zeroclick.meeting.client.api.microsoft.service.CalendarService;
 import org.zeroclick.meeting.client.common.UserAccessRequiredException;
+import org.zeroclick.meeting.service.CalendarService.EventIdentification;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
 
 /**
@@ -48,32 +48,47 @@ public class MicrosoftEventHelper extends AbstractEventHelper<Event, DateTimeTim
 
 	private static final Logger LOG = LoggerFactory.getLogger(MicrosoftEventHelper.class);
 
+	private ProviderDateHelper<DateTimeTimeZone> microsoftDateHelper;
+
+	@Override
+	protected ProviderDateHelper<DateTimeTimeZone> getDateHelper() {
+		if (null == this.microsoftDateHelper) {
+			this.microsoftDateHelper = new MicrosoftDateHelper();
+		}
+		return this.microsoftDateHelper;
+	}
+
 	@Override
 	public String asLog(final Event event, final Boolean maximumDetails) {
 		if (null != event) {
+			String responseStatus = "notSet";
+			if (null != event.getResponseStatus()) {
+				responseStatus = event.getResponseStatus().getResponse();
+			}
 			final StringBuilder builder = new StringBuilder();
 			builder.append("Microsoft event : ").append(event.getId()).append(", start : ").append(event.getStart())
-					.append(", end : ").append(event.getEnd()).append(", status").append("TO DEFINE")
-					.append(", transparency : ").append("TIO DEFINE").append(", from recurent event : ")
-					.append("TO DEFINE").append(", summary : ").append(event.getSubject());
+					.append(", end : ").append(event.getEnd()).append(", status").append(responseStatus)
+					.append(", showAs : ").append(event.getShowAs()).append(", from recurent event : ")
+					.append(event.getRecurrence()).append(", summary : ").append(event.getSubject());
 			if (maximumDetails) {
-				builder.append(". ICalUID : ").append("TO DEFINE").append(", link : ").append("TO DEFINE")
-						.append(" with ").append("TP DEFINE").append(" attendee(s)").append(" at location : ")
-						.append("TO DEFINE");
+				builder.append(". ICalUID : ").append(event.getiCalUId()).append(", link : ").append(event.getWebLink())
+						.append(" with ").append(event.getAttendees().size()).append(" attendee(s)  at location : ")
+						.append(event.getLocation());
 			}
 			return builder.toString();
 		}
 		return "";
 	}
 
-	@Override
-	public DateTimeTimeZone toDateTime(final ZonedDateTime dateTime, final ZoneId zoneId) {
-		final DateTimeTimeZone mDate = new DateTimeTimeZone();
-		final Date javaDate = Date.from(dateTime.toInstant());
-		mDate.setDateTime(javaDate);
-		mDate.setTimeZone(TimeZone.getTimeZone(zoneId).getDisplayName(Locale.ENGLISH));
-		return mDate;
-	}
+	// @Override
+	// private DateTimeTimeZone toDateTime(final ZonedDateTime dateTime, final
+	// ZoneId zoneId) {
+	// final DateTimeTimeZone mDate = new DateTimeTimeZone();
+	// final Date javaDate = Date.from(dateTime.toInstant());
+	// mDate.setDateTime(javaDate);
+	// mDate.setTimeZone(TimeZone.getTimeZone(zoneId).getDisplayName(Locale.ENGLISH));
+	// return mDate;
+	// }
 
 	@Override
 	public List<Event> retrieveEvents(final ZonedDateTime startDate, final ZonedDateTime endDate, final Long userId,
@@ -90,20 +105,24 @@ public class MicrosoftEventHelper extends AbstractEventHelper<Event, DateTimeTim
 			throw new VetoException(TEXTS.get("zc.meeting.calendarProviderRequired"));
 		}
 
+		final String microsoftdStartDate = this.toISO8601DateTime(startDate);
+		final String microsoftEndDate = this.toISO8601DateTime(endDate);
+
 		// Sort by start time in descending order
 		final String sort = "start/dateTime DESC";
 		// Only return the properties we care about
-		final String properties = "organizer,subject,start,end";
+		final String properties = "organizer,subject,start,end,iCalUId,isAllDay,isOrganizer,showAs,webLink";
 		// Return at most 10 events
 		final Integer maxResults = 50;
 
 		PagedResult<Event> eventsPage = null;
 		final List<Event> events = new ArrayList<>();
 		try {
-			eventsPage = mCalendarService.getCalendar().getEvents(sort, properties, maxResults).execute().body();
+			eventsPage = mCalendarService.getCalendar()
+					.getEvents(microsoftdStartDate, microsoftEndDate, sort, properties, maxResults).execute().body();
 			events.addAll(CollectionUtility.arrayList(eventsPage.getValue()));
 
-			// FIXEME Djer13 handle multi page results
+			// FIXME Djer13 handle multi page results
 			if (null != eventsPage.getNextPageLink()) {
 				LOG.warn("Some event are not analysed because on the next page ! url :" + eventsPage.getNextPageLink());
 			}
@@ -114,22 +133,92 @@ public class MicrosoftEventHelper extends AbstractEventHelper<Event, DateTimeTim
 		return events;
 	}
 
+	private String toISO8601DateTime(final ZonedDateTime date) {
+		return date.toOffsetDateTime().toString();
+	}
+
+	public Event getEvent(final EventIdentification eventIdentification, final CalendarService calendar) {
+		Event event = null;
+		try {
+			event = calendar.getEvent(eventIdentification.getEventId()).execute().body();
+		} catch (final IOException ioe) {
+			LOG.error("Microsft API error while trying to retrieve Event with ID : " + eventIdentification.getEventId(),
+					ioe);
+		}
+
+		return event;
+	}
+
 	@Override
 	public Boolean isNotRegiteredOn(final Event event, final String userEmail) {
-		// TODO Auto-generated method stub
-		return null;
+		Boolean iAmRegistred = Boolean.FALSE;
+		final String eventCreator = event.getOrganizer().getEmailAddress().getAddress();
+		final Attendee attendee = this.searchAttendee(event, userEmail);
+
+		if (null != attendee) {
+			final String attendeeResponseStatus = attendee.getStatus().getResponse();
+			if ("Accepted".equals(attendeeResponseStatus)) {
+				iAmRegistred = Boolean.TRUE;
+			}
+		}
+
+		return !(userEmail.equalsIgnoreCase(eventCreator) || iAmRegistred);
 	}
 
 	@Override
 	public Boolean isFree(final Event event) {
-		// TODO Auto-generated method stub
-		return null;
+		Boolean isFree = Boolean.FALSE;
+		final String showAs = event.getShowAs();
+		if ("Free".equals(showAs)) {
+			isFree = Boolean.TRUE;
+		}
+		return isFree;
 	}
 
 	@Override
 	public Boolean isFullDay(final Event event) {
-		// TODO Auto-generated method stub
-		return null;
+		return event.getIsAllDay();
+	}
+
+	private Attendee searchAttendee(final Event event, final String emailAdress) {
+		Attendee foundAttende = null;
+		final Collection<Attendee> attendees = event.getAttendees();
+
+		if (null != attendees && attendees.size() > 0) {
+			for (final Attendee attendee : attendees) {
+				if (emailAdress.equalsIgnoreCase(attendee.getEmailAddress().getAddress())) {
+					foundAttende = attendee;
+					break;
+				}
+			}
+		}
+		return foundAttende;
+	}
+
+	@Override
+	public String getHmlLink(final Event event) {
+		String htmlLink = "unknow";
+
+		if (null != event) {
+			htmlLink = event.getWebLink();
+		}
+		return htmlLink;
+	}
+
+	@Override
+	public void sort(final List<Event> events) {
+		events.sort(new MicrosoftEventStartComparator());
+
+	}
+
+	@Override
+	protected DateTimeTimeZone getEventStart(final Event event) {
+		return event.getStart();
+	}
+
+	@Override
+	protected DateTimeTimeZone getEventEnd(final Event event) {
+		return event.getEnd();
 	}
 
 }

@@ -19,7 +19,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
-import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -30,7 +29,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
@@ -56,11 +54,8 @@ import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
 import org.zeroclick.meeting.client.api.AbstractApiHelper;
 import org.zeroclick.meeting.client.api.ApiCalendar;
 import org.zeroclick.meeting.client.api.ApiCredential;
-import org.zeroclick.meeting.client.calendar.GoogleEventStartComparator;
 import org.zeroclick.meeting.client.common.CallTrackerService;
-import org.zeroclick.meeting.client.common.DayDuration;
 import org.zeroclick.meeting.client.common.UserAccessRequiredException;
-import org.zeroclick.meeting.service.CalendarAviability;
 import org.zeroclick.meeting.service.CalendarService.EventIdentification;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
@@ -113,6 +108,7 @@ public class GoogleApiHelper extends AbstractApiHelper<Credential, Calendar> {
 		this.dataStoreFactory = new ScoutDataStoreFactory();
 	}
 
+	@Override
 	protected GoogleEventHelper getEventHelper() {
 		if (null == this.eventHelper) {
 			this.eventHelper = new GoogleEventHelper();
@@ -209,7 +205,7 @@ public class GoogleApiHelper extends AbstractApiHelper<Credential, Calendar> {
 		}
 	}
 
-	public List<ApiCredential<Credential>> getCredentials(final Long userId) throws IOException {
+	private List<ApiCredential<Credential>> getCredentials(final Long userId) throws IOException {
 		final IApiService apiService = BEANS.get(IApiService.class);
 		final List<ApiCredential<Credential>> credentials = new ArrayList<>();
 
@@ -336,7 +332,7 @@ public class GoogleApiHelper extends AbstractApiHelper<Credential, Calendar> {
 	}
 
 	public EventDateTime toEventDateTime(final ZonedDateTime dateTime, final ZoneOffset zoneOffset) {
-		final DateTime date = this.getEventHelper().toDateTime(dateTime, zoneOffset);
+		final DateTime date = this.getEventHelper().toDateTime(dateTime);
 		return new EventDateTime().setDateTime(date);
 	}
 
@@ -448,25 +444,55 @@ public class GoogleApiHelper extends AbstractApiHelper<Credential, Calendar> {
 		}
 
 		if (null != calendarsServices && calendarsServices.size() > 0) {
-			for (final ApiCalendar<Calendar, ApiCredential<Credential>> calendarService : calendarsServices) {
-				try {
-					final CalendarList calendarsList = calendarService.getCalendar().calendarList().list().execute();
-
-					final List<CalendarListEntry> calendarItems = calendarsList.getItems();
-					for (final CalendarListEntry calendarItem : calendarItems) {
-						final StringBuilder calendarId = new StringBuilder();
-						calendarId.append(userId).append('_').append(calendarItem.getId()).append('_')
-								.append(calendarService.getMetaData().getApiCredentialId());
-						calendars.put(calendarId.toString(), this.toCalendarConfig(calendarItem, userId,
-								calendarService.getMetaData().getApiCredentialId()));
-					}
-
-				} catch (final IOException e) {
-					LOG.warn("Cannot get (Google) calendar Service for user : " + userId, e);
-					throw new VetoException("Cannot get your Google calendar Data");
-				}
+			for (final ApiCalendar<Calendar, ApiCredential<Credential>> calendarApiService : calendarsServices) {
+				calendars.putAll(this.buildCalendarConfig(calendarApiService));
 			}
 		}
+
+		return calendars;
+	}
+
+	private Map<String, AbstractCalendarConfigurationTableRowData> buildCalendarConfig(
+			final ApiCalendar<Calendar, ApiCredential<Credential>> calendarApiService) {
+		final Map<String, AbstractCalendarConfigurationTableRowData> calendars = new HashMap<>();
+		final Long userId = calendarApiService.getMetaData().getUserId();
+		final Long apiId = calendarApiService.getMetaData().getApiCredentialId();
+
+		try {
+			final CalendarList calendarsList = calendarApiService.getCalendar().calendarList().list().execute();
+
+			final List<CalendarListEntry> calendarItems = calendarsList.getItems();
+			for (final CalendarListEntry calendarItem : calendarItems) {
+				@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
+				final StringBuilder calendarId = new StringBuilder();
+				calendarId.append(userId).append('_').append(calendarItem.getId()).append('_').append(apiId);
+				calendars.put(calendarId.toString(), this.toCalendarConfig(calendarItem, userId, apiId));
+			}
+
+		} catch (
+
+		final IOException ioe) {
+			LOG.warn("Cannot get (Google) calendar Service for user : " + userId, ioe);
+			throw new VetoException("Cannot get your Google calendar Data");
+		}
+
+		return calendars;
+	}
+
+	/**
+	 * Retrieve calendar's list in Google account.
+	 *
+	 * @param userId
+	 * @return a map, id is the Google calendar Id, value is a **partial** table
+	 *         Row (some data not exist in, Google configuration)
+	 */
+	@Override
+	public Map<String, AbstractCalendarConfigurationTableRowData> getCalendars(final ApiTableRowData aUserApi) {
+		Map<String, AbstractCalendarConfigurationTableRowData> calendars = new HashMap<>();
+		final ApiCalendar<Calendar, ApiCredential<Credential>> calendarApiService = this
+				.getCalendarService(aUserApi.getApiCredentialId());
+
+		calendars = this.buildCalendarConfig(calendarApiService);
 
 		return calendars;
 	}
@@ -613,100 +639,13 @@ public class GoogleApiHelper extends AbstractApiHelper<Credential, Calendar> {
 	}
 
 	@Override
-	public CalendarAviability getCalendarAviability(final ZonedDateTime startDate, final ZonedDateTime endDate,
-			final Long userId, final AbstractCalendarConfigurationTableRowData calendar, final ZoneId userZoneId) {
-		final List<Event> allConcurentEvent = new ArrayList<>();
-		allConcurentEvent.addAll(this.getEventHelper().getEvents(startDate, endDate, userId, calendar));
-
-		ZonedDateTime endLastEvent = null;
-		List<DayDuration> freeTimes = null;
-		if (!allConcurentEvent.isEmpty()) {
-			freeTimes = this.getFreeTime(startDate, endDate, allConcurentEvent, userZoneId);
-			final Event lastEvent = this.getLastEvent(allConcurentEvent);
-			endLastEvent = this.getEventHelper().fromEventDateTime(lastEvent.getEnd());
-		}
-
-		return new CalendarAviability(endLastEvent, freeTimes);
-	}
-
-	private Event getLastEvent(final List<Event> allConcurentEvent) {
-		final Event lastEvent = allConcurentEvent.get(allConcurentEvent.size() - 1);
-		return lastEvent;
-	}
-
-	private List<DayDuration> getFreeTime(final ZonedDateTime startDate, final ZonedDateTime endDate,
-			final List<Event> events, final ZoneId userZoneId) {
-		final List<DayDuration> freeTime = new ArrayList<>();
-		events.sort(new GoogleEventStartComparator());
-		final Iterator<Event> itEvent = events.iterator();
-		Boolean isFirstEvent = Boolean.TRUE;
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug(new StringBuilder().append("Searching for freeTime from : ").append(startDate).append(" to ")
-					.append(endDate).append(" with : ").append(events.size()).append(" event(s) in period").toString());
-		}
-
-		Event event = null;
-		while (itEvent.hasNext()) {
-			// next should be call only the first time, the end of the while
-			// move to the next (to get start of the next event)
-			if (isFirstEvent) {
-				event = itEvent.next();
-				isFirstEvent = Boolean.FALSE;
-			}
-			final ZonedDateTime eventZonedStartDate = this.getEventHelper().fromEventDateTime(event.getStart());
-			final DayOfWeek eventLocalStartDateDay = eventZonedStartDate.getDayOfWeek();
-			if (eventZonedStartDate.isAfter(startDate)) {
-				// freeTime from startDate to the beginning of the event
-				freeTime.add(new DayDuration(startDate.toOffsetDateTime().toOffsetTime(),
-						eventZonedStartDate.toLocalTime().atOffset(this.getEventHelper().timeOffset(event.getStart())),
-						CollectionUtility.arrayList(eventLocalStartDateDay), Boolean.FALSE));
-				if (itEvent.hasNext()) {
-					event = itEvent.next();
-				}
-			} else {
-				// freeTime from end of this event to begin of the next (if
-				// this event ends before the endDate)
-				final ZonedDateTime eventZonedEndDate = this.getEventHelper().fromEventDateTime(event.getEnd());
-				if (eventZonedEndDate.isBefore(endDate)) {
-					Event nextEvent = null;
-					if (itEvent.hasNext()) {
-						nextEvent = itEvent.next();
-					}
-					ZonedDateTime nextEventLocalStartDate;
-					ZoneOffset offset;
-					if (null == nextEvent) {
-						// no more event we are on the last one, this
-						// freeTime ends at endDate
-						nextEventLocalStartDate = endDate;
-						offset = endDate.getOffset();
-					} else {
-						nextEventLocalStartDate = this.getEventHelper().fromEventDateTime(nextEvent.getStart());
-						offset = this.getEventHelper().timeOffset(nextEvent.getStart());
-					}
-					freeTime.add(new DayDuration(eventZonedEndDate.toLocalTime().atOffset(offset),
-							nextEventLocalStartDate.toLocalTime().atOffset(offset),
-							CollectionUtility.arrayList(eventLocalStartDateDay), Boolean.FALSE));
-					event = nextEvent;
-				} else {
-					if (itEvent.hasNext()) {
-						event = itEvent.next();
-					}
-				}
-			}
-		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug(new StringBuilder().append(freeTime.size()).append(" freeTime period(s) found").toString());
-		}
-		return freeTime;
-	}
-
-	@Override
 	public String getEventHtmlLink(final EventIdentification eventIdentification, final Long apiCredentialId) {
 		final ApiCalendar<Calendar, ApiCredential<Credential>> calendarService = this
 				.getCalendarService(apiCredentialId);
 
-		return this.getEventHelper().getHmlLink(eventIdentification, calendarService.getCalendar());
+		final Event event = this.getEventHelper().getEvent(eventIdentification, calendarService.getCalendar());
+
+		return this.getEventHelper().getHmlLink(event);
 	}
 
 	@Override

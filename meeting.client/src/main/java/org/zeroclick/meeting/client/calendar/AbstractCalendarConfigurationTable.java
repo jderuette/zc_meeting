@@ -249,7 +249,7 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 				// User really won't provide required data
 				return; // early Break
 			}
-			googleHelper.autoConfigureCalendars();
+			calendarService.autoConfigureCalendars();
 
 			AbstractCalendarConfigurationTable.this.loadData();
 		}

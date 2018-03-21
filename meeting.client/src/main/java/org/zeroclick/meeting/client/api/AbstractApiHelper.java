@@ -15,6 +15,8 @@ limitations under the License.
  */
 package org.zeroclick.meeting.client.api;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -28,6 +30,8 @@ import org.zeroclick.comon.user.AppUserHelper;
 import org.zeroclick.configuration.onboarding.OnBoardingUserForm;
 import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
+import org.zeroclick.meeting.client.api.event.EventHelper;
+import org.zeroclick.meeting.service.CalendarAviability;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
@@ -46,6 +50,8 @@ import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
  *            type of Calendar service
  */
 public abstract class AbstractApiHelper<E, F> implements ApiHelper {
+
+	protected abstract EventHelper getEventHelper();
 
 	@Override
 	public Long getCurrentUserId() {
@@ -133,6 +139,12 @@ public abstract class AbstractApiHelper<E, F> implements ApiHelper {
 	}
 
 	protected abstract Boolean delete(String calendarId, String eventId, F calendarService);
+
+	@Override
+	public CalendarAviability getCalendarAviability(final ZonedDateTime startDate, final ZonedDateTime endDate,
+			final Long userId, final AbstractCalendarConfigurationTableRowData calendar, final ZoneId userZoneId) {
+		return this.getEventHelper().getCalendarAviability(startDate, endDate, userId, calendar, userZoneId);
+	}
 
 	@Override
 	public void askToAddApi(final Long userId) {

@@ -39,6 +39,8 @@ import org.zeroclick.meeting.client.api.microsoft.data.TokenResponse;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.IApiService;
 
+import com.google.api.client.util.IOUtils;
+
 /**
  * @author djer
  *
@@ -105,6 +107,8 @@ public class MicrosoftApiOAuthCallback extends AbstractUiServletRequestHandler {
 						input.getRefreshToken().setValue(oAuthTokens.getRefreshToken());
 						input.getProvider().setValue(ProviderCodeType.MicrosoftCode.ID);
 						input.getExpirationTimeMilliseconds().setValue(oAuthTokens.getExpirationTime().getTime());
+						input.getTenantId().setValue(idTokenObj.getTenantId());
+						input.setProviderData(IOUtils.serialize(oAuthTokens));
 
 						final ApiFormData createdData = apiService.create(input, Boolean.FALSE);
 
@@ -128,10 +132,13 @@ public class MicrosoftApiOAuthCallback extends AbstractUiServletRequestHandler {
 						LOG.error("No acces Token generate with Id Token with email : " + idTokenObj.getEmail());
 					}
 				} else {
-					LOG.error("Microsft API cannot generate AccessToken from code : " + code);
+					LOG.error(new StringBuilder().append("Microsft API cannot generate AccessToken from code : ")
+							.append(code).append(" idTokenObj is nul, id token String to parse is : ").append(idToken)
+							.toString());
 				}
 			} else {
-				LOG.error("Invalid state, canno't create new (microsfot) API");
+				LOG.error(new StringBuilder().append("Invalid state, canno't create new (microsfot) API, expected : ")
+						.append(expectedState).append(", actual :").append(state).toString());
 			}
 		} else {
 			LOG.error("No nonce/state attribute in current Session, canno't create new (microsfot) API");

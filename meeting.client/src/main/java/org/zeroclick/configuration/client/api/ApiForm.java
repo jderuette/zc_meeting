@@ -26,6 +26,7 @@ import org.zeroclick.configuration.client.api.ApiForm.MainBox.ExpirationTimeMill
 import org.zeroclick.configuration.client.api.ApiForm.MainBox.OkButton;
 import org.zeroclick.configuration.client.api.ApiForm.MainBox.ProviderField;
 import org.zeroclick.configuration.client.api.ApiForm.MainBox.RefreshTokenField;
+import org.zeroclick.configuration.client.api.ApiForm.MainBox.TenantIdField;
 import org.zeroclick.configuration.shared.provider.ProviderCodeType;
 import org.zeroclick.meeting.client.api.google.GoogleApiHelper;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
@@ -132,6 +133,10 @@ public class ApiForm extends AbstractForm {
 
 	public AccountEmailField getAccountEmailField() {
 		return this.getFieldByClass(AccountEmailField.class);
+	}
+
+	public TenantIdField getTenantIdField() {
+		return this.getFieldByClass(TenantIdField.class);
 	}
 
 	public OkButton getOkButton() {
@@ -246,6 +251,19 @@ public class ApiForm extends AbstractForm {
 			@Override
 			protected int getConfiguredMaxLength() {
 				return 128;
+			}
+		}
+
+		@Order(6000)
+		public class TenantIdField extends AbstractStringField {
+			@Override
+			protected String getConfiguredLabel() {
+				return TEXTS.get("zc.api.tenantId");
+			}
+
+			@Override
+			protected int getConfiguredMaxLength() {
+				return 512;
 			}
 		}
 

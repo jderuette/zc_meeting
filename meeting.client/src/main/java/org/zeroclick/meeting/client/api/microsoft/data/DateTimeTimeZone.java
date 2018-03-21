@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
  * @author djer
- *
+ * @see {@link https://developer.microsoft.com/fr-fr/graph/docs/api-reference/v1.0/resources/datetimetimezone}
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DateTimeTimeZone {
@@ -36,6 +36,13 @@ public class DateTimeTimeZone {
 		this.dateTime = dateTime;
 	}
 
+	/**
+	 * A timeZone string LIKE : Etc/GMT+12, Etc/GMT+11, Pacifique/Honolulu,
+	 * Amérique/Anchorage, Amérique/Santa_Isabel, Amérique/Los_Angeles,
+	 * Europe/Paris, Asie/Yangon (Rangoon)
+	 * 
+	 * @return
+	 */
 	public String getTimeZone() {
 		return this.timeZone;
 	}

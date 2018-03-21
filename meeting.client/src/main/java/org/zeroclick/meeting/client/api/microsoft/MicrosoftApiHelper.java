@@ -16,7 +16,6 @@ limitations under the License.
 package org.zeroclick.meeting.client.api.microsoft;
 
 import java.io.IOException;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -33,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.zeroclick.comon.text.StringHelper;
 import org.zeroclick.configuration.shared.api.ApiTablePageData;
 import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
+import org.zeroclick.configuration.shared.provider.ProviderCodeType;
 import org.zeroclick.meeting.client.api.AbstractApiHelper;
 import org.zeroclick.meeting.client.api.ApiCalendar;
 import org.zeroclick.meeting.client.api.ApiCredential;
@@ -45,13 +45,14 @@ import org.zeroclick.meeting.client.api.microsoft.service.MicrosoftServiceBuilde
 import org.zeroclick.meeting.client.api.microsoft.service.OutlookService;
 import org.zeroclick.meeting.client.api.microsoft.service.TokenService;
 import org.zeroclick.meeting.client.common.UserAccessRequiredException;
-import org.zeroclick.meeting.service.CalendarAviability;
 import org.zeroclick.meeting.service.CalendarService.EventIdentification;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationTablePageData.CalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.IApiService;
+
+import com.google.api.client.util.IOUtils;
 
 /**
  * @author djer
@@ -102,6 +103,7 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 		this.redirectUrl = "http://localhost:8082/api/microsoft/oauth2callback";
 	}
 
+	@Override
 	protected MicrosoftEventHelper getEventHelper() {
 		if (null == this.eventHelper) {
 			this.eventHelper = new MicrosoftEventHelper();
@@ -144,26 +146,41 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 		return response;
 	}
 
-	public TokenResponse ensureTokens(final TokenResponse tokens, final String tenantId) {
-		LOG.info("Checking if exisitng tokens are still valids");
+	public TokenResponse ensureTokens(final Long apiCredentialId) {
+		LOG.info("Checking if exisitng tokens are still valids for apiId : " + apiCredentialId);
 		final Calendar now = Calendar.getInstance();
 		final MicrosoftServiceBuilder microsoftServiceBuilder = BEANS.get(MicrosoftServiceBuilder.class);
 
+		final ApiFormData savedData = this.getSavecApiCredential(apiCredentialId);
+		final TokenResponse existingTokens = this.getTokenResponse(savedData);
+
 		TokenResponse response = null;
 
-		if (now.getTime().before(tokens.getExpirationTime())) {
-			LOG.info("Tokens are still valids");
-			response = tokens;
+		if (now.getTime().before(existingTokens.getExpirationTime())) {
+			LOG.debug("Tokens are still valids");
+			response = existingTokens;
 		} else {
 			LOG.info("Tokens are expired, refreshing them");
 			final TokenService tokenService = microsoftServiceBuilder.getTokenService();
 
 			try {
-				response = tokenService.getAccessTokenFromRefreshToken(tenantId, this.getAppId(), this.getAppPassword(),
-						"refresh_token", tokens.getRefreshToken(), this.getRedirectUrl()).execute().body();
+				response = tokenService.getAccessTokenFromRefreshToken(savedData.getTenantId().getValue(),
+						this.getAppId(), this.getAppPassword(), "refresh_token", existingTokens.getRefreshToken(),
+						this.getRedirectUrl()).execute().body();
+
+				// Store the new Token for this Api Id
+				savedData.getAccessToken().setValue(response.getAccessToken());
+				savedData.getRefreshToken().setValue(response.getRefreshToken());
+				savedData.getProvider().setValue(ProviderCodeType.MicrosoftCode.ID);
+				savedData.getExpirationTimeMilliseconds().setValue(response.getExpirationTime().getTime());
+				savedData.setProviderData(IOUtils.serialize(response));
+
+				final IApiService apiService = BEANS.get(IApiService.class);
+				apiService.store(savedData);
+
 			} catch (final IOException e) {
-				LOG.error("Error while refreshing Token with acces TOken : " + tokens.getAccessToken()
-						+ " from tenantId : " + tenantId, e);
+				LOG.error("Error while refreshing Token with acces Token : " + existingTokens.getAccessToken()
+						+ " from tenantId : " + savedData.getTenantId().getValue(), e);
 				final TokenResponse error = new TokenResponse();
 				error.setError("IOException");
 				error.setErrorDescription(e.getMessage());
@@ -171,6 +188,28 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 			}
 		}
 		return response;
+	}
+
+	private ApiFormData getSavecApiCredential(final Long apiCredentialId) {
+		final IApiService apiService = BEANS.get(IApiService.class);
+
+		final ApiFormData input = new ApiFormData();
+		input.setApiCredentialId(apiCredentialId);
+
+		final ApiFormData apiData = apiService.load(input);
+
+		return apiData;
+	}
+
+	private TokenResponse getTokenResponse(final ApiFormData OAuthData) {
+		TokenResponse tokens = null;
+		try {
+			tokens = IOUtils.deserialize(OAuthData.getProviderData());
+		} catch (final IOException ioe) {
+			LOG.error("Erro while trying to desirialize Saved Token Response from provider Data : "
+					+ OAuthData.getProviderData(), ioe);
+		}
+		return tokens;
 	}
 
 	/**
@@ -296,28 +335,46 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 		}
 
 		if (null != calendarsServices && calendarsServices.size() > 0) {
-			for (final ApiCalendar<CalendarService, ApiCredential<String>> calendarService : calendarsServices) {
-				try {
-					final PagedResult<org.zeroclick.meeting.client.api.microsoft.data.Calendar> calendarsList = calendarService
-							.getCalendar().getCalendars().execute().body();
-
-					// final List<CalendarListEntry> calendarItems =
-					// calendarsList.getItems();
-					for (final org.zeroclick.meeting.client.api.microsoft.data.Calendar calendarItem : calendarsList
-							.getValue()) {
-						final StringBuilder calendarId = new StringBuilder();
-						calendarId.append(userId).append('_').append(calendarItem.getId()).append('_')
-								.append(calendarService.getMetaData().getApiCredentialId());
-						calendars.put(calendarId.toString(), this.toCalendarConfig(calendarItem, userId,
-								calendarService.getMetaData().getApiCredentialId()));
-					}
-
-				} catch (final IOException e) {
-					LOG.warn("Cannot get (Google) calendar Service for user : " + userId, e);
-					throw new VetoException("Cannot get your Google calendar Data");
-				}
+			for (final ApiCalendar<CalendarService, ApiCredential<String>> calendarApiService : calendarsServices) {
+				calendars.putAll(this.buildCalendarConfig(calendarApiService));
 			}
 		}
+
+		return calendars;
+	}
+
+	private Map<String, AbstractCalendarConfigurationTableRowData> buildCalendarConfig(
+			final ApiCalendar<CalendarService, ApiCredential<String>> calendarApiService) {
+		final Map<String, AbstractCalendarConfigurationTableRowData> calendars = new HashMap<>();
+		final Long userId = calendarApiService.getMetaData().getUserId();
+		final Long apiId = calendarApiService.getMetaData().getApiCredentialId();
+		try {
+			final PagedResult<org.zeroclick.meeting.client.api.microsoft.data.Calendar> calendarsList = calendarApiService
+					.getCalendar().getCalendars().execute().body();
+
+			for (final org.zeroclick.meeting.client.api.microsoft.data.Calendar calendarItem : calendarsList
+					.getValue()) {
+				@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
+				final StringBuilder calendarId = new StringBuilder();
+				calendarId.append(userId).append('_').append(calendarItem.getId()).append('_').append(apiId);
+				calendars.put(calendarId.toString(), this.toCalendarConfig(calendarItem, userId, apiId));
+			}
+
+		} catch (final IOException e) {
+			LOG.warn("Cannot get (Microsoft) calendar Service for user : " + userId, e);
+			throw new VetoException("Cannot get your Google calendar Data");
+		}
+
+		return calendars;
+	}
+
+	@Override
+	public Map<String, AbstractCalendarConfigurationTableRowData> getCalendars(final ApiTableRowData aUserApi) {
+		Map<String, AbstractCalendarConfigurationTableRowData> calendars = new HashMap<>();
+		final ApiCalendar<CalendarService, ApiCredential<String>> calendarApiService = this
+				.getCalendarService(aUserApi.getApiCredentialId());
+
+		calendars = this.buildCalendarConfig(calendarApiService);
 
 		return calendars;
 	}
@@ -346,6 +403,10 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 	@Override
 	public ApiCalendar<CalendarService, ApiCredential<String>> getCalendarService(final Long apiCredentialId) {
 		final MicrosoftServiceBuilder microsoftServiceBuilder = BEANS.get(MicrosoftServiceBuilder.class);
+
+		final MicrosoftApiHelper microsoftApiHelper = BEANS.get(MicrosoftApiHelper.class);
+		microsoftApiHelper.ensureTokens(apiCredentialId);
+
 		final ApiCredential<String> apiCredential = this.getApiCredential(apiCredentialId);
 
 		final CalendarService mCalendarService = microsoftServiceBuilder.getCalendarService(
@@ -359,16 +420,13 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 	}
 
 	@Override
-	public String getEventHtmlLink(final EventIdentification eventIdentification, final Long eventHeldBy) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	public String getEventHtmlLink(final EventIdentification eventIdentification, final Long apiCredentialId) {
+		final ApiCalendar<CalendarService, ApiCredential<String>> calendarService = this
+				.getCalendarService(apiCredentialId);
 
-	@Override
-	public CalendarAviability getCalendarAviability(final ZonedDateTime startDate, final ZonedDateTime endDate,
-			final Long userId, final AbstractCalendarConfigurationTableRowData calendar, final ZoneId userZoneId) {
-		// TODO Auto-generated method stub
-		return null;
+		final Event event = this.getEventHelper().getEvent(eventIdentification, calendarService.getCalendar());
+
+		return this.getEventHelper().getHmlLink(event);
 	}
 
 	/**
@@ -380,7 +438,7 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 	 *             when no credential can be found for the user
 	 */
 	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
-	public List<ApiCalendar<CalendarService, ApiCredential<String>>> getCalendarsServices(final Long userId)
+	private List<ApiCalendar<CalendarService, ApiCredential<String>>> getCalendarsServices(final Long userId)
 			throws IOException {
 		final List<ApiCalendar<CalendarService, ApiCredential<String>>> calendarsServices = new ArrayList<>();
 		final List<ApiCredential<String>> apiCredentials = this.getCredentials(userId);
@@ -398,12 +456,12 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 	private AbstractCalendarConfigurationTableRowData toCalendarConfig(
 			final org.zeroclick.meeting.client.api.microsoft.data.Calendar cal, final Long userId,
 			final Long apiCredentialId) throws IOException {
-		LOG.debug("Creating model data for (Google) calendar data : " + cal);
+		LOG.debug("Creating model data for (Microsoft) calendar data : " + cal);
 		final CalendarConfigurationTableRowData calendarConfigData = new CalendarConfigurationTableRowData();
 		calendarConfigData.setExternalId(cal.getId());
 		calendarConfigData.setName(cal.getName());
 		// TODO Djer13 a way to know if a calendar is the main ?
-		calendarConfigData.setMain(null);
+		calendarConfigData.setMain(false);
 		calendarConfigData.setReadOnly(!cal.getCanEdit());
 		calendarConfigData.setUserId(userId);
 		calendarConfigData.setOAuthCredentialId(apiCredentialId);
@@ -414,14 +472,6 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 	}
 
 	public String aslog(final Event event) {
-		if (null != event) {
-			final StringBuilder builder = new StringBuilder(100);
-			builder.append("Microsoft Event : ").append(event.getId()).append(", start : ").append(event.getStart())
-					.append(", end : ").append(event.getEnd()).append(", subject : ").append(event.getSubject())
-					.append(" , organizer : ").append(event.getOrganizer());
-			return builder.toString();
-		}
-		return "";
+		return this.getEventHelper().asLog(event);
 	}
-
 }

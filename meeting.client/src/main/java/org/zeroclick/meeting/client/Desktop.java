@@ -222,7 +222,8 @@ public class Desktop extends AbstractDesktop {
 			LOG.info("Auto-importing user Calendars for user : " + userId);
 
 			try {
-				googleHelper.autoConfigureCalendars();
+				final CalendarService calendarService = BEANS.get(CalendarService.class);
+				calendarService.autoConfigureCalendars();
 			} catch (final Exception ex) {
 				LOG.error("Error while importing (Google) calendar for user Id : " + userId, ex);
 			}
@@ -309,8 +310,8 @@ public class Desktop extends AbstractDesktop {
 						final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 
 						notificationHelper.addProccessedNotification("zc.api.added");
-						final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
-						googleHelper.autoConfigureCalendars();
+						final CalendarService calendarService = BEANS.get(CalendarService.class);
+						calendarService.autoConfigureCalendars();
 
 						notificationHelper.addProccessedNotification(
 								"zc.meeting.calendar.notification.createdCalendarsConfig",
@@ -339,8 +340,8 @@ public class Desktop extends AbstractDesktop {
 						final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 
 						notificationHelper.addProccessedNotification("zc.api.modified");
-						final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
-						googleHelper.autoConfigureCalendars();
+						final CalendarService calendarService = BEANS.get(CalendarService.class);
+						calendarService.autoConfigureCalendars();
 
 						notificationHelper.addProccessedNotification(
 								"zc.meeting.calendar.notification.modifiedCalendarsConfig",

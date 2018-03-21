@@ -21,6 +21,8 @@ import org.zeroclick.meeting.client.api.microsoft.data.PagedResult;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
+import retrofit2.http.PATCH;
+import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 /**
@@ -32,6 +34,16 @@ public interface CalendarService {
 	@GET("/v1.0/me/events")
 	Call<PagedResult<Event>> getEvents(@Query("$orderby") String orderBy, @Query("$select") String select,
 			@Query("$top") Integer maxResults);
+
+	@GET("/v1.0/me/calendar/calendarView")
+	Call<PagedResult<Event>> getEvents(@Query("startDateTime") String start, @Query("endDateTime") String end,
+			@Query("$orderby") String orderBy, @Query("$select") String select, @Query("$top") Integer maxResults);
+
+	@PATCH("/v1.0/me/events/{eventId}")
+	Call<Event> updateEvent(@Path("eventId") String eventId, Event modifiedEvent);
+
+	@GET("/v1.0/me/events/{eventId}")
+	Call<Event> getEvent(@Path("eventId") String eventId);
 
 	@GET("/v1.0/me/calendars")
 	Call<PagedResult<Calendar>> getCalendars();
