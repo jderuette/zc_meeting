@@ -347,7 +347,7 @@ public class SlotHelper {
 
 		for (final DayDuration period : nextValidDates.keySet()) {
 			final LocalDateTime periodDate = nextValidDates.get(period);
-			if (null == closestDate || periodDate.isBefore(closestDate)) {
+			if (null != periodDate && (null == closestDate || periodDate.isBefore(closestDate))) {
 				if (LOG.isDebugEnabled()) {
 					@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 					final StringBuilder builder = new StringBuilder();
