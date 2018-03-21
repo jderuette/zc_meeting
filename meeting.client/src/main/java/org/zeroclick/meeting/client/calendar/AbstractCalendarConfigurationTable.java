@@ -347,7 +347,7 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 
 	private void disableCell(final Cell view) {
 		view.setEditable(false);
-		view.setBackgroundColor("f6f6f6");
+		view.setBackgroundColor("999999");
 	}
 
 	protected Boolean canStore() {
