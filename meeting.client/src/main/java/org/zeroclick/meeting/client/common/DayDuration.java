@@ -426,6 +426,10 @@ public class DayDuration {
 	}
 
 	public DayOfWeek getNextDayOfWeek(final ZonedDateTime checkedDate) {
+		if (this.getValidDayOfWeek().size() == 0) {
+			LOG.debug("No valid day aviallable (desactivited) in : " + this);
+			return null; // early Break;
+		}
 		final DayOfWeek checkedDateDayOfWeek = checkedDate.getDayOfWeek();
 		// search if a next day in week is available
 		for (final DayOfWeek validDay : this.getValidDayOfWeek()) {
@@ -440,6 +444,9 @@ public class DayDuration {
 
 	public LocalDateTime getNextOrSameDate(final ZonedDateTime checkedDate) {
 		final DayOfWeek nextDayOfWeek = this.getClosestDayOfWeek(checkedDate);
+		if (null == nextDayOfWeek) {
+			return null; // early break
+		}
 
 		LocalDate day = null;
 
