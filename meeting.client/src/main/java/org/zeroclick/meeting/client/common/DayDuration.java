@@ -438,7 +438,6 @@ public class DayDuration {
 			}
 		}
 		// No Next Day in week, the first validDay (next week) is the closest
-		// FIXME if NO valid Day OfWeek for this period ?
 		return this.getValidDayOfWeek().get(0);
 	}
 
