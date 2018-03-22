@@ -38,6 +38,7 @@ import org.zeroclick.meeting.client.api.microsoft.data.PagedResult;
 import org.zeroclick.meeting.client.api.microsoft.data.TokenResponse;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.IApiService;
+import org.zeroclick.meeting.ui.html.HtmlResponseHelper;
 
 import com.google.api.client.util.IOUtils;
 
@@ -66,7 +67,9 @@ public class MicrosoftApiOAuthCallback extends AbstractUiServletRequestHandler {
 			}
 			return false;
 		}
+		final HtmlResponseHelper responseHelper = new HtmlResponseHelper();
 
+		ApiFormData userApi = null;
 		final Long currentUsderId = this.microsoftApiHelper.getCurrentUserId();
 		LOG.info("Microsfot API Storing User token for user Id : " + currentUsderId);
 
@@ -119,9 +122,13 @@ public class MicrosoftApiOAuthCallback extends AbstractUiServletRequestHandler {
 						}
 
 						if (null == accountEmail) {
-							LOG.error("Cannot get User account email to store in his api for user " + currentUsderId);
+							final StringBuilder builder = new StringBuilder();
+							builder.append("Cannot get User account email to store in his api for user ");
+							responseHelper.addErrorMessage(builder.toString());
+							builder.append(currentUsderId);
+							LOG.error(builder.toString());
 						} else {
-							apiService.storeAccountEmail(createdData, accountEmail);
+							userApi = apiService.storeAccountEmail(createdData, accountEmail);
 						}
 
 						// try to get event to check connection
@@ -129,23 +136,39 @@ public class MicrosoftApiOAuthCallback extends AbstractUiServletRequestHandler {
 								.getEvents(oAuthTokens.getAccessToken(), idTokenObj.getEmail());
 						this.debugLastEvent(events);
 					} else {
-						LOG.error("No acces Token generate with Id Token with email : " + idTokenObj.getEmail());
+						final StringBuilder builder = new StringBuilder();
+						builder.append("No acces Token generate with Id Token with email : ")
+								.append(idTokenObj.getEmail());
+						responseHelper.addErrorMessage(builder.toString());
+						LOG.error(builder.toString());
 					}
 				} else {
-					LOG.error(new StringBuilder().append("Microsft API cannot generate AccessToken from code : ")
-							.append(code).append(" idTokenObj is nul, id token String to parse is : ").append(idToken)
-							.toString());
+					final StringBuilder builder = new StringBuilder();
+					builder.append("Microsft API cannot generate AccessToken");
+					responseHelper.addErrorMessage(builder.toString());
+					builder.append(" from code : ").append(code)
+							.append(" idTokenObj is nul, id token String to parse is : ").append(idToken);
+					LOG.error(builder.toString());
 				}
 			} else {
-				LOG.error(new StringBuilder().append("Invalid state, canno't create new (microsfot) API, expected : ")
-						.append(expectedState).append(", actual :").append(state).toString());
+				final StringBuilder builder = new StringBuilder();
+				builder.append("Invalid state, canno't create new (microsfot) API");
+				responseHelper.addErrorMessage(builder.toString());
+				builder.append(", expected : ").append(expectedState).append(", actual :").append(state);
+				LOG.error(builder.toString());
 			}
 		} else {
-			LOG.error("No nonce/state attribute in current Session, canno't create new (microsfot) API");
+			responseHelper
+					.addErrorMessage("No nonce/state attribute in current Session, canno't create new (microsfot) API");
 		}
 
-		return true;
+		if (null != userApi) {
+			responseHelper.addSuccessMessage("Microsoft connection OK");
+		}
 
+		resp.getWriter().append(responseHelper.getPageContent());
+
+		return true;
 	}
 
 	private void debugLastEvent(final PagedResult<Event> events) {

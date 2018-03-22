@@ -15,6 +15,7 @@ limitations under the License.
  */
 package org.zeroclick.meeting.client.api.microsoft.data;
 
+import java.io.Serializable;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -26,7 +27,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TokenResponse {
+public class TokenResponse implements Serializable {
+
+	private static final long serialVersionUID = -3712320945577114983L;
 
 	@JsonProperty("token_type")
 	private String tokenType;
