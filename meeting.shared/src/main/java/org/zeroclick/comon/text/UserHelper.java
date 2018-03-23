@@ -21,6 +21,10 @@ import javax.security.auth.Subject;
 
 import org.eclipse.scout.rt.platform.ApplicationScoped;
 import org.eclipse.scout.rt.platform.BEANS;
+import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
+import org.zeroclick.configuration.shared.slot.ReadSlotPermission;
+import org.zeroclick.meeting.shared.calendar.ReadCalendarConfigurationPermission;
+import org.zeroclick.meeting.shared.event.ReadEventPermission;
 import org.zeroclick.meeting.shared.security.AccessControlService;
 
 /**
@@ -37,5 +41,26 @@ public class UserHelper {
 
 	public Subject getCurrentUserSubject() {
 		return Subject.getSubject(AccessController.getContext());
+	}
+
+	public Boolean isCalendarAdmin() {
+		final int currentUserCalendarConfigLevel = ACCESS
+				.getLevel(new ReadCalendarConfigurationPermission((Long) null));
+		return currentUserCalendarConfigLevel == ReadCalendarConfigurationPermission.LEVEL_ALL;
+	}
+
+	public Boolean isEventAdmin() {
+		final int currentUserEventLevel = ACCESS.getLevel(new ReadEventPermission((Long) null));
+		return currentUserEventLevel == ReadEventPermission.LEVEL_ALL;
+	}
+
+	public Boolean isEventUser() {
+		final int currentUserEventLevel = ACCESS.getLevel(new ReadEventPermission((Long) null));
+		return currentUserEventLevel >= ReadEventPermission.LEVEL_OWN;
+	}
+
+	public Boolean isSlotUser() {
+		final int currentUserEventLevel = ACCESS.getLevel(new ReadSlotPermission((Long) null));
+		return currentUserEventLevel == ReadSlotPermission.LEVEL_ALL;
 	}
 }

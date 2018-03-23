@@ -43,6 +43,7 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.comon.text.UserHelper;
 import org.zeroclick.configuration.shared.api.ApiLookupCall;
 import org.zeroclick.meeting.client.api.google.GoogleApiHelper;
 import org.zeroclick.meeting.service.CalendarService;
@@ -98,8 +99,14 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 
 	@Override
 	protected void execInitTable() {
+		final UserHelper userHelper = BEANS.get(UserHelper.class);
 		this.displayAllUsers = this.getConfiguredDisplayAllUsers();
 		this.loadData();
+
+		if (!userHelper.isCalendarAdmin()) {
+			final RefreshMenu refreshMenu = this.getMenuByClass(RefreshMenu.class);
+			refreshMenu.setVisible(false);
+		}
 
 		if (AbstractCalendarConfigurationTable.this.isDisplayAllUsers()) {
 			this.getUserIdColumn().setVisible(true);

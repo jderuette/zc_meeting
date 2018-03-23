@@ -4,17 +4,15 @@ import java.util.List;
 
 import org.eclipse.scout.rt.client.ui.desktop.outline.AbstractOutline;
 import org.eclipse.scout.rt.client.ui.desktop.outline.pages.IPage;
+import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
-import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
-import org.zeroclick.configuration.shared.slot.ReadSlotPermission;
+import org.zeroclick.comon.text.UserHelper;
 import org.zeroclick.meeting.client.admin.EventAdminNodePage;
 import org.zeroclick.meeting.client.event.EventAskedTablePage;
 import org.zeroclick.meeting.client.event.EventProcessedTablePage;
 import org.zeroclick.meeting.client.event.EventTablePage;
 import org.zeroclick.meeting.shared.Icons;
-import org.zeroclick.meeting.shared.calendar.ReadCalendarConfigurationPermission;
-import org.zeroclick.meeting.shared.event.ReadEventPermission;
 
 /**
  * <h3>{@link MeetingOutline}</h3>
@@ -27,20 +25,16 @@ public class MeetingOutline extends AbstractOutline {
 	// private static final Logger LOG =
 	// LoggerFactory.getLogger(MeetingOutline.class);
 
+	private UserHelper getUserHelper() {
+		return BEANS.get(UserHelper.class);
+	}
+
 	@Override
 	protected void execCreateChildPages(final List<IPage<?>> pageList) {
-		final int currentUserEventLevel = ACCESS.getLevel(new ReadEventPermission((Long) null));
-		final Boolean isEventUser = currentUserEventLevel >= ReadEventPermission.LEVEL_OWN;
-		final Boolean isEventAdmin = currentUserEventLevel == ReadEventPermission.LEVEL_ALL;
-
-		final int currentUserSlotLevel = ACCESS.getLevel(new ReadSlotPermission((Long) null));
-		// final Boolean isSlotUser = currentUserSlotLevel >=
-		// ReadSlotPermission.LEVEL_OWN;
-		final Boolean isSlotAdmin = currentUserSlotLevel == ReadSlotPermission.LEVEL_ALL;
-
-		final int currentUserCalendarConfigLevel = ACCESS
-				.getLevel(new ReadCalendarConfigurationPermission((Long) null));
-		final Boolean iscalendarConfigAdmin = currentUserCalendarConfigLevel == ReadCalendarConfigurationPermission.LEVEL_ALL;
+		final Boolean isEventUser = this.getUserHelper().isEventUser();
+		final Boolean isEventAdmin = this.getUserHelper().isEventAdmin();
+		final Boolean isSlotAdmin = this.getUserHelper().isSlotUser();
+		final Boolean iscalendarConfigAdmin = this.getUserHelper().isCalendarAdmin();
 
 		final EventTablePage eventTablePage = new EventTablePage();
 		eventTablePage.setVisibleGranted(isEventUser);
@@ -64,8 +58,7 @@ public class MeetingOutline extends AbstractOutline {
 	@Override
 	protected void initConfig() {
 		super.initConfig();
-		final Boolean isVisible = ACCESS
-				.getLevel(new ReadEventPermission((Long) null)) >= ReadEventPermission.LEVEL_OWN;
+		final Boolean isVisible = this.getUserHelper().isEventUser();
 		this.setEnabledGranted(isVisible);
 		this.setVisibleGranted(isVisible);
 	}
