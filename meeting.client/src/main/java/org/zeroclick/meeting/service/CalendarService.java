@@ -76,11 +76,11 @@ public class CalendarService {
 
 	public ZonedDateTime canCreateEvent(final ZonedDateTime startDate, final ZonedDateTime endDate, final Long userId,
 			final ZoneId userZoneId) {
-		LOG.info(new StringBuilder(150).append("Cheking for calendars events from : ").append(startDate).append(" to ")
+		LOG.info(new StringBuilder(150).append("Checking for calendars events from : ").append(startDate).append(" to ")
 				.append(endDate).append(" for user : ").append(userId).toString());
 
 		if (!this.isCalendarConfigured(userId)) {
-			LOG.info("Cannot check user clendar because no API configured for user : " + userId);
+			LOG.info("Cannot check user calendar because no API configured for user : " + userId);
 			// new recommended Date null, means "available" in user calendar
 			return null; // early break
 		}
@@ -230,8 +230,9 @@ public class CalendarService {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(new StringBuilder().append("Creating Event : '").append(subject).append("' fom : ")
 					.append(startDate).append(" to ").append(endDate).append(", for :").append(forUserId)
-					.append(", in Calendar : ").append(calendarToStoreEvent.getExternalId()).append(" (attendee :")
-					.append(withEmail).append(", autoAccept? ").append(guestAutoAcceptMeeting).append(")").toString());
+					.append(", in Calendar : ").append(calendarToStoreEvent.getExternalId().getValue())
+					.append(" (attendee :").append(withEmail).append(", autoAccept? ").append(guestAutoAcceptMeeting)
+					.append(")").toString());
 		}
 
 		final String envDisplay = new ApplicationEnvProperty().displayAsText();

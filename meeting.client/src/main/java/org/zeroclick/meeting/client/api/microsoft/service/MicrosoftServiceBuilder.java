@@ -24,6 +24,8 @@ import org.zeroclick.meeting.client.api.microsoft.MicrosoftApiHelper;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.IApiService;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -92,8 +94,10 @@ public class MicrosoftServiceBuilder {
 
 	private Retrofit buildRetrofit(final String baseUrl, final OkHttpClient client) {
 		// Create and configure the Retrofit object
+		final ObjectMapper customObjectMapper = new ObjectMapper();
+
 		return new Retrofit.Builder().baseUrl(baseUrl).client(client)
-				.addConverterFactory(JacksonConverterFactory.create()).build();
+				.addConverterFactory(JacksonConverterFactory.create(customObjectMapper)).build();
 	}
 
 	public CalendarService getCalendarService(final String accessToken, final String userEmail) {

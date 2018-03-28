@@ -27,6 +27,7 @@ import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.comon.date.DateHelper;
 import org.zeroclick.meeting.client.api.ApiCalendar;
 import org.zeroclick.meeting.client.api.ApiCredential;
 import org.zeroclick.meeting.client.api.ProviderDateHelper;
@@ -39,6 +40,7 @@ import org.zeroclick.meeting.client.api.microsoft.service.CalendarService;
 import org.zeroclick.meeting.client.common.UserAccessRequiredException;
 import org.zeroclick.meeting.service.CalendarService.EventIdentification;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
+import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
 
 /**
  * @author djer
@@ -89,6 +91,31 @@ public class MicrosoftEventHelper extends AbstractEventHelper<Event, DateTimeTim
 	// mDate.setTimeZone(TimeZone.getTimeZone(zoneId).getDisplayName(Locale.ENGLISH));
 	// return mDate;
 	// }
+
+	@Override
+	public Event create(final Event newEvent, final CalendarConfigurationFormData calendarToStoreEvent) {
+		final MicrosoftApiHelper apiHelper = BEANS.get(MicrosoftApiHelper.class);
+
+		final ApiCalendar<CalendarService, ApiCredential<String>> microsoftCalendarService = apiHelper
+				.getCalendarService(calendarToStoreEvent.getOAuthCredentialId().getValue());
+
+		return this.create(newEvent, calendarToStoreEvent, microsoftCalendarService);
+	}
+
+	private Event create(final Event newEvent, final CalendarConfigurationFormData calendarToStoreEvent,
+			final ApiCalendar<CalendarService, ApiCredential<String>> microsoftCalendarService) {
+		Event createdEvent = null;
+
+		try {
+			createdEvent = microsoftCalendarService.getCalendar()
+					.createEvent(calendarToStoreEvent.getExternalId().getValue(), newEvent).execute().body();
+
+		} catch (final IOException ioe) {
+			LOG.error("Error while creating (microsoft) Event", ioe);
+		}
+
+		return createdEvent;
+	}
 
 	@Override
 	public List<Event> retrieveEvents(final ZonedDateTime startDate, final ZonedDateTime endDate, final Long userId,
@@ -219,6 +246,15 @@ public class MicrosoftEventHelper extends AbstractEventHelper<Event, DateTimeTim
 	@Override
 	protected DateTimeTimeZone getEventEnd(final Event event) {
 		return event.getEnd();
+	}
+
+	@Override
+	public DateTimeTimeZone toProviderDateTime(final ZonedDateTime date) {
+		final DateTimeTimeZone providerDate = new DateTimeTimeZone();
+		final DateHelper dateHelper = BEANS.get(DateHelper.class);
+		providerDate.setDateTime(dateHelper.toUserDate(date));
+		providerDate.setTimeZone(date.getZone().getId());
+		return providerDate;
 	}
 
 }

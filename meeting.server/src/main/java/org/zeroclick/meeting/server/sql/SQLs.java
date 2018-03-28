@@ -148,6 +148,9 @@ public interface SQLs {
 
 	String OAUHTCREDENTIAL_UPDATE_WITHOUT_ACCOUNT_EMAIL = "UPDATE OAUHTCREDENTIAL SET user_id=:userId,  access_token=:accessToken, expiration_time_milliseconds=:expirationTimeMilliseconds, refresh_token=:refreshToken, provider=:provider, repository_id=:repositoryId, provider_data=:providerData WHERE api_credential_id=:apiCredentialId";
 	String OAUHTCREDENTIAL_UPDATE = "UPDATE OAUHTCREDENTIAL SET user_id=:userId,  access_token=:accessToken, expiration_time_milliseconds=:expirationTimeMilliseconds, refresh_token=:refreshToken, provider=:provider, repository_id=:repositoryId, provider_data=:providerData, account_email=:accountEmail WHERE api_credential_id=:apiCredentialId";
+	String OAUHTCREDENTIAL_UPDATE_WITH_TENANT_ID = "UPDATE OAUHTCREDENTIAL SET user_id=:userId,  access_token=:accessToken, expiration_time_milliseconds=:expirationTimeMilliseconds, refresh_token=:refreshToken, provider=:provider, repository_id=:repositoryId, provider_data=:providerData, account_email=:accountEmail, "
+			+ PatchManageMicrosoftCalendars.PATCHED_ADDED_COLUMN_TENANT_ID
+			+ "=:tenantId WHERE api_credential_id=:apiCredentialId";
 
 	String OAUHTCREDENTIAL_SELECT_OWNER = "SELECT user_id FROM OAUHTCREDENTIAL WHERE api_credential_id=:apiCredentialId INTO :userId";
 

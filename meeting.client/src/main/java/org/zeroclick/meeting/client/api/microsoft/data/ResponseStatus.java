@@ -15,14 +15,22 @@ limitations under the License.
  */
 package org.zeroclick.meeting.client.api.microsoft.data;
 
+import java.util.Date;
+
 /**
  * @author djer
  * @see {@link https://developer.microsoft.com/fr-fr/graph/docs/api-reference/v1.0/resources/responsestatus}
  *
  */
 public class ResponseStatus {
+	/**
+	 * One of : None, Organizer, TentativelyAccepted, Accepted, Declined,
+	 * NotResponded
+	 */
 	private String response;
-	private DateTimeTimeZone time;
+	// @JsonFormat(shape = JsonFormat.Shape.STRING, pattern =
+	// "yyyy-MM-dd'T'HH:mm:ssX")
+	private Date time;
 
 	/**
 	 * One of : None, Organizer, TentativelyAccepted, Accepted, Declined,
@@ -45,11 +53,11 @@ public class ResponseStatus {
 	 *
 	 * @return
 	 */
-	public DateTimeTimeZone getTime() {
+	public Date getTime() {
 		return this.time;
 	}
 
-	public void setTime(final DateTimeTimeZone time) {
+	public void setTime(final Date time) {
 		this.time = time;
 	}
 }

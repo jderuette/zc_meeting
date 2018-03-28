@@ -16,6 +16,7 @@ limitations under the License.
 package org.zeroclick.meeting.client.api.google;
 
 import java.io.IOException;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
@@ -240,11 +241,17 @@ public class GoogleEventHelper extends AbstractEventHelper<Event, EventDateTime>
 		return "";
 	}
 
-	public DateTime toDateTime(final ZonedDateTime dateTime) {
-		return new DateTime(Date.from(dateTime.toInstant()), TimeZone.getTimeZone(dateTime.getZone()));
+	@Override
+	public Event create(final Event newEvent, final CalendarConfigurationFormData calendarToStoreEvent) {
+		final GoogleApiHelper apiHelper = BEANS.get(GoogleApiHelper.class);
+
+		ApiCalendar<Calendar, ApiCredential<Credential>> googleCalendarService;
+		googleCalendarService = apiHelper.getCalendarService(calendarToStoreEvent.getOAuthCredentialId().getValue());
+
+		return this.create(newEvent, calendarToStoreEvent, googleCalendarService);
 	}
 
-	public Event create(final Event newEvent, final CalendarConfigurationFormData calendarToStoreEvent,
+	private Event create(final Event newEvent, final CalendarConfigurationFormData calendarToStoreEvent,
 			final ApiCalendar<Calendar, ApiCredential<Credential>> googleCalendarService) {
 		Event createdEvent = null;
 		try {
@@ -306,4 +313,19 @@ public class GoogleEventHelper extends AbstractEventHelper<Event, EventDateTime>
 		}
 		return eventUpdated;
 	}
+
+	@Override
+	protected EventDateTime toProviderDateTime(final ZonedDateTime date) {
+		return this.toEventDateTime(date, date.getOffset());
+	}
+
+	public EventDateTime toEventDateTime(final ZonedDateTime dateTime, final ZoneOffset zoneOffset) {
+		final DateTime date = this.toDateTime(dateTime);
+		return new EventDateTime().setDateTime(date);
+	}
+
+	public DateTime toDateTime(final ZonedDateTime dateTime) {
+		return new DateTime(Date.from(dateTime.toInstant()), TimeZone.getTimeZone(dateTime.getZone()));
+	}
+
 }

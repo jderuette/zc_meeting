@@ -29,6 +29,7 @@ import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
 import org.zeroclick.meeting.server.sql.DatabaseHelper;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchAddEmailToApi;
+import org.zeroclick.meeting.server.sql.migrate.data.PatchManageMicrosoftCalendars;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CreateApiPermission;
 import org.zeroclick.meeting.shared.calendar.DeleteApiPermission;
@@ -410,7 +411,11 @@ public class ApiService extends AbstractCommonService implements IApiService {
 		}
 
 		if (this.isAfterCreateAddAccountEmailPatch()) {
-			SQL.update(SQLs.OAUHTCREDENTIAL_UPDATE, formData);
+			if (this.isAfterCreatAddTenantId()) {
+				SQL.update(SQLs.OAUHTCREDENTIAL_UPDATE_WITH_TENANT_ID, formData);
+			} else {
+				SQL.update(SQLs.OAUHTCREDENTIAL_UPDATE, formData);
+			}
 		} else {
 			SQL.update(SQLs.OAUHTCREDENTIAL_UPDATE_WITHOUT_ACCOUNT_EMAIL, formData);
 		}
@@ -574,6 +579,11 @@ public class ApiService extends AbstractCommonService implements IApiService {
 	private Boolean isAfterCreateAddAccountEmailPatch() {
 		return DatabaseHelper.get().isColumnExists(PatchAddEmailToApi.PATCHED_TABLE,
 				PatchAddEmailToApi.PATCHED_ADDED_COLUMN);
+	}
+
+	private boolean isAfterCreatAddTenantId() {
+		return DatabaseHelper.get().isColumnExists(PatchManageMicrosoftCalendars.PATCHED_TABLE,
+				PatchManageMicrosoftCalendars.PATCHED_ADDED_COLUMN_TENANT_ID);
 	}
 
 	@Override

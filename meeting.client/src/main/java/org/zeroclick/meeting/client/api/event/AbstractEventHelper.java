@@ -17,14 +17,12 @@ package org.zeroclick.meeting.client.api.event;
 
 import java.time.DayOfWeek;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.scout.rt.platform.BEANS;
-import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.comon.user.AppUserHelper;
@@ -33,6 +31,7 @@ import org.zeroclick.meeting.client.common.DayDuration;
 import org.zeroclick.meeting.service.CalendarAviability;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
+import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.IApiService;
 
 /**
@@ -181,79 +180,117 @@ public abstract class AbstractEventHelper<T, D> implements EventHelper {
 
 	public abstract void sort(final List<T> events);
 
-	private List<DayDuration> getFreeTime(final ZonedDateTime startDate, final ZonedDateTime endDate,
+	public List<DayDuration> getFreeTime(final ZonedDateTime startDate, final ZonedDateTime endDate,
 			final List<T> events, final ZoneId userZoneId) {
-		final List<DayDuration> freeTime = new ArrayList<>();
+		final FreeTimeAppender freeTimeAppender = new FreeTimeAppender(startDate, endDate, startDate.getDayOfWeek());
 		this.sort(events);
 		final Iterator<T> itEvent = events.iterator();
-		Boolean isFirstEvent = Boolean.TRUE;
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug(new StringBuilder().append("Searching for freeTime from : ").append(startDate).append(" to ")
-					.append(endDate).append(" with : ").append(events.size()).append(" event(s) in period").toString());
-		}
-
-		T event = null;
 		while (itEvent.hasNext()) {
-			// next should be call only the first time, the end of the while
-			// move to the next (to get start of the next event)
-			if (isFirstEvent) {
-				event = itEvent.next();
-				isFirstEvent = Boolean.FALSE;
-			}
+			final T event = itEvent.next();
 			final ZonedDateTime eventZonedStartDate = this.getEventStartZoned(event);
 			final DayOfWeek eventLocalStartDateDay = eventZonedStartDate.getDayOfWeek();
 			final ZonedDateTime eventZonedEndDate = this.getEventEndZoned(event);
-			if (eventZonedStartDate.isAfter(startDate)) {
-				// freeTime from startDate to the beginning of the event
-				freeTime.add(new DayDuration(startDate.toOffsetDateTime().toOffsetTime(),
-						eventZonedEndDate.toLocalTime().atOffset(eventZonedEndDate.getOffset()),
-						CollectionUtility.arrayList(eventLocalStartDateDay), Boolean.FALSE));
-				if (itEvent.hasNext()) {
-					event = itEvent.next();
-				}
-			} else {
-				// freeTime from end of this event to begin of the next (if
-				// this event ends before the endDate)
-				if (eventZonedEndDate.isBefore(endDate)) {
-					T nextEvent = null;
-					if (itEvent.hasNext()) {
-						nextEvent = itEvent.next();
-					}
-					ZonedDateTime nextEventLocalStartDate;
-					ZoneOffset offset;
-					if (null == nextEvent) {
-						// no more event we are on the last one, this
-						// freeTime ends at endDate
-						nextEventLocalStartDate = endDate;
-						offset = endDate.getOffset();
-					} else {
-						nextEventLocalStartDate = this.getEventStartZoned(nextEvent);
-						offset = nextEventLocalStartDate.getOffset();
-					}
-					freeTime.add(new DayDuration(eventZonedEndDate.toLocalTime().atOffset(offset),
-							nextEventLocalStartDate.toLocalTime().atOffset(offset),
-							CollectionUtility.arrayList(eventLocalStartDateDay), Boolean.FALSE));
-					event = nextEvent;
-				} else {
-					if (itEvent.hasNext()) {
-						event = itEvent.next();
-					}
-				}
-			}
+
+			freeTimeAppender.addEvent(eventZonedStartDate, eventZonedEndDate, eventLocalStartDateDay);
 		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug(new StringBuilder().append(freeTime.size()).append(" freeTime period(s) found").toString());
-		}
-		return freeTime;
+
+		return freeTimeAppender.getFreeTimes();
 	}
+
+	/*
+	 * public List<DayDuration> getFreeTime2(final ZonedDateTime startDate,
+	 * final ZonedDateTime endDate, final List<T> events, final ZoneId
+	 * userZoneId) { final FreeTimeAppender freeTimeAppender = new
+	 * FreeTimeAppender(startDate, endDate, startDate.getDayOfWeek()); final
+	 * List<DayDuration> freeTime = new ArrayList<>(); this.sort(events); final
+	 * Iterator<T> itEvent = events.iterator(); Boolean isFirstEvent =
+	 * Boolean.TRUE;
+	 *
+	 * if (LOG.isDebugEnabled()) { LOG.debug(new
+	 * StringBuilder().append("Searching for freeTime from : ").append(startDate
+	 * ).append(" to ")
+	 * .append(endDate).append(" with : ").append(events.size()).
+	 * append(" event(s) in period").toString()); }
+	 *
+	 * T event = null; while (itEvent.hasNext()) { final ZonedDateTime
+	 * eventZonedStartDate = this.getEventStartZoned(event); final DayOfWeek
+	 * eventLocalStartDateDay = eventZonedStartDate.getDayOfWeek(); final
+	 * ZonedDateTime eventZonedEndDate = this.getEventEndZoned(event);
+	 *
+	 * // next should be call only the first time, the end of the while // move
+	 * to the next (to get start of the next event) if (isFirstEvent) { event =
+	 * itEvent.next(); isFirstEvent = Boolean.FALSE; } // TODO filter collected
+	 * FreeTime with the current Event
+	 *
+	 * // this event block the whole period if
+	 * (!eventZonedStartDate.isAfter(startDate) &&
+	 * !eventZonedEndDate.isBefore(endDate)) { // clear optionally previously
+	 * discovered freeTime freeTime.clear(); // stop searching freeTime, this
+	 * event block the whole period break; }
+	 *
+	 * // events start Before AND ends during period -> FT endEvent-End //
+	 * period // " " " AND ends after period -> NO FT // " " " AND ends before
+	 * period -> NOT possible
+	 *
+	 * if (!eventZonedStartDate.isAfter(startDate)) { if
+	 * (eventZonedEndDate.isBefore(endDate)) { // FreeTime at the end of the
+	 * period // if This FreeTime not blocked by others events final OffsetTime
+	 * freeTimeStart = eventZonedEndDate.toOffsetDateTime().toOffsetTime();
+	 * final OffsetTime freeTimeEnd =
+	 * endDate.toLocalTime().atOffset(endDate.getOffset());
+	 *
+	 * freeTimeAppender.add(freeTimeStart, freeTimeEnd, eventLocalStartDateDay);
+	 * } else { // the whole period is blocked by this event freeTime.clear();
+	 * break; } // No freeTime at the end of period, we move to next One if
+	 * (!eventZonedEndDate.isBefore(endDate)) { if (itEvent.hasNext()) { event =
+	 * itEvent.next(); } } } else { // FreeTime at the begin of the period
+	 * freeTimeAppender.add(startDate.toOffsetDateTime().toOffsetTime(),
+	 * eventZonedStartDate.toLocalTime().atOffset(eventZonedStartDate.getOffset(
+	 * )), eventLocalStartDateDay); } // freeTime from end of this event to
+	 * begin of the next (if // this event ends before the endDate) if
+	 * (eventZonedEndDate.isBefore(endDate)) { T nextEvent = null; if
+	 * (itEvent.hasNext()) { nextEvent = itEvent.next(); } ZonedDateTime
+	 * nextEventLocalStartDate; ZonedDateTime nextEventLocalEndDate; ZoneOffset
+	 * offset; if (null == nextEvent) { // no more event we are on the last one,
+	 * We can't know the // end of this FreeTime period with the current data
+	 * range. // Defaulting to end of the period nextEventLocalStartDate =
+	 * endDate; offset = endDate.getOffset(); } else { nextEventLocalStartDate =
+	 * this.getEventStartZoned(nextEvent); nextEventLocalEndDate =
+	 * this.getEventEndZoned(nextEvent); offset =
+	 * nextEventLocalStartDate.getOffset();
+	 *
+	 * // if the "next" event begin at the time of the current (to // event
+	 * starting at the same time) if
+	 * (nextEventLocalStartDate.isEqual(eventZonedStartDate)) { if
+	 * (nextEventLocalEndDate.isBefore(eventZonedEndDate)) { // the "next" event
+	 * is "inside" the current // we need the next one to get end of freeTime
+	 * for // the current Event // We can safety ignore the "next" event because
+	 * it // can't have Free Time as it is inside the "current // one" throw new
+	 * RuntimeException(
+	 * "Two events starting at the same time, no handled (Yet) in FreeTime calculation"
+	 * ); } } else if (nextEventLocalStartDate.isBefore(endDate)) { // start
+	 * before or during the period if (nextEventLocalEndDate.isAfter(endDate)) {
+	 * // Next events ends BEFORE the ends of the period. // The is FreeTme from
+	 * end of "current Event" and // ends of period
+	 * freeTimeAppender.add(nextEventLocalEndDate.toOffsetDateTime().
+	 * toOffsetTime(), endDate.toLocalTime().atOffset(endDate.getOffset()),
+	 * eventLocalStartDateDay); } } }
+	 * freeTimeAppender.add(eventZonedEndDate.toLocalTime().atOffset(offset),
+	 * nextEventLocalStartDate.toLocalTime().atOffset(offset),
+	 * eventLocalStartDateDay); event = nextEvent; } else { if
+	 * (itEvent.hasNext()) { event = itEvent.next(); } } } if
+	 * (LOG.isDebugEnabled()) { LOG.debug(new
+	 * StringBuilder().append(freeTime.size()).
+	 * append(" freeTime period(s) found").toString()); } return freeTime; }
+	 */
 
 	protected ZonedDateTime getEventStartZoned(final T event) {
 		return this.getDateHelper().fromEventDateTime(this.getEventStart(event));
 	}
 
 	/**
-	 * Convert a Google (Event) Date to a standard Java 8 LocalDateTime (JSR
+	 * Convert a provider (Event) Date to a standard Java 8 LocalDateTime (JSR
 	 * 310)
 	 *
 	 * @param date
@@ -285,4 +322,8 @@ public abstract class AbstractEventHelper<T, D> implements EventHelper {
 	public ZonedDateTime fromEventDateTime(final D date) {
 		return this.getDateHelper().fromEventDateTime(date);
 	}
+
+	protected abstract D toProviderDateTime(ZonedDateTime date);
+
+	public abstract T create(T newEvent, CalendarConfigurationFormData calendarToStoreEvent);
 }

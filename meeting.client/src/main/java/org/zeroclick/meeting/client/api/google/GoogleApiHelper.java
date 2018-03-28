@@ -20,9 +20,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -74,7 +72,6 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.client.util.DateTime;
 import com.google.api.client.util.store.DataStoreFactory;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.CalendarScopes;
@@ -325,19 +322,8 @@ public class GoogleApiHelper extends AbstractApiHelper<Credential, Calendar> {
 		this.flow.getCredentialDataStore().delete(String.valueOf(oAuthCredentialId));
 	}
 
-	public EventDateTime toEventDateTime(final LocalDateTime dateTime, final ZoneId zoneId) {
-		final ZoneOffset zoneOffset = ZoneOffset.from(dateTime.atZone(zoneId));
-
-		return this.toEventDateTime(dateTime, zoneOffset);
-	}
-
-	public EventDateTime toEventDateTime(final ZonedDateTime dateTime, final ZoneOffset zoneOffset) {
-		final DateTime date = this.getEventHelper().toDateTime(dateTime);
-		return new EventDateTime().setDateTime(date);
-	}
-
 	public EventDateTime toEventDateTime(final ZonedDateTime dateTime) {
-		return this.toEventDateTime(dateTime, dateTime.getOffset());
+		return this.getEventHelper().toEventDateTime(dateTime, dateTime.getOffset());
 	}
 
 	public ZonedDateTime toZonedDateTime(final Date date, final ZoneId userZoneId) {
@@ -606,10 +592,7 @@ public class GoogleApiHelper extends AbstractApiHelper<Credential, Calendar> {
 		final EventAttendee[] attendees = new EventAttendee[] { attendeeEmail };
 		newEvent.setAttendees(Arrays.asList(attendees));
 
-		ApiCalendar<Calendar, ApiCredential<Credential>> googleCalendarService;
-		googleCalendarService = this.getCalendarService(calendarToStoreEvent.getOAuthCredentialId().getValue());
-
-		final Event event = this.getEventHelper().create(newEvent, calendarToStoreEvent, googleCalendarService);
+		final Event event = this.getEventHelper().create(newEvent, calendarToStoreEvent);
 
 		return null == event ? null : event.getId();
 	}

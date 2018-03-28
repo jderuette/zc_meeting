@@ -20,8 +20,11 @@ import org.zeroclick.meeting.client.api.microsoft.data.Event;
 import org.zeroclick.meeting.client.api.microsoft.data.PagedResult;
 
 import retrofit2.Call;
+import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.PATCH;
+import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
@@ -40,10 +43,28 @@ public interface CalendarService {
 			@Query("$orderby") String orderBy, @Query("$select") String select, @Query("$top") Integer maxResults);
 
 	@PATCH("/v1.0/me/events/{eventId}")
-	Call<Event> updateEvent(@Path("eventId") String eventId, Event modifiedEvent);
+	Call<Event> updateEvent(@Path("eventId") String eventId, @Body Event modifiedEvent);
+
+	@POST("/v1.0/me/calendars/{calendarId}/events")
+	Call<Event> createEvent(@Path("calendarId") String calendarId, @Body Event newEvent);
+
+	@POST("/v1.0/me/calendar/events")
+	Call<Event> createEvent(@Body Event newEvent);
+
+	@POST("/v1.0/users/{userPrincipalName}/calendars/{calendarId}/events")
+	Call<Event> createEvent(@Path("userPrincipalName") String onwnerPrincipal, @Path("calendarId") String calendarId,
+			@Body Event newEvent);
 
 	@GET("/v1.0/me/events/{eventId}")
 	Call<Event> getEvent(@Path("eventId") String eventId);
+
+	@DELETE("/v1.0/me/events/{eventId}")
+	Call<Event> deleteEvent(String eventId);
+
+	// DO NOT use, attendee accept, but the event is owned by organizer ! user
+	// updateEvent instead
+	// @POST("/v1.0/me/events/{eventId}/accept")
+	// Call<Event> acceptEvent(String eventId);
 
 	@GET("/v1.0/me/calendars")
 	Call<PagedResult<Calendar>> getCalendars();

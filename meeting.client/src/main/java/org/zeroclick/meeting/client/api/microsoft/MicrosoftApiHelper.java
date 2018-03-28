@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,15 +31,22 @@ import org.eclipse.scout.rt.platform.util.UriBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.comon.text.StringHelper;
+import org.zeroclick.comon.text.TextsHelper;
 import org.zeroclick.configuration.shared.api.ApiTablePageData;
 import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
 import org.zeroclick.configuration.shared.provider.ProviderCodeType;
 import org.zeroclick.meeting.client.api.AbstractApiHelper;
 import org.zeroclick.meeting.client.api.ApiCalendar;
 import org.zeroclick.meeting.client.api.ApiCredential;
+import org.zeroclick.meeting.client.api.microsoft.data.Attendee;
+import org.zeroclick.meeting.client.api.microsoft.data.DateTimeTimeZone;
+import org.zeroclick.meeting.client.api.microsoft.data.EmailAddress;
 import org.zeroclick.meeting.client.api.microsoft.data.Event;
+import org.zeroclick.meeting.client.api.microsoft.data.ItemBody;
+import org.zeroclick.meeting.client.api.microsoft.data.Location;
 import org.zeroclick.meeting.client.api.microsoft.data.MicrosoftUser;
 import org.zeroclick.meeting.client.api.microsoft.data.PagedResult;
+import org.zeroclick.meeting.client.api.microsoft.data.ResponseStatus;
 import org.zeroclick.meeting.client.api.microsoft.data.TokenResponse;
 import org.zeroclick.meeting.client.api.microsoft.service.CalendarService;
 import org.zeroclick.meeting.client.api.microsoft.service.MicrosoftServiceBuilder;
@@ -67,7 +75,7 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 	public static final String AUTHORITY = "https://login.microsoftonline.com";
 	private static final String AUTHORIZE_URL = AUTHORITY + "/common/oauth2/v2.0/authorize";
 
-	private static String[] scopes = { "openid", "offline_access", "profile", "User.Read", "Calendars.Read" };
+	private static String[] scopes = { "openid", "offline_access", "profile", "User.Read", "Calendars.ReadWrite" };
 
 	private String appId;
 	private String appPassword;
@@ -362,7 +370,7 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 
 		} catch (final IOException e) {
 			LOG.warn("Cannot get (Microsoft) calendar Service for user : " + userId, e);
-			throw new VetoException("Cannot get your Google calendar Data");
+			throw new VetoException("Cannot get your (Microsoft) calendar Data");
 		}
 
 		return calendars;
@@ -383,20 +391,108 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 	public String createEvent(final ZonedDateTime startDate, final ZonedDateTime endDate, final String subject,
 			final Long forUserId, final String location, final String withEmail, final Boolean guestAutoAcceptMeeting,
 			final String envDisplay, final CalendarConfigurationFormData calendarToStoreEvent) {
-		// TODO Auto-generated method stub
-		return null;
+
+		final Event newEvent = new Event();
+
+		newEvent.setStart(this.toProviderDateTime(startDate));
+		newEvent.setEnd(this.toProviderDateTime(endDate));
+		newEvent.setSubject(envDisplay + " " + subject + TextsHelper.get(forUserId, "zc.common.email.subject.suffix"));
+
+		final Location microsoftLocation = new Location();
+		final String locationText = TextsHelper.get(forUserId, location);
+		microsoftLocation.setDisplayName(locationText);
+
+		newEvent.setLocation(microsoftLocation);
+		newEvent.setBodyPreview(subject);
+
+		final ItemBody body = new ItemBody();
+		body.setContentType("Text");
+		body.setContent(subject);
+		newEvent.setBody(body);
+
+		final Collection<Attendee> attendees = new ArrayList<>();
+
+		final Attendee atendee = new Attendee();
+		final EmailAddress attendeeEmailAdress = new EmailAddress();
+		attendeeEmailAdress.setAddress(withEmail);
+
+		atendee.setEmailAddress(attendeeEmailAdress);
+
+		final ResponseStatus status = new ResponseStatus();
+		if (guestAutoAcceptMeeting) {
+			status.setResponse("Accepted");
+		} else {
+			status.setResponse("None");
+		}
+		atendee.setStatus(status);
+
+		attendees.add(atendee);
+		newEvent.setAttendees(attendees);
+
+		newEvent.setCategories(new ArrayList<>());
+
+		final Event event = this.getEventHelper().create(newEvent, calendarToStoreEvent);
+
+		return null == event ? null : event.getId();
+	}
+
+	private DateTimeTimeZone toProviderDateTime(final ZonedDateTime startDate) {
+		return this.getEventHelper().toProviderDateTime(startDate);
 	}
 
 	@Override
 	protected Boolean delete(final String calendarId, final String eventId, final CalendarService calendarService) {
-		// TODO Auto-generated method stub
-		return Boolean.FALSE;
+		Boolean eventDeleted = Boolean.FALSE;
+		try {
+			calendarService.deleteEvent(eventId).execute().body();
+			eventDeleted = Boolean.TRUE;
+		} catch (final IOException ioe) {
+			LOG.error("Error while deleting (Microsoft) event", ioe);
+			eventDeleted = Boolean.FALSE;
+		}
+		return eventDeleted;
 	}
 
 	@Override
 	public Boolean acceptEvent(final EventIdentification eventOrganizerIdentification, final String attendeeEmail,
 			final ApiTableRowData eventCreatorApi) {
-		// TODO Auto-generated method stub
+		final Boolean eventUpdated = Boolean.FALSE;
+
+		final ApiCalendar<CalendarService, ApiCredential<String>> apiCalendarService = this
+				.getCalendarService(eventCreatorApi.getApiCredentialId());
+
+		final Event organizerEvent = this.getEventHelper().getEvent(eventOrganizerIdentification,
+				apiCalendarService.getCalendar());
+
+		if (null == organizerEvent) {
+			return eventUpdated;// early Break
+		}
+
+		final Collection<Attendee> attendees = organizerEvent.getAttendees();
+		for (final Attendee eventAttendee : attendees) {
+			if (attendeeEmail.equals(eventAttendee.getEmailAddress())) {
+				if (LOG.isDebugEnabled()) {
+					@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
+					final StringBuilder builder = new StringBuilder();
+					LOG.debug(builder.append("Updating (Microsoft) event : ").append(organizerEvent.getSubject())
+							.append(" as accepted for attendee : ").append(eventAttendee.getEmailAddress()).toString());
+				}
+
+				@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
+				final ResponseStatus acceptedStatus = new ResponseStatus();
+				acceptedStatus.setResponse("Accepted");
+				eventAttendee.setStatus(acceptedStatus);
+			}
+		}
+
+		try {
+			apiCalendarService.getCalendar().updateEvent(eventOrganizerIdentification.getEventId(), organizerEvent)
+					.execute().body();
+		} catch (final IOException e) {
+			LOG.error("Error while accepting (Microsoft) Event" + eventOrganizerIdentification + " by attendee : "
+					+ attendeeEmail);
+		}
+
 		return Boolean.FALSE;
 	}
 
@@ -404,8 +500,7 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 	public ApiCalendar<CalendarService, ApiCredential<String>> getCalendarService(final Long apiCredentialId) {
 		final MicrosoftServiceBuilder microsoftServiceBuilder = BEANS.get(MicrosoftServiceBuilder.class);
 
-		final MicrosoftApiHelper microsoftApiHelper = BEANS.get(MicrosoftApiHelper.class);
-		microsoftApiHelper.ensureTokens(apiCredentialId);
+		this.ensureTokens(apiCredentialId);
 
 		final ApiCredential<String> apiCredential = this.getApiCredential(apiCredentialId);
 

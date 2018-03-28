@@ -17,6 +17,7 @@ package org.zeroclick.meeting.client.api.microsoft.data;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
@@ -25,6 +26,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DateTimeTimeZone {
+	/** ISO 8601 like 2015-11-08T19:00:00.0000000 **/
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
 	private Date dateTime;
 	private String timeZone;
 
@@ -40,7 +43,7 @@ public class DateTimeTimeZone {
 	 * A timeZone string LIKE : Etc/GMT+12, Etc/GMT+11, Pacifique/Honolulu,
 	 * Amérique/Anchorage, Amérique/Santa_Isabel, Amérique/Los_Angeles,
 	 * Europe/Paris, Asie/Yangon (Rangoon)
-	 * 
+	 *
 	 * @return
 	 */
 	public String getTimeZone() {
