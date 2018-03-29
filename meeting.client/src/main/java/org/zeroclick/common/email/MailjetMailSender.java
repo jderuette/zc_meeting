@@ -25,13 +25,13 @@ import org.slf4j.LoggerFactory;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationEnvProperty;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
 
+import com.mailjet.client.ClientOptions;
 import com.mailjet.client.MailjetClient;
 import com.mailjet.client.MailjetRequest;
 import com.mailjet.client.MailjetResponse;
 import com.mailjet.client.errors.MailjetException;
 import com.mailjet.client.errors.MailjetSocketTimeoutException;
-import com.mailjet.client.resource.Contact;
-import com.mailjet.client.resource.Email;
+import com.mailjet.client.resource.Emailv31;
 
 /**
  * @author djer
@@ -53,7 +53,7 @@ public class MailjetMailSender implements IMailSender {
 		final String password = this.getPass();
 		LOG.info("Initializing new MailjetMailSender. user : " + user + ", password (partial) : "
 				+ password.substring(0, 5));
-		this.client = new MailjetClient(user, password);
+		this.client = new MailjetClient(user, password, new ClientOptions("v3.1"));
 		this.client.setDebug(new MailjetLogLevelProperty().getValue());
 	}
 
@@ -100,18 +100,24 @@ public class MailjetMailSender implements IMailSender {
 			LOG.debug(messageBodyWithFooter);
 		}
 
-		final MailjetRequest email = new MailjetRequest(Email.resource)
-				.property(Email.FROMEMAIL, new EmailFromProperty().getValue())
-				.property(Email.FROMNAME, new EmailFromNameProperty().getValue())
-				.property(Email.SUBJECT, subjectWithEnv)
-				.property(Email.TEXTPART, "No message text use an html compliant mail reader")
-				.property(Email.HTMLPART, messageBodyWithFooter)
-				.property(Email.RECIPIENTS, new JSONArray().put(new JSONObject().put(Contact.EMAIL, recipientTo)));
+		final JSONObject message = new JSONObject();
+		message.put(Emailv31.Message.FROM,
+				new JSONObject().put(Emailv31.Message.EMAIL, new EmailFromProperty().getValue())
+						.put(Emailv31.Message.NAME, new EmailFromNameProperty().getValue()))
+				.put(Emailv31.Message.SUBJECT, subjectWithEnv)
+				.put(Emailv31.Message.TEXTPART, "No message text use an html compliant mail reader")
+				.put(Emailv31.Message.HTMLPART, messageBodyWithFooter).put(Emailv31.Message.TO,
+						new JSONArray().put(new JSONObject().put(Emailv31.Message.EMAIL, recipientTo)));
 
 		final String mailBCC = new EmailBccProperty().getValue();
 		if (null != mailBCC && !"".equals(mailBCC)) {
-			email.property(Email.BCC, mailBCC);
+			message.put(Emailv31.Message.BCC,
+					new JSONArray().put(new JSONObject().put("Email", mailBCC).put("Name", "0ClickSupport")));
 		}
+
+		final MailjetRequest email = new MailjetRequest(Emailv31.resource).property(Emailv31.MESSAGES,
+				new JSONArray().put(message));
+
 		try {
 			// trigger the API call
 			final MailjetResponse response = this.client.post(email);
