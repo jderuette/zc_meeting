@@ -15,6 +15,7 @@ limitations under the License.
  */
 package org.zeroclick.common.email;
 
+import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.config.AbstractPositiveIntegerConfigProperty;
 import org.eclipse.scout.rt.shared.TEXTS;
@@ -22,6 +23,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.configuration.shared.params.IAppParamsService;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationEnvProperty;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
 
@@ -109,7 +111,15 @@ public class MailjetMailSender implements IMailSender {
 				.put(Emailv31.Message.HTMLPART, messageBodyWithFooter).put(Emailv31.Message.TO,
 						new JSONArray().put(new JSONObject().put(Emailv31.Message.EMAIL, recipientTo)));
 
-		final String mailBCC = new EmailBccProperty().getValue();
+		String mailBCC;
+		final IAppParamsService paramService = BEANS.get(IAppParamsService.class);
+		mailBCC = paramService.getValue(IAppParamsService.APP_PARAM_KEY_SUPPORT_BCC);
+
+		if (null == mailBCC || "".equals(mailBCC)) {
+			// try with the "old" parameter
+			mailBCC = new EmailBccProperty().getValue();
+		}
+
 		if (null != mailBCC && !"".equals(mailBCC)) {
 			message.put(Emailv31.Message.BCC,
 					new JSONArray().put(new JSONObject().put("Email", mailBCC).put("Name", "0ClickSupport")));
