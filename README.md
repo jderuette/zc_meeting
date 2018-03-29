@@ -49,6 +49,6 @@ Most specific configuration ca be visualiser throught Config.properties files. $
 | ZEROCLICK_API_GOOGLE_AUTH_FILE | contacts.api.google.client.auth.file | ${user.area}/GoogleClientStorage/client_secret_zeroclick_dev.json | Client | Your (Google) app credential file | (empty) |
 | ZEROCLICK_MAIL_FROM | zeroclick.mail.from | bob358@someProvider.com | Client | Mail who send email | admin@0click.org |
 | ZEROCLICK_MAIL_FROM_NAME | zeroclick.mail.from.name | Bob from 0Click | Client | Name display in mail client for the sender | admin |
-| ZEROCLICK_MAIL_BCC | zeroclick.mail.bcc | suport@someProvider.com | Client | in not empty will be bcc for all mail | (empty) |
+| ZEROCLICK_MAIL_BCC | zeroclick.mail.bcc | suport@someProvider.com | Client | in not empty will be bcc for all mail **Deprecated** use app parameter "bcc.support.email" instead | (empty) |
 
 
