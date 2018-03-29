@@ -79,7 +79,7 @@ public class RoleService extends AbstractCommonService implements IRoleService {
 			if (this.isAfterCreateSubcriptionPatch()) {
 				SQL.selectInto(SQLs.ROLE_SELECT + SQLs.ROLE_SELECT_INTO, formData);
 			} else {
-				SQL.selectInto(SQLs.ROLE_UPDATE_WITHOUT_TYPE + SQLs.ROLE_SELECT_INTO, formData);
+				SQL.selectInto(SQLs.ROLE_SELECT_WITHOUT_TYPE + SQLs.ROLE_SELECT_INTO_WITHOUT_TYPE, formData);
 			}
 		}
 		return formData;
@@ -106,7 +106,6 @@ public class RoleService extends AbstractCommonService implements IRoleService {
 		super.checkPermission(new UpdateRolePermission());
 		LOG.info("Deleting Role (and link to documents, and link to Users and link to permissions) for Role ID : "
 				+ formData.getRoleId());
-
 		if (null == formData.getRoleId()) {
 			this.loadByRoleName(formData);
 			if (null == formData.getRoleId()) {
@@ -114,16 +113,24 @@ public class RoleService extends AbstractCommonService implements IRoleService {
 			}
 		}
 
+		/** 3 = "free" @see SQLS.ROLE_VALUES_SUB_FREE */
+		final Long defaultReassignRole = 3L;
+
+		if (formData.getRoleId() == defaultReassignRole) {
+			throw new VetoException("Cannot delete role ID " + defaultReassignRole + " because it's the default one !");
+		}
+
 		final AssignDocumentToRoleFormData assignDocFormData = new AssignDocumentToRoleFormData();
 		assignDocFormData.getRoleId().setValue(formData.getRoleId());
 		this.deleteAssignDocumentByRole(assignDocFormData);
 
 		this.deleteSubscriptionMetaDataByRole(formData);
-		this.deleteUserRoleByRole(formData);
+
+		this.deleteUserRoleByRole(formData, defaultReassignRole);
+
 		this.deletePermissionsByRole(formData.getRoleId());
 
 		SQL.insert(SQLs.ROLE_DELETE, formData);
-
 	}
 
 	private Long loadByRoleName(final RoleFormData formData) {
@@ -138,11 +145,17 @@ public class RoleService extends AbstractCommonService implements IRoleService {
 		return formData.getRoleId();
 	}
 
-	private void deleteUserRoleByRole(final RoleFormData formData) {
+	private void deleteUserRoleByRole(final RoleFormData formData, final Long reassignToThisRole) {
 		super.checkPermission(new UpdateAssignToRolePermission());
-		LOG.info("Deleting all link between users and role for roleId : " + formData.getRoleId());
+		LOG.info("Deleting all link between users and role for roleId : " + formData.getRoleId()
+				+ " and re-assign users to role : " + reassignToThisRole);
 		if (null == formData.getRoleId()) {
 			throw new VetoException("role ID required");
+		}
+
+		if (null != reassignToThisRole) {
+			SQL.update(SQLs.USER_ROLE_UPDATE_MASS_CHANGE_ROLE_ID, new NVPair("newRoleId", reassignToThisRole),
+					new NVPair("oldRoleId", formData.getRoleId()));
 		}
 
 		SQL.insert(SQLs.USER_ROLE_REMOVE_BY_ROLE, formData);
@@ -246,7 +259,7 @@ public class RoleService extends AbstractCommonService implements IRoleService {
 	}
 
 	private Boolean isAfterCreateSubcriptionPatch() {
-		return DatabaseHelper.get().isColumnExists(PatchCreateSubscription.ROLE_DOCUMENT_TABLE_NAME,
+		return DatabaseHelper.get().isColumnExists(PatchCreateSubscription.PATCHED_TABLE_ROLE,
 				PatchCreateSubscription.ADDED_ROLE_COLUMN);
 	}
 }

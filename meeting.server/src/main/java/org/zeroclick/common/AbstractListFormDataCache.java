@@ -13,27 +13,17 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.zeroclick.configuration.shared.api;
+package org.zeroclick.common;
 
-import java.io.Serializable;
+import java.util.List;
 
-import org.zeroclick.meeting.shared.calendar.ApiFormData;
+import org.eclipse.scout.rt.shared.data.form.AbstractFormData;
 
 /**
  * @author djer
  *
  */
-public abstract class AbstractApiNotification implements Serializable {
+public abstract class AbstractListFormDataCache<K, V extends List<? extends AbstractFormData>>
+		extends AbstractDataCache<K, V> {
 
-	private static final long serialVersionUID = 7138478047755190548L;
-
-	private final ApiFormData apiForm;
-
-	public AbstractApiNotification(final ApiFormData apiForm) {
-		this.apiForm = apiForm;
-	}
-
-	public ApiFormData getApiForm() {
-		return this.apiForm;
-	}
 }

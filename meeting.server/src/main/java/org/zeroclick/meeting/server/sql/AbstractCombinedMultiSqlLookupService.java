@@ -101,7 +101,6 @@ public abstract class AbstractCombinedMultiSqlLookupService<T> extends AbstractS
 		};
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public List<ILookupRow<T>> getDataByKey(final ILookupCall<T> call) {
 		final List<ILookupRow<T>> combinedRows = new ArrayList<>();
@@ -253,7 +252,6 @@ public abstract class AbstractCombinedMultiSqlLookupService<T> extends AbstractS
 		if (null != searchedText && null != data && data.length > 0) {
 			// remove "SQL" wildcard and replace * by .* (regexp)
 			searchedText = searchedText.replaceAll("\\*", ".*").replaceAll("%", ".*");
-			final int j = 0;
 			for (int i = 0; i < data.length; i++) {
 				final Object[] row = data[i];
 				if (null != row && null != row[sqlConfig.getTranslatedColumn()]) {

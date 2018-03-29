@@ -43,6 +43,16 @@ public interface IEventService extends IService {
 	 */
 	Map<Long, Integer> getUsersWithPendingMeeting();
 
+	/**
+	 * Get pending events for a specific userId
+	 *
+	 * @param forUserId
+	 *            : userId to get pending meeting
+	 *
+	 * @return a Map<UserId, NbEvent>
+	 */
+	Map<Long, Integer> getUsersWithPendingMeeting(Long forUserId);
+
 	Set<String> getKnowEmail(ILookupCall<String> call);
 
 	Set<String> getKnowEmailByKey(ILookupCall<String> call);
@@ -57,9 +67,20 @@ public interface IEventService extends IService {
 	/**
 	 *
 	 * @param state
+	 * @param onlyAsOrganizer
 	 * @return UserId => nbEvent
 	 */
 	Map<Long, Integer> getNbEventsByUser(String state, Boolean onlyAsOrganizer);
+
+	/**
+	 *
+	 * @param state
+	 * @param onlyAsOrganizer
+	 * @param forUserId
+	 *            : userId to get pending meeting
+	 * @return UserId => nbEvent
+	 */
+	public Map<Long, Integer> getNbEventsByUser(final String state, final Boolean onlyAsOrganizer, Long forUserId);
 
 	/**
 	 * Used for data migration

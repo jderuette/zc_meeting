@@ -24,6 +24,7 @@ import java.time.OffsetTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 import org.eclipse.scout.rt.platform.BEANS;
@@ -88,7 +89,7 @@ public class DayDuration {
 	}
 
 	@SuppressWarnings("PMD.CollapsibleIfStatements")
-	private Boolean isBeforeBegin(final LocalDateTime checkedDate) {
+	public Boolean isBeforeBegin(final LocalDateTime checkedDate) {
 		Boolean result = Boolean.FALSE;
 		if (this.validDayOfWeek.contains(checkedDate.getDayOfWeek())) {
 			// compare to NOT before instead of after to handle equals Dates
@@ -127,12 +128,12 @@ public class DayDuration {
 	}
 
 	@SuppressWarnings("PMD.CollapsibleIfStatements")
-	private Boolean isAfterEnd(final LocalDateTime checkedDate) {
+	public Boolean isAfterEnd(final LocalDateTime checkedDate) {
 		Boolean result = Boolean.FALSE;
 		if (this.validDayOfWeek.contains(checkedDate.getDayOfWeek())) {
 			// compare to NOT after instead of before to handle equals Dates
 			// (see : http://stackoverflow.com/a/13936632/8029150)
-			if (!checkedDate.toLocalTime().isAfter(this.end.toLocalTime())) {
+			if (!checkedDate.toLocalTime().isBefore(this.end.toLocalTime())) {
 				result = Boolean.TRUE;
 			}
 		}
@@ -152,24 +153,20 @@ public class DayDuration {
 					isInperiod = Boolean.TRUE;
 				} else {
 					if (LOG.isDebugEnabled()) {
-						final StringBuilder builder = new StringBuilder(100);
-						builder.append(checkedDate).append(" not valid beacuase is after period end ").append(this);
-						LOG.debug(builder.toString());
+						LOG.debug(new StringBuilder(100).append(checkedDate)
+								.append(" not valid beacuase is after period end ").append(this).toString());
 					}
 				}
 			} else {
 				if (LOG.isDebugEnabled()) {
-					final StringBuilder builder = new StringBuilder(100);
-					builder.append(checkedDate).append(" not valid beacuase is before period start ").append(this);
-					LOG.debug(builder.toString());
+					LOG.debug(new StringBuilder(100).append(checkedDate)
+							.append(" not valid beacuase is before period start ").append(this).toString());
 				}
 			}
 		} else {
 			if (LOG.isDebugEnabled()) {
-				final StringBuilder builder = new StringBuilder(100);
-				builder.append(checkedDate).append('(').append(checkedDate.getDayOfWeek())
-						.append(") is not in a valid day for period ").append(this);
-				LOG.debug(builder.toString());
+				LOG.debug(new StringBuilder(100).append(checkedDate).append('(').append(checkedDate.getDayOfWeek())
+						.append(") is not in a valid day for period ").append(this).toString());
 			}
 		}
 
@@ -199,31 +196,25 @@ public class DayDuration {
 		final DateHelper dateHelper = BEANS.get(DateHelper.class);
 		final long nbMinsDiff = dateHelper.getRelativeTimeShift(startDate, endDate, Boolean.TRUE, ChronoUnit.MINUTES);
 
-		if (nbMinsDiff < durationInMinutes.intValue()) {
-			if (LOG.isDebugEnabled()) {
-				final StringBuilder builder = new StringBuilder(100);
-				builder.append("From ").append(startDate).append(" to ").append(endDate).append(" is to short for a ")
-						.append(durationInMinutes).append(" meeting only ").append(nbMinsDiff).append(" mins available")
-						.append(this);
-				LOG.debug(builder.toString());
-			}
+		if (LOG.isDebugEnabled() && nbMinsDiff < durationInMinutes.intValue()) {
+			LOG.debug(new StringBuilder(100).append("From ").append(startDate).append(" to ").append(endDate)
+					.append(" is to short for a ").append(durationInMinutes).append(" meeting only ").append(nbMinsDiff)
+					.append(" mins available").append(this).toString());
 		}
 
 		final Long minutesOverlaps = this.getTimeOverlap(startDate, endDate, durationInMinutes);
 		if (minutesOverlaps < durationInMinutes) {
 			if (LOG.isDebugEnabled()) {
-				final StringBuilder builder = new StringBuilder(100);
-				builder.append("From ").append(startDate).append(" to ").append(endDate)
+				LOG.debug(new StringBuilder(100).append("From ").append(startDate).append(" to ").append(endDate)
 						.append(" is to short for a (DayDuration not enought long)").append(durationInMinutes)
-						.append(" meeting only ").append(minutesOverlaps).append(" mins available").append(this);
-				LOG.debug(builder.toString());
+						.append(" meeting only ").append(minutesOverlaps).append(" mins available").append(this)
+						.toString());
 			}
 		} else {
 			if (LOG.isDebugEnabled()) {
-				final StringBuilder builder = new StringBuilder(100);
-				builder.append("From ").append(startDate).append(" to ").append(endDate).append(" ")
-						.append(minutesOverlaps).append(" are available for meetings ").append(this);
-				LOG.debug(builder.toString());
+				LOG.debug(new StringBuilder(100).append("From ").append(startDate).append(" to ").append(endDate)
+						.append(' ').append(minutesOverlaps).append(" are available for meetings ").append(this)
+						.toString());
 			}
 			isPeriodPossible = Boolean.TRUE;
 		}
@@ -272,15 +263,11 @@ public class DayDuration {
 			final Boolean stopWhenMeetingPossible) {
 		final ChronoUnit unit = ChronoUnit.MINUTES;
 
-		if (null != duration) {
-			if (this.getDuration(unit) < duration) {
-				final StringBuilder builder = new StringBuilder();
-				builder.append("Period Duration (").append(this.getDuration(unit))
-						.append(") is less than meeting duration (").append(duration).append("), no Hours available")
-						.append(this);
-				LOG.info(builder.toString());
-				return 0L;// early Break
-			}
+		if (null != duration && this.getDuration(unit) < duration) {
+			LOG.info(new StringBuilder().append("Period Duration (").append(this.getDuration(unit))
+					.append(") is less than meeting duration (").append(duration).append("), no Hours available")
+					.append(this).toString());
+			return 0L;// early Break
 		}
 
 		Long timeOverlap = 0L;
@@ -308,11 +295,9 @@ public class DayDuration {
 				final Long maxTimeOverlap = startPartialPeriod.until(endPartialPeriod, unit);
 				timeOverlap = this.getAvailableHours(maxTimeOverlap, duration);
 
-				final StringBuilder builder = new StringBuilder();
-				builder.append("1 day TimeFrame : start ").append(startPartialPeriod).append(" end ")
-						.append(endPartialPeriod).append(" total available : ").append(timeOverlap)
-						.append(" on a max Time avialable of ").append(maxTimeOverlap).append(this);
-				LOG.info(builder.toString());
+				LOG.info(new StringBuilder().append("1 day TimeFrame : start ").append(startPartialPeriod)
+						.append(" end ").append(endPartialPeriod).append(" total available : ").append(timeOverlap)
+						.append(" on a max Time avialable of ").append(maxTimeOverlap).append(this).toString());
 			}
 		} else {
 			// (partial) First Day + All days between Begin and End + (partial)
@@ -347,12 +332,10 @@ public class DayDuration {
 			}
 			final Long fullDayOverlap = this.getTimeOverlapFullDay(fullDayStart, fullDayEnd);
 			timeOverlap = partialFirstDay + fullDayOverlap + partialLastDay;
-			final StringBuilder builder = new StringBuilder();
-			builder.append("Multiple days TimeFrame : start ").append(startPartialPeriod).append(" end ")
-					.append(endPartialPeriod).append(" total available : ").append(timeOverlap).append(", FirstDay : ")
-					.append(partialFirstDay).append(", fullDays : ").append(fullDayOverlap).append(", LastDay : ")
-					.append(partialLastDay).append(this);
-			LOG.info(builder.toString());
+			LOG.info(new StringBuilder().append("Multiple days TimeFrame : start ").append(startPartialPeriod)
+					.append(" end ").append(endPartialPeriod).append(" total available : ").append(timeOverlap)
+					.append(", FirstDay : ").append(partialFirstDay).append(", fullDays : ").append(fullDayOverlap)
+					.append(", LastDay : ").append(partialLastDay).append(this).toString());
 		}
 		return timeOverlap;
 
@@ -367,15 +350,12 @@ public class DayDuration {
 			final long nbPossibleMeeting = Math.floorDiv(amountOfMinutes, durationInMinutes.longValue());
 			timeOverlap = nbPossibleMeeting * durationInMinutes.longValue();
 
-			final StringBuilder builder = new StringBuilder();
-			builder.append(nbPossibleMeeting).append(" meeting of ").append(durationInMinutes)
+			LOG.info(new StringBuilder().append(nbPossibleMeeting).append(" meeting of ").append(durationInMinutes)
 					.append(" mins are avaible in period, for a total of ").append(timeOverlap).append(" minutes")
-					.append(this);
-			LOG.info(builder.toString());
+					.append(this).toString());
 		} else {
-			final StringBuilder builder = new StringBuilder();
-			builder.append(timeOverlap).append(" minutes are available for meetings").append(this);
-			LOG.info(builder.toString());
+			LOG.info(new StringBuilder().append(timeOverlap).append(" minutes are available for meetings").append(this)
+					.toString());
 		}
 
 		return timeOverlap;
@@ -418,6 +398,70 @@ public class DayDuration {
 
 	public Boolean isSameDay(final LocalDate startDate, final LocalDate endDate) {
 		return startDate.equals(endDate);
+	}
+
+	public DayOfWeek getClosestDayOfWeek(final ZonedDateTime checkedDate) {
+		final DayOfWeek nextDayOfWeek;
+		// if current time is before start we can use today else next valid day
+		if (checkedDate.toLocalTime().isBefore(this.getStart().toLocalTime())) {
+			nextDayOfWeek = this.getNextOrSameDayOfWeek(checkedDate);
+		} else {
+			nextDayOfWeek = this.getNextDayOfWeek(checkedDate);
+		}
+
+		return nextDayOfWeek;
+	}
+
+	public DayOfWeek getNextOrSameDayOfWeek(final ZonedDateTime checkedDate) {
+		final DayOfWeek checkedDateDayOfWeek = checkedDate.getDayOfWeek();
+		// search if a next day in week is available
+		for (final DayOfWeek validDay : this.getValidDayOfWeek()) {
+			if (validDay.getValue() >= checkedDateDayOfWeek.getValue()) {
+				return validDay;
+			}
+		}
+		// No Next Day in week, the first validDay (next week) is the closest
+		// FIXME if NO valid Day OfWeek for this period ?
+		return this.getValidDayOfWeek().get(0);
+	}
+
+	public DayOfWeek getNextDayOfWeek(final ZonedDateTime checkedDate) {
+		if (this.getValidDayOfWeek().size() == 0) {
+			LOG.debug("No valid day aviallable (desactivited) in : " + this);
+			return null; // early Break;
+		}
+		final DayOfWeek checkedDateDayOfWeek = checkedDate.getDayOfWeek();
+		// search if a next day in week is available
+		for (final DayOfWeek validDay : this.getValidDayOfWeek()) {
+			if (validDay.getValue() > checkedDateDayOfWeek.getValue()) {
+				return validDay;
+			}
+		}
+		// No Next Day in week, the first validDay (next week) is the closest
+		return this.getValidDayOfWeek().get(0);
+	}
+
+	public LocalDateTime getNextOrSameDate(final ZonedDateTime checkedDate) {
+		final DayOfWeek nextDayOfWeek = this.getClosestDayOfWeek(checkedDate);
+		if (null == nextDayOfWeek) {
+			return null; // early break
+		}
+
+		LocalDate day = null;
+
+		if (nextDayOfWeek == checkedDate.getDayOfWeek()) {
+			if (this.isBeforeBegin(checkedDate.toLocalDateTime())) {
+				day = checkedDate.with(TemporalAdjusters.nextOrSame(nextDayOfWeek)).toLocalDate();
+			} else {
+				day = checkedDate.with(TemporalAdjusters.next(nextDayOfWeek)).toLocalDate();
+			}
+		} else {
+			day = checkedDate.with(TemporalAdjusters.next(nextDayOfWeek)).toLocalDate();
+		}
+
+		final LocalDateTime nextValidLocalDate = LocalDateTime.of(day, this.getStart().toLocalTime());
+
+		return nextValidLocalDate;
 	}
 
 	/*

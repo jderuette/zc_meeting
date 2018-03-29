@@ -61,13 +61,13 @@ public class DocumentTablePage extends AbstractPageWithTable<Table> {
 		protected void initConfig() {
 			super.initConfig();
 
-			final DocumentCreatedNotificationHandler documentCreatedNotificationHandler = BEANS
+			final DocumentCreatedNotificationHandler documentCreatedNotifHand = BEANS
 					.get(DocumentCreatedNotificationHandler.class);
-			documentCreatedNotificationHandler.addListener(this.createDocumentCreatedListener());
+			documentCreatedNotifHand.addListener(this.createDocumentCreatedListener());
 
-			final DocumentModifiedNotificationHandler documentModifiedNotificationHandler = BEANS
+			final DocumentModifiedNotificationHandler documentModifiedNotifHand = BEANS
 					.get(DocumentModifiedNotificationHandler.class);
-			documentModifiedNotificationHandler.addListener(this.createDocumentModifiedListener());
+			documentModifiedNotifHand.addListener(this.createDocumentModifiedListener());
 
 		}
 
@@ -77,8 +77,12 @@ public class DocumentTablePage extends AbstractPageWithTable<Table> {
 				public void handleNotification(final DocumentCreatedNotification notification) {
 
 					final DocumentFormData formData = notification.getFormData();
-					LOG.debug("New document prepare to add to table (in " + Table.this.getTitle()
-							+ ") for document Id : " + formData.getDocumentId());
+					if (LOG.isDebugEnabled()) {
+						LOG.debug(new StringBuilder().append("New document prepare to add to table (in ")
+								.append(Table.this.getTitle()).append(") for document Id : ")
+								.append(formData.getDocumentId()).toString());
+					}
+
 					try {
 						DocumentTablePage.this.getTable()
 								.addRow(DocumentTablePage.this.getTable().createTableRowFromForm(formData));
@@ -105,9 +109,12 @@ public class DocumentTablePage extends AbstractPageWithTable<Table> {
 						final ITableRow row = DocumentTablePage.this.getTable()
 								.getRow(formData.getDocumentId().getValue());
 						if (null != row) {
-							LOG.debug("Modified document prepare to modify table row (in " + Table.this.getTitle()
-									+ ") for document Id : " + formData.getDocumentId());
-
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(
+										new StringBuilder().append("Modified document prepare to modify table row (in ")
+												.append(Table.this.getTitle())
+												.append(") for document Id : " + formData.getDocumentId()).toString());
+							}
 							Table.this.updateTableRowFromForm(row, formData);
 
 							DocumentTablePage.this.getTable().applyRowFilters();
@@ -117,8 +124,12 @@ public class DocumentTablePage extends AbstractPageWithTable<Table> {
 									formData.getName().getValue());
 
 						} else {
-							LOG.debug("Modified document ignored because it's not a current table row (in "
-									+ Table.this.getTitle() + ") for document Id : " + formData.getDocumentId());
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(new StringBuilder()
+										.append("Modified document ignored because it's not a current table row (in ")
+										.append(Table.this.getTitle()).append(") for document Id : ")
+										.append(formData.getDocumentId()).toString());
+							}
 						}
 
 					} catch (final RuntimeException e) {
@@ -172,13 +183,13 @@ public class DocumentTablePage extends AbstractPageWithTable<Table> {
 
 		@Override
 		protected void execDisposeTable() {
-			final DocumentCreatedNotificationHandler documentCreatedNotificationHandler = BEANS
+			final DocumentCreatedNotificationHandler documentCreatedNotifHand = BEANS
 					.get(DocumentCreatedNotificationHandler.class);
-			documentCreatedNotificationHandler.removeListener(this.documentCreatedListener);
+			documentCreatedNotifHand.removeListener(this.documentCreatedListener);
 
-			final DocumentModifiedNotificationHandler documentModifiedNotificationHandler = BEANS
+			final DocumentModifiedNotificationHandler documentModifiedNotifHand = BEANS
 					.get(DocumentModifiedNotificationHandler.class);
-			documentModifiedNotificationHandler.removeListener(this.documentModifiedListener);
+			documentModifiedNotifHand.removeListener(this.documentModifiedListener);
 
 			super.execDisposeTable();
 		}

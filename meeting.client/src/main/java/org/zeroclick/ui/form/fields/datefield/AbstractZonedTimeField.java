@@ -41,9 +41,8 @@ public abstract class AbstractZonedTimeField extends AbstractZonedDateField {
 		if (null != this.getValue()) {
 			final DateHelper dateHelper = BEANS.get(DateHelper.class);
 			final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
-			// WARNING the \n is REQUIRED to allow scout detect
-			// hours part of the date !
-			formatedHours = "\n" + dateHelper.formatHours(this.getValue(), appUserHelper.getCurrentUserTimeZone());
+
+			formatedHours = dateHelper.formatHoursForUi(this.getValue(), appUserHelper.getCurrentUserTimeZone());
 		}
 		return formatedHours;
 	}

@@ -39,6 +39,7 @@ import org.zeroclick.meeting.client.common.SlotHelper.DayOfWeekLists;
 @RunWithSubject("anonymous")
 @RunWith(ClientTestRunner.class)
 @RunWithClientSession(TestEnvironmentClientSession.class)
+@SuppressWarnings("PMD.MethodNamingConventions")
 public class DayDurationTest {
 
 	private DayDuration morningWorkDay;
@@ -47,7 +48,7 @@ public class DayDurationTest {
 	private DayDuration oneDayOfTwo;
 
 	@Before
-	public void setup() {
+	public void setUp() {
 		this.morningWorkDay = new DayDuration(OffsetTime.of(8, 0, 0, 0, ZoneOffset.UTC),
 				OffsetTime.of(12, 0, 0, 0, ZoneOffset.UTC), DayOfWeekLists.STANDARD_WORK_DAYS);
 

@@ -102,7 +102,8 @@ public class ScoutDataStoreFactory extends AbstractDataStoreFactory {
 			final IApiService apiService = BEANS.get(IApiService.class);
 
 			final ApiFormData input = new ApiFormData();
-			input.setUserId(Long.valueOf(key));
+			// input.setUserId(Long.valueOf(key));
+			input.setApiCredentialId(Long.valueOf(key));
 
 			final ApiFormData data = apiService.load(input);
 			/*
@@ -129,25 +130,23 @@ public class ScoutDataStoreFactory extends AbstractDataStoreFactory {
 			final IApiService apiService = BEANS.get(IApiService.class);
 
 			final ApiFormData input = new ApiFormData();
-			input.setUserId(Long.valueOf(key));
+			input.setApiCredentialId(Long.valueOf(key));
 			input.getProvider().setValue(ProviderCodeType.GoogleCode.ID);
 
-			final ApiFormData createdData = apiService.create(input);
-			createdData.setUserId(Long.valueOf(key));
-			createdData.setProviderData(IOUtils.serialize(value));
-			createdData.getProvider().setValue(ProviderCodeType.GoogleCode.ID);
+			final ApiFormData exitingApi = apiService.load(input);
+			exitingApi.setProviderData(IOUtils.serialize(value));
 
 			if (value instanceof StoredCredential) {
 				final StoredCredential credential = (StoredCredential) value;
-				createdData.getAccessToken().setValue(credential.getAccessToken());
-				createdData.getRefreshToken().setValue(credential.getRefreshToken());
-				createdData.getExpirationTimeMilliseconds().setValue(credential.getExpirationTimeMilliseconds());
+				exitingApi.getAccessToken().setValue(credential.getAccessToken());
+				exitingApi.getRefreshToken().setValue(credential.getRefreshToken());
+				exitingApi.getExpirationTimeMilliseconds().setValue(credential.getExpirationTimeMilliseconds());
 			} else {
 				LOG.warn(
 						"Could not extract detailed information from Google Data beacause its not an instance of Credential");
 			}
 
-			apiService.store(createdData);
+			apiService.store(exitingApi);
 
 			if (this.cache.containsKey(key)) {
 				this.cache.remove(key);

@@ -1,5 +1,6 @@
 package org.zeroclick.configuration.client.user;
 
+import java.util.List;
 import java.util.Set;
 
 import org.eclipse.scout.rt.client.dto.Data;
@@ -11,6 +12,7 @@ import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractIntegerColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractLongColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractSmartColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractStringColumn;
+import org.eclipse.scout.rt.client.ui.basic.table.columns.IColumn;
 import org.eclipse.scout.rt.client.ui.desktop.outline.pages.AbstractPageWithTable;
 import org.eclipse.scout.rt.client.ui.form.FormEvent;
 import org.eclipse.scout.rt.client.ui.form.FormListener;
@@ -27,6 +29,7 @@ import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.LanguageCodeType;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.configuration.shared.user.UserTablePageData;
+import org.zeroclick.ui.action.menu.AbstractCopyMenu;
 import org.zeroclick.ui.action.menu.AbstractEditMenu;
 import org.zeroclick.ui.action.menu.AbstractNewMenu;
 import org.zeroclick.ui.form.columns.zoneddatecolumn.AbstractZonedDateColumn;
@@ -94,6 +97,51 @@ public class UserTablePage extends AbstractPageWithTable<Table> {
 		}
 
 		@Order(3000)
+		public class CopyUserMenu extends AbstractCopyMenu {
+
+			@Override
+			protected String getConfiguredText() {
+				return TEXTS.get("zc.user.copy");
+			}
+
+			@Order(1000)
+			public class CopyUserEmailMenu extends AbstractCopyMenu {
+				@Override
+				protected String getConfiguredText() {
+					return TEXTS.get("zc.user.copy.email");
+				}
+
+				@Override
+				protected AbstractTable getConfiguredTable() {
+					return UserTablePage.this.getTable();
+				}
+
+				@Override
+				protected List<IColumn<?>> getConfiguredCopiedColumns() {
+					return CollectionUtility.arrayList(Table.this.getEmailColumn());
+				}
+			}
+
+			@Order(2000)
+			public class CopyUserRowMenu extends AbstractCopyMenu {
+				@Override
+				protected String getConfiguredText() {
+					return TEXTS.get("zc.user.copy.allLine");
+				}
+
+				@Override
+				protected boolean getConfiguredDefaultKeyStroke() {
+					return true;
+				}
+
+				@Override
+				protected AbstractTable getConfiguredTable() {
+					return UserTablePage.this.getTable();
+				}
+			}
+		}
+
+		@Order(4000)
 		public class ClearUserCacheMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {

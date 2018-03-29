@@ -42,6 +42,8 @@ import org.eclipse.scout.rt.platform.util.concurrent.IRunnable;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.code.ICodeType;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
 import org.zeroclick.comon.text.TextsHelper;
@@ -91,6 +93,8 @@ import org.zeroclick.ui.action.menu.AbstractAddMenu;
 
 @FormData(value = EventFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class EventForm extends AbstractForm {
+
+	private static final Logger LOG = LoggerFactory.getLogger(EventForm.class);
 
 	private static final String EMAIL_PATTERN = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
 			+ "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
@@ -578,6 +582,7 @@ public class EventForm extends AbstractForm {
 											if (!EventForm.this.existEmail(importedEmail)) {
 												final ITableRow newRow = EventForm.this.getEmailsField().getTable()
 														.createRow();
+												@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 												final Cell cell = new Cell();
 												cell.setValue(importedEmail);
 												newRow.setCell(Table.this.getEmailColumn().getColumnIndex(), cell);
@@ -1237,8 +1242,8 @@ public class EventForm extends AbstractForm {
 					eventService.create(formData);
 				}
 			}, Jobs.newInput()
-					.withName("Creating event for {0} By {1}", eventGuestEmail,
-							EventForm.this.getOrganizerEmailField().getValue())
+					.withName("Creating event organizer {}, invitee {}",
+							EventForm.this.getOrganizerEmailField().getValue(), eventGuestEmail)
 					.withRunContext(ClientRunContexts.copyCurrent()).withThreadName("Creating event"));
 
 		}
@@ -1259,6 +1264,8 @@ public class EventForm extends AbstractForm {
 			try {
 				mailSender.sendEmail(recipient, subject, content);
 			} catch (final MailException e) {
+				LOG.error("Cannot send email to " + recipient + " with subject : " + subject + " for event ID : "
+						+ formData.getEventId(), e);
 				throw new VetoException(TEXTS.get("zc.common.cannotSendEmail"));
 			}
 		}

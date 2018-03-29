@@ -22,7 +22,7 @@ import org.eclipse.scout.rt.platform.util.date.UTCDate;
  *
  */
 public interface IZeroClickUTCDateFieldUIFacade {
-	void setDateTimeFromUI(UTCDate d);
+	void setDateTimeFromUI(UTCDate date);
 
 	void setDisplayTextFromUI(String text);
 

@@ -15,13 +15,14 @@ limitations under the License.
  */
 package org.zeroclick.configuration.shared.api;
 
+import org.zeroclick.meeting.shared.AbstractNotification;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 
 /**
  * @author djer
  *
  */
-public class ApiCreatedNotification extends AbstractApiNotification {
+public class ApiCreatedNotification extends AbstractNotification<ApiFormData> {
 
 	private static final long serialVersionUID = 1291791661924835564L;
 

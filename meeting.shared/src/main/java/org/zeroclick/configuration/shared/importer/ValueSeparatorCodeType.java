@@ -9,6 +9,7 @@ import org.eclipse.scout.rt.shared.services.common.code.AbstractCode;
 import org.eclipse.scout.rt.shared.services.common.code.AbstractCodeType;
 import org.eclipse.scout.rt.shared.services.common.code.ICode;
 
+@SuppressWarnings("PMD.ShortVariable")
 public class ValueSeparatorCodeType extends AbstractCodeType<Long, String> {
 
 	private static final long serialVersionUID = 1L;

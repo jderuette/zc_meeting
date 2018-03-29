@@ -174,10 +174,12 @@ public abstract class AbstractDataPatcher implements IDataPatcher {
 	}
 
 	private void refreshSuperUserPermissions() {
-		LOG.debug("Refreshing SuperUser role with current existing permissions");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Refreshing SuperUser role with current existing permissions");
+		}
 		final Version sourceCodeVersion = this.getSourceCodeVersion();
 
-		if (sourceCodeVersion.greaterThan(Version.valueOf("1.1.5"))) {
+		if (sourceCodeVersion.greaterThanOrEqualTo(Version.valueOf("1.1.4"))) {
 			final RoleFormData roleformData = this.getSuperUserRole();
 			if (null != roleformData.getRoleId()) {
 				try {
@@ -206,7 +208,7 @@ public abstract class AbstractDataPatcher implements IDataPatcher {
 		try {
 			roleService.load(roleFormData);
 		} catch (final Exception e) {
-			LOG.warn("Cannot load superUser Role : " + e);
+			LOG.warn("Cannot load superUser Role ", e);
 		}
 		return roleFormData;
 	}

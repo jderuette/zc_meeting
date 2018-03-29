@@ -4,10 +4,12 @@ import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.holders.NVPair;
 import org.eclipse.scout.rt.server.clientnotification.ClientNotificationRegistry;
 import org.eclipse.scout.rt.server.jdbc.SQL;
+import org.eclipse.scout.rt.shared.cache.ICache;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.AbstractCommonService;
+import org.zeroclick.common.AbstractFormDataCache;
 import org.zeroclick.configuration.shared.params.CreateAppParamsPermission;
 import org.zeroclick.configuration.shared.params.IAppParamsService;
 import org.zeroclick.configuration.shared.params.ParamCreatedNotification;
@@ -25,105 +27,51 @@ public class AppParamsService extends AbstractCommonService implements IAppParam
 		return LOG;
 	}
 
+	private final AbstractFormDataCache<Long, AppParamsFormData> dataCache = new AbstractFormDataCache<Long, AppParamsFormData>() {
+		@Override
+		public AppParamsFormData loadForCache(final Long paramId) {
+			final AppParamsFormData appParamsFormData = new AppParamsFormData();
+			appParamsFormData.getParamId().setValue(paramId);
+			return AppParamsService.this.loadForCache(appParamsFormData);
+		}
+	};
+
+	private final AbstractFormDataCache<String, AppParamsFormData> dataCacheByKey = new AbstractFormDataCache<String, AppParamsFormData>() {
+		@Override
+		public AppParamsFormData loadForCache(final String key) {
+			final AppParamsFormData appParamsFormData = new AppParamsFormData();
+			appParamsFormData.getKey().setValue(key);
+			return AppParamsService.this.loadForCacheByKey(appParamsFormData);
+		}
+	};
+
+	private ICache<Long, AppParamsFormData> getDataCache() {
+		return this.dataCache.getCache();
+	}
+
+	private ICache<String, AppParamsFormData> getDataCacheByKey() {
+		return this.dataCacheByKey.getCache();
+	}
+
+	private AppParamsFormData loadForCache(final AppParamsFormData formData) {
+		// No permission check, public Data
+		SQL.selectInto(
+				SQLs.PARAMS_SELECT_WITH_CATEGORY + SQLs.PARAMS_SELECT_FILTER_ID + SQLs.PARAMS_SELECT_INTO_WITH_CATEGORY,
+				formData);
+		return formData;
+	}
+
+	private AppParamsFormData loadForCacheByKey(final AppParamsFormData formData) {
+		// No permission check, public Data
+		SQL.selectInto(SQLs.PARAMS_SELECT + SQLs.PARAMS_SELECT_FILTER_KEY + SQLs.PARAMS_SELECT_INTO, formData);
+		return formData;
+	}
+
 	@Override
 	public AppParamsTablePageData getAppParamsTableData(final SearchFilter filter) {
 		final AppParamsTablePageData pageData = new AppParamsTablePageData();
 		SQL.selectInto(SQLs.PARAMS_PAGE_SELECT + SQLs.PARAMS_PAGE_DATA_SELECT_INTO, new NVPair("page", pageData));
 		return pageData;
-	}
-
-	@Override
-	public void create(final String key, final String value) {
-		super.checkPermission(new CreateAppParamsPermission());
-		LOG.debug("Creating app_params with key : " + key + " and value : " + value);
-
-		final Long paramId = this.getNextId();
-		SQL.update(SQLs.PARAMS_INSERT, new NVPair("paramId", paramId), new NVPair("key", key),
-				new NVPair("value", value));
-
-		SQL.update(SQLs.PARAMS_UPDATE, new NVPair("paramId", paramId), new NVPair("key", key),
-				new NVPair("value", value));
-	}
-
-	@Override
-	public void create(final String key, final String value, final String category) {
-		super.checkPermission(new CreateAppParamsPermission());
-		LOG.debug("Creating app_params with key : " + key + " and value : " + value + "(category : " + category + ")");
-		final Long paramId = this.getNextId();
-
-		SQL.update(SQLs.PARAMS_INSERT, new NVPair("paramId", paramId));
-
-		SQL.update(SQLs.PARAMS_UPDATE_WITH_CATEGORY, new NVPair("paramId", paramId), new NVPair("key", key),
-				new NVPair("value", value), new NVPair("category", category));
-	}
-
-	@Override
-	public String getValue(final String key) {
-		// No permission check, public Data
-		final Object value = this.getData(key, 2);
-		return null == value ? null : (String) value;
-	}
-
-	protected Long getId(final String key) {
-		final Object paramId = this.getData(key, 0);
-		return null == paramId ? null : (Long) paramId;
-	}
-
-	@Override
-	public Boolean isKeyExists(final String key) {
-		final Object[][] datas = this.getAppParamsData(key);
-		final boolean found = null != datas && datas.length > 1;
-		LOG.debug("App_params : " + key + " found ? " + found);
-		return found;
-	}
-
-	@Override
-	public void store(final String key, final String value) {
-		super.checkPermission(new UpdateAppParamsPermission());
-		LOG.debug("Storing app_params with key : " + key + " and value : " + value);
-
-		final Long existingId = this.getId(key);
-		if (null == existingId) {
-			this.create(key, value);
-		} else {
-			LOG.debug("Updatting app_params with id : " + existingId + " with key : " + key + " and value : " + value);
-			SQL.update(SQLs.PARAMS_UPDATE, new NVPair("key", key), new NVPair("value", value));
-		}
-	}
-
-	protected Object[][] getAppParamsData(final String key) {
-		// No permission check, public Data
-		LOG.debug("Searching app_params for key : " + key);
-		return SQL.select(SQLs.PARAMS_SELECT + SQLs.PARAMS_SELECT_FILTER_KEY, new NVPair("key", key));
-	}
-
-	protected Object getData(final String key, final Integer columnNumber) {
-		// No permission check, public Data
-		LOG.debug("Searching app_params for key : " + key);
-		Object paramValue = null;
-		final Object[][] datas = this.getAppParamsData(key);
-
-		if (null != datas && datas.length == 1) {
-			paramValue = datas[0][columnNumber];
-		} else if (null != datas && datas.length > 1) {
-			LOG.warn("Multiple values for key : " + key + ". Returning the first one");
-			paramValue = datas[0][columnNumber];
-		} else {
-			LOG.warn("No value for key : " + key + ".");
-		}
-
-		return paramValue;
-	}
-
-	@Override
-	public void delete(final String key) {
-		super.checkPermission(new UpdateAppParamsPermission());
-		LOG.debug("Deleting app_params key : " + key);
-		SQL.update(SQLs.PARAMS_DELETE, new NVPair("key", key));
-	}
-
-	protected Long getNextId() {
-		return SQL.getSequenceNextval(PatchCreateParamsTable.APP_PARAMS_ID_SEQ);
 	}
 
 	@Override
@@ -136,6 +84,11 @@ public class AppParamsService extends AbstractCommonService implements IAppParam
 	@Override
 	public AppParamsFormData create(final AppParamsFormData formData) {
 		super.checkPermission(new CreateAppParamsPermission());
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuilder().append("Creating app_params with key : ").append(formData.getKey().getValue())
+					.append(" and value : ").append(formData.getValue().getValue()).append("(category : ")
+					.append(formData.getCategory().getValue()).append(")").toString());
+		}
 		// add a unique param id if necessary
 		if (null == formData.getParamId().getValue()) {
 			formData.getParamId().setValue(this.getNextId());
@@ -155,11 +108,67 @@ public class AppParamsService extends AbstractCommonService implements IAppParam
 	}
 
 	@Override
+	public void create(final String key, final String value) {
+		// permission checked by method with category parameter
+		this.create(key, value, null);
+	}
+
+	@Override
+	public void create(final String key, final String value, final String category) {
+		// permission check done by create method
+		final AppParamsFormData formData = new AppParamsFormData();
+		formData.getKey().setValue(key);
+		formData.getValue().setValue(value);
+		formData.getCategory().setValue(category);
+
+		this.create(formData);
+	}
+
+	@Override
 	public AppParamsFormData load(final AppParamsFormData formData) {
+		AppParamsFormData cachedData = this.getDataCache().get(formData.getParamId().getValue());
+		if (null == cachedData) {
+			// avoid NPE
+			cachedData = formData;
+		}
+		return cachedData;
+	}
+
+	private AppParamsFormData load(final String key) {
 		// No permission check, public Data
-		SQL.selectInto(SQLs.PARAMS_SELECT_WITH_CATEGORY + SQLs.PARAMS_SELECT_FILTER_ID + SQLs.PARAMS_SELECT_INTO,
-				formData);
-		return formData;
+		AppParamsFormData cachedData = this.getDataCacheByKey().get(key);
+		if (null == cachedData) {
+			// avoid NPE
+			cachedData = new AppParamsFormData();
+		}
+		return cachedData;
+	}
+
+	@Override
+	public String getValue(final String key) {
+		// No permission check, public Data
+		String value = null;
+		final AppParamsFormData cachedData = this.load(key);
+		value = null == cachedData.getValue().getValue() ? null : (String) cachedData.getValue().getValue();
+		return value;
+	}
+
+	protected Long getId(final String key) {
+		// No permission check, public Data
+		final AppParamsFormData cachedData = this.load(key);
+		return cachedData.getParamId().getValue();
+	}
+
+	@Override
+	public Boolean isKeyExists(final String key) {
+		// No permission check, public Data
+		final AppParamsFormData cachedData = this.load(key);
+		final Boolean found = null != cachedData.getParamId().getValue();
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuilder().append("App_params : ").append(key + " found ? ").append(found).toString());
+		}
+		return found;
 	}
 
 	protected AppParamsFormData store(final AppParamsFormData formData, final Boolean forCreation) {
@@ -169,15 +178,47 @@ public class AppParamsService extends AbstractCommonService implements IAppParam
 		if (!forCreation) {
 			this.sendModifiedNotifications(formData);
 		}
+
+		this.clearCaches(formData);
+
 		return formData;
 	}
 
 	@Override
 	public AppParamsFormData store(final AppParamsFormData formData) {
-		super.checkPermission(new UpdateAppParamsPermission());
-		this.store(formData, Boolean.FALSE);
+		// permission check done by store method
+		return this.store(formData, Boolean.FALSE);
+	}
 
-		return formData;
+	@Override
+	public void store(final String key, final String value) {
+		// permission check done by store method
+		final AppParamsFormData formData = new AppParamsFormData();
+		formData.getKey().setValue(key);
+		formData.getValue().setValue(value);
+
+		this.store(formData);
+	}
+
+	@Override
+	public void delete(final String key) {
+		super.checkPermission(new UpdateAppParamsPermission());
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuilder().append("Deleting app_params key : ").append(key).toString());
+		}
+		final AppParamsFormData appParamsFormData = this.load(key);
+
+		SQL.update(SQLs.PARAMS_DELETE, appParamsFormData);
+		this.clearCaches(appParamsFormData);
+	}
+
+	protected Long getNextId() {
+		return SQL.getSequenceNextval(PatchCreateParamsTable.APP_PARAMS_ID_SEQ);
+	}
+
+	private void clearCaches(final AppParamsFormData formData) {
+		this.dataCache.clearCache(formData.getParamId().getValue());
+		this.dataCacheByKey.clearCache(formData.getKey().getValue());
 	}
 
 	// private Set<String> buildNotifiedUsers(final AppParamsFormData formData)

@@ -17,7 +17,9 @@ package org.zeroclick.meeting.server.sql.migrate.data;
 
 import java.time.ZoneOffset;
 import java.time.format.TextStyle;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 
 import org.eclipse.scout.rt.platform.BEANS;
@@ -28,6 +30,7 @@ import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.eclipse.scout.rt.shared.services.common.security.IAccessControlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.configuration.shared.role.AssignToRoleFormData;
 import org.zeroclick.configuration.shared.role.IRoleService;
 import org.zeroclick.configuration.shared.role.IRoleTypeLookupService;
 import org.zeroclick.configuration.shared.role.RoleFormData;
@@ -127,8 +130,20 @@ public class PatchCreateSuperUser extends AbstractDataPatcher {
 				SQL.update(SQLs.ROLE_UPDATE_WITHOUT_TYPE, superUserRoleFormData);
 			}
 
-			// add "ALL" permission to superUser Role
-			this.addAllPermissions(this.superUserRoleId);
+			// manual add "ReadRolePermission"
+			final AssignToRoleFormData readPermissionPermFormData = new AssignToRoleFormData();
+			readPermissionPermFormData.getRoleId().setValue(this.superUserRoleId);
+			final List<String> readPermissionList = new ArrayList<>();
+			readPermissionList.add("org.zeroclick.configuration.shared.role.ReadPermissionPermission");
+			readPermissionPermFormData.setPermission(readPermissionList);
+			readPermissionPermFormData.getLevel().setValue(100l);
+			SQL.insert(SQLs.ROLE_PERMISSION_INSERT, readPermissionPermFormData);
+			// Clear user Cache
+			BEANS.get(ServerAccessControlService.class)
+					.clearCacheOfUsersIds(CollectionUtility.arrayList(firstSuperUserPrincipal));
+
+			// clear permission cache
+			BEANS.get(IAccessControlService.class).clearCache();
 
 			this.superUserId = DatabaseHelper.get().getNextVal("USER_ID_SEQ");
 			final UserFormData superUserFormData = new UserFormData();
@@ -150,6 +165,9 @@ public class PatchCreateSuperUser extends AbstractDataPatcher {
 			// add the superUser role
 			SQL.update(SQLs.USER_ROLE_INSERT, new NVPair("userId", superUserFormData.getUserId().getValue()),
 					new NVPair("rolesBox", superUserFormData.getRolesBox().getValue()));
+
+			// add "ALL" permission to superUser Role
+			this.addAllPermissions(this.superUserRoleId);
 
 			// Clear user Cache
 			BEANS.get(ServerAccessControlService.class)

@@ -52,19 +52,30 @@ import org.zeroclick.meeting.client.common.SlotHelper;
 import org.zeroclick.meeting.client.common.UserAccessRequiredException;
 import org.zeroclick.meeting.client.event.EventTablePage.Table;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
+import org.zeroclick.meeting.client.google.api.GoogleApiHelper.ApiCalendar;
 import org.zeroclick.meeting.shared.Icons;
-import org.zeroclick.meeting.shared.event.AbstractEventNotification;
+import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
+import org.zeroclick.meeting.shared.calendar.ApiFormData;
+import org.zeroclick.meeting.shared.calendar.CalendarConfigurationCreatedNotification;
+import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
+import org.zeroclick.meeting.shared.calendar.CalendarConfigurationModifiedNotification;
+import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationCreatedNotification;
+import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationModifiedNotification;
+import org.zeroclick.meeting.shared.calendar.IApiService;
+import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.event.CreateEventPermission;
+import org.zeroclick.meeting.shared.event.EventCreatedNotification;
 import org.zeroclick.meeting.shared.event.EventFormData;
+import org.zeroclick.meeting.shared.event.EventModifiedNotification;
 import org.zeroclick.meeting.shared.event.EventTablePageData;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.StateCodeType;
 import org.zeroclick.ui.action.menu.AbstractNewMenu;
 import org.zeroclick.ui.action.menu.AbstractValidateMenu;
 
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;
-import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventAttendee;
 import com.google.api.services.calendar.model.Events;
@@ -133,17 +144,37 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 	}
 
 	@Override
-	protected Boolean canHandleNew(final AbstractEventNotification notification) {
-		final EventFormData formData = notification.getEventForm();
+	protected Boolean canHandle(final EventCreatedNotification notification) {
+		final EventFormData formData = notification.getFormData();
 		return !this.getEventMessageHelper().isHeldByCurrentUser(formData)
 				&& CompareUtility.equals(StateCodeType.AskedCode.ID, formData.getState().getValue());
 	}
 
 	@Override
-	protected Boolean canHandleModified(final AbstractEventNotification notification) {
-		final EventFormData formData = notification.getEventForm();
+	protected Boolean canHandle(final EventModifiedNotification notification) {
+		final EventFormData formData = notification.getFormData();
 		return !this.getEventMessageHelper().isHeldByCurrentUser(formData)
 				&& CompareUtility.equals(StateCodeType.AskedCode.ID, formData.getState().getValue());
+	}
+
+	@Override
+	protected Boolean canHandle(final CalendarConfigurationCreatedNotification notification) {
+		return Boolean.TRUE;
+	}
+
+	@Override
+	protected Boolean canHandle(final CalendarConfigurationModifiedNotification notification) {
+		return Boolean.TRUE;
+	}
+
+	@Override
+	protected Boolean canHandle(final CalendarsConfigurationModifiedNotification notification) {
+		return Boolean.TRUE;
+	}
+
+	@Override
+	protected Boolean canHandle(final CalendarsConfigurationCreatedNotification notification) {
+		return Boolean.TRUE;
 	}
 
 	public class Table extends AbstractEventsTablePage<Table>.Table {
@@ -241,11 +272,13 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					final Date calculatedStartDate = this.getStartDateColumn().getValue(row.getRowIndex());
 					if (null == calculatedStartDate) {
 						final Long eventId = this.getEventIdColumn().getValue(row.getRowIndex());
-						LOG.debug("No auto-filled dates for event ID : " + eventId + " Adding to processedList");
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("No auto-filled dates for event ID : " + eventId + " Adding to processedList");
+						}
 						EventTablePage.this.addEventProcessedWithoutDates(eventId);
 					}
 				} catch (final IOException e) {
-					LOG.warn("Canno't auto calculate start/end meeting for row " + row, e);
+					LOG.error("Canno't auto calculate start/end meeting for row " + row, e);
 				}
 			}
 		}
@@ -368,7 +401,9 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			Boolean hasLooped = Boolean.FALSE;
 
 			final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
-			LOG.debug("Changing Next date for Event ID : " + eventId + " with start Date : " + newStartDate);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Changing Next date for Event ID : " + eventId + " with start Date : " + newStartDate);
+			}
 
 			final ZonedDateTime nextStartDate = this.addReactionTime(newStartDate);
 			DateReturn newPossibleDate;
@@ -471,8 +506,10 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			ZonedDateTime minimalStart = ZonedDateTime.now(date.getZone()).plus(Duration.ofMinutes(reactionDelayMin));
 			minimalStart = this.roundToNextHourQuarter(minimalStart);
 			if (date.isBefore(minimalStart)) {
-				LOG.debug(date + " is too close with reactionTime of " + reactionDelayMin + " mins. Using : "
-						+ minimalStart);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug(date + " is too close with reactionTime of " + reactionDelayMin + " mins. Using : "
+							+ minimalStart);
+				}
 				// startDate is too close
 				return minimalStart;
 			} else {
@@ -489,7 +526,9 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					newMins = 0;
 				}
 			}
-			LOG.debug(minutes + " rounded to (next quarter) : " + newMins);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(minutes + " rounded to (next quarter) : " + newMins);
+			}
 			return newMins;
 		}
 
@@ -566,7 +605,8 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				final ZonedDateTime calendareRecommendedDate = this.tryCreateEvent(startDate, nextEndDate,
 						Duration.ofMinutes(selectEventDuration), guestUserId);
 				if (calendareRecommendedDate != null) {
-					return new DateReturn(this.addReactionTime(calendareRecommendedDate), loopInDates);
+					return new DateReturn(this.atZone(this.addReactionTime(calendareRecommendedDate), guestUserId),
+							loopInDates);
 				}
 			}
 
@@ -631,98 +671,196 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			// if no exiting event, a new one can be created
 			ZonedDateTime recommendedNewDate = null;
 			if (allConcurentEvent.isEmpty()) {
-				LOG.info(
-						"No event found in calendars from : " + startDate + " to " + endDate + " for user : " + userId);
+				LOG.info(new StringBuilder().append("No event found in calendars from : ").append(startDate)
+						.append(" to ").append(endDate).append(" for user : ").append(userId).toString());
 				// Do nothing special, recommendedNewDate = null meaning
 				// provided periods is OK
 			} else {
 				// else try to find a new appropriate new startDate
 				if (LOG.isDebugEnabled()) {
-					final StringBuilder builderDebug = new StringBuilder(100);
-					builderDebug.append(allConcurentEvent.size()).append(" event(s) found in calendars from : ")
-							.append(startDate).append(" to ").append(endDate).append(" for user : ").append(userId);
-					LOG.debug(builderDebug.toString());
+					LOG.debug(new StringBuilder(100).append(allConcurentEvent.size())
+							.append(" event(s) found in calendars from : ").append(startDate).append(" to ")
+							.append(endDate).append(" for user : ").append(userId).toString());
 				}
 				final List<DayDuration> freeTimes = this.getFreeTime(startDate, endDate, allConcurentEvent, userZoneId);
 
 				if (!freeTimes.isEmpty()) {
 					if (LOG.isDebugEnabled()) {
-						final StringBuilder builderDebug = new StringBuilder(100);
-						builderDebug.append("FreeTime found in calendars from : ").append(startDate).append(" to ")
-								.append(endDate).append(" with periods : ").append(freeTimes);
-						LOG.debug(builderDebug.toString());
+						LOG.debug(new StringBuilder(100).append("FreeTime found in calendars from : ").append(startDate)
+								.append(" to ").append(endDate).append(" with periods : ").append(freeTimes)
+								.toString());
 					}
 					recommendedNewDate = SlotHelper.get().getNextValidDateTime(freeTimes, startDate, endDate);
 					if (null != recommendedNewDate) {
-						LOG.info("Recommanding new search from : " + recommendedNewDate + " (cause : " + userId
-								+ " has blocking event(s) but freeTime)");
+						LOG.info(new StringBuilder().append("Recommanding new search from : ")
+								.append(recommendedNewDate).append(" (cause : ").append(userId)
+								.append(" has blocking event(s) but freeTime)").toString());
 					}
 				}
 				if (null == recommendedNewDate) {
 					if (LOG.isDebugEnabled()) {
-						final StringBuilder builderDebug = new StringBuilder(100);
-						builderDebug.append("No avilable periods found in freeTime from : ").append(startDate)
-								.append(" to ").append(endDate).append(" for user : ").append(userId);
-						LOG.debug(builderDebug.toString());
+						LOG.debug(new StringBuilder(100).append("No avilable periods found in freeTime from : ")
+								.append(startDate).append(" to ").append(endDate).append(" for user : ").append(userId)
+								.toString());
 					}
 					// The new potential start is the end of the last event
 					final Event lastEvent = this.getLastEvent(allConcurentEvent);
+					final String lastBlockingEventText = googleHelper.aslog(lastEvent);
 					if (LOG.isDebugEnabled()) {
-						final StringBuilder builderDebug = new StringBuilder(100);
-						builderDebug.append("Last (Google) blocking event ").append(googleHelper.aslog(lastEvent));
-						LOG.debug(builderDebug.toString());
+						LOG.debug(new StringBuilder(100).append("Last (Google) blocking event ")
+								.append(lastBlockingEventText).toString());
 					}
 					final ZonedDateTime endLastEvent = googleHelper.fromEventDateTime(lastEvent.getEnd());
 					// TODO Djer13 is required to add 1 minute ?
 					recommendedNewDate = endLastEvent.plus(Duration.ofMinutes(1));
-					LOG.info("Recommanding new search from : " + recommendedNewDate + " (cause : " + userId
-							+ " whole period blocked by " + allConcurentEvent.size() + " event(s)");
+					LOG.info(new StringBuilder().append("Recommanding new search from : ").append(recommendedNewDate)
+							.append(" (cause : ").append(userId).append(" has whole period blocked by ")
+							.append(allConcurentEvent.size()).append(" event(s), last blocking event : ")
+							.append(lastBlockingEventText).toString());
 				}
 			}
 
 			return recommendedNewDate;
 		}
 
-		private String getUserCreateEventCalendar(final Long userId) {
-			return "primary";
+		private Set<AbstractCalendarConfigurationTableRowData> getUserUsedEventCalendar(final Long userId) {
+			final ICalendarConfigurationService calendarConfigurationService = BEANS
+					.get(ICalendarConfigurationService.class);
+
+			final Set<AbstractCalendarConfigurationTableRowData> usedCalendars = calendarConfigurationService
+					.getUsedCalendars(userId);
+
+			return usedCalendars;
+
 		}
 
 		private List<Event> getEvents(final ZonedDateTime startDate, final ZonedDateTime endDate, final Long userId)
 				throws IOException {
 			final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
-			Calendar gCalendarService;
-
-			try {
-				gCalendarService = googleHelper.getCalendarService(userId);
-			} catch (final UserAccessRequiredException uare) {
-				throw new VetoException(TEXTS.get("zc.meeting.calendarProviderRequired"));
-			}
+			final IApiService apiService = BEANS.get(IApiService.class);
 
 			// getEvent from start to End for each calendar
-			final String readEventCalendarId = this.getUserCreateEventCalendar(userId);
-			final List<CalendarListEntry> userGCalendars = CollectionUtility
-					.arrayList(gCalendarService.calendarList().get(readEventCalendarId).execute());
+			final Set<AbstractCalendarConfigurationTableRowData> activatedEventCalendars = this
+					.getUserUsedEventCalendar(userId);
+			// final List<CalendarListEntry> userGCalendars = CollectionUtility
+			// .arrayList(gCalendarService.calendarList().get(readEventCalendarId).execute());
+			//
+			// final IUserService userService = BEANS.get(IUserService.class);
+			// final UserFormData userDetails =
+			// userService.getUserDetails(userId);
+			// final String myEmail = userDetails.getEmail().getValue();
 
 			final DateTime googledStartDate = googleHelper.toDateTime(startDate);
 			final DateTime googledEndDate = googleHelper.toDateTime(endDate);
 
 			final List<Event> allConcurentEvent = new ArrayList<>();
-			for (final CalendarListEntry calendar : userGCalendars) {
-				final Events events = gCalendarService.events().list(calendar.getId()).setMaxResults(50)
-						.setTimeMin(googledStartDate).setTimeMax(googledEndDate).setOrderBy("startTime")
-						.setSingleEvents(true).execute();
-				allConcurentEvent.addAll(events.getItems());
-			}
+			for (final AbstractCalendarConfigurationTableRowData calendar : activatedEventCalendars) {
+				Calendar gCalendarService = null;
 
-			final Boolean ignoreFullDayEvents = Boolean.TRUE;
+				try {
+					gCalendarService = googleHelper.getCalendarService(calendar.getOAuthCredentialId());
+				} catch (final UserAccessRequiredException uare) {
+					LOG.error("Error while getting (Google) events", uare);
+					throw new VetoException(TEXTS.get("zc.meeting.calendarProviderRequired"));
+				}
 
-			if (!allConcurentEvent.isEmpty() && ignoreFullDayEvents) {
-				final Iterator<Event> itEvents = allConcurentEvent.iterator();
-				while (itEvents.hasNext()) {
-					final Event event = itEvents.next();
-					if (null != event.getStart().getDate()) {
-						LOG.debug("FullDay Event removed : " + googleHelper.aslog(event));
-						itEvents.remove();
+				final String calendarId = calendar.getExternalId();
+
+				final com.google.api.services.calendar.Calendar.Events.List eventQuery = gCalendarService.events()
+						.list(calendarId).setMaxResults(50).setTimeMin(googledStartDate).setTimeMax(googledEndDate)
+						.setSingleEvents(true).setOrderBy("startTime");
+
+				Events events = null;
+				try {
+					events = eventQuery.execute();
+				} catch (final GoogleJsonResponseException gjre) {
+					if (gjre.getStatusCode() == 404) {
+						LOG.warn("problem while geting user Event for user : " + userId
+								+ " trying to auto-Configure is calendars");
+						googleHelper.autoConfigureCalendars(userId);
+
+						if (this.isMySelf(userId)) {
+							final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+							notificationHelper.addProccessedNotification(
+									"zc.meeting.calendar.notification.modifiedCalendarsConfig",
+									TEXTS.get("zc.common.me"));
+						}
+
+						final ICalendarConfigurationService calendarConfigurationService = BEANS
+								.get(ICalendarConfigurationService.class);
+
+						@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
+						final CalendarConfigurationFormData formData = new CalendarConfigurationFormData();
+						formData.getCalendarConfigurationId().setValue(calendar.getCalendarConfigurationId());
+
+						final CalendarConfigurationFormData calendarAfterAutoConfigure = calendarConfigurationService
+								.load(formData);
+
+						if (LOG.isDebugEnabled() && null != calendarAfterAutoConfigure
+								&& null == calendarAfterAutoConfigure.getCalendarConfigurationId().getValue()) {
+							LOG.debug("Calendar was removed after synchro, continuing with the next one");
+						} else {
+							throw gjre;
+						}
+					}
+				}
+
+				final Boolean processFullDay = calendar.getProcessFullDayEvent();
+				final Boolean processFree = calendar.getProcessFreeEvent();
+				final Boolean processNotRegisteredOn = calendar.getProcessNotRegistredOnEvent();
+
+				if (null != events && null != events.getItems() && events.getItems().size() > 0) {
+					for (final Event event : events.getItems()) {
+						// dispo/busy
+						if (!processFree && "transparent".equals(event.getTransparency())) {
+							LOG.info(new StringBuilder(100).append("Event : ").append(event.getSummary())
+									.append(" (" + event.getId()).append("in " + events.getSummary())
+									.append(") is ignored because processFree is False in this calendar configuration (")
+									.append(calendar.getCalendarConfigurationId()).append(") and transparency is : ")
+									.append(event.getTransparency()).append(" from calendar : ").append(calendarId)
+									.toString());
+							continue;
+						}
+
+						// event registred on
+						if (!processNotRegisteredOn) {
+							final ApiFormData apiConfg = apiService.load(calendar.getOAuthCredentialId());
+							final String apiAccontEmail = apiConfg.getAccountEmail().getValue();
+
+							final String eventCreator = event.getCreator().getEmail();
+							final List<EventAttendee> attendees = event.getAttendees();
+							Boolean iAmRegistred = Boolean.FALSE;
+							if (null != attendees && attendees.size() > 0) {
+								for (final EventAttendee attendee : attendees) {
+									if (apiAccontEmail.equalsIgnoreCase(attendee.getEmail())) {
+										if ("accepted".equals(attendee.getResponseStatus())) {
+											iAmRegistred = Boolean.TRUE;
+										}
+									}
+								}
+							}
+							if (!(apiAccontEmail.equalsIgnoreCase(eventCreator) || iAmRegistred)) {
+								LOG.info(new StringBuilder(100).append("Event : " + event.getSummary()).append(" (")
+										.append(event.getId())
+										.append(") is ignored because processNotRegisteredOn is False in this calendar Configuration (")
+										.append(calendar.getCalendarConfigurationId())
+										.append(" from " + events.getSummary()).append(") and ").append(apiAccontEmail)
+										.append(" isn't organizer or hasen't accepted the event from calendar : ")
+										.append(calendarId).toString());
+								continue;
+							}
+						}
+
+						// full day event
+						if (!processFullDay && null != event.getStart().getDate()) {
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("FullDay Event from calendar : " + calendarId + " ignored : "
+										+ googleHelper.aslog(event));
+							}
+							continue;
+						}
+
+						allConcurentEvent.add(event);
 					}
 				}
 			}
@@ -742,8 +880,11 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			final Iterator<Event> itEvent = events.iterator();
 			Boolean isFirstEvent = Boolean.TRUE;
 
-			LOG.debug("Searching for freeTime from : " + startDate + " to " + endDate + " with : " + events.size()
-					+ " event(s) in period");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(new StringBuilder().append("Searching for freeTime from : ").append(startDate).append(" to ")
+						.append(endDate).append(" with : ").append(events.size()).append(" event(s) in period")
+						.toString());
+			}
 
 			Event event = null;
 			while (itEvent.hasNext()) {
@@ -798,21 +939,41 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					}
 				}
 			}
-			LOG.debug(freeTime.size() + " freeTime periods found");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(new StringBuilder().append(freeTime.size()).append(" freeTime periods found").toString());
+			}
 			return freeTime;
 		}
 
 		private Event createEvent(final ZonedDateTime startDate, final ZonedDateTime endDate, final Long forUserId,
 				final String withEmail, final String subject, final String location) throws IOException {
-			LOG.debug("Creating (Google) Event from : " + startDate + " to " + endDate + ", for :" + forUserId
-					+ " (attendee :" + withEmail + ")");
+			return this.createEvent(startDate, endDate, forUserId, withEmail, subject, location, Boolean.FALSE);
+		}
+
+		private Event createEvent(final ZonedDateTime startDate, final ZonedDateTime endDate, final Long forUserId,
+				final String withEmail, final String subject, final String location,
+				final Boolean guestAutoAcceptMeeting) throws IOException {
 
 			final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+			final String createdEventCalendarId = googleHelper.getUserCreateEventCalendar(forUserId);
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(new StringBuilder().append("Creating (Google) Event from : ").append(startDate).append(" to ")
+						.append(endDate).append(", for :").append(forUserId).append("in Calendar : ")
+						.append(createdEventCalendarId).append(" (attendee :").append(withEmail)
+						.append(", autoAccept? ").append(guestAutoAcceptMeeting).append(")").toString());
+			}
 
 			Calendar googleCalendarService;
 
 			try {
-				googleCalendarService = googleHelper.getCalendarService(forUserId);
+				final ICalendarConfigurationService calendarConfigurationService = BEANS
+						.get(ICalendarConfigurationService.class);
+				final CalendarConfigurationFormData calendarToStoreEvent = calendarConfigurationService
+						.getCalendarToStoreEvents(forUserId);
+
+				googleCalendarService = googleHelper
+						.getCalendarService(calendarToStoreEvent.getOAuthCredentialId().getValue());
 			} catch (final UserAccessRequiredException uare) {
 				// throw new
 				// VetoException(TEXTS.get("zc.meeting.calendarProviderRequired"));
@@ -820,7 +981,6 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			}
 
 			final String EnvDisplay = new ApplicationEnvProperty().displayAsText();
-			final String createdEventCalendarId = this.getUserCreateEventCalendar(forUserId);
 
 			final Event newEvent = new Event();
 			newEvent.setStart(googleHelper.toEventDateTime(startDate));
@@ -830,38 +990,47 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			newEvent.setLocation(TextsHelper.get(forUserId, location));
 			newEvent.setDescription(subject);
 
-			final EventAttendee[] attendees = new EventAttendee[] { new EventAttendee().setEmail(withEmail) };
+			final EventAttendee attendeeEmail = new EventAttendee().setEmail(withEmail);
+			if (guestAutoAcceptMeeting) {
+				attendeeEmail.setResponseStatus("accepted");
+			}
+
+			final EventAttendee[] attendees = new EventAttendee[] { attendeeEmail };
 			newEvent.setAttendees(Arrays.asList(attendees));
 
 			final Event createdEvent = googleCalendarService.events().insert(createdEventCalendarId, newEvent)
 					.execute();
 
-			LOG.info("(Google) Event created  with id : " + createdEvent.getId() + " from " + startDate + " to "
-					+ endDate + ", for : " + forUserId + " ICalUID : " + createdEvent.getICalUID() + " link : "
-					+ createdEvent.getHtmlLink());
+			LOG.info(new StringBuilder(250).append("(Google) Event created  with id : ").append(createdEvent.getId())
+					.append(" in calendar : ").append(createdEventCalendarId).append(" with ")
+					.append(createdEvent.getAttendees().size()).append(" attendee(s) ; From ").append(startDate)
+					.append(" to ").append(endDate).append(", for : ").append(forUserId).append(" ICalUID : ")
+					.append(createdEvent.getICalUID()).append(" link : ").append(createdEvent.getHtmlLink())
+					.toString());
 
 			return createdEvent;
 		}
 
 		private Event acceptCreatedEvent(final Event organizerEvent, final String organizerCalendarId,
 				final Long userId, final String attendeeEmail, final Long heldByUserId) throws IOException {
-			LOG.debug(
-					"Accepting (Google) Event from (" + organizerEvent.getOrganizer().getEmail() + "), for :" + userId);
+			LOG.info(new StringBuilder().append("Accepting (Google) Event from (")
+					.append(organizerEvent.getOrganizer().getEmail()).append(" organizerCalendarId : ")
+					.append(organizerCalendarId + "), for :").append(userId).append(" with his email : ")
+					.append(attendeeEmail).toString());
 
 			Long googleApiUserId = userId;
 			final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
 
 			if (!googleHelper.isCalendarConfigured(userId)) {
-				LOG.info("User : " + userId
-						+ " as no calendar configured (assuming no API acces), updating the (Google) Event with the heldBy user Id ("
-						+ heldByUserId + ")");
+				LOG.info(new StringBuilder().append("User : ").append(userId)
+						.append(" as no calendar configured (assuming no API acces), updating the (Google) Event with the heldBy user Id (")
+						.append(heldByUserId).append(")").toString());
 				googleApiUserId = heldByUserId;
 			}
 
-			Calendar gCalendarService;
-
+			List<ApiCalendar> gCalendarsServices;
 			try {
-				gCalendarService = googleHelper.getCalendarService(googleApiUserId);
+				gCalendarsServices = googleHelper.getCalendarsServices(googleApiUserId);
 			} catch (final UserAccessRequiredException uare) {
 				throw new VetoException(TEXTS.get("zc.meeting.calendarProviderRequired"));
 			}
@@ -869,15 +1038,60 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			final List<EventAttendee> attendees = organizerEvent.getAttendees();
 			for (final EventAttendee eventAttendee : attendees) {
 				if (attendeeEmail.equals(eventAttendee.getEmail())) {
-					LOG.debug("Updating (Google) event : " + organizerEvent.getSummary()
-							+ " as accepted for attendee : " + eventAttendee.getEmail());
+					if (LOG.isDebugEnabled()) {
+						LOG.debug(new StringBuilder().append("Updating (Google) event : ")
+								.append(organizerEvent.getSummary()).append(" as accepted for attendee : ")
+								.append(eventAttendee.getEmail()).toString());
+					}
 					eventAttendee.setResponseStatus("accepted");
 				}
 			}
 
 			// Update the event
-			final Event updatedEvent = gCalendarService.events()
-					.update(organizerCalendarId, organizerEvent.getId(), organizerEvent).execute();
+			Event updatedEvent = null;
+			Boolean eventUpdated = Boolean.FALSE;
+
+			if (null != gCalendarsServices && gCalendarsServices.size() > 0) {
+				for (final ApiCalendar gCalendarService : gCalendarsServices) {
+					if (!eventUpdated) {
+						try {
+							updatedEvent = gCalendarService.getCalendar().events()
+									.update(organizerCalendarId, organizerEvent.getId(), organizerEvent).execute();
+							eventUpdated = Boolean.TRUE;
+						} catch (final GoogleJsonResponseException gjre) {
+							if (gjre.getStatusCode() == 404) {
+								// wait a few and re-try
+								LOG.warn(new StringBuilder()
+										.append("(Google); exception while accepting recently created event (id :")
+										.append(organizerEvent.getId()).append(") with apiConfigurationId : ")
+										.append(gCalendarService.getMetaData().getApiCredentialId())
+										.append(", re-trying").toString(), gjre);
+								try {
+									Thread.sleep(200);
+								} catch (final InterruptedException e) {
+									// do nothing
+								}
+								try {
+									updatedEvent = gCalendarService.getCalendar().events()
+											.update(organizerCalendarId, organizerEvent.getId(), organizerEvent)
+											.execute();
+									eventUpdated = Boolean.TRUE;
+								} catch (final GoogleJsonResponseException gjre2) {
+									LOG.warn(new StringBuilder()
+											.append("(Google); exception while accepting recently created event (id :")
+											.append(organizerEvent.getId()).append(")  with apiConfigurationId : ")
+											.append(gCalendarService.getMetaData().getApiCredentialId())
+											.append(", in second try").toString(), gjre);
+								}
+							}
+						}
+					}
+				}
+			}
+
+			if (!eventUpdated) {
+				LOG.error("Error while update Event, cannot acces event with any GCalendarService confgiured");
+			}
 
 			return updatedEvent;
 		}
@@ -930,8 +1144,6 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 						validateCpsForm.setModal(Boolean.TRUE);
 						validateCpsForm.startNew();
 						validateCpsForm.waitFor();
-					} else {
-						// Do nothing
 					}
 					// if user subscribe to subscription witch give him access
 					final SubscriptionHelperData subscriptionAfterData = subHelper.canCreateEvent();
@@ -1032,6 +1244,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			@Override
 			protected void execAction() {
+				final Boolean guestAutoAcceptEvent = Boolean.TRUE;
 
 				final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 				notificationHelper.addProcessingNotification("zc.meeting.notification.acceptingEvent");
@@ -1059,25 +1272,35 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					}
 					// External event for holder
 					final Event externalOrganizerEvent = Table.this.createEvent(start, end, eventHeldBy,
-							eventGuestEmail, subject, venue);
+							eventGuestEmail, subject, venue, guestAutoAcceptEvent);
 					if (null == externalOrganizerEvent) {
-						LOG.warn("Event not created for user : " + eventHeldBy
-								+ " and he is the organizer ! (subject : " + subject + ")");
+						LOG.warn(new StringBuilder().append("Event not created for user : ").append(eventHeldBy)
+								.append(" and he is the organizer ! (subject : ").append(subject).append(")")
+								.toString());
 					} else {
 						Table.this.getExternalIdOrganizerColumn().setValue(Table.this.getSelectedRow(),
 								externalOrganizerEvent.getId());
 					}
 
-					if (null == eventGuest) {
-						eventGuest = userService.getUserIdByEmail(eventGuestEmail);
-					}
+					if (!guestAutoAcceptEvent) {
+						// Only if required to process "accept" in a other
+						// request
+						if (null == eventGuest) {
+							eventGuest = userService.getUserIdByEmail(eventGuestEmail);
+						}
 
-					final Event externalGuestEvent = Table.this.acceptCreatedEvent(externalOrganizerEvent,
-							Table.this.getUserCreateEventCalendar(eventHeldBy), eventGuest, eventGuestEmail,
-							eventHeldBy);
-					if (null != externalGuestEvent) {
+						final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+
+						final Event externalGuestEvent = Table.this.acceptCreatedEvent(externalOrganizerEvent,
+								googleHelper.getUserCreateEventCalendar(eventHeldBy), eventGuest, eventGuestEmail,
+								eventHeldBy);
+						if (null != externalGuestEvent) {
+							Table.this.getExternalIdRecipientColumn().setValue(Table.this.getSelectedRow(),
+									externalGuestEvent.getId());
+						}
+					} else {
 						Table.this.getExternalIdRecipientColumn().setValue(Table.this.getSelectedRow(),
-								externalGuestEvent.getId());
+								externalOrganizerEvent.getId());
 					}
 
 					// Save at the end to save external IDs !
@@ -1269,9 +1492,14 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 						final ZonedDateTime currentStartDate = EventTablePage.this.getDateHelper().getZonedValue(
 								EventTablePage.this.getAppUserHelper().getUserZoneId(guestId),
 								Table.this.getStartDateColumn().getValue(row.getRowIndex()));
-						final ZonedDateTime newStartDate = currentStartDate.plusDays(1).withHour(0).withMinute(0)
-								.withSecond(0).withNano(0);
-						Table.this.changeDatesNext(newStartDate);
+						if (null == currentStartDate) {
+							// a simple next because, there is no existing start
+							Table.this.changeDatesNext();
+						} else {
+							final ZonedDateTime newStartDate = currentStartDate.plusDays(1).withHour(0).withMinute(0)
+									.withSecond(0).withNano(0);
+							Table.this.changeDatesNext(newStartDate);
+						}
 						Table.this.reloadMenus(Table.this.getSelectedRow());
 					} catch (final IOException e) {
 						LOG.error("Error while getting (Google) calendar details", e);

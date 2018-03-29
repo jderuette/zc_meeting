@@ -13,33 +13,25 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.zeroclick.configuration.shared.user;
-
-import java.io.Serializable;
+package org.zeroclick.common;
 
 /**
  * @author djer
  *
  */
-public abstract class AbstractUserNotification implements Serializable {
+public class BulkSqlData {
+	Object[][] data;
 
-	private static final long serialVersionUID = 8907899874848943474L;
-
-	private final UserFormData userForm;
-
-	public AbstractUserNotification(final UserFormData newEvent) {
-		this.userForm = newEvent;
+	public BulkSqlData(final Object[][] data) {
+		super();
+		this.data = data;
 	}
 
-	public UserFormData getUserForm() {
-		return this.userForm;
+	public Object[][] getData() {
+		return this.data;
 	}
 
-	@Override
-	public String toString() {
-		final StringBuilder builder = new StringBuilder(50);
-		builder.append("UserNotification [userForm=").append(this.userForm).append(']');
-		return builder.toString();
+	public void setData(final Object[][] data) {
+		this.data = data;
 	}
-
 }

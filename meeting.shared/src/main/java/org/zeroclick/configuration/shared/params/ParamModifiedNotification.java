@@ -16,23 +16,17 @@ limitations under the License.
 package org.zeroclick.configuration.shared.params;
 
 import org.zeroclick.common.params.AppParamsFormData;
+import org.zeroclick.meeting.shared.AbstractNotification;
 
 /**
  * @author djer
  *
  */
-public class ParamModifiedNotification extends AbstractParamNotification {
+public class ParamModifiedNotification extends AbstractNotification<AppParamsFormData> {
 
 	private static final long serialVersionUID = -2546211635305638271L;
 
 	public ParamModifiedNotification(final AppParamsFormData modifiedParam) {
 		super(modifiedParam);
-	}
-
-	@Override
-	public String toString() {
-		final StringBuilder builder = new StringBuilder(50);
-		builder.append("ParamModifiedNotification [paramForm=").append(super.getParamForm()).append(']');
-		return builder.toString();
 	}
 }

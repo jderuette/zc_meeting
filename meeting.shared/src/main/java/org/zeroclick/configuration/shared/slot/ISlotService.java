@@ -9,15 +9,7 @@ import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 @TunnelToServer
 public interface ISlotService extends IService {
 
-	SlotFormData prepareCreate(SlotFormData formData);
-
-	SlotFormData create(SlotFormData formData);
-
-	SlotFormData load(SlotFormData formData);
-
-	SlotFormData store(SlotFormData formData);
-
-	SlotTablePageData getSlotTableData(SearchFilter filter);
+	SlotsFormData store(SlotsFormData formData);
 
 	SlotTablePageData getDayDurationTableData(SearchFilter filter);
 
@@ -28,18 +20,6 @@ public interface ISlotService extends IService {
 	DayDurationFormData load(DayDurationFormData formData);
 
 	Object[][] getSlots();
-
-	Object[][] getDayDurations(Long slotId);
-
-	Object[][] getDayDurationsLight(Long slotId);
-
-	// /**
-	// * retrieve CURRENT USER list of daySuration for the Slot name
-	// *
-	// * @param slotName
-	// * @return
-	// */
-	// Object[][] getDayDurations(String slotName);
 
 	List<DayDurationFormData> getDayDurations(String slotName, Long userId);
 
@@ -66,12 +46,4 @@ public interface ISlotService extends IService {
 	 */
 	void updateDayDurationsByTemplate(String slotName, String requiredStart, String requiredEnd, String newStart,
 			String newEnd);
-	//
-	// /**
-	// * Migration : DO not use Correct the DayDuration start and end hours.
-	// From
-	// * User timeZone to UTC. TimeZone isn't stored in DataBase so assume ALL
-	// * User have their current TimeZone in DB.
-	// */
-	// void migrateDayDurationTimeToUtc(String slotName);
 }

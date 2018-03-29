@@ -22,7 +22,7 @@ public class ZoneIdLookupCall extends LocalLookupCall<String> {
 	private final Boolean displayCustomText = Boolean.TRUE;
 
 	@Override
-	@SuppressWarnings("PMD.CollapsibleIfStatements")
+	@SuppressWarnings({ "PMD.CollapsibleIfStatements", "PMD.AvoidInstantiatingObjectsInLoops" })
 	protected List<LookupRow<String>> execCreateLookupRows() {
 		// TODO Djer : cache rows because they not change during runtime.
 		final List<LookupRow<String>> rows = new ArrayList<>();

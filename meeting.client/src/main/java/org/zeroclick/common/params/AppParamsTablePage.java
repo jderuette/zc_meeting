@@ -2,12 +2,8 @@ package org.zeroclick.common.params;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.eclipse.scout.rt.client.dto.Data;
-import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
-import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
-import org.eclipse.scout.rt.client.ui.action.menu.TableMenuType;
 import org.eclipse.scout.rt.client.ui.basic.cell.ICell;
 import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
 import org.eclipse.scout.rt.client.ui.basic.table.ITableRow;
@@ -19,7 +15,6 @@ import org.eclipse.scout.rt.client.ui.desktop.outline.pages.AbstractPageWithTabl
 import org.eclipse.scout.rt.client.ui.form.IForm;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
-import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.notification.INotificationListener;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
@@ -30,7 +25,6 @@ import org.zeroclick.configuration.shared.params.IAppParamsService;
 import org.zeroclick.configuration.shared.params.ParamCreatedNotification;
 import org.zeroclick.configuration.shared.params.ParamModifiedNotification;
 import org.zeroclick.meeting.client.NotificationHelper;
-import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.ui.action.menu.AbstractEditMenu;
 import org.zeroclick.ui.action.menu.AbstractNewMenu;
 
@@ -62,23 +56,23 @@ public class AppParamsTablePage extends AbstractPageWithTable<Table> {
 		@Override
 		protected void initConfig() {
 			super.initConfig();
-			final ParamCreatedNotificationHandler paramCreatedNotificationHandler = BEANS
+			final ParamCreatedNotificationHandler paramCreatedNotifHand = BEANS
 					.get(ParamCreatedNotificationHandler.class);
-			paramCreatedNotificationHandler.addListener(this.createParamCreatedListener());
+			paramCreatedNotifHand.addListener(this.createParamCreatedListener());
 
-			final ParamModifiedNotificationHandler paramModifiedNotificationHandler = BEANS
+			final ParamModifiedNotificationHandler paramModifiedNotifHand = BEANS
 					.get(ParamModifiedNotificationHandler.class);
-			paramModifiedNotificationHandler.addListener(this.createParamModifiedListener());
+			paramModifiedNotifHand.addListener(this.createParamModifiedListener());
 		}
 
 		@Override
 		protected void execDisposeTable() {
-			final ParamCreatedNotificationHandler paramCreatedNotificationHandler = BEANS
+			final ParamCreatedNotificationHandler paramCreatedNotifHand = BEANS
 					.get(ParamCreatedNotificationHandler.class);
-			paramCreatedNotificationHandler.removeListener(this.paramCreatedListener);
-			final ParamModifiedNotificationHandler paramModifiedNotificationHandler = BEANS
+			paramCreatedNotifHand.removeListener(this.paramCreatedListener);
+			final ParamModifiedNotificationHandler paramModifiedNotifHand = BEANS
 					.get(ParamModifiedNotificationHandler.class);
-			paramModifiedNotificationHandler.removeListener(this.paramModifiedListener);
+			paramModifiedNotifHand.removeListener(this.paramModifiedListener);
 
 			super.execDisposeTable();
 		}
@@ -87,7 +81,7 @@ public class AppParamsTablePage extends AbstractPageWithTable<Table> {
 			this.paramModifiedListener = new INotificationListener<ParamModifiedNotification>() {
 				@Override
 				public void handleNotification(final ParamModifiedNotification notification) {
-					final AppParamsFormData paramForm = notification.getParamForm();
+					final AppParamsFormData paramForm = notification.getFormData();
 					try {
 						ITableRow row = AppParamsTablePage.this.getTable().getRow(paramForm.getParamId().getValue());
 						if (null == row) {
@@ -95,8 +89,11 @@ public class AppParamsTablePage extends AbstractPageWithTable<Table> {
 									.addRow(AppParamsTablePage.this.getTable().createTableRowFromForm(paramForm));
 						}
 						if (null != row) {
-							LOG.debug("Modified param prepare to modify table row (in " + Table.this.getTitle()
-									+ ") for event Id : " + paramForm.getParamId().getValue());
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(new StringBuilder().append("Modified param prepare to modify table row (in ")
+										.append(Table.this.getTitle()).append(") for event Id : ")
+										.append(paramForm.getParamId().getValue()).toString());
+							}
 
 							Table.this.updateTableRowFromForm(row, paramForm);
 
@@ -106,8 +103,12 @@ public class AppParamsTablePage extends AbstractPageWithTable<Table> {
 							notificationHelper.addProccessedNotification("zc.params.modified");
 
 						} else {
-							LOG.debug("Modified param ignored because it's not a current table row (in "
-									+ Table.this.getTitle() + ") for param Id : " + paramForm.getParamId().getValue());
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(new StringBuilder()
+										.append("Modified param ignored because it's not a current table row (in ")
+										.append(Table.this.getTitle()).append(") for param Id : ")
+										.append(paramForm.getParamId().getValue()).toString());
+							}
 						}
 
 					} catch (final RuntimeException e) {
@@ -124,9 +125,12 @@ public class AppParamsTablePage extends AbstractPageWithTable<Table> {
 				@Override
 				public void handleNotification(final ParamCreatedNotification notification) {
 
-					final AppParamsFormData paramForm = notification.getParamForm();
-					LOG.debug("New param prepare to add to table (in " + Table.this.getTitle() + ") for param Id : "
-							+ paramForm.getParamId().getValue());
+					final AppParamsFormData paramForm = notification.getFormData();
+					if (LOG.isDebugEnabled()) {
+						LOG.debug(new StringBuilder().append("New param prepare to add to table (in ")
+								.append(Table.this.getTitle() + ") for param Id : ")
+								.append(paramForm.getParamId().getValue()).toString());
+					}
 					try {
 						AppParamsTablePage.this.getTable()
 								.addRow(AppParamsTablePage.this.getTable().createTableRowFromForm(paramForm));
@@ -202,7 +206,7 @@ public class AppParamsTablePage extends AbstractPageWithTable<Table> {
 			protected String getConfiguredText() {
 				return TEXTS.get("zc.params.new");
 			}
-			
+
 			@Override
 			protected void execAction() {
 				Table.this.loadParamsForm();

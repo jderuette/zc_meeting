@@ -62,13 +62,13 @@ public class FormPage extends AbstractPageWithNodes implements IFormPage {
 
 	protected void ensureText() {
 		if (this.getCellForUpdate().getText() == null) {
-			String s = this.m_formType.getSimpleName();
-			s = s.replaceAll("Form$", "");
-			final String t = TEXTS.getWithFallback(s, null);
-			if (t == null) {
-				s = s.replaceAll("([a-z0-9])([A-Z])", "$1 $2");
+			String simpleName = this.m_formType.getSimpleName();
+			simpleName = simpleName.replaceAll("Form$", "");
+			final String translatedName = TEXTS.getWithFallback(simpleName, null);
+			if (translatedName == null) {
+				simpleName = simpleName.replaceAll("([a-z0-9])([A-Z])", "$1 $2");
 			}
-			this.getCellForUpdate().setText(s);
+			this.getCellForUpdate().setText(simpleName);
 		}
 	}
 

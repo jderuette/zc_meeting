@@ -66,14 +66,19 @@ public abstract class AbstractZonedDateField extends AbstractDateField {
 	}
 
 	@Override
+	protected void execChangedValue() {
+		if (null != this.getValue()) {
+			this.setDisplayText(this.getDisplayText());
+		}
+	}
+
+	@Override
 	public String getDisplayText() {
 		String formatedDateHours = "";
 		if (null != this.getValue()) {
 			final DateHelper dateHelper = BEANS.get(DateHelper.class);
-			// WARNING the \n is REQUIRED to allow scout detect
-			// hours part of the date !
-			formatedDateHours = dateHelper.format(this.getZonedValue()) + "\n"
-					+ dateHelper.formatHours(this.getZonedValue());
+			formatedDateHours = dateHelper.formatForUi(this.getValue(),
+					this.getAppUserHelper().getCurrentUserTimeZone());
 		}
 		return formatedDateHours;
 	}

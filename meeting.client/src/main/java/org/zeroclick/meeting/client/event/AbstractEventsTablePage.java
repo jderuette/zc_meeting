@@ -46,6 +46,7 @@ import org.zeroclick.configuration.client.api.ApiCreatedNotificationHandler;
 import org.zeroclick.configuration.client.slot.DayDurationModifiedNotificationHandler;
 import org.zeroclick.configuration.client.user.UserModifiedNotificationHandler;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
+import org.zeroclick.configuration.shared.api.ApiDeletedNotification;
 import org.zeroclick.configuration.shared.duration.DurationCodeType;
 import org.zeroclick.configuration.shared.params.IAppParamsService;
 import org.zeroclick.configuration.shared.params.ParamCreatedNotification;
@@ -58,11 +59,20 @@ import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.configuration.shared.user.UserModifiedNotification;
 import org.zeroclick.configuration.shared.venue.VenueLookupCall;
 import org.zeroclick.meeting.client.NotificationHelper;
+import org.zeroclick.meeting.client.calendar.CalendarConfigurationCreatedNotificationHandler;
+import org.zeroclick.meeting.client.calendar.CalendarConfigurationModifiedNotificationHandler;
+import org.zeroclick.meeting.client.calendar.CalendarsConfigurationCreatedNotificationHandler;
+import org.zeroclick.meeting.client.calendar.CalendarsConfigurationModifiedNotificationHandler;
 import org.zeroclick.meeting.client.common.CallTrackerService;
 import org.zeroclick.meeting.client.event.EventTablePage.Table.NewEventMenu;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
-import org.zeroclick.meeting.shared.event.AbstractEventNotification;
+import org.zeroclick.meeting.shared.calendar.CalendarConfigurationCreatedNotification;
+import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
+import org.zeroclick.meeting.shared.calendar.CalendarConfigurationModifiedNotification;
+import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationCreatedNotification;
+import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationFormData;
+import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationModifiedNotification;
 import org.zeroclick.meeting.shared.event.EventCreatedNotification;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.EventModifiedNotification;
@@ -87,8 +97,6 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	 * To avoid event processed twice, when no date available
 	 */
 	private final Set<Long> processedEventWithoutPossibleDates = new HashSet<>(3);
-	private Date processedEventLastModification;
-	private final Long processedEventTtl = 20000L; // millisecondes
 
 	private DateHelper dateHelper;
 	private AppUserHelper appUserHelper;
@@ -152,26 +160,24 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 		this.callTracker = new CallTrackerService<>(maxNbCall, Duration.ofMinutes(maxDuration), "Get calendar Events");
 
-		final ParamCreatedNotificationHandler paramCreatedNotificationHandler = BEANS
-				.get(ParamCreatedNotificationHandler.class);
-		paramCreatedNotificationHandler.addListener(this.createParamCreatedListener());
+		final ParamCreatedNotificationHandler paramCreatedNotifHand = BEANS.get(ParamCreatedNotificationHandler.class);
+		paramCreatedNotifHand.addListener(this.createParamCreatedListener());
 
-		final ParamModifiedNotificationHandler paramModifiedNotificationHandler = BEANS
+		final ParamModifiedNotificationHandler paramModifiedNotifHand = BEANS
 				.get(ParamModifiedNotificationHandler.class);
-		paramModifiedNotificationHandler.addListener(this.createParamModifiedListener());
+		paramModifiedNotifHand.addListener(this.createParamModifiedListener());
 
 		super.execInitPage();
 	}
 
 	@Override
 	protected void execDisposePage() {
-		final ParamCreatedNotificationHandler paramCreatedNotificationHandler = BEANS
-				.get(ParamCreatedNotificationHandler.class);
-		paramCreatedNotificationHandler.removeListener(this.paramCreatedListener);
+		final ParamCreatedNotificationHandler paramCreatedNotifHand = BEANS.get(ParamCreatedNotificationHandler.class);
+		paramCreatedNotifHand.removeListener(this.paramCreatedListener);
 
-		final ParamModifiedNotificationHandler paramModifiedNotificationHandler = BEANS
+		final ParamModifiedNotificationHandler paramModifiedNotifHand = BEANS
 				.get(ParamModifiedNotificationHandler.class);
-		paramModifiedNotificationHandler.removeListener(this.paramModifiedListener);
+		paramModifiedNotifHand.removeListener(this.paramModifiedListener);
 
 		super.execDisposePage();
 	}
@@ -183,7 +189,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	 * @param formdata
 	 * @return true if this (sub) tablePage want handle the event
 	 */
-	protected Boolean canHandleNew(final AbstractEventNotification notification) {
+	protected Boolean canHandle(final EventCreatedNotification notification) {
 		return Boolean.FALSE;
 	}
 
@@ -195,7 +201,76 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	 * @param previousStateRow
 	 * @return true if this (sub) tablePage want handle the event
 	 */
-	protected Boolean canHandleModified(final AbstractEventNotification notification) {
+	protected Boolean canHandle(final EventModifiedNotification notification) {
+		return Boolean.FALSE;
+	}
+
+	/**
+	 * Allow subClass to defined if they want to handle notification for this
+	 * kind of event
+	 *
+	 * @param formdata
+	 * @return true if this (sub) tablePage want handle the event
+	 */
+	protected Boolean canHandle(final ApiCreatedNotification notification) {
+		return Boolean.FALSE;
+	}
+
+	/**
+	 * Allow subClass to defined if they want to handle notification for this
+	 * kind of event
+	 *
+	 * @param formdata
+	 * @return true if this (sub) tablePage want handle the event
+	 */
+	protected Boolean canHandle(final ApiDeletedNotification notification) {
+		return Boolean.FALSE;
+	}
+
+	/**
+	 * Allow subClass to defined if they want to handle notification for this
+	 * kind of event
+	 *
+	 * @param formdata
+	 * @return true if this (sub) tablePage want handle the event
+	 */
+	protected Boolean canHandle(final CalendarConfigurationCreatedNotification notification) {
+		return Boolean.FALSE;
+	}
+
+	/**
+	 * Allow subClass to defined if they want to handle notification for this
+	 * kind of event
+	 *
+	 * @param formdata
+	 * @param previousStateRow
+	 * @return true if this (sub) tablePage want handle the event
+	 */
+	protected Boolean canHandle(final CalendarConfigurationModifiedNotification notification) {
+		return Boolean.FALSE;
+	}
+
+	/**
+	 * Allow subClass to defined if they want to handle notification for this
+	 * kind of event
+	 *
+	 * @param formdata
+	 * @param previousStateRow
+	 * @return true if this (sub) tablePage want handle the event
+	 */
+	protected Boolean canHandle(final CalendarsConfigurationModifiedNotification notification) {
+		return Boolean.FALSE;
+	}
+
+	/**
+	 * Allow subClass to defined if they want to handle notification for this
+	 * kind of event
+	 *
+	 * @param formdata
+	 * @param previousStateRow
+	 * @return true if this (sub) tablePage want handle the event
+	 */
+	protected Boolean canHandle(final CalendarsConfigurationCreatedNotification notification) {
 		return Boolean.FALSE;
 	}
 
@@ -213,7 +288,8 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	 *
 	 * @param formData
 	 */
-	protected void onModifiedEvent(final EventFormData formData, final String previousStateRow) {
+	protected void onModifiedEvent(final EventFormData formData, final String previousStateRow,
+			final ITableRow modifiedRow) {
 
 	}
 
@@ -266,18 +342,9 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 	protected void addEventProcessedWithoutDates(final Long eventId) {
 		this.processedEventWithoutPossibleDates.add(eventId);
-		this.processedEventLastModification = new Date();
 	}
 
 	private Boolean isEventProcessed(final Long eventId) {
-		// if (null != this.processedEventLastModification) {
-		// final Date oudatedDataTime = new Date(
-		// this.processedEventLastModification.getTime() +
-		// this.processedEventTtl);
-		// if (new Date().after(oudatedDataTime)) {
-		// this.processedEventWithoutPossibleDates.clear();
-		// }
-		// }
 		return this.processedEventWithoutPossibleDates.contains(eventId);
 	}
 
@@ -286,7 +353,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			@Override
 			public void handleNotification(final ParamCreatedNotification notification) {
 
-				final AppParamsFormData paramForm = notification.getParamForm();
+				final AppParamsFormData paramForm = notification.getFormData();
 				AbstractEventsTablePage.this.updateEventCallTracker(paramForm);
 			}
 		};
@@ -298,7 +365,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			@Override
 			public void handleNotification(final ParamModifiedNotification notification) {
 
-				final AppParamsFormData paramForm = notification.getParamForm();
+				final AppParamsFormData paramForm = notification.getFormData();
 				AbstractEventsTablePage.this.updateEventCallTracker(paramForm);
 			}
 		};
@@ -308,9 +375,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	private void updateEventCallTracker(final AppParamsFormData paramForm) {
 		final String appParamKey = paramForm.getKey().getValue();
 		final String appParamValue = paramForm.getValue().getValue();
-		LOG.debug("New Param prepare to update Event Configuration (in "
-				+ AbstractEventsTablePage.this.getConfiguredTitle() + ") for param Id : " + paramForm.getParamId()
-				+ " with key : " + appParamKey);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuilder().append("New Param prepare to update Event Configuration (in ")
+					.append(AbstractEventsTablePage.this.getConfiguredTitle()).append(") for param Id : ")
+					.append(paramForm.getParamId()).append(" with key : ").append(appParamKey).toString());
+		}
 		try {
 
 			if (null != appParamKey) {
@@ -352,6 +421,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		protected INotificationListener<UserModifiedNotification> userModifiedListener;
 		protected INotificationListener<DayDurationModifiedNotification> dayDurationModifiedListener;
 
+		private INotificationListener<CalendarsConfigurationModifiedNotification> calendarsConfiModifiedListener;
+		private INotificationListener<CalendarsConfigurationCreatedNotification> calendarsConfiCreatedListener;
+		private INotificationListener<CalendarConfigurationModifiedNotification> calendarConfigModifiedListener;
+		private INotificationListener<CalendarConfigurationCreatedNotification> calendarConfiCreatedListener;
+
 		@Override
 		protected boolean getConfiguredHeaderEnabled() {
 			return Boolean.FALSE;
@@ -386,25 +460,40 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			this.getExternalIdOrganizerColumn().setVisiblePermission(new ReadEventExtendedPropsPermission());
 			this.getExternalIdRecipientColumn().setVisiblePermission(new ReadEventExtendedPropsPermission());
 
-			final EventCreatedNotificationHandler eventCreatedNotificationHandler = BEANS
+			final EventCreatedNotificationHandler eventCreatedNotifHand = BEANS
 					.get(EventCreatedNotificationHandler.class);
-			eventCreatedNotificationHandler.addListener(this.createEventCreatedListener());
+			eventCreatedNotifHand.addListener(this.createEventCreatedListener());
 
-			final EventModifiedNotificationHandler eventModifiedNotificationHandler = BEANS
+			final EventModifiedNotificationHandler eventModifiedNotifHand = BEANS
 					.get(EventModifiedNotificationHandler.class);
-			eventModifiedNotificationHandler.addListener(this.createEventModifiedListener());
+			eventModifiedNotifHand.addListener(this.createEventModifiedListener());
 
-			final ApiCreatedNotificationHandler apiCreatedNotificationHandler = BEANS
-					.get(ApiCreatedNotificationHandler.class);
-			apiCreatedNotificationHandler.addListener(this.createApiCreatedListener());
+			final ApiCreatedNotificationHandler apiCreatedNotifHand = BEANS.get(ApiCreatedNotificationHandler.class);
+			apiCreatedNotifHand.addListener(this.createApiCreatedListener());
 
-			final UserModifiedNotificationHandler userModifiedNotificationHandler = BEANS
+			final UserModifiedNotificationHandler userModifiedNotifHand = BEANS
 					.get(UserModifiedNotificationHandler.class);
-			userModifiedNotificationHandler.addListener(this.createUserModifiedListener());
+			userModifiedNotifHand.addListener(this.createUserModifiedListener());
 
-			final DayDurationModifiedNotificationHandler createDayDurationModifiedHandler = BEANS
+			final DayDurationModifiedNotificationHandler dayDurationModifiedNotifHand = BEANS
 					.get(DayDurationModifiedNotificationHandler.class);
-			createDayDurationModifiedHandler.addListener(this.createDayDurationModifiedListener());
+			dayDurationModifiedNotifHand.addListener(this.createDayDurationModifiedListener());
+
+			final CalendarsConfigurationModifiedNotificationHandler calendarsConfigModifiedNotifHand = BEANS
+					.get(CalendarsConfigurationModifiedNotificationHandler.class);
+			calendarsConfigModifiedNotifHand.addListener(this.createCalendarsConfigrationModifiedListener());
+
+			final CalendarConfigurationModifiedNotificationHandler calendarConfiModifiedNotifHand = BEANS
+					.get(CalendarConfigurationModifiedNotificationHandler.class);
+			calendarConfiModifiedNotifHand.addListener(this.createCalendarConfigrationModifiedListener());
+
+			final CalendarsConfigurationCreatedNotificationHandler calendarsConfigCreatedNotifHand = BEANS
+					.get(CalendarsConfigurationCreatedNotificationHandler.class);
+			calendarsConfigCreatedNotifHand.addListener(this.createCalendarsConfigrationCreatedListener());
+
+			final CalendarConfigurationCreatedNotificationHandler calendarConfigCreatedNotifHand = BEANS
+					.get(CalendarConfigurationCreatedNotificationHandler.class);
+			calendarConfigCreatedNotifHand.addListener(this.createCalendarConfigrationCreatedListener());
 
 		}
 
@@ -413,13 +502,16 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				@Override
 				public void handleNotification(final EventCreatedNotification notification) {
 
-					if (!AbstractEventsTablePage.this.canHandleNew(notification)) {
+					if (!AbstractEventsTablePage.this.canHandle(notification)) {
 						return; // Early Break
 					}
 
-					final EventFormData eventForm = notification.getEventForm();
-					LOG.debug("New event prepare to add to table (in " + Table.this.getTitle() + ") for event Id : "
-							+ eventForm.getEventId());
+					final EventFormData eventForm = notification.getFormData();
+					if (LOG.isDebugEnabled()) {
+						LOG.debug(new StringBuffer().append("New event prepare to add to table (in ")
+								.append(Table.this.getTitle()).append(") for event Id : ")
+								.append(eventForm.getEventId()).toString());
+					}
 					try {
 						final ITableRow newRow = AbstractEventsTablePage.this.getTable()
 								.addRow(AbstractEventsTablePage.this.getTable().createTableRowFromForm(eventForm));
@@ -446,18 +538,21 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			this.eventModifiedListener = new INotificationListener<EventModifiedNotification>() {
 				@Override
 				public void handleNotification(final EventModifiedNotification notification) {
-					final EventFormData eventForm = notification.getEventForm();
-					if (!AbstractEventsTablePage.this.canHandleModified(notification)) {
+					final EventFormData eventForm = notification.getFormData();
+					if (!AbstractEventsTablePage.this.canHandle(notification)) {
 						// remove row if exists
 						final ITableRow row = AbstractEventsTablePage.this.getTable().getRow(eventForm.getEventId());
 						if (null != row) {
-							LOG.debug("Modified event prepare to remove table row (in " + Table.this.getTitle()
-									+ ") for event Id : " + eventForm.getEventId());
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(new StringBuffer().append("Modified event prepare to remove table row (in ")
+										.append(Table.this.getTitle()).append(") for event Id : ")
+										.append(eventForm.getEventId()).toString());
+							}
 							AbstractEventsTablePage.this.getTable().deleteRow(row);
 
 							// TODO Djer13 not really a "modified" event, just a
 							// row removed
-							AbstractEventsTablePage.this.onModifiedEvent(eventForm, eventForm.getPreviousState());
+							AbstractEventsTablePage.this.onModifiedEvent(eventForm, eventForm.getPreviousState(), row);
 						}
 						return; // early break
 					}
@@ -465,23 +560,27 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 					try {
 						ITableRow row = AbstractEventsTablePage.this.getTable().getRow(eventForm.getEventId());
 						if (null == row) {
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(new StringBuffer().append("Modified event prepare to ADD table row (in ")
+										.append(Table.this.getTitle()).append(") for event Id : ")
+										.append(eventForm.getEventId()).toString());
+							}
 							row = AbstractEventsTablePage.this.getTable()
 									.addRow(AbstractEventsTablePage.this.getTable().createTableRowFromForm(eventForm));
 						}
 						if (null != row) {
-							LOG.debug("Modified event prepare to modify table row (in " + Table.this.getTitle()
-									+ ") for event Id : " + eventForm.getEventId());
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(new StringBuffer().append("Modified event prepare to modify table row (in ")
+										.append(Table.this.getTitle()).append(") for event Id : ")
+										.append(eventForm.getEventId()).toString());
+							}
 							// if row is null, this table instance should not
 							// handle this event. We can safely ignore.
-							// TODO Djer13 perf : avoid handling notification in
-							// child xxxEventTablePage if this event is not the
-							// current Table
 							final String previousStateRow = eventForm.getPreviousState();
 
 							Table.this.updateTableRowFromForm(row, eventForm);
 							AbstractEventsTablePage.this.getTable().applyRowFilters();
-							AbstractEventsTablePage.this.onModifiedEvent(eventForm, previousStateRow);
-							Table.this.refreshAutoFillDate(row);
+							AbstractEventsTablePage.this.onModifiedEvent(eventForm, previousStateRow, row);
 
 							final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 							notificationHelper.addProccessedNotification(
@@ -490,8 +589,12 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 											.buildValuesForLocaleMessages(eventForm, Table.this.getCurrentUserId()));
 
 						} else {
-							LOG.debug("Modified event ignored because it's not a current table row (in "
-									+ Table.this.getTitle() + ") for event Id : " + eventForm.getEventId());
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(new StringBuffer()
+										.append("Modified event ignored because it's not a current table row (in ")
+										.append(Table.this.getTitle()).append(") for event Id : ")
+										.append(eventForm.getEventId()).toString());
+							}
 						}
 
 					} catch (final RuntimeException e) {
@@ -507,17 +610,27 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			this.apiCreatedListener = new INotificationListener<ApiCreatedNotification>() {
 				@Override
 				public void handleNotification(final ApiCreatedNotification notification) {
+
+					if (!AbstractEventsTablePage.this.canHandle(notification)) {
+						return; // Early Break
+					}
 					try {
-						final ApiFormData eventForm = notification.getApiForm();
-						LOG.debug("Created Api prepare to modify menus (" + this.getClass().getName() + ") : "
-								+ eventForm.getUserId());
+						final ApiFormData eventForm = notification.getFormData();
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(new StringBuffer().append("Created Api prepare to modify menus (")
+									.append(this.getClass().getName()).append(") : ").append(eventForm.getUserId())
+									.toString());
+						}
 						Table.this.reloadMenus();
 						// calculate start/end meeting
-						LOG.debug("Created Api prepare to calculate start/end date (" + this.getClass().getName()
-								+ ") : " + eventForm.getUserId());
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(new StringBuffer().append("Created Api prepare to calculate start/end date (")
+									.append(this.getClass().getName()).append(") : ").append(eventForm.getUserId())
+									.toString());
+						}
 						final List<ITableRow> rows = Table.this.getRows();
 						for (final ITableRow row : rows) {
-							Table.this.autoFillDates(row);
+							Table.this.refreshAutoFillDate(row);
 						}
 					} catch (final RuntimeException e) {
 						LOG.error("Could not handle new api. (" + Table.this.getTitle() + ")", e);
@@ -533,12 +646,15 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				@Override
 				public void handleNotification(final UserModifiedNotification notification) {
 					try {
-						final UserFormData userForm = notification.getUserForm();
-						LOG.debug("User modified prepare to reset cached TimeZone (" + Table.this.getTitle() + ") : "
-								+ userForm.getUserId());
+						final UserFormData userForm = notification.getFormData();
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(new StringBuffer().append("User modified prepare to reset cached TimeZone (")
+									.append(Table.this.getTitle()).append(") : ").append(userForm.getUserId())
+									.toString());
+						}
 						final List<ITableRow> rows = Table.this.getRows();
 						for (final ITableRow row : rows) {
-							Table.this.autoFillDates(row);
+							Table.this.refreshAutoFillDate(row);
 						}
 					} catch (final RuntimeException e) {
 						LOG.error("Could not handle modified User. (" + Table.this.getTitle() + ")", e);
@@ -554,12 +670,15 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				@Override
 				public void handleNotification(final DayDurationModifiedNotification notification) {
 					try {
-						final DayDurationFormData dayDurationForm = notification.getDayDurationForm();
-						LOG.debug(
-								"Day Duration modified prepare to reset invalid date proposal (" + Table.this.getTitle()
-										+ ") for slotCode : " + notification.getDayDurationForm().getSlotCode()
-										+ " ( ID " + dayDurationForm.getDayDurationId() + ")");
-						Table.this.resetInvalidatesEvent(notification.getDayDurationForm().getSlotCode());
+						final DayDurationFormData dayDurationForm = notification.getFormData();
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(new StringBuffer()
+									.append("Day Duration modified prepare to reset invalid date proposal (")
+									.append(Table.this.getTitle()).append(") for slotCode : ")
+									.append(notification.getFormData().getSlotCode())
+									.append(" ( ID " + dayDurationForm.getDayDurationId()).append(")").toString());
+						}
+						Table.this.resetInvalidatesEvent(notification.getFormData().getSlotCode());
 
 					} catch (final RuntimeException e) {
 						LOG.error("Could not handle modified DayDuration. (" + Table.this.getTitle() + ")", e);
@@ -568,6 +687,177 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			};
 
 			return this.dayDurationModifiedListener;
+		}
+
+		private INotificationListener<CalendarsConfigurationModifiedNotification> createCalendarsConfigrationModifiedListener() {
+			this.calendarsConfiModifiedListener = new INotificationListener<CalendarsConfigurationModifiedNotification>() {
+				@Override
+				public void handleNotification(final CalendarsConfigurationModifiedNotification notification) {
+					if (AbstractEventsTablePage.this.canHandle(notification)) {
+						try {
+
+							final CalendarsConfigurationFormData calendarsConfigurationFormData = notification
+									.getFormData();
+							Long userId = null;
+							if (calendarsConfigurationFormData.getCalendarConfigTable().getRowCount() > 0) {
+								userId = calendarsConfigurationFormData.getCalendarConfigTable().getRows()[0]
+										.getUserId();
+							}
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(new StringBuffer()
+										.append("Calendars Configurations modified prepare to refresh event (")
+										.append(this.getClass().getName()).append(") : (first UserId)").append(userId)
+										.toString());
+							}
+
+							if (Table.this.isMySelf(userId)) {
+								final GoogleApiHelper googleApiHelper = BEANS.get(GoogleApiHelper.class);
+								googleApiHelper.autoConfigureCalendars();
+
+								final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+								notificationHelper.addProccessedNotification(
+										"zc.meeting.calendar.notification.modifiedCalendarsConfig",
+										googleApiHelper.getAccountsEmail(
+												calendarsConfigurationFormData.getCalendarConfigTable().getRows()));
+							}
+
+							Table.this.refreshAutoFillDate();
+
+						} catch (final RuntimeException e) {
+							LOG.error("Could not handle modified Calendars Configurations. ("
+									+ this.getClass().getName() + ")", e);
+						}
+					} else {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(new StringBuffer().append(this.getClass().getName())
+									.append(" don't handle notification : ").append(notification).toString());
+						}
+					}
+				}
+			};
+
+			return this.calendarsConfiModifiedListener;
+		}
+
+		private INotificationListener<CalendarConfigurationModifiedNotification> createCalendarConfigrationModifiedListener() {
+			this.calendarConfigModifiedListener = new INotificationListener<CalendarConfigurationModifiedNotification>() {
+				@Override
+				public void handleNotification(final CalendarConfigurationModifiedNotification notification) {
+					if (AbstractEventsTablePage.this.canHandle(notification)) {
+						try {
+							final CalendarConfigurationFormData calendarConfigurationFormData = notification
+									.getFormData();
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(new StringBuffer()
+										.append("Calendar Configuration modified prepare to refresh event (")
+										.append(this.getClass().getName()).append("), modified calendar : ")
+										.append(calendarConfigurationFormData.getName().getValue()).append(" : ")
+										.append(calendarConfigurationFormData.getUserId().getValue()).toString());
+							}
+
+							if (Table.this.isMySelf(calendarConfigurationFormData.getUserId().getValue())) {
+								final GoogleApiHelper googleApiHelper = BEANS.get(GoogleApiHelper.class);
+								googleApiHelper.autoConfigureCalendars();
+
+								final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+								notificationHelper.addProccessedNotification(
+										"zc.meeting.calendar.notification.modifiedCalendarConfig",
+										calendarConfigurationFormData.getName().getValue());
+							}
+
+							Table.this.refreshAutoFillDate();
+
+						} catch (final RuntimeException e) {
+							LOG.error("Could not handle modified Calendar Configuration. (" + this.getClass().getName()
+									+ ")", e);
+						}
+					} else {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(new StringBuffer().append(this.getClass().getName())
+									.append(" don't handle notification : ").append(notification).toString());
+						}
+					}
+				}
+			};
+
+			return this.calendarConfigModifiedListener;
+		}
+
+		private INotificationListener<CalendarsConfigurationCreatedNotification> createCalendarsConfigrationCreatedListener() {
+			this.calendarsConfiCreatedListener = new INotificationListener<CalendarsConfigurationCreatedNotification>() {
+				@Override
+				public void handleNotification(final CalendarsConfigurationCreatedNotification notification) {
+					if (AbstractEventsTablePage.this.canHandle(notification)) {
+						try {
+							final CalendarsConfigurationFormData calendarsConfigurationFormData = notification
+									.getFormData();
+							Long userId = null;
+							if (calendarsConfigurationFormData.getCalendarConfigTable().getRowCount() > 0) {
+								userId = calendarsConfigurationFormData.getCalendarConfigTable().getRows()[0]
+										.getUserId();
+							}
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(new StringBuffer()
+										.append("Calendars Configurations created prepare to refresh event (")
+										.append(this.getClass().getName()).append(") : ").append(userId).toString());
+							}
+
+							Table.this.refreshAutoFillDate();
+
+						} catch (final RuntimeException e) {
+							LOG.error("Could not handle created Calendars Configuration. (" + this.getClass().getName()
+									+ ")", e);
+						}
+					} else {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(new StringBuffer().append(this.getClass().getName())
+									.append(" don't handle notification : ").append(notification).toString());
+						}
+					}
+				}
+			};
+
+			return this.calendarsConfiCreatedListener;
+		}
+
+		private INotificationListener<CalendarConfigurationCreatedNotification> createCalendarConfigrationCreatedListener() {
+			this.calendarConfiCreatedListener = new INotificationListener<CalendarConfigurationCreatedNotification>() {
+				@Override
+				public void handleNotification(final CalendarConfigurationCreatedNotification notification) {
+					if (AbstractEventsTablePage.this.canHandle(notification)) {
+						try {
+							final CalendarConfigurationFormData calendarConfigurationFormData = notification
+									.getFormData();
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(new StringBuffer()
+										.append("Calendar Configuration created prepare to refresh event (")
+										.append(this.getClass().getName()).append(") : ")
+										.append(calendarConfigurationFormData.getUserId().getValue()).toString());
+							}
+
+							if (Table.this.isMySelf(calendarConfigurationFormData.getUserId().getValue())) {
+								final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+								notificationHelper.addProccessedNotification(
+										"zc.meeting.calendar.notification.createdCalendarConfig",
+										calendarConfigurationFormData.getName().getValue());
+							}
+
+							Table.this.refreshAutoFillDate();
+
+						} catch (final RuntimeException e) {
+							LOG.error("Could not handle created Calendar Configuration. (" + this.getClass().getName()
+									+ ")", e);
+						}
+					} else {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(new StringBuffer().append(this.getClass().getName())
+									.append(" don't handle notification : ").append(notification).toString());
+						}
+					}
+				}
+			};
+
+			return this.calendarConfiCreatedListener;
 		}
 
 		protected void autoFillDates(final ITableRow row) {
@@ -582,8 +872,17 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		}
 
 		protected void resetInvalidatesEvent(final ZonedDateTime start, final ZonedDateTime end) {
+			this.resetInvalidatesEvent(start, end, null);
+		}
+
+		protected void resetInvalidatesEvent(final ZonedDateTime start, final ZonedDateTime end,
+				final Long exeptEventId) {
 			final List<ITableRow> rows = this.getRows();
+
 			for (final ITableRow row : rows) {
+				if (this.getEventIdColumn().getValue(row).equals(exeptEventId)) {
+					continue;
+				}
 				this.invalidateIfSlotAlreadyUsed(row, start, end);
 			}
 		}
@@ -592,11 +891,24 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 				final ZonedDateTime newAcceptedEventEnd) {
 			final ZonedDateTime rowStart = this.getStartDateColumn().getZonedValue(row.getRowIndex());
 			final ZonedDateTime rowEnd = this.getEndDateColumn().getZonedValue(row.getRowIndex());
+			final Long rowEventId = this.getEventIdColumn().getValue(row);
+			final String rowState = this.getStateColumn().getValue(row);
 
-			if (null != rowStart && null != rowEnd) {
-				if (!rowStart.isBefore(newAcceptedEventstart) && !rowEnd.isAfter(rowEnd)) {
+			final Boolean isAsked = StateCodeType.AskedCode.ID.equals(rowState);
+
+			if (null != rowStart && null != rowEnd && isAsked) {
+
+				if (AbstractEventsTablePage.this.getDateHelper().isPeriodOverlap(rowStart, rowEnd,
+						newAcceptedEventstart, newAcceptedEventEnd)) {
+					LOG.info("Reseting start/end (" + rowStart + " / " + rowEnd + ") date for event id : " + rowEventId
+							+ " because an other event was in the start/end period (" + newAcceptedEventstart + " / "
+							+ newAcceptedEventEnd + ")");
 					this.getStartDateColumn().setValue(row.getRowIndex(), (Date) null);
 					this.getEndDateColumn().setValue(row.getRowIndex(), (Date) null);
+				} else {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("No reset needed for event id : " + rowEventId);
+					}
 				}
 			}
 		}
@@ -611,14 +923,19 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		private void invalidateIfSlotMatch(final ITableRow row, final String slotCode) {
 			final Long rowSlotCode = this.getSlotColumn().getValue(row.getRowIndex());
 
-			if (null != rowSlotCode) {
-				if (rowSlotCode.equals(Long.valueOf(slotCode))) {
-					this.refreshAutoFillDate(row);
-				}
+			if (null != rowSlotCode && rowSlotCode.equals(Long.valueOf(slotCode))) {
+				this.refreshAutoFillDate(row);
 			}
 		}
 
-		private void refreshAutoFillDate(final ITableRow row) {
+		protected void refreshAutoFillDate() {
+			final List<ITableRow> rows = this.getRows();
+			for (final ITableRow row : rows) {
+				this.refreshAutoFillDate(row);
+			}
+		}
+
+		protected void refreshAutoFillDate(final ITableRow row) {
 			this.getStartDateColumn().setValue(row.getRowIndex(), (Date) null);
 			this.getEndDateColumn().setValue(row.getRowIndex(), (Date) null);
 			this.autoFillDates(row);
@@ -671,24 +988,40 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 
 		@Override
 		protected void execDisposeTable() {
-			final EventCreatedNotificationHandler eventCreatedNotificationHandler = BEANS
+			final EventCreatedNotificationHandler eventCreatedNotifHand = BEANS
 					.get(EventCreatedNotificationHandler.class);
-			eventCreatedNotificationHandler.removeListener(this.eventCreatedListener);
-			final EventModifiedNotificationHandler eventModifiedNotificationHandler = BEANS
+			eventCreatedNotifHand.removeListener(this.eventCreatedListener);
+			final EventModifiedNotificationHandler eventModifiedNotifHand = BEANS
 					.get(EventModifiedNotificationHandler.class);
-			eventModifiedNotificationHandler.removeListener(this.eventModifiedListener);
+			eventModifiedNotifHand.removeListener(this.eventModifiedListener);
 
 			final ApiCreatedNotificationHandler apiCreatedNotificationHandler = BEANS
 					.get(ApiCreatedNotificationHandler.class);
 			apiCreatedNotificationHandler.removeListener(this.apiCreatedListener);
 
-			final UserModifiedNotificationHandler userModifeidNotificationHandler = BEANS
+			final UserModifiedNotificationHandler userModifeidNotifHand = BEANS
 					.get(UserModifiedNotificationHandler.class);
-			userModifeidNotificationHandler.removeListener(this.userModifiedListener);
+			userModifeidNotifHand.removeListener(this.userModifiedListener);
 
-			final DayDurationModifiedNotificationHandler dayDurationModifiedNotificationHandler = BEANS
+			final DayDurationModifiedNotificationHandler dayDurationModifiedNotifHand = BEANS
 					.get(DayDurationModifiedNotificationHandler.class);
-			dayDurationModifiedNotificationHandler.removeListener(this.dayDurationModifiedListener);
+			dayDurationModifiedNotifHand.removeListener(this.dayDurationModifiedListener);
+
+			final CalendarsConfigurationModifiedNotificationHandler calendarsConfigModifiedNotifHand = BEANS
+					.get(CalendarsConfigurationModifiedNotificationHandler.class);
+			calendarsConfigModifiedNotifHand.removeListener(this.calendarsConfiModifiedListener);
+
+			final CalendarConfigurationModifiedNotificationHandler calendarConfigModifiedNotifHand = BEANS
+					.get(CalendarConfigurationModifiedNotificationHandler.class);
+			calendarConfigModifiedNotifHand.removeListener(this.calendarConfigModifiedListener);
+
+			final CalendarsConfigurationCreatedNotificationHandler calendarsConfiCreatedNotifHand = BEANS
+					.get(CalendarsConfigurationCreatedNotificationHandler.class);
+			calendarsConfiCreatedNotifHand.removeListener(this.calendarsConfiCreatedListener);
+
+			final CalendarConfigurationCreatedNotificationHandler calendarConfigCreatedNotifHand = BEANS
+					.get(CalendarConfigurationCreatedNotificationHandler.class);
+			calendarConfigCreatedNotifHand.removeListener(this.calendarConfiCreatedListener);
 
 			super.execDisposeTable();
 		}
@@ -812,6 +1145,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			final String currentUserEmail = userDetails.getEmail().getValue();
 
 			return currentUserEmail.equals(email);
+		}
+
+		protected Boolean isMySelf(final Long userId) {
+			final Long currentUser = AbstractEventsTablePage.this.getAppUserHelper().getCurrentUserId();
+			return currentUser.equals(userId);
 		}
 
 		protected String getState(final ITableRow row) {
@@ -1001,8 +1339,10 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 									"Cannot re-calculate start/end date after cancel/reject meeting because end date was NULL for event : "
 											+ rejectEventForm.getEventId());
 						} else {
-							Table.this.resetInvalidatesEvent(rejectEventForm.getStart(), rejectEventForm.getEnd());
+							Table.this.resetInvalidatesEvent(rejectEventForm.getStart(), rejectEventForm.getEnd(),
+									rejectEventForm.getEventId());
 							Table.this.autoFillDates();
+							// Autofill handled by EventModifiedNotification
 						}
 					} catch (final ClassCastException cce) {
 						LOG.warn("Cannot re-calculate start/end date after cancel/reject meeting", cce);

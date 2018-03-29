@@ -1,5 +1,6 @@
 package org.zeroclick.meeting.client;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -9,6 +10,7 @@ import org.eclipse.scout.rt.client.context.ClientRunContexts;
 import org.eclipse.scout.rt.client.job.ModelJobs;
 import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
 import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
+import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenuSeparator;
 import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.desktop.AbstractDesktop;
 import org.eclipse.scout.rt.client.ui.desktop.OpenUriAction;
@@ -23,6 +25,7 @@ import org.eclipse.scout.rt.platform.nls.NlsLocale;
 import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.platform.status.Status;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
+import org.eclipse.scout.rt.platform.util.StringUtility;
 import org.eclipse.scout.rt.platform.util.concurrent.IRunnable;
 import org.eclipse.scout.rt.shared.AbstractIcons;
 import org.eclipse.scout.rt.shared.TEXTS;
@@ -31,16 +34,24 @@ import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.eclipse.scout.rt.shared.services.common.security.IAccessControlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.comon.user.AppUserHelper;
 import org.zeroclick.configuration.client.ConfigurationOutline;
 import org.zeroclick.configuration.client.administration.AdministrationOutline;
 import org.zeroclick.configuration.client.api.ApiCreatedNotificationHandler;
 import org.zeroclick.configuration.client.api.ApiDeletedNotificationHandler;
+import org.zeroclick.configuration.client.api.ApiModifiedNotificationHandler;
+import org.zeroclick.configuration.client.slot.SlotsForm;
 import org.zeroclick.configuration.client.user.UserForm;
 import org.zeroclick.configuration.client.user.UserModifiedNotificationHandler;
 import org.zeroclick.configuration.client.user.ValidateCpsForm;
+import org.zeroclick.configuration.client.user.ViewCpsForm;
 import org.zeroclick.configuration.onboarding.OnBoardingUserForm;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
 import org.zeroclick.configuration.shared.api.ApiDeletedNotification;
+import org.zeroclick.configuration.shared.api.ApiModifiedNotification;
+import org.zeroclick.configuration.shared.api.ApiTablePageData;
+import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
+import org.zeroclick.configuration.shared.provider.ProviderCodeType;
 import org.zeroclick.configuration.shared.role.ReadPermissionPermission;
 import org.zeroclick.configuration.shared.role.ReadRolePermission;
 import org.zeroclick.configuration.shared.user.IUserService;
@@ -48,11 +59,16 @@ import org.zeroclick.configuration.shared.user.ReadUserPermission;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.configuration.shared.user.UserModifiedNotification;
+import org.zeroclick.meeting.client.calendar.CalendarsConfigurationForm;
 import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
 import org.zeroclick.meeting.client.meeting.MeetingOutline;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
+import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
+import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.CreateApiPermission;
+import org.zeroclick.meeting.shared.calendar.IApiService;
+import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.calendar.ReadApiPermission;
 import org.zeroclick.meeting.shared.event.ReadEventPermission;
 import org.zeroclick.meeting.shared.security.AccessControlService;
@@ -68,6 +84,7 @@ public class Desktop extends AbstractDesktop {
 
 	protected INotificationListener<ApiCreatedNotification> apiCreatedListener;
 	private INotificationListener<ApiDeletedNotification> apiDeletedListener;
+	private INotificationListener<ApiModifiedNotification> apiModifiedListener;
 	private INotificationListener<UserModifiedNotification> userModifiedListener;
 
 	@Override
@@ -98,17 +115,17 @@ public class Desktop extends AbstractDesktop {
 			this.activateFirstPage();
 		}
 
-		final ApiCreatedNotificationHandler apiCreatedNotificationHandler = BEANS
-				.get(ApiCreatedNotificationHandler.class);
-		apiCreatedNotificationHandler.addListener(this.createApiCreatedListener());
+		final ApiCreatedNotificationHandler apiCreatedNotifHand = BEANS.get(ApiCreatedNotificationHandler.class);
+		apiCreatedNotifHand.addListener(this.createApiCreatedListener());
 
-		final ApiDeletedNotificationHandler apiDeletedNotificationHandler = BEANS
-				.get(ApiDeletedNotificationHandler.class);
-		apiDeletedNotificationHandler.addListener(this.createApiDeletedListener());
+		final ApiDeletedNotificationHandler apiDeletedNotifHand = BEANS.get(ApiDeletedNotificationHandler.class);
+		apiDeletedNotifHand.addListener(this.createApiDeletedListener());
 
-		final UserModifiedNotificationHandler userModifiedNotificationHandler = BEANS
-				.get(UserModifiedNotificationHandler.class);
-		userModifiedNotificationHandler.addListener(this.createUserModifiedListener());
+		final ApiModifiedNotificationHandler apiModifiedNotifHand = BEANS.get(ApiModifiedNotificationHandler.class);
+		apiModifiedNotifHand.addListener(this.createApiModifiedListener());
+
+		final UserModifiedNotificationHandler userModifiedNotifHand = BEANS.get(UserModifiedNotificationHandler.class);
+		userModifiedNotifHand.addListener(this.createUserModifiedListener());
 
 		this.checkAndUpdateRequiredDatas();
 	}
@@ -120,12 +137,17 @@ public class Desktop extends AbstractDesktop {
 	}
 
 	private void checkAndUpdateRequiredDatas() {
-		// default user timezone
+		final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
 		final IUserService userService = BEANS.get(IUserService.class);
 		final AccessControlService acs = BEANS.get(AccessControlService.class);
 		final Long currentUserId = acs.getZeroClickUserIdOfCurrentSubject();
+
+		this.cleanInvalidApiKey(currentUserId);
+
+		// default user timezone
 		final String currentUserTimeZone = userService.getUserTimeZone(currentUserId);
-		if (null == currentUserTimeZone || !BEANS.get(GoogleApiHelper.class).isCalendarConfigured()) {
+		final Boolean isCalendarConfigured = googleHelper.isCalendarConfigured();
+		if (null == currentUserTimeZone || !isCalendarConfigured) {
 			final OnBoardingUserForm form = new OnBoardingUserForm();
 			form.getUserIdField().setValue(currentUserId);
 			form.setEnabledPermission(new UpdateUserPermission(currentUserId));
@@ -141,26 +163,92 @@ public class Desktop extends AbstractDesktop {
 			// accepted CPS/withdraw and respective Date are let empty to force
 			// User re-check
 		}
+
+		if (isCalendarConfigured) {
+			this.autoImportCalendars(currentUserId);
+		}
+
+	}
+
+	private void cleanInvalidApiKey(final Long userId) {
+		final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+
+		// API connection for multiple account (link to email address, and store
+		// by API key instead of user Id key
+		final IApiService apiService = BEANS.get(IApiService.class);
+		final ApiTablePageData userApis = apiService.getApis(userId);
+
+		if (null != userApis && userApis.getRowCount() > 0) {
+			for (final ApiTableRowData userApi : userApis.getRows()) {
+				if (StringUtility.isNullOrEmpty(userApi.getAccountEmail())) {
+					// User has old API system, so is API is store by UserId
+					try {
+						LOG.info("Invalid API detected (no email account) id : " + userApi.getApiCredentialId()
+								+ " removing it fro user : " + userId);
+						googleHelper.removeCredential(userId);
+						@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
+						final ApiFormData apiFormData = new ApiFormData();
+						apiFormData.setApiCredentialId(userApi.getApiCredentialId());
+						apiFormData.setUserId(userId);
+						apiFormData.getProvider().setValue(ProviderCodeType.GoogleCode.ID);
+						apiService.delete(apiFormData);
+
+					} catch (final IOException ioe) {
+						LOG.error(
+								"Error while removing 'old' (Google) API stored by UserId instead of apiCredentialId for user Id : "
+										+ userId,
+								ioe);
+					}
+				}
+			}
+		}
+	}
+
+	private void autoImportCalendars(final long userId) {
+		// Calendars configuration in 0Click
+		final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+		final ICalendarConfigurationService calendarConfigurationService = BEANS
+				.get(ICalendarConfigurationService.class);
+
+		final CalendarConfigurationFormData formData = new CalendarConfigurationFormData();
+		formData.getUserId().setValue(userId);
+		final CalendarsConfigurationFormData configuredCalendars = calendarConfigurationService
+				.getCalendarConfigurationTableData(false);
+
+		if (null == configuredCalendars
+				|| null != configuredCalendars && configuredCalendars.getCalendarConfigTable() != null
+						&& configuredCalendars.getCalendarConfigTable().getRowCount() == 0) {
+			LOG.info("Auto-importing user Calendars for user : " + userId);
+
+			try {
+				googleHelper.autoConfigureCalendars();
+			} catch (final Exception ex) {
+				LOG.error("Error while importing (Google) calendar for user Id : " + userId, ex);
+			}
+		}
 	}
 
 	@Override
 	protected void execClosing() {
 		if (null != this.apiCreatedListener) {
-			final ApiCreatedNotificationHandler apiCreatedNotificationHandler = BEANS
-					.get(ApiCreatedNotificationHandler.class);
-			apiCreatedNotificationHandler.removeListener(this.apiCreatedListener);
+			final ApiCreatedNotificationHandler apiCreatedNotifHand = BEANS.get(ApiCreatedNotificationHandler.class);
+			apiCreatedNotifHand.removeListener(this.apiCreatedListener);
 		}
 
 		if (null != this.apiDeletedListener) {
-			final ApiDeletedNotificationHandler apiDeletedNotificationHandler = BEANS
-					.get(ApiDeletedNotificationHandler.class);
-			apiDeletedNotificationHandler.removeListener(this.apiDeletedListener);
+			final ApiDeletedNotificationHandler apiDeletedNotifHand = BEANS.get(ApiDeletedNotificationHandler.class);
+			apiDeletedNotifHand.removeListener(this.apiDeletedListener);
+		}
+
+		if (null != this.apiModifiedListener) {
+			final ApiModifiedNotificationHandler apiModifiedNotifHand = BEANS.get(ApiModifiedNotificationHandler.class);
+			apiModifiedNotifHand.removeListener(this.apiModifiedListener);
 		}
 
 		if (null != this.userModifiedListener) {
-			final UserModifiedNotificationHandler userModifiedNotificationHandler = BEANS
+			final UserModifiedNotificationHandler userModifiedNotifHand = BEANS
 					.get(UserModifiedNotificationHandler.class);
-			userModifiedNotificationHandler.removeListener(this.userModifiedListener);
+			userModifiedNotifHand.removeListener(this.userModifiedListener);
 		}
 	}
 
@@ -171,6 +259,11 @@ public class Desktop extends AbstractDesktop {
 				break;
 			}
 		}
+	}
+
+	protected Boolean isMySelf(final Long userId) {
+		final Long currentUser = BEANS.get(AppUserHelper.class).getCurrentUserId();
+		return currentUser.equals(userId);
 	}
 
 	public void addNotification(final Integer severity, final Long duration, final Boolean closable,
@@ -191,7 +284,10 @@ public class Desktop extends AbstractDesktop {
 			@Override
 			@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 			public void run() throws Exception {
-				LOG.debug("Adding desktop notification : " + status.getMessage());
+				if (LOG.isDebugEnabled()) {
+					LOG.debug(new StringBuilder().append("Adding desktop notification : ").append(status.getMessage())
+							.append("(").append(status.getClass()).append(")").toString());
+				}
 				final DesktopNotification desktopNotification = new DesktopNotification(status, duration, closable);
 				ClientSession.get().getDesktop().addNotification(desktopNotification);
 			}
@@ -203,10 +299,22 @@ public class Desktop extends AbstractDesktop {
 			@Override
 			public void handleNotification(final ApiCreatedNotification notification) {
 				try {
-					final ApiFormData eventForm = notification.getApiForm();
-					LOG.debug("Created Api prepare to modify desktop menus (" + this.getClass().getName() + ") : "
-							+ eventForm.getUserId());
-					Desktop.this.getMenu(AddGoogleCalendarMenu.class).setVisible(Boolean.FALSE);
+					final ApiFormData apiForm = notification.getFormData();
+
+					if (Desktop.this.isMySelf(apiForm.getUserId())) {
+						LOG.info(new StringBuilder().append("Created Api prepare to autoConfigure Calendar's API id ")
+								.append(apiForm.getApiCredentialId()).append(" with email : ")
+								.append(apiForm.getAccountEmail().getValue()).toString());
+						final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+
+						notificationHelper.addProccessedNotification("zc.api.added");
+						final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+						googleHelper.autoConfigureCalendars();
+
+						notificationHelper.addProccessedNotification(
+								"zc.meeting.calendar.notification.createdCalendarsConfig",
+								apiForm.getAccountEmail().getValue());
+					}
 
 				} catch (final RuntimeException e) {
 					LOG.error("Could not handle new api. (" + this.getClass().getName() + ")", e);
@@ -217,14 +325,47 @@ public class Desktop extends AbstractDesktop {
 		return this.apiCreatedListener;
 	}
 
+	private INotificationListener<ApiModifiedNotification> createApiModifiedListener() {
+		this.apiModifiedListener = new INotificationListener<ApiModifiedNotification>() {
+			@Override
+			public void handleNotification(final ApiModifiedNotification notification) {
+				try {
+					final ApiFormData apiForm = notification.getFormData();
+					LOG.info(new StringBuilder().append("Modified Api prepare to autoConfigure Calendar's API id ")
+							.append(apiForm.getApiCredentialId()).append(" with email : ")
+							.append(apiForm.getAccountEmail().getValue()).toString());
+					if (Desktop.this.isMySelf(apiForm.getUserId())) {
+						final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+
+						notificationHelper.addProccessedNotification("zc.api.modified");
+						final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+						googleHelper.autoConfigureCalendars();
+
+						notificationHelper.addProccessedNotification(
+								"zc.meeting.calendar.notification.modifiedCalendarsConfig",
+								apiForm.getAccountEmail().getValue());
+					}
+
+				} catch (final RuntimeException e) {
+					LOG.error("Could not handle modified api. (" + this.getClass().getName() + ")", e);
+				}
+			}
+		};
+
+		return this.apiModifiedListener;
+	}
+
 	private INotificationListener<ApiDeletedNotification> createApiDeletedListener() {
 		this.apiDeletedListener = new INotificationListener<ApiDeletedNotification>() {
 			@Override
 			public void handleNotification(final ApiDeletedNotification notification) {
 				try {
-					final ApiFormData eventForm = notification.getApiForm();
-					LOG.debug("Deleted Api prepare to modify desktop menus (" + this.getClass().getName() + ") : "
-							+ eventForm.getUserId());
+					final ApiFormData eventForm = notification.getFormData();
+					if (LOG.isDebugEnabled()) {
+						LOG.debug(new StringBuilder().append("Deleted Api prepare to modify desktop menus (")
+								.append(this.getClass().getName()).append(") : ").append(eventForm.getUserId())
+								.toString().toString());
+					}
 					Desktop.this.getMenu(AddGoogleCalendarMenu.class).setVisible(Boolean.TRUE);
 
 				} catch (final RuntimeException e) {
@@ -241,9 +382,12 @@ public class Desktop extends AbstractDesktop {
 			@Override
 			public void handleNotification(final UserModifiedNotification notification) {
 				try {
-					final UserFormData userForm = notification.getUserForm();
-					LOG.debug("User modified prepare to update locale (" + this.getClass().getName() + ") : "
-							+ userForm.getUserId());
+					final UserFormData userForm = notification.getFormData();
+					if (LOG.isDebugEnabled()) {
+						LOG.debug(new StringBuilder().append("User modified prepare to update locale (")
+								.append(this.getClass().getName()).append(") : ").append(userForm.getUserId())
+								.toString());
+					}
 
 					final Locale currentLocale = NlsLocale.get();
 
@@ -296,7 +440,7 @@ public class Desktop extends AbstractDesktop {
 		protected void execInitAction() {
 			super.execInitAction();
 			this.setVisiblePermission(new CreateApiPermission());
-			this.setVisible(!BEANS.get(GoogleApiHelper.class).isCalendarConfigured());
+			// this.setVisible(!BEANS.get(GoogleApiHelper.class).isCalendarConfigured());
 		}
 	}
 
@@ -308,7 +452,7 @@ public class Desktop extends AbstractDesktop {
 			return AbstractIcons.Person;
 		}
 
-		@Order(31000)
+		@Order(1000)
 		public class WhoAmIMenuMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {
@@ -332,7 +476,7 @@ public class Desktop extends AbstractDesktop {
 			}
 		}
 
-		@Order(32000)
+		@Order(2000)
 		public class EditMyAccountMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {
@@ -363,7 +507,112 @@ public class Desktop extends AbstractDesktop {
 			}
 		}
 
-		@Order(33000)
+		@Order(3000)
+		public class EditCalendarConfigurationsMenu extends AbstractMenu {
+			@Override
+			protected String getConfiguredText() {
+				return TEXTS.get("zc.meeting.calendar.configuration");
+			}
+
+			@Override
+			protected String getConfiguredIconId() {
+				return Icons.Calendar;
+			}
+
+			@Override
+			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+				return CollectionUtility.hashSet();
+			}
+
+			@Override
+			protected void execAction() {
+				final CalendarsConfigurationForm configForm = new CalendarsConfigurationForm();
+				configForm.startModify();
+			}
+		}
+
+		@Order(4000)
+		public class EditSlotsConfigMenu extends AbstractMenu {
+			@Override
+			protected String getConfiguredText() {
+				return TEXTS.get("zc.meeting.slot.configuration");
+			}
+
+			@Override
+			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+				return CollectionUtility.hashSet();
+			}
+
+			@Override
+			protected void execAction() {
+				final SlotsForm slotsFrom = new SlotsForm();
+				slotsFrom.startModify();
+			}
+		}
+
+		@Order(5000)
+		public class ContractSeparatorMenu extends AbstractMenuSeparator {
+			@Override
+			protected String getConfiguredText() {
+				return null;
+			}
+
+			@Override
+			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+				return CollectionUtility.hashSet();
+			}
+		}
+
+		@Order(6000)
+		public class ViewCpsMenu extends AbstractMenu {
+			@Override
+			protected String getConfiguredText() {
+				return TEXTS.get("zc.user.role.subscription.contracts");
+			}
+
+			@Override
+			protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+				return CollectionUtility.hashSet();
+			}
+
+			@Override
+			protected void execAction() {
+				final IUserService userService = BEANS.get(IUserService.class);
+				final UserFormData userData = userService.getCurrentUserDetails();
+				final ViewCpsForm viewCpsForm = new ViewCpsForm();
+				viewCpsForm.getUserIdField().setValue(userData.getUserId().getValue());
+				viewCpsForm.startNew(userData.getSubscriptionBox().getValue());
+			}
+		}
+
+		// @Order(6000)
+		// public class ViewTosMenu extends AbstractMenu {
+		// @Override
+		// protected String getConfiguredText() {
+		// return TEXTS.get("zc.user.role.subscription.tos.label");
+		// }
+		//
+		// @Override
+		// protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+		// return CollectionUtility.hashSet();
+		// }
+		//
+		// @Override
+		// protected void execAction() {
+		// final IAppParamsService appParamService =
+		// BEANS.get(IAppParamsService.class);
+		// final String url =
+		// appParamService.getValue(IAppParamsService.APP_PARAM_KEY_TOS_URL);
+		//
+		// if (null == url || url.isEmpty()) {
+		// throw new VetoException("No Term Of Use to display");
+		// }
+		// ClientSession.get().getDesktop().openUri(url,
+		// OpenUriAction.NEW_WINDOW);
+		// }
+		// }
+
+		@Order(7000)
 		public class LogoutMenu extends AbstractMenu {
 			@Override
 			protected String getConfiguredText() {

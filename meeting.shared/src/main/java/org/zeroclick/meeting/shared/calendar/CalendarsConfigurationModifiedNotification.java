@@ -13,35 +13,21 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.zeroclick.configuration.shared.params;
+package org.zeroclick.meeting.shared.calendar;
 
-import java.io.Serializable;
-
-import org.zeroclick.common.params.AppParamsFormData;
+import org.zeroclick.meeting.shared.AbstractNotification;
 
 /**
  * @author djer
  *
  */
-public abstract class AbstractParamNotification implements Serializable {
+public class CalendarsConfigurationModifiedNotification
+		extends AbstractNotification<CalendarsConfigurationFormData> {
 
 	private static final long serialVersionUID = -2546211635305638271L;
 
-	private final AppParamsFormData paramForm;
-
-	public AbstractParamNotification(final AppParamsFormData paramForm) {
-		this.paramForm = paramForm;
-	}
-
-	public AppParamsFormData getParamForm() {
-		return this.paramForm;
-	}
-
-	@Override
-	public String toString() {
-		final StringBuilder builder = new StringBuilder(50);
-		builder.append("ParamNotification [eventForm=").append(this.paramForm).append(']');
-		return builder.toString();
+	public CalendarsConfigurationModifiedNotification(final CalendarsConfigurationFormData newData) {
+		super(newData);
 	}
 
 }

@@ -26,7 +26,6 @@ import org.zeroclick.configuration.shared.slot.SlotCodeType;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper.SubscriptionHelperData;
 import org.zeroclick.configuration.shared.user.IUserService;
-import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.shared.event.EventCreatedNotification;
 import org.zeroclick.meeting.shared.event.EventFormData;
@@ -92,21 +91,44 @@ public class EventService extends AbstractCommonService implements IEventService
 	}
 
 	@Override
+	public Map<Long, Integer> getUsersWithPendingMeeting() {
+		return this.getNbEventsByUser(null, Boolean.FALSE, null);
+	}
+
+	@Override
+	public Map<Long, Integer> getUsersWithPendingMeeting(final Long forUserId) {
+		return this.getNbEventsByUser(null, Boolean.FALSE, forUserId);
+	}
+
+	@Override
 	public Map<Long, Integer> getNbEventsByUser(final String state) {
 		return this.getNbEventsByUser(state, Boolean.FALSE);
 	}
 
 	@Override
-	public Map<Long, Integer> getNbEventsByUser(final String state, final Boolean onlyAsOrganizer) {
+	public Map<Long, Integer> getNbEventsByUser(final String state, final Boolean onlyAsOrganizer,
+			final Long forUserId) {
 		final Map<Long, Integer> users = new HashMap<>();
-
 		final Long currentUser = super.userHelper.getCurrentUserId();
-		LOG.debug("Loading pending meeting users with : " + currentUser + " (Only as organizer : " + onlyAsOrganizer
-				+ ")");
+		Long userId = forUserId;
+
+		if (null == userId) {
+			userId = currentUser;
+		}
+
+		final boolean isMySelf = userId.equals(currentUser);
+		if (!isMySelf) {
+			this.checkPermission(new ReadEventPermission(userId));
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuffer().append("Loading pending meeting users with : ").append(userId)
+					.append(" (Only as organizer : ").append(onlyAsOrganizer).append(")").toString());
+		}
 
 		if (!onlyAsOrganizer) {
 			final Object[][] pendingOrganizer = this.getEventsByUser(SQLs.EVENT_SELECT_USERS_EVENT_GUEST, state,
-					currentUser);
+					userId);
 			if (null != pendingOrganizer && pendingOrganizer.length > 0) {
 				for (int i = 0; i < pendingOrganizer.length; i++) {
 					final Long pendingUserOrganizer = (Long) pendingOrganizer[i][1];
@@ -119,7 +141,7 @@ public class EventService extends AbstractCommonService implements IEventService
 			}
 		}
 
-		final Object[][] pendingAttendee = this.getEventsByUser(SQLs.EVENT_SELECT_USERS_EVENT_HOST, state, currentUser);
+		final Object[][] pendingAttendee = this.getEventsByUser(SQLs.EVENT_SELECT_USERS_EVENT_HOST, state, userId);
 
 		if (null != pendingAttendee && pendingAttendee.length > 0) {
 			for (int i = 0; i < pendingAttendee.length; i++) {
@@ -131,10 +153,18 @@ public class EventService extends AbstractCommonService implements IEventService
 				users.put(pendingUserAttendee, ++currentNbEvent);
 			}
 		}
-
-		LOG.debug("List of pending meeting (Only as organizer : " + onlyAsOrganizer + ") users with : " + currentUser
-				+ " : " + users);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuffer().append("List of pending meeting (Only as organizer : ").append(onlyAsOrganizer)
+					.append(") users with : ").append(userId).append(" : ").append(users).toString());
+		}
 		return users;
+	}
+
+	@Override
+	public Map<Long, Integer> getNbEventsByUser(final String state, final Boolean onlyAsOrganizer) {
+		final Long currentUser = super.userHelper.getCurrentUserId();
+		return this.getNbEventsByUser(state, onlyAsOrganizer, currentUser);
+
 	}
 
 	private Object[][] getEventsByUser(final String sqlBase, final String state, final Long forUser) {
@@ -162,18 +192,15 @@ public class EventService extends AbstractCommonService implements IEventService
 	}
 
 	@Override
-	public Map<Long, Integer> getUsersWithPendingMeeting() {
-		return this.getNbEventsByUser(null);
-	}
-
-	@Override
 	public EventFormData prepareCreate(final EventFormData formData) {
 		final SubscriptionHelper subHelper = BEANS.get(SubscriptionHelper.class);
 		final SubscriptionHelperData subscriptionData = subHelper.canCreateEvent();
 		if (!subscriptionData.isAccessAllowed()) {
 			super.throwAuthorizationFailed();
 		}
-		LOG.debug("PrepareCreate for Event");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("PrepareCreate for Event");
+		}
 
 		formData.getState().setValue(StateCodeType.AskedCode.ID);
 		formData.getDuration().setValue(DurationCodeType.HalfHourCode.ID);
@@ -190,6 +217,7 @@ public class EventService extends AbstractCommonService implements IEventService
 	@Override
 	public EventFormData create(final EventFormData formData) {
 		final SubscriptionHelper subHelper = BEANS.get(SubscriptionHelper.class);
+
 		final SubscriptionHelperData subscriptionData = subHelper.canCreateEvent();
 		if (!subscriptionData.isAccessAllowed()) {
 			super.throwAuthorizationFailed();
@@ -259,8 +287,9 @@ public class EventService extends AbstractCommonService implements IEventService
 		}
 		SQL.update(SQLs.EVENT_UPDATE, formData);
 
-		if (!duringCreate) {
+		this.updateParticipantsPermissions(formData);
 
+		if (!duringCreate) {
 			this.sendModifiedNotifications(formData);
 		}
 		return formData;
@@ -343,7 +372,8 @@ public class EventService extends AbstractCommonService implements IEventService
 		final Long eventOwner = this.getOwner(eventId);
 
 		if (null == eventOwner) {
-			LOG.error("Event " + eventId + " as NO owner (organizer)");
+			LOG.error(
+					new StringBuffer().append("Event ").append(eventId).append(" as NO owner (organizer)").toString());
 			isOwn = Boolean.FALSE;
 		} else if (eventOwner.equals(currentUserId)) {
 			isOwn = Boolean.TRUE;
@@ -357,7 +387,8 @@ public class EventService extends AbstractCommonService implements IEventService
 		Boolean isRecipient = Boolean.FALSE;
 		final String eventRecipient = this.getRecipient(eventId);
 		if (null == eventRecipient || "".equals(eventRecipient)) {
-			LOG.error("Event " + eventId + " as NO recipient (email)");
+			LOG.error(
+					new StringBuffer().append("Event ").append(eventId).append(" as NO recipient (email)").toString());
 			isRecipient = Boolean.FALSE;
 		} else if (eventRecipient.equalsIgnoreCase(this.getCurrentUserEmail())) {
 			isRecipient = Boolean.TRUE;
@@ -366,23 +397,33 @@ public class EventService extends AbstractCommonService implements IEventService
 
 	}
 
-	private String getCurrentUserEmail() {
+	/**
+	 * allow "related" permissions to be updated
+	 *
+	 * @param formData
+	 */
+	private void updateParticipantsPermissions(final EventFormData formData) {
 		final IUserService userService = BEANS.get(IUserService.class);
-		final UserFormData userDetails = userService.getCurrentUserDetails();
 
-		return userDetails.getEmail().getValue();
+		userService.clearCache(formData.getOrganizer().getValue());
+		userService.clearCache(formData.getGuestId().getValue());
 	}
 
 	@Override
+	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 	public void migrateDurationlookupToCodeType() {
 		LOG.info("Updating Event duration from minutes to IDs");
 		final DurationCodeType durationCodeType = new DurationCodeType();
 		final List<? extends ICode<Long>> existingCodes = durationCodeType.getCodes(Boolean.FALSE);
 
 		for (final ICode<Long> code : existingCodes) {
-			LOG.debug("Updating event with durantion : " + code.getValue() + " with id : " + code.getId());
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(new StringBuffer().append("Updating event with durantion : ").append(code.getValue())
+						.append(" with id : ").append(code.getId()).toString());
+			}
 			final String sql = "UPDATE event set duration=:durationId where duration=:durationminutes";
-			SQL.update(sql, new NVPair("durationId", code.getId()), new NVPair("durationminutes", code.getValue()));
+			SQL.update(sql, new NVPair("durationId", code.getId()),
+					new NVPair("durationminutes", code.getValue().intValue()));
 		}
 	}
 }

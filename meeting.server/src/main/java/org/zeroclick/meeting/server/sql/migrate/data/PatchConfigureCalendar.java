@@ -15,9 +15,11 @@ limitations under the License.
  */
 package org.zeroclick.meeting.server.sql.migrate.data;
 
+import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.server.jdbc.SQL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.configuration.shared.params.IAppParamsService;
 import org.zeroclick.configuration.shared.role.ReadAssignSubscriptionToUserPermission;
 import org.zeroclick.configuration.shared.role.UpdateAssignSubscriptionToUserPermission;
 import org.zeroclick.meeting.server.sql.SQLs;
@@ -92,8 +94,10 @@ public class PatchConfigureCalendar extends AbstractDataPatcher {
 
 	private void migrateData() {
 		LOG.info("Add calendar configuration upgraing default data");
+
+		final IAppParamsService appParamsService = BEANS.get(IAppParamsService.class);
 		// adding calendar and config must be done in UI (by User) in calendar
-		// COnfiuration Page
+		// Confiuration Page
 
 		this.getDatabaseHelper().addAdminPermission(
 				"org.zeroclick.meeting.shared.calendar.CreateCalendarConfigurationPermission",
@@ -114,6 +118,15 @@ public class PatchConfigureCalendar extends AbstractDataPatcher {
 		this.getDatabaseHelper().addStandardUserPermission(
 				"org.zeroclick.meeting.shared.calendar.UpdateCalendarConfigurationPermission",
 				ReadAssignSubscriptionToUserPermission.LEVEL_OWN);
+
+		LOG.info("create a default value for TOS URL");
+		appParamsService.create(IAppParamsService.APP_PARAM_KEY_TOS_URL, "https://www.elycoop.fr/", "contract");
+
+		LOG.info("Add missing roles to admin");
+
+		this.getDatabaseHelper().addAdminPermission(
+				"org.zeroclick.configuration.shared.role.ReadAssignToRolePermission",
+				ReadAssignSubscriptionToUserPermission.LEVEL_ALL);
 
 	}
 

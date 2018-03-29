@@ -28,6 +28,8 @@ public interface IUserService extends IService {
 
 	UserFormData getCurrentUserDetails();
 
+	UserFormData getUserDetails(Long userId);
+
 	public String getUserTimeZone(Long userId);
 
 	UserFormData getPassword(String userName);

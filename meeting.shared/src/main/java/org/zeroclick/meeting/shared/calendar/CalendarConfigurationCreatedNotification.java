@@ -13,33 +13,20 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.zeroclick.meeting.shared.event;
+package org.zeroclick.meeting.shared.calendar;
 
-import java.io.Serializable;
+import org.zeroclick.meeting.shared.AbstractNotification;
 
 /**
  * @author djer
  *
  */
-public abstract class AbstractEventNotification implements Serializable {
+public class CalendarConfigurationCreatedNotification extends AbstractNotification<CalendarConfigurationFormData> {
 
 	private static final long serialVersionUID = -2546211635305638271L;
 
-	private final EventFormData eventForm;
-
-	public AbstractEventNotification(final EventFormData newEvent) {
-		this.eventForm = newEvent;
-	}
-
-	public EventFormData getEventForm() {
-		return this.eventForm;
-	}
-
-	@Override
-	public String toString() {
-		final StringBuilder builder = new StringBuilder(50);
-		builder.append("EventNotification [eventForm=").append(this.eventForm).append(']');
-		return builder.toString();
+	public CalendarConfigurationCreatedNotification(final CalendarConfigurationFormData newData) {
+		super(newData);
 	}
 
 }

@@ -13,36 +13,39 @@
    See the License for the specific language governing permissions and
 limitations under the License.
  */
-package org.zeroclick.configuration.shared.user;
+package org.zeroclick.meeting.shared;
 
 import java.io.Serializable;
+
+import org.eclipse.scout.rt.shared.data.form.AbstractFormData;
 
 /**
  * @author djer
  *
  */
-public abstract class AbstractCpsNotification implements Serializable {
+public abstract class AbstractNotification<V extends AbstractFormData> implements Serializable {
 
-	/**
-	 * serialVersionUID
-	 */
-	private static final long serialVersionUID = -6678349457151406417L;
+	private static final long serialVersionUID = 7996107908284379078L;
 
-	private final ValidateCpsFormData validateCpsForm;
+	private final V formData;
 
-	public AbstractCpsNotification(final ValidateCpsFormData validateCpsForm) {
-		this.validateCpsForm = validateCpsForm;
+	public AbstractNotification(final V newData) {
+		this.formData = newData;
 	}
 
-	public ValidateCpsFormData getValidateCpsForm() {
-		return this.validateCpsForm;
+	public V getFormData() {
+		return this.formData;
+	}
+
+	protected StringBuilder toStringBuilder() {
+		final StringBuilder builder = new StringBuilder(100);
+		builder.append(this.getClass()).append(" [FormData=").append(this.getFormData()).append(']');
+		return builder;
 	}
 
 	@Override
 	public String toString() {
-		final StringBuilder builder = new StringBuilder(50);
-		builder.append("CpsNotification [validateCpsForm=").append(this.validateCpsForm).append(']');
-		return builder.toString();
+		return this.toStringBuilder().toString();
 	}
 
 }

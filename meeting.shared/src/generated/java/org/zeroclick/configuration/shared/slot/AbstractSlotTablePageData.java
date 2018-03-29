@@ -54,8 +54,8 @@ public abstract class AbstractSlotTablePageData extends AbstractTablePageData {
 		private static final long serialVersionUID = 1L;
 		public static final String name = "name";
 		public static final String dayDurationId = "dayDurationId";
-		public static final String start = "start";
-		public static final String end = "end";
+		public static final String slotStart = "slotStart";
+		public static final String slotEnd = "slotEnd";
 		public static final String slot = "slot";
 		public static final String slotId = "slotId";
 		public static final String orderInSlot = "orderInSlot";
@@ -67,10 +67,11 @@ public abstract class AbstractSlotTablePageData extends AbstractTablePageData {
 		public static final String friday = "friday";
 		public static final String saturday = "saturday";
 		public static final String sunday = "sunday";
+		public static final String weeklyPerpetual = "weeklyPerpetual";
 		private String m_name;
 		private Long m_dayDurationId;
-		private Date m_start;
-		private Date m_end;
+		private Date m_slotStart;
+		private Date m_slotEnd;
 		private Long m_slot;
 		private Long m_slotId;
 		private Integer m_orderInSlot;
@@ -82,6 +83,7 @@ public abstract class AbstractSlotTablePageData extends AbstractTablePageData {
 		private Boolean m_friday;
 		private Boolean m_saturday;
 		private Boolean m_sunday;
+		private Boolean m_weeklyPerpetual;
 
 		public String getName() {
 			return m_name;
@@ -99,20 +101,20 @@ public abstract class AbstractSlotTablePageData extends AbstractTablePageData {
 			m_dayDurationId = newDayDurationId;
 		}
 
-		public Date getStart() {
-			return m_start;
+		public Date getSlotStart() {
+			return m_slotStart;
 		}
 
-		public void setStart(Date newStart) {
-			m_start = newStart;
+		public void setSlotStart(Date newSlotStart) {
+			m_slotStart = newSlotStart;
 		}
 
-		public Date getEnd() {
-			return m_end;
+		public Date getSlotEnd() {
+			return m_slotEnd;
 		}
 
-		public void setEnd(Date newEnd) {
-			m_end = newEnd;
+		public void setSlotEnd(Date newSlotEnd) {
+			m_slotEnd = newSlotEnd;
 		}
 
 		public Long getSlot() {
@@ -201,6 +203,14 @@ public abstract class AbstractSlotTablePageData extends AbstractTablePageData {
 
 		public void setSunday(Boolean newSunday) {
 			m_sunday = newSunday;
+		}
+
+		public Boolean getWeeklyPerpetual() {
+			return m_weeklyPerpetual;
+		}
+
+		public void setWeeklyPerpetual(Boolean newWeeklyPerpetual) {
+			m_weeklyPerpetual = newWeeklyPerpetual;
 		}
 	}
 }

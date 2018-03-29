@@ -89,12 +89,14 @@ public abstract class AbstractZeroClickUTCDateField extends AbstractValueField<U
 
 	@ConfigProperty(ConfigProperty.BOOLEAN)
 	@Order(240)
+	@SuppressWarnings("PMD.BooleanGetMethodName")
 	protected boolean getConfiguredHasDate() {
 		return true;
 	}
 
 	@ConfigProperty(ConfigProperty.BOOLEAN)
 	@Order(241)
+	@SuppressWarnings("PMD.BooleanGetMethodName")
 	protected boolean getConfiguredHasTime() {
 		return false;
 	}
@@ -152,10 +154,10 @@ public abstract class AbstractZeroClickUTCDateField extends AbstractValueField<U
 		String timeFormatPattern = null;
 		if (format != null) {
 			// Try to extract date and time parts of pattern
-			final int h = format.toLowerCase().indexOf('h');
-			if (h >= 0) {
-				dateFormatPattern = format.substring(0, h).trim();
-				timeFormatPattern = format.substring(h).trim();
+			final int hPos = format.toLowerCase().indexOf('h');
+			if (hPos >= 0) {
+				dateFormatPattern = format.substring(0, hPos).trim();
+				timeFormatPattern = format.substring(hPos).trim();
 			} else {
 				if (this.isHasDate()) {
 					dateFormatPattern = format;
@@ -175,14 +177,14 @@ public abstract class AbstractZeroClickUTCDateField extends AbstractValueField<U
 
 	@Override
 	public String getFormat() {
-		String s = "";
+		String format = "";
 		if (this.isHasDate()) {
-			s = StringUtility.join(" ", s, this.getDateFormatPattern());
+			format = StringUtility.join(" ", format, this.getDateFormatPattern());
 		}
 		if (this.isHasTime()) {
-			s = StringUtility.join(" ", s, this.getTimeFormatPattern());
+			format = StringUtility.join(" ", format, this.getTimeFormatPattern());
 		}
-		return s;
+		return format;
 	}
 
 	@Override
@@ -232,8 +234,8 @@ public abstract class AbstractZeroClickUTCDateField extends AbstractValueField<U
 	}
 
 	@Override
-	public void setHasTime(final boolean b) {
-		this.propertySupport.setPropertyBool(PROP_HAS_TIME, b);
+	public void setHasTime(final boolean hasTime) {
+		this.propertySupport.setPropertyBool(PROP_HAS_TIME, hasTime);
 		if (this.isInitialized()) {
 			this.setValue(this.getValue());
 		}
@@ -245,8 +247,8 @@ public abstract class AbstractZeroClickUTCDateField extends AbstractValueField<U
 	}
 
 	@Override
-	public void setHasDate(final boolean b) {
-		this.propertySupport.setPropertyBool(PROP_HAS_DATE, b);
+	public void setHasDate(final boolean hasDate) {
+		this.propertySupport.setPropertyBool(PROP_HAS_DATE, hasDate);
 		if (this.isInitialized()) {
 			this.setValue(this.getValue());
 		}
@@ -273,13 +275,12 @@ public abstract class AbstractZeroClickUTCDateField extends AbstractValueField<U
 			return "";
 		}
 		DateFormat dateFormat;
-		final StringBuilder sb = new StringBuilder();
+		final StringBuilder builder = new StringBuilder();
 		dateFormat = this.getIsolatedDateFormat();
-		sb.append(dateFormat == null ? "" : dateFormat.format(validValue));
-		sb.append("\n");
+		builder.append(dateFormat == null ? "" : dateFormat.format(validValue)).append('\n');
 		dateFormat = this.getIsolatedTimeFormat();
-		sb.append(dateFormat == null ? "" : dateFormat.format(validValue));
-		return sb.toString();
+		builder.append(dateFormat == null ? "" : dateFormat.format(validValue));
+		return builder.toString();
 	}
 
 	@Override
@@ -314,20 +315,20 @@ public abstract class AbstractZeroClickUTCDateField extends AbstractValueField<U
 	}
 
 	@Override
-	public void setTimeValue(final Double d) {
-		this.setValue(TypeCastUtility.castValue(DateUtility.convertDoubleTimeToDate(d), UTCDate.class));
+	public void setTimeValue(final Double time) {
+		this.setValue(TypeCastUtility.castValue(DateUtility.convertDoubleTimeToDate(time), UTCDate.class));
 	}
 
-	protected Date applyAutoDate(Date d) {
-		if (d != null) {
-			return d;
+	protected Date applyAutoDate(Date autoDate) {
+		if (autoDate != null) {
+			return autoDate;
 		}
-		d = this.getAutoDate();
-		if (d == null) {
+		autoDate = this.getAutoDate();
+		if (autoDate == null) {
 			// use today's date
-			d = new Date();
+			autoDate = new Date();
 		}
-		return d;
+		return autoDate;
 	}
 
 	@Override
@@ -341,30 +342,30 @@ public abstract class AbstractZeroClickUTCDateField extends AbstractValueField<U
 
 	@Override
 	public DateFormat getIsolatedDateFormat() {
-		final DateFormat f = this.getDateFormat();
-		if (f instanceof SimpleDateFormat) {
-			final String pat = ((SimpleDateFormat) f).toPattern();
-			final int h = pat.toLowerCase().indexOf('h');
-			if (h >= 0) {
+		final DateFormat dateFormat = this.getDateFormat();
+		if (dateFormat instanceof SimpleDateFormat) {
+			final String pat = ((SimpleDateFormat) dateFormat).toPattern();
+			final int hPos = pat.toLowerCase().indexOf('h');
+			if (hPos >= 0) {
 				try {
-					return new SimpleDateFormat(pat.substring(0, h).trim(), NlsLocale.get());
+					return new SimpleDateFormat(pat.substring(0, hPos).trim(), NlsLocale.get());
 				} catch (final Exception e) {
 					LOG.error("could not isolate date pattern from '{}'", pat, e);
 				}
 			}
 		}
-		return f;
+		return dateFormat;
 	}
 
 	@Override
 	public DateFormat getIsolatedTimeFormat() {
-		final DateFormat f = this.getDateFormat();
-		if (f instanceof SimpleDateFormat) {
-			final String pat = ((SimpleDateFormat) f).toPattern();
-			final int h = pat.toLowerCase().indexOf('h');
-			if (h >= 0) {
+		final DateFormat dateFormat = this.getDateFormat();
+		if (dateFormat instanceof SimpleDateFormat) {
+			final String pat = ((SimpleDateFormat) dateFormat).toPattern();
+			final int hPos = pat.toLowerCase().indexOf('h');
+			if (hPos >= 0) {
 				try {
-					return new SimpleDateFormat(pat.substring(h).trim(), NlsLocale.get());
+					return new SimpleDateFormat(pat.substring(hPos).trim(), NlsLocale.get());
 				} catch (final Exception e) {
 					LOG.error("could not isolate time pattern from '{}'", pat, e);
 				}

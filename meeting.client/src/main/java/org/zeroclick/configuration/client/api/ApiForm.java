@@ -20,6 +20,7 @@ import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.client.api.ApiForm.MainBox.AccessTokenField;
+import org.zeroclick.configuration.client.api.ApiForm.MainBox.AccountEmailField;
 import org.zeroclick.configuration.client.api.ApiForm.MainBox.CancelButton;
 import org.zeroclick.configuration.client.api.ApiForm.MainBox.ExpirationTimeMillisecondsField;
 import org.zeroclick.configuration.client.api.ApiForm.MainBox.OkButton;
@@ -31,6 +32,7 @@ import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CreateApiPermission;
 import org.zeroclick.meeting.shared.calendar.DeleteApiPermission;
 import org.zeroclick.meeting.shared.calendar.IApiService;
+import org.zeroclick.ui.form.fields.emailfield.EmailField;
 
 @FormData(value = ApiFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class ApiForm extends AbstractForm {
@@ -126,6 +128,10 @@ public class ApiForm extends AbstractForm {
 
 	public ProviderField getProviderField() {
 		return this.getFieldByClass(ProviderField.class);
+	}
+
+	public AccountEmailField getAccountEmailField() {
+		return this.getFieldByClass(AccountEmailField.class);
 	}
 
 	public OkButton getOkButton() {
@@ -225,6 +231,24 @@ public class ApiForm extends AbstractForm {
 			}
 		}
 
+		@Order(5000)
+		public class AccountEmailField extends EmailField {
+			@Override
+			protected String getConfiguredLabel() {
+				return TEXTS.get("zc.api.accountEmail");
+			}
+
+			@Override
+			protected boolean getConfiguredMandatory() {
+				return Boolean.TRUE;
+			}
+
+			@Override
+			protected int getConfiguredMaxLength() {
+				return 128;
+			}
+		}
+
 		@Order(100000)
 		public class OkButton extends AbstractOkButton {
 
@@ -298,7 +322,7 @@ public class ApiForm extends AbstractForm {
 
 			// use GoolgleApiHelper to clean cache for this user
 			try {
-				BEANS.get(GoogleApiHelper.class).removeCredential(formData.getUserId());
+				BEANS.get(GoogleApiHelper.class).removeCredential(ApiForm.this.getApiCredentialId());
 			} catch (final IOException e) {
 				LOG.error("Error while trying to delete User (Google) Api credential", e);
 			}

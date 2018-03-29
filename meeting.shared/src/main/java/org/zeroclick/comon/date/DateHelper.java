@@ -104,9 +104,7 @@ public class DateHelper {
 	public Date toUtcDate(final Date dateFromUser) {
 		final int dateMinutOeffsetFromUtc = dateFromUser.getTimezoneOffset();
 		Date utcDate = dateFromUser;
-		if (dateMinutOeffsetFromUtc == 0) {
-			// Already UTC Time
-		} else {
+		if (dateMinutOeffsetFromUtc != 0) {
 			final ZonedDateTime zdt = ZonedDateTime.from(dateFromUser.toInstant());
 			zdt.plusMinutes(dateMinutOeffsetFromUtc);
 			utcDate = Date.from(zdt.toInstant());
@@ -202,6 +200,13 @@ public class DateHelper {
 		return this.format(this.getZonedValue(userZoneId, this.toUtcDate(date)));
 	}
 
+	public String formatForUi(final Date date, final ZoneId userZoneId) {
+		// WARNING the \n is REQUIRED to allow scout detect
+		// hours part of the date !
+		final ZonedDateTime userZonedDate = this.getZonedValue(userZoneId, date);
+		return this.format(userZonedDate, Boolean.TRUE) + "\n" + this.formatHours(userZonedDate);
+	}
+
 	public String format(final ZonedDateTime zoneDateTime) {
 		return this.format(zoneDateTime, Boolean.FALSE);
 	}
@@ -220,6 +225,12 @@ public class DateHelper {
 
 	public String formatHours(final Date date, final ZoneId userZoneId) {
 		return this.formatHours(this.getZonedValue(userZoneId, date));
+	}
+
+	public String formatHoursForUi(final Date date, final ZoneId userZoneId) {
+		// WARNING the \n is REQUIRED to allow scout detect
+		// hours part of the date !
+		return "\n" + this.formatHours(this.getZonedValue(userZoneId, date));
 	}
 
 	public String formatHours(final ZonedDateTime zonedDateTime, final Locale userlocale) {
@@ -244,6 +255,7 @@ public class DateHelper {
 		return this.getRelativeDay(zonedValue, userLcoale, Boolean.FALSE, Boolean.FALSE);
 	}
 
+	@SuppressWarnings("PMD.EmptyIfStmt")
 	public String getRelativeDay(final ZonedDateTime zonedValue, final Locale userLcoale,
 			final Boolean emptyForAbsolute, final Boolean addParenthesis) {
 		final String key = this.getRelativeDateKey(zonedValue, Boolean.TRUE);
@@ -423,6 +435,22 @@ public class DateHelper {
 		}
 
 		return startPoint;
+	}
+
+	public Boolean isInPeriodInlcusiv(final ZonedDateTime checkedDate, final ZonedDateTime peridoStart,
+			final ZonedDateTime periodEnd) {
+		if (null == checkedDate) {
+			return false; // early break
+		}
+		return !checkedDate.isBefore(peridoStart) && !checkedDate.isAfter(periodEnd);
+	}
+
+	public Boolean isPeriodOverlap(final ZonedDateTime checkedDateStart, final ZonedDateTime checkedDateEnd,
+			final ZonedDateTime peridoStart, final ZonedDateTime periodEnd) {
+		final Boolean isStartInPeriod = this.isInPeriodInlcusiv(checkedDateStart, peridoStart, periodEnd);
+		final Boolean isEndInPeriod = this.isInPeriodInlcusiv(checkedDateEnd, peridoStart, periodEnd);
+
+		return isStartInPeriod || isEndInPeriod;
 	}
 
 }

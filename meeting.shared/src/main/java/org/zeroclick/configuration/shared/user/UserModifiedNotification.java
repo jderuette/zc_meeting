@@ -15,22 +15,17 @@ limitations under the License.
  */
 package org.zeroclick.configuration.shared.user;
 
+import org.zeroclick.meeting.shared.AbstractNotification;
+
 /**
  * @author djer
  *
  */
-public class UserModifiedNotification extends AbstractUserNotification {
+public class UserModifiedNotification extends AbstractNotification<UserFormData> {
 
 	private static final long serialVersionUID = 2040401559830122856L;
 
 	public UserModifiedNotification(final UserFormData newEvent) {
 		super(newEvent);
-	}
-
-	@Override
-	public String toString() {
-		final StringBuilder builder = new StringBuilder(75);
-		builder.append("UserModifiedNotification [userForm=").append(super.getUserForm()).append(']');
-		return builder.toString();
 	}
 }

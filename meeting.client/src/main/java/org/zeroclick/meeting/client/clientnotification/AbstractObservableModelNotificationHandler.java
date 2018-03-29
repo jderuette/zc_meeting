@@ -33,11 +33,11 @@ import org.eclipse.scout.rt.shared.notification.INotificationListener;
  * @author djer
  *
  */
-public abstract class AbstractObservableModelNotificationHandler<NotificationType extends Serializable>
-		extends AbstractObservableNotificationHandler<NotificationType> {
+public abstract class AbstractObservableModelNotificationHandler<N extends Serializable>
+		extends AbstractObservableNotificationHandler<N> {
 
 	@Override
-	protected void scheduleHandlingNotifications(final NotificationType notification, final EventListenerList list,
+	protected void scheduleHandlingNotifications(final N notification, final EventListenerList list,
 			final IClientSession session) {
 		Jobs.schedule(new IRunnable() {
 
@@ -45,7 +45,7 @@ public abstract class AbstractObservableModelNotificationHandler<NotificationTyp
 			@Override
 			public void run() throws Exception {
 				if (list != null && list.getListenerCount(INotificationListener.class) > 0) {
-					for (final INotificationListener<NotificationType> l : list
+					for (final INotificationListener<N> l : list
 							.getListeners(INotificationListener.class)) {
 						l.handleNotification(notification);
 					}

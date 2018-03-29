@@ -11,6 +11,7 @@
 package org.zeroclick.meeting.server.sql;
 
 import org.zeroclick.configuration.shared.role.IRoleTypeLookupService;
+import org.zeroclick.meeting.server.sql.migrate.data.PatchAddEmailToApi;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchAddEventMinAndMaxDate;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchAddLastLogin;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchAddSlotCode;
@@ -135,21 +136,26 @@ public interface SQLs {
 	 */
 	String OAUHTCREDENTIAL_CREATE_TABLE = "CREATE TABLE OAUHTCREDENTIAL (api_credential_id INTEGER NOT NULL CONSTRAINT OAUHTCREDENTIAL_PK PRIMARY KEY, user_id INTEGER, access_token VARCHAR(200), expiration_time_milliseconds BIGINT, refresh_token VARCHAR(200), provider INTEGER, repository_id VARCHAR(200), provider_data __blobType__)";
 
-	String OAUHTCREDENTIAL_PAGE_SELECT = "SELECT api_credential_id, access_token, expiration_time_milliseconds, refresh_token, user_id, provider FROM OAUHTCREDENTIAL WHERE 1=1";
+	String OAUHTCREDENTIAL_PAGE_SELECT = "SELECT api_credential_id, access_token, expiration_time_milliseconds, refresh_token, user_id, provider, "
+			+ PatchAddEmailToApi.PATCHED_ADDED_COLUMN + " FROM OAUHTCREDENTIAL WHERE 1=1";
 	String OAUHTCREDENTIAL_PAGE_SELECT_FILTER_USER = " AND user_id = :currentUser";
-	String OAUHTCREDENTIAL_PAGE_DATA_SELECT_INTO = " INTO :{page.apiCredentialId}, :{page.accessToken}, :{page.expirationTimeMilliseconds}, :{page.refreshToken}, :{page.userId}, :{page.provider}";
+	String OAUHTCREDENTIAL_PAGE_DATA_SELECT_INTO = " INTO :{page.apiCredentialId}, :{page.accessToken}, :{page.expirationTimeMilliseconds}, :{page.refreshToken}, :{page.userId}, :{page.provider}, :{page.accountEmail}";
 
 	String OAUHTCREDENTIAL_INSERT = "INSERT INTO OAUHTCREDENTIAL (api_credential_id, user_id) VALUES (:apiCredentialId, :userId)";
 
-	String OAUHTCREDENTIAL_UPDATE = "UPDATE OAUHTCREDENTIAL SET user_id=:userId,  access_token=:accessToken, expiration_time_milliseconds=:expirationTimeMilliseconds, refresh_token=:refreshToken, provider=:provider, repository_id=:repositoryId, provider_data=:providerData WHERE api_credential_id=:apiCredentialId";
+	String OAUHTCREDENTIAL_UPDATE_WITHOUT_ACCOUNT_EMAIL = "UPDATE OAUHTCREDENTIAL SET user_id=:userId,  access_token=:accessToken, expiration_time_milliseconds=:expirationTimeMilliseconds, refresh_token=:refreshToken, provider=:provider, repository_id=:repositoryId, provider_data=:providerData WHERE api_credential_id=:apiCredentialId";
+	String OAUHTCREDENTIAL_UPDATE = "UPDATE OAUHTCREDENTIAL SET user_id=:userId,  access_token=:accessToken, expiration_time_milliseconds=:expirationTimeMilliseconds, refresh_token=:refreshToken, provider=:provider, repository_id=:repositoryId, provider_data=:providerData, account_email=:accountEmail WHERE api_credential_id=:apiCredentialId";
 
 	String OAUHTCREDENTIAL_SELECT_OWNER = "SELECT user_id FROM OAUHTCREDENTIAL WHERE api_credential_id=:apiCredentialId INTO :userId";
 
-	String OAUHTCREDENTIAL_SELECT = "SELECT api_credential_id, access_token, expiration_time_milliseconds, refresh_token, user_id, provider, repository_id, provider_data FROM OAUHTCREDENTIAL WHERE 1=1";
+	String OAUHTCREDENTIAL_SELECT = "SELECT api_credential_id, access_token, expiration_time_milliseconds, refresh_token, user_id, provider, repository_id, provider_data, "
+			+ PatchAddEmailToApi.PATCHED_ADDED_COLUMN + " FROM OAUHTCREDENTIAL WHERE 1=1";
 	String OAUHTCREDENTIAL_SELECT_API_ID = "SELECT api_credential_id FROM OAUHTCREDENTIAL WHERE 1=1";
 	String OAUHTCREDENTIAL_SELECT_GOOGLE_DATA = "SELECT google_data FROM OAUHTCREDENTIAL WHERE provider=1";
 
-	String OAUHTCREDENTIAL_SELECT_INTO = " INTO :apiCredentialId, :accessToken, :expirationTimeMilliseconds, :refreshToken, :userId, :provider, :repositoryId, :providerData";
+	String OAUHTCREDENTIAL_SELECT_BY_ACCOUNT_EMAIL = "SELECT api_credential_id FROM OAUHTCREDENTIAL WHERE user_id=:userId AND account_email=:accountEmail";
+
+	String OAUHTCREDENTIAL_SELECT_INTO = " INTO :apiCredentialId, :accessToken, :expirationTimeMilliseconds, :refreshToken, :userId, :provider, :repositoryId, :providerData, :accountEmail";
 	String OAUHTCREDENTIAL_SELECT_INTO_API_ID = " INTO :apiCredentialId";
 
 	String OAUHTCREDENTIAL_SELECT_PROVIDER_DATA_ONLY = "SELECT provider_data FROM OAUHTCREDENTIAL WHERE 1=1";
@@ -157,16 +163,27 @@ public interface SQLs {
 	String OAUHTCREDENTIAL_FILTER_OAUTH_ID = " AND api_credential_id = :apiCredentialId";
 	String OAUHTCREDENTIAL_FILTER_USER_ID = " AND user_id= :userId";
 	String OAUHTCREDENTIAL_FILTER_ACESS_TOKEN = " AND access_token= :accessToken";
+	String OAUHTCREDENTIAL_FILTER_ACCOUNTS_EMAIL = " AND " + PatchAddEmailToApi.PATCHED_ADDED_COLUMN
+			+ "= :accountEmail";
 
 	String OAUHTCREDENTIAL_SELECT_ALL_USER_IDS = "select user_id FROM OAUHTCREDENTIAL";
 
-	String OAUHTCREDENTIAL_INSERT_SAMPLE = "INSERT INTO OAUHTCREDENTIAL (api_credential_id, user_id, access_token, expiration_time_milliseconds, refresh_token, provider, repository_id, provider_data) ";
+	String OAUHTCREDENTIAL_LOOKUP = "SELECT DISTINCT api_credential_id, " + PatchAddEmailToApi.PATCHED_ADDED_COLUMN
+			+ " FROM OAUHTCREDENTIAL WHERE 1=1 " + "<key>   AND api_credential_id = :key </key>" + " <text> AND UPPER("
+			+ PatchAddEmailToApi.PATCHED_ADDED_COLUMN + ") LIKE UPPER('%'||:text||'%') </text> <all> </all>";
+
+	String OAUHTCREDENTIAL_INSERT_SAMPLE_WITHOUT_ACCOUNT_EMAIL = "INSERT INTO OAUHTCREDENTIAL (api_credential_id, user_id, access_token, expiration_time_milliseconds, refresh_token, provider, repository_id, provider_data)";
+	String OAUHTCREDENTIAL_INSERT_SAMPLE = "INSERT INTO OAUHTCREDENTIAL (api_credential_id, user_id, access_token, expiration_time_milliseconds, refresh_token, provider, repository_id, provider_data, "
+			+ PatchAddEmailToApi.PATCHED_ADDED_COLUMN + ")";
 
 	String OAUHTCREDENTIAL_VALUES_01 = " VALUES  (nextval('OAUHTCREDENTIAL_ID_SEQ'), 0, 'testAccessToken', 1514568455, 'testRefreshToken', 1, 'testRepo', null)";
 
 	String OAUHTCREDENTIAL_DROP_TABLE = "DROP TABLE OAUHTCREDENTIAL";
 
 	String OAUHTCREDENTIAL_DELETE = "DELETE FROM OAUHTCREDENTIAL where 1=1" + OAUHTCREDENTIAL_FILTER_OAUTH_ID;
+
+	String OAUHTCREDENTIAL_PATCH_ADD_EMAIL_COLUMN = "ALTER TABLE " + PatchAddEmailToApi.PATCHED_TABLE + " ADD COLUMN "
+			+ PatchAddEmailToApi.PATCHED_ADDED_COLUMN + " VARCHAR(120)";
 
 	/**
 	 * Roles and permissions
@@ -185,6 +202,7 @@ public interface SQLs {
 	String ROLE_UPDATE_WITHOUT_TYPE = "UPDATE ROLE SET name=:roleName WHERE role_id=:roleId";
 
 	String ROLE_SELECT = "SELECT role_id, name, type FROM ROLE WHERE 1=1 AND role_id = :roleId";
+	String ROLE_SELECT_WITHOUT_TYPE = "SELECT role_id, name FROM ROLE WHERE 1=1 AND role_id = :roleId";
 	String ROLE_SELECT_BY_NAME_WITHOUT_TYPE = "SELECT role_id, name FROM ROLE WHERE 1=1 AND name = :roleName";
 	String ROLE_SELECT_BY_NAME = "SELECT role_id, name, type FROM ROLE WHERE 1=1 AND name = :roleName";
 	String ROLE_SELECT_INTO_WITHOUT_TYPE = " INTO :roleId, :roleName";
@@ -346,6 +364,8 @@ public interface SQLs {
 	String USER_ROLE_INSERT = "INSERT INTO USER_ROLE (user_id, role_id) VALUES (:userId, :{rolesBox})";
 	String USER_ROLE_INSERT_WITH_START_DATE = "INSERT INTO USER_ROLE (user_id, role_id, start_date) VALUES (:userId, :{rolesBox}, :{startDate})";
 
+	String USER_ROLE_UPDATE_MASS_CHANGE_ROLE_ID = "UPDATE USER_ROLE SET role_id=:newRoleId WHERE role_id=:oldRoleId";
+
 	// Avoid deleting role of kind "subscription" !!
 
 	String USER_ROLE_REMOVE = "DELETE FROM USER_ROLE WHERE user_id=:userId AND role_id=:{rolesBox}";
@@ -481,7 +501,8 @@ public interface SQLs {
 	String PARAMS_SELECT_FILTER_LOOKUP = " <key> AND key=:key</key><text> AND value LIKE :text</text> <all></all>";
 	String PARAMS_SELECT_FILTER_LOOKUP_CATEGORY = " <key> AND category=:key</key><text> AND category LIKE :text</text> <all></all>";
 
-	String PARAMS_SELECT_INTO = " INTO :paramId, :key, :category, :value";
+	String PARAMS_SELECT_INTO_WITH_CATEGORY = " INTO :paramId, :key, :category, :value";
+	String PARAMS_SELECT_INTO = " INTO :paramId, :key, :value";
 
 	String PARAMS_INSERT = "INSERT INTO APP_PARAMS (param_id) VALUES (:paramId)";
 
@@ -493,7 +514,7 @@ public interface SQLs {
 	String PARAMS_INSERT_VALUES_DATAVERSION = " VALUES(nextval('" + PatchCreateParamsTable.APP_PARAMS_ID_SEQ
 			+ "'), 'dataVersion', '1.0.0')";
 
-	String PARAMS_DELETE = "DELETE FROM APP_PARAMS WHERE key=:key";
+	String PARAMS_DELETE = "DELETE FROM APP_PARAMS WHERE param_id=:paramId";
 
 	String PARAMS_DROP_TABLE = "DROP TABLE APP_PARAMS";
 
@@ -548,8 +569,8 @@ public interface SQLs {
 	// PatchSlotTable.SLOT_ID_SEQ + "'), 'zc.meeting.slot.4', 1)";
 
 	String DAY_DURATION_PAGE_SELECT = "SELECT DAY_DURATION.day_duration_id, DAY_DURATION.name, slot_start, slot_end, SLOT.slot_code, SLOT.slot_id, order_in_slot, SLOT.user_id, "
-			+ "monday, tuesday, wednesday, thursday, friday, saturday, sunday FROM DAY_DURATION INNER JOIN SLOT ON DAY_DURATION.slot_id = SLOT.slot_id";
-	String DAY_DURATION_PAGE_SELECT_INTO = " INTO :{page.dayDurationId}, :{page.name}, :{page.start}, :{page.end}, :{page.slot}, :{page.slotId}, :{page.orderInSlot}, :{page.userId}, :{page.monday}, :{page.tuesday}, :{page.wednesday}, :{page.thursday}, :{page.friday}, :{page.saturday}, :{page.sunday}";
+			+ "monday, tuesday, wednesday, thursday, friday, saturday, sunday, weekly_perpetual FROM DAY_DURATION INNER JOIN SLOT ON DAY_DURATION.slot_id = SLOT.slot_id";
+	String DAY_DURATION_PAGE_SELECT_INTO = " INTO :{page.dayDurationId}, :{page.name}, :{page.slotStart}, :{page.slotEnd}, :{page.slot}, :{page.slotId}, :{page.orderInSlot}, :{page.userId}, :{page.monday}, :{page.tuesday}, :{page.wednesday}, :{page.thursday}, :{page.friday}, :{page.saturday}, :{page.sunday}, :{page.weeklyPerpetual}";
 
 	String DAY_DURATION_SELECT = "SELECT DAY_DURATION.day_duration_id, DAY_DURATION.name, slot_start, slot_end, "
 			+ "monday, tuesday, wednesday, thursday, friday, saturday, sunday, weekly_perpetual, order_in_slot, DAY_DURATION.slot_id, SLOT.slot_code";
@@ -689,27 +710,31 @@ public interface SQLs {
 	 */
 
 	String CALENDAR_CONFIG_CREATE = "CREATE TABLE " + PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME
-			+ "(agenda_config_id INTEGER NOT NULL, external_id VARCHAR(250) NOT NULL, process_full_day_event BOOLEAN, process_busy_event BOOLEAN, process_not_registred_on_event BOOLEAN, oAuth_credential_id INTEGER NOT NULL,"
+			+ "(agenda_config_id INTEGER NOT NULL, external_id VARCHAR(250) NOT NULL, name VARCHAR(250), read_only BOOLEAN, main BOOLEAN, process BOOLEAN, add_event_to_calendar BOOLEAN, process_full_day_event BOOLEAN, process_busy_event BOOLEAN, process_not_registred_on_event BOOLEAN, oAuth_credential_id INTEGER NOT NULL,"
 			+ " CONSTRAINT " + PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME + "_PK PRIMARY KEY (agenda_config_id),"
 			+ " CONSTRAINT " + PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME
 			+ "_OAUHTCREDENTIAL_FK FOREIGN KEY (oAuth_credential_id) REFERENCES OAUHTCREDENTIAL(api_credential_id))";
 	String CALENDAR_CONFIG_JOIN_OAUTH = " INNER JOIN OAUHTCREDENTIAL ON oAuth_credential_id=api_credential_id";
 
-	String CALENDAR_CONFIG_PAGE_SELECT = "select agenda_config_id, external_id, process_full_day_event, process_busy_event, process_not_registred_on_event, oAuth_credential_id, user_id FROM "
+	String CALENDAR_CONFIG_PAGE_SELECT = "select agenda_config_id, external_id, name, read_only, main, process, add_event_to_calendar, process_full_day_event, process_busy_event, process_not_registred_on_event, oAuth_credential_id, user_id FROM "
 			+ PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME + CALENDAR_CONFIG_JOIN_OAUTH + " WHERE 1=1";
-	String CALENDAR_CONFIG_PAGE_SELECT_INTO = " INTO :{page.calendarConfigurationId}, :{page.externalId}, :{page.processFullDayEvent}, :{page.ProcessFreeEvent}, :{page.processNotRegistredOnEvent}, :{page.OAuthCredentialId}, :{page.userId}";
+	String CALENDAR_CONFIG_PAGE_SELECT_INTO = " INTO :{page.calendarConfigurationId}, :{page.externalId}, :{page.name}, :{page.readOnly}, :{page.main}, :{page.process}, :{page.addEventToCalendar}, :{page.processFullDayEvent}, :{page.ProcessFreeEvent}, :{page.processNotRegistredOnEvent}, :{page.OAuthCredentialId}, :{page.userId}";
 
+	String CALENDAR_CONFIG_FILTER_ID = " AND agenda_config_id = :calendarConfigurationId";
 	String CALENDAR_CONFIG_FILTER_CURRENT_USER = " AND user_id = :currentUser";
 	String CALENDAR_CONFIG_FILTER_USER_ID = " AND user_id = :userId";
 	String CALENDAR_CONFIG_FILTER_EXTERNAL_ID = " AND external_id = :externalId";
+	String CALENDAR_CONFIG_FILTER_OAUTH_CREDENTIAL_ID_ID = "  AND oAuth_credential_id = :oAuthCredentialId";
+	String CALENDAR_CONFIG_FILTER_ADD_EVENT = " AND add_event_to_calendar='true'";
+	String CALENDAR_CONFIG_FILTER_PROCESSED = " AND process = 'true'";
 
-	String CALENDAR_CONFIG_SELECT = "select agenda_config_id, external_id, process_full_day_event, process_busy_event, process_not_registred_on_event, oAuth_credential_id FROM "
+	String CALENDAR_CONFIG_SELECT = "select agenda_config_id, external_id, name, main, read_only, process, add_event_to_calendar, process_full_day_event, process_busy_event, process_not_registred_on_event, oAuth_credential_id, user_id FROM "
 			+ PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME + CALENDAR_CONFIG_JOIN_OAUTH;
 
 	String CALENDAR_CONFIG_SELECT_ID = "select agenda_config_id FROM "
 			+ PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME + CALENDAR_CONFIG_JOIN_OAUTH;
 
-	String CALENDAR_CONFIG_SELECT_INTO = " INTO :calendarConfigurationId, :externalId, :processFullDayEvent, :processFreeEvent, :processNotRegistredOnEvent, :oAuthCredentialId";
+	String CALENDAR_CONFIG_SELECT_INTO = " INTO :calendarConfigurationId, :externalId, :name, :main, :readOnly, :process, :addEventToCalendar, :processFullDayEvent, :processFreeEvent, :processNotRegistredOnEvent, :oAuthCredentialId, :userId";
 
 	String CALENDAR_CONFIG_SELECT_OWNER = "SELECT user_id FROM " + PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME
 			+ CALENDAR_CONFIG_JOIN_OAUTH + " WHERE agenda_config_id=:calendarConfigurationId";
@@ -717,8 +742,10 @@ public interface SQLs {
 	String CALENDAR_CONFIG_INSERT = "INSERT INTO " + PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME
 			+ " (agenda_config_id, external_id, oAuth_credential_id) VALUES(:calendarConfigurationId, :externalId, :OAuthCredentialId)";
 	String CALENDAR_CONFIG_UPDATE = "UPDATE " + PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME
-			+ " SET process_full_day_event=:processFullDayEvent, process_busy_event=:ProcessFreeEvent, process_not_registred_on_event=:processNotRegistredOnEvent WHERE 1=1 ";
+			+ " SET name=:name, main=:main, read_only=:readOnly, process=:process, add_event_to_calendar=:addEventToCalendar, process_full_day_event=:processFullDayEvent, process_busy_event=:ProcessFreeEvent, process_not_registred_on_event=:processNotRegistredOnEvent";
 	String CALENDAR_CONFIG_DELETE_BY_API_ID = "DELETE FROM " + PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME
 			+ " WHERE oAuth_credential_id=:oAuthCredentialId";
+	String CALENDAR_CONFIG_DELETE_BY_EXTERNAL_ID = "DELETE FROM " + PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME
+			+ " WHERE external_id=:externalId AND oAuth_credential_id=:oAuthCredentialId";
 
 }

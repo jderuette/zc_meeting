@@ -6,12 +6,12 @@
 	<parent>
 		<groupId>org.zeroclick</groupId>
 		<artifactId>meeting</artifactId>
-		<version>1.1.11</version>
+		<version>1.1.12</version>
 		<relativePath>../meeting/pom.xml</relativePath>
 	</parent>
 
 	<properties>
-		<mailjet-version>4.0.5</mailjet-version>
+		<mailjet-version>4.1.1</mailjet-version>
 		<!-- TODO Djer13 allow check when I found a solution for java 8 Date API -->
 		<master_sanityCheck_skip>true</master_sanityCheck_skip>
 	</properties>
@@ -50,7 +50,12 @@
 			<artifactId>google-api-services-calendar</artifactId>
 			<version>v3-rev244-1.22.0</version>
 		</dependency>
-
+		<dependency>
+			<groupId>com.google.apis</groupId>
+			<artifactId>google-api-services-people</artifactId>
+			<version>v1-rev217-1.22.0</version>
+		</dependency>
+		
 		<dependency>
 			<groupId>com.mailjet</groupId>
 			<artifactId>mailjet-client</artifactId>

@@ -1,10 +1,9 @@
 package org.zeroclick.configuration.server.slot;
 
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 
@@ -16,25 +15,29 @@ import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.platform.util.date.UTCDate;
 import org.eclipse.scout.rt.server.clientnotification.ClientNotificationRegistry;
 import org.eclipse.scout.rt.server.jdbc.SQL;
+import org.eclipse.scout.rt.shared.cache.ICache;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.common.AbstractBulkSqlDataCache;
 import org.zeroclick.common.AbstractCommonService;
+import org.zeroclick.common.AbstractFormDataCache;
+import org.zeroclick.common.AbstractListFormDataCache;
+import org.zeroclick.common.AbstractPageDataDataCache;
+import org.zeroclick.common.BulkSqlData;
 import org.zeroclick.comon.date.DateHelper;
-import org.zeroclick.configuration.shared.slot.CreateSlotPermission;
 import org.zeroclick.configuration.shared.slot.DayDurationFormData;
 import org.zeroclick.configuration.shared.slot.DayDurationModifiedNotification;
 import org.zeroclick.configuration.shared.slot.ISlotService;
 import org.zeroclick.configuration.shared.slot.ReadSlotPermission;
-import org.zeroclick.configuration.shared.slot.SlotFormData;
 import org.zeroclick.configuration.shared.slot.SlotTablePageData;
+import org.zeroclick.configuration.shared.slot.SlotsFormData;
+import org.zeroclick.configuration.shared.slot.SlotsFormData.SlotsTable.SlotsTableRowData;
 import org.zeroclick.configuration.shared.slot.UpdateSlotPermission;
 import org.zeroclick.meeting.server.sql.DatabaseHelper;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchSlotTable;
-import org.zeroclick.meeting.shared.event.IEventService;
-import org.zeroclick.meeting.shared.security.AccessControlService;
 
 public class SlotService extends AbstractCommonService implements ISlotService {
 
@@ -45,30 +48,108 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 		return LOG;
 	}
 
-	@Override
-	public SlotFormData prepareCreate(final SlotFormData formData) {
-		super.checkPermission(new CreateSlotPermission());
-		// TODO [djer] add business logic here.
-		return formData;
-	}
-
-	@Override
-	public SlotFormData create(final SlotFormData formData) {
-		super.checkPermission(new CreateSlotPermission());
-		// TODO [djer] add business logic here.
-		return formData;
-	}
-
-	@Override
-	public SlotFormData load(final SlotFormData formData) {
-		// Filter in select (currentUser) check if user can at least read own
-		if (ACCESS.getLevel(new ReadSlotPermission((Long) null)) >= ReadSlotPermission.LEVEL_OWN) {
-			super.throwAuthorizationFailed();
+	private final AbstractFormDataCache<Long, DayDurationFormData> dataCacheDayDuration = new AbstractFormDataCache<Long, DayDurationFormData>() {
+		@Override
+		public DayDurationFormData loadForCache(final Long dayDurationId) {
+			final DayDurationFormData dayDurationFormData = new DayDurationFormData();
+			dayDurationFormData.setDayDurationId(dayDurationId);
+			return SlotService.this.loadForCacheDayDuration(dayDurationFormData);
 		}
+	};
 
-		SQL.selectInto(SQLs.SLOT_SELECT + SQLs.SLOT_SELECT_FILTER_USER_ID + SQLs.SLOT_PAGE_SELECT_INTO, formData,
-				new NVPair("node", formData), new NVPair("currentUser", this.userHelper.getCurrentUserId()));
-		return formData;
+	private final AbstractBulkSqlDataCache<Long, BulkSqlData> dataCacheSlotsByUserId = new AbstractBulkSqlDataCache<Long, BulkSqlData>() {
+		@Override
+		public BulkSqlData loadForCache(final Long userId) {
+			return SlotService.this.loadForCacheSlotByUserId(userId);
+		}
+	};
+
+	private final AbstractListFormDataCache<Long, List<DayDurationFormData>> dataCacheDayDurationByUserId = new AbstractListFormDataCache<Long, List<DayDurationFormData>>() {
+		@Override
+		public List<DayDurationFormData> loadForCache(final Long userId) {
+			return SlotService.this.loadForCacheDayDurationByUserId(userId);
+		}
+	};
+
+	private final AbstractPageDataDataCache<Long, SlotTablePageData> dataCacheSlotTableDataDayDurationByUserId = new AbstractPageDataDataCache<Long, SlotTablePageData>() {
+		@Override
+		public SlotTablePageData loadForCache(final Long userId) {
+			return SlotService.this.loadForCacheSlotTableDayDurationByUserId(userId);
+		}
+	};
+
+	private ICache<Long, DayDurationFormData> getDataCacheDayDuration() {
+		return this.dataCacheDayDuration.getCache();
+	}
+
+	private ICache<Long, BulkSqlData> getDataCacheSlotByUserId() {
+		return this.dataCacheSlotsByUserId.getCache();
+	}
+
+	private ICache<Long, List<DayDurationFormData>> getDataCacheDayDurationByUserId() {
+		return this.dataCacheDayDurationByUserId.getCache();
+	}
+
+	private ICache<Long, SlotTablePageData> getDataCacheSlotTableDataDayDurationByUserId() {
+		return this.dataCacheSlotTableDataDayDurationByUserId.getCache();
+	}
+
+	protected DayDurationFormData loadForCacheDayDuration(final DayDurationFormData dayDurationFormData) {
+		final StringBuilder sqlBuilder = new StringBuilder();
+		sqlBuilder.append(SQLs.DAY_DURATION_SELECT).append(", ").append(SQLs.SLOT_SELECT_FILEDS)
+				.append(SQLs.DAY_DURATION_SELECT_FROM).append(SQLs.DAY_DURATION_JOIN_SLOT)
+				.append(SQLs.GENERIC_WHERE_FOR_SECURE_AND).append(SQLs.DAY_DURATION_SELECT_FILTER_DAY_DURATION_ID)
+				.append(SQLs.DAY_DURATION_SELECT_INTO);
+		SQL.selectInto(sqlBuilder.toString(), dayDurationFormData,
+				new NVPair("dayDurationId", dayDurationFormData.getDayDurationId()));
+
+		return dayDurationFormData;
+	}
+
+	protected BulkSqlData loadForCacheSlotByUserId(final Long userId) {
+		final String sql = SQLs.SLOT_PAGE_SELECT + SQLs.SLOT_SELECT_FILTER_USER_ID;
+		final Object[][] results = SQL.select(sql, new NVPair("currentUser", userId));
+
+		return new BulkSqlData(results);
+	}
+
+	protected List<DayDurationFormData> loadForCacheDayDurationByUserId(final Long userId) {
+		final IBeanArrayHolder<DayDurationFormData> results = new BeanArrayHolder<>(DayDurationFormData.class);
+
+		final StringBuilder sql = new StringBuilder(128);
+		sql.append(SQLs.DAY_DURATION_SELECT).append(", ").append(SQLs.DAY_DURATION_SELECT_SLOT_USER_ID)
+				.append(SQLs.DAY_DURATION_SELECT_FROM).append(SQLs.DAY_DURATION_JOIN_SLOT)
+				.append(SQLs.GENERIC_WHERE_FOR_SECURE_AND);
+		// .append(SQLs.DAY_DURATION_SELECT_FILTER_SLOT_NAME);
+		if (null != userId) {
+			sql.append(SQLs.DAY_DURATION_SELECT_FILTER_SLOT_USER_ID);
+		}
+		sql.append(SQLs.DAY_DURATION_SELECT_ORDER)
+				.append(this.addResultPrefix(SQLs.DAY_DURATION_SELECT_INTO, "results"))
+				.append(this.addResultPrefix(SQLs.DAY_DURATION_SELECT_INTO_SLOT_USER_ID, "results"));
+
+		SQL.selectInto(sql.toString(), new NVPair("userId", userId), new NVPair("results", results));
+
+		return null == results ? null : CollectionUtility.arrayList(results.getBeans((BeanArrayHolder.State[]) null));
+	}
+
+	protected SlotTablePageData loadForCacheSlotTableDayDurationByUserId(final Long userId) {
+		final SlotTablePageData pageData = new SlotTablePageData();
+
+		final StringBuilder sql = new StringBuilder();
+		sql.append(SQLs.DAY_DURATION_PAGE_SELECT);
+		if (null != userId) {
+			sql.append(SQLs.SLOT_SELECT_FILTER_USER_ID);
+		}
+		sql.append(SQLs.DAY_DURATION_PAGE_SELECT_INTO);
+
+		SQL.selectInto(sql.toString(), new NVPair("page", pageData), new NVPair("currentUser", userId));
+
+		return pageData;
+	}
+
+	private String addResultPrefix(final String sql, final String prefix) {
+		return sql.replaceAll("\\:\\{", Matcher.quoteReplacement(":{" + prefix + "."));
 	}
 
 	private String getSlotCode(final Long slotId) {
@@ -92,29 +173,13 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 		// Access on Slot implies access on DayDuration
 		super.checkPermission(new ReadSlotPermission(formData.getSlotId()));
 
-		final StringBuilder sqlBuilder = new StringBuilder();
+		DayDurationFormData cachedData = this.getDataCacheDayDuration().get(formData.getDayDurationId());
+		if (null == cachedData) {
+			// avoid NPE
+			cachedData = formData;
+		}
 
-		sqlBuilder.append(SQLs.DAY_DURATION_SELECT).append(", ").append(SQLs.SLOT_SELECT_FILEDS)
-				.append(SQLs.DAY_DURATION_SELECT_FROM).append(SQLs.DAY_DURATION_JOIN_SLOT)
-				.append(SQLs.GENERIC_WHERE_FOR_SECURE_AND).append(SQLs.DAY_DURATION_SELECT_FILTER_DAY_DURATION_ID)
-				.append(SQLs.DAY_DURATION_SELECT_INTO);
-
-		// SQL.selectInto(
-		// SQLs.DAY_DURATION_SELECT +
-		// SQLs.DAY_DURATION_SELECT_FROM_PLUS_GENERIC_WHERE
-		// + SQLs.DAY_DURATION_SELECT_FILTER_DAY_DURATION_ID +
-		// SQLs.DAY_DURATION_SELECT_INTO,
-		// formData, new NVPair("dayDurationId", formData.getDayDurationId()));
-
-		SQL.selectInto(sqlBuilder.toString(), formData, new NVPair("dayDurationId", formData.getDayDurationId()));
-		return formData;
-	}
-
-	@Override
-	public SlotFormData store(final SlotFormData formData) {
-		super.checkPermission(new UpdateSlotPermission());
-		// TODO [djer] add business logic here.
-		return formData;
+		return cachedData;
 	}
 
 	@Override
@@ -124,58 +189,67 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 
 		this.sendModifiedNotifications(formData);
 
+		this.clearCache(formData.getDayDurationId(), formData.getUserId());
+
 		return formData;
 	}
 
-	private Set<String> buildNotifiedUsers(final DayDurationFormData formData) {
-		// Notify Users for DayDuration update
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
+	@Override
+	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
+	public SlotsFormData store(final SlotsFormData formData) {
+		final SlotsTableRowData[] rows = formData.getSlotsTable().getRows();
 
-		final Set<String> notifiedUsers = new HashSet<>();
-		if (null != formData.getUserId()) {
-			notifiedUsers.addAll(acs.getUserNotificationIds(formData.getUserId()));
+		for (final SlotsTableRowData row : rows) {
+			this.checkPermission(new UpdateSlotPermission());
+			SQL.insert(SQLs.DAY_DURATION_UPDATE, row);
+
+			this.clearCache(row.getDayDurationId(), row.getUserId());
 		}
 
-		// inform all attendee with pending event
-		// TODO Djer13 only event with "current" slotId ?
-		final Set<Long> pendingUsers = this.getUserWithPendingEvent();
-		if (null != pendingUsers) {
-			for (final Long userId : pendingUsers) {
-				notifiedUsers.addAll(acs.getUserNotificationIds(userId));
-			}
-		}
-		return notifiedUsers;
+		this.sendModifiedNotifications(formData);
+
+		return formData;
 	}
 
 	private void sendModifiedNotifications(final DayDurationFormData formData) {
-		final String sltoCode = this.getSlotCode(formData.getSlotId());
-		final Set<String> notifiedUsers = this.buildNotifiedUsers(formData);
+		this.sendModifiedNotifications(formData.getUserId(), formData.getSlotId(), formData);
+	}
+
+	private void sendModifiedNotifications(final Long userId, final Long slotId, final DayDurationFormData formData) {
+		final String sltoCode = this.getSlotCode(slotId);
+		final Set<String> notifiedUsers = this.buildNotifiedUsers(userId, Boolean.TRUE);
 		BEANS.get(ClientNotificationRegistry.class).putForUsers(notifiedUsers,
 				new DayDurationModifiedNotification(formData, sltoCode));
 	}
 
-	private SlotTablePageData getSlotData(final SearchFilter filter, final Boolean displayAllForAdmin) {
-		// No permission check, not admin user automatically see is own data
-		final SlotTablePageData pageData = new SlotTablePageData();
-
-		String ownerFilter = "";
-		Long currentConnectedUserId = 0L;
-		if (!displayAllForAdmin
-				|| ACCESS.getLevel(new ReadSlotPermission((Long) null)) != ReadSlotPermission.LEVEL_ALL) {
-			ownerFilter = SQLs.SLOT_SELECT_FILTER_USER_ID;
-			currentConnectedUserId = super.userHelper.getCurrentUserId();
+	private void sendModifiedNotifications(final SlotsFormData formData) {
+		if (formData.getSlotsTable().getRowCount() > 0) {
+			for (final SlotsTableRowData row : formData.getSlotsTable().getRows()) {
+				this.sendModifiedNotifications(row.getUserId(), row.getSlotId(), this.toDayDurationForm(row));
+			}
+		} else {
+			LOG.warn(
+					"Cannot send user CalendarsConfigurationModifiedNotification because no User ID (no calendars modified)");
 		}
-
-		final String sql = SQLs.SLOT_PAGE_SELECT + ownerFilter + SQLs.SLOT_PAGE_SELECT_INTO;
-
-		SQL.selectInto(sql, new NVPair("page", pageData), new NVPair("currentUser", currentConnectedUserId));
-
-		return pageData;
 	}
 
-	@Override
-	public SlotTablePageData getSlotTableData(final SearchFilter filter) {
-		return this.getSlotData(filter, Boolean.FALSE);
+	private DayDurationFormData toDayDurationForm(final SlotsTableRowData row) {
+		final DayDurationFormData dayDurationFormData = new DayDurationFormData();
+		dayDurationFormData.setDayDurationId(row.getDayDurationId());
+		dayDurationFormData.setName(row.getName());
+		dayDurationFormData.setSlotCode(String.valueOf(row.getSlot()));
+		dayDurationFormData.setSlotId(row.getSlotId());
+		dayDurationFormData.setUserId(row.getUserId());
+		dayDurationFormData.getMonday().setValue(row.getMonday());
+		dayDurationFormData.getTuesday().setValue(row.getTuesday());
+		dayDurationFormData.getWednesday().setValue(row.getWednesday());
+		dayDurationFormData.getTuesday().setValue(row.getTuesday());
+		dayDurationFormData.getFriday().setValue(row.getFriday());
+		dayDurationFormData.getSaturday().setValue(row.getSaturday());
+		dayDurationFormData.getSunday().setValue(row.getSunday());
+		dayDurationFormData.getWeeklyPerpetual().setValue(row.getWednesday());
+		dayDurationFormData.getOrderInSlot().setValue(Long.valueOf(row.getOrderInSlot()));
+		return dayDurationFormData;
 	}
 
 	@Override
@@ -193,21 +267,23 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 	}
 
 	private SlotTablePageData getDayDurationData(final SearchFilter filter, final Boolean displayAllForAdmin) {
-		final SlotTablePageData pageData = new SlotTablePageData();
-
-		String ownerFilter = "";
-		Long currentConnectedUserId = 0L;
+		SlotTablePageData result = new SlotTablePageData();
 		if (!displayAllForAdmin
 				|| ACCESS.getLevel(new ReadSlotPermission((Long) null)) != ReadSlotPermission.LEVEL_ALL) {
-			ownerFilter = SQLs.SLOT_SELECT_FILTER_USER_ID;
-			currentConnectedUserId = super.userHelper.getCurrentUserId();
+
+			final SlotTablePageData cachedData = this.getDataCacheSlotTableDataDayDurationByUserId()
+					.get(super.userHelper.getCurrentUserId());
+			if (null != cachedData) {
+				// TODO Djer permission check on each Slot, for the reader
+				// (userId)
+				result = cachedData;
+			}
+		} else {
+			// ICache.get(Null) does not work, manual load for admins
+			result = this.loadForCacheSlotTableDayDurationByUserId(null);
 		}
 
-		final String sql = SQLs.DAY_DURATION_PAGE_SELECT + ownerFilter + SQLs.DAY_DURATION_PAGE_SELECT_INTO;
-
-		SQL.selectInto(sql, new NVPair("page", pageData), new NVPair("currentUser", currentConnectedUserId));
-
-		return pageData;
+		return result;
 	}
 
 	@Override
@@ -220,70 +296,24 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 		return this.getDayDurationData(filter, Boolean.TRUE);
 	}
 
-	@Override
-	public Object[][] getDayDurations(final Long slotId) {
-		// Access on SLot implies access on DayDuration
-		super.checkPermission(new ReadSlotPermission(slotId));
-
-		final String sql = SQLs.DAY_DURATION_SELECT + SQLs.DAY_DURATION_SELECT_FROM_PLUS_GENERIC_WHERE
-				+ SQLs.DAY_DURATION_SELECT_FILTER_SLOT_ID + SQLs.DAY_DURATION_SELECT_ORDER;
-
-		final Object[][] results = SQL.select(sql, new NVPair("slotId", slotId));
-
-		return results;
-	}
-
-	@Override
-	public Object[][] getDayDurationsLight(final Long slotId) {
-		// Access on SLot implies access on DayDuration
-		super.checkPermission(new ReadSlotPermission(slotId));
-
-		final String sql = SQLs.DAY_DURATION_SELECT_LIGHT + SQLs.DAY_DURATION_SELECT_FILTER_SLOT_ID
-				+ SQLs.DAY_DURATION_SELECT_ORDER;
-
-		final Object[][] results = SQL.select(sql, new NVPair("slotId", slotId));
-
-		return results;
-	}
-
 	private Long getSlotId(final String slotName, final Long userId) {
 		// No permission check here to allow involved user to get ID of a slot
 		// by name (during day, lunch, ...)
 		Long slotId = null;
-		final String sql = SQLs.SLOT_SELECT_ID_BY_NAME;
 
-		final Object[][] results = SQL.select(sql, new NVPair("slotName", slotName), new NVPair("userId", userId));
+		final BulkSqlData cachedData = this.getDataCacheSlotByUserId().get(userId);
 
-		if (null != results && results.length != 0 && results[0] != null && results[0].length != 0) {
-			slotId = (Long) results[0][0];
-		}
-		return slotId;
-	}
-
-	private String buildDayDurationsSelect(final Long userId, final Boolean addInto, final String intoPrefix) {
-		final StringBuilder sql = new StringBuilder(128);
-		sql.append(SQLs.DAY_DURATION_SELECT).append(", ").append(SQLs.DAY_DURATION_SELECT_SLOT_USER_ID)
-				.append(SQLs.DAY_DURATION_SELECT_FROM).append(SQLs.DAY_DURATION_JOIN_SLOT)
-				.append(SQLs.GENERIC_WHERE_FOR_SECURE_AND).append(SQLs.DAY_DURATION_SELECT_FILTER_SLOT_NAME);
-		if (null != userId) {
-			sql.append(SQLs.DAY_DURATION_SELECT_FILTER_SLOT_USER_ID);
-		}
-		sql.append(SQLs.DAY_DURATION_SELECT_ORDER);
-
-		if (addInto) {
-			if (null == intoPrefix) {
-				sql.append(SQLs.DAY_DURATION_SELECT_INTO).append(SQLs.DAY_DURATION_SELECT_INTO_SLOT_USER_ID);
-			} else {
-				sql.append(this.addResultPrefix(SQLs.DAY_DURATION_SELECT_INTO, intoPrefix))
-						.append(this.addResultPrefix(SQLs.DAY_DURATION_SELECT_INTO_SLOT_USER_ID, intoPrefix));
+		if (null != cachedData && null != cachedData.getData() && cachedData.getData().length > 0) {
+			// filter by Slot Name
+			for (final Object[] slotRow : cachedData.getData()) {
+				if (null != slotRow && null != slotRow[1] && slotName.equals(slotRow[1])) {
+					slotId = (Long) slotRow[0];
+					break;
+				}
 			}
 		}
 
-		return sql.toString();
-	}
-
-	private String addResultPrefix(final String sql, final String prefix) {
-		return sql.replaceAll("\\:\\{", Matcher.quoteReplacement(":{" + prefix + "."));
+		return slotId;
 	}
 
 	@Override
@@ -297,12 +327,27 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 			super.throwAuthorizationFailed();
 		}
 
-		final IBeanArrayHolder<DayDurationFormData> results = new BeanArrayHolder<>(DayDurationFormData.class);
+		List<DayDurationFormData> dayDurationsPageData = null;
 
-		final String sql = this.buildDayDurationsSelect(userId, Boolean.TRUE, "results");
-		SQL.selectInto(sql, new NVPair("userId", userId), new NVPair("slotName", slotName),
-				new NVPair("results", results));
-		return null == results ? null : CollectionUtility.arrayList(results.getBeans((BeanArrayHolder.State[]) null));
+		if (null != userId) {
+			dayDurationsPageData = this.getDataCacheDayDurationByUserId().get(userId);
+		} else {
+			// Null does not work as Key for cache, manual load
+			dayDurationsPageData = this.loadForCacheDayDurationByUserId(null);
+		}
+
+		final List<DayDurationFormData> dayDurations = new ArrayList<>();
+
+		if (null != dayDurationsPageData && dayDurationsPageData.size() > 0) {
+			// extract valid slot by SlotId
+			for (final DayDurationFormData dayDuration : dayDurationsPageData) {
+				if (slotId.equals(dayDuration.getSlotId())) {
+					dayDurations.add(dayDuration);
+				}
+			}
+		}
+
+		return dayDurations;
 	}
 
 	private List<DayDurationFormData> getDayDurationsForAllUsers(final String slotName) {
@@ -317,6 +362,13 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 		}
 
 		return slotUserId;
+	}
+
+	private void clearCache(final Long dayDurationId, final Long userId) {
+		this.dataCacheDayDuration.clearCache(dayDurationId);
+		this.dataCacheDayDurationByUserId.clearCache(userId);
+		this.dataCacheSlotsByUserId.clearCache(userId);
+		this.dataCacheSlotTableDataDayDurationByUserId.clearCache(userId);
 	}
 
 	@Override
@@ -343,20 +395,6 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 		final Set<Long> pendingUsers = this.getUserWithPendingEvent();
 
 		return pendingUsers.contains(slotOwner);
-	}
-
-	private Set<Long> getUserWithPendingEvent() {
-		Set<Long> pendingMeetingUser = new HashSet<>();
-
-		final IEventService eventService = BEANS.get(IEventService.class);
-		final Map<Long, Integer> pendingUsers = eventService.getUsersWithPendingMeeting();
-
-		if (null != pendingUsers) {
-			pendingMeetingUser = pendingUsers.keySet();
-		}
-
-		return pendingMeetingUser;
-
 	}
 
 	@Override
@@ -431,8 +469,12 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 	}
 
 	@Override
+	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 	public void addDefaultCodeToExistingSlot() {
-		if (ACCESS.getLevel(new ReadSlotPermission((Long) null)) == ReadSlotPermission.LEVEL_ALL) {
+		// "isCurrentUserSuperUser" Ugly but required to allow datamigration
+		// BEFORE super userCreated
+		if (this.isCurrentUserSuperUser()
+				|| ACCESS.getLevel(new ReadSlotPermission((Long) null)) == ReadSlotPermission.LEVEL_ALL) {
 
 			final String sql = SQLs.SLOT_PAGE_SELECT;
 
@@ -440,10 +482,11 @@ public class SlotService extends AbstractCommonService implements ISlotService {
 
 			if (null != slots && slots.length > 0) {
 				for (int row = 0; row < slots.length; row++) {
-					LOG.info("Adding default Slot code for slot");
+
 					final Object[] slot = slots[row];
 					final String slotName = (String) slot[1];
 					final Long slotId = (Long) slot[0];
+					LOG.info("Adding default Slot code for slot : " + slotName + " (" + slotId + ")");
 					final String slotCodeExtracted = slotName.substring(slotName.lastIndexOf('.') + 1,
 							slotName.length());
 					final Integer slotCode = Integer.valueOf(slotCodeExtracted);

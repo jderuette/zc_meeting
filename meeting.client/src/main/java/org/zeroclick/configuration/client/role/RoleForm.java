@@ -203,6 +203,9 @@ public class RoleForm extends AbstractForm {
 			formData = service.load(formData);
 			RoleForm.this.importFormData(formData);
 
+			RoleForm.this.setSubTitle(TEXTS.get("zc.user.role.delete"));
+			RoleForm.this.getTypeField().setMandatory(false);
+
 			RoleForm.this.setVisiblePermission(new UpdateRolePermission());
 			RoleForm.this.setEnabledPermission(new UpdateRolePermission());
 		}

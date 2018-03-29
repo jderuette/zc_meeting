@@ -28,13 +28,12 @@ import org.eclipse.scout.rt.shared.cache.ICache;
 import org.eclipse.scout.rt.shared.cache.ICacheBuilder;
 import org.eclipse.scout.rt.shared.cache.ICacheValueResolver;
 import org.eclipse.scout.rt.shared.cache.KeyCacheEntryFilter;
-import org.eclipse.scout.rt.shared.data.form.AbstractFormData;
 
 /**
  * @author djer
  *
  */
-public abstract class AbstractDataCache<K, V extends AbstractFormData> implements IDataCache<K, V> {
+public abstract class AbstractDataCache<K, V> implements IDataCache<K, V> {
 
 	protected ICache<K, V> dataCache;
 
