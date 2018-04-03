@@ -144,16 +144,17 @@ public class SlotHelper {
 				startCal.setTime(startTime);
 				endCal.setTime(endTime);
 
-				daysDurations.add(new DayDuration(
-						OffsetTime.of(startCal.get(Calendar.HOUR_OF_DAY), startCal.get(Calendar.MINUTE), 0, 0,
-								userZoneId.getRules().getOffset(forDate.toInstant())),
-						OffsetTime.of(endCal.get(Calendar.HOUR_OF_DAY), endCal.get(Calendar.MINUTE), 0, 0,
-								userZoneId.getRules().getOffset(forDate.toInstant())),
-						this.buildListOfWeekDay(dayDurationData)));
+				daysDurations.add(new DayDuration(this.toUserOffsetTime(startCal, userZoneId),
+						this.toUserOffsetTime(endCal, userZoneId), this.buildListOfWeekDay(dayDurationData)));
 			}
 		}
 
 		return daysDurations;
+	}
+
+	public OffsetTime toUserOffsetTime(final Calendar dateCal, final ZoneId userZoneId) {
+		return OffsetTime.of(dateCal.get(Calendar.HOUR_OF_DAY), dateCal.get(Calendar.MINUTE), 0, 0,
+				userZoneId.getRules().getOffset(dateCal.toInstant()));
 	}
 
 	private List<DayOfWeek> buildListOfWeekDay(final DayDurationFormData dayDurationData) {

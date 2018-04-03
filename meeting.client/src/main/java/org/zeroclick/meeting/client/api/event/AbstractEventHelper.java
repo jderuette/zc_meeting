@@ -25,6 +25,7 @@ import java.util.List;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.comon.date.DateHelper;
 import org.zeroclick.comon.user.AppUserHelper;
 import org.zeroclick.meeting.client.api.ProviderDateHelper;
 import org.zeroclick.meeting.client.common.DayDuration;
@@ -182,7 +183,13 @@ public abstract class AbstractEventHelper<T, D> implements EventHelper {
 
 	public List<DayDuration> getFreeTime(final ZonedDateTime startDate, final ZonedDateTime endDate,
 			final List<T> events, final ZoneId userZoneId) {
-		final FreeTimeAppender freeTimeAppender = new FreeTimeAppender(startDate, endDate, startDate.getDayOfWeek());
+		final DateHelper dateHelper = BEANS.get(DateHelper.class);
+
+		final ZonedDateTime userZoneStartDate = dateHelper.atZone(startDate, userZoneId);
+		final ZonedDateTime userZonEndDate = dateHelper.atZone(endDate, userZoneId);
+
+		final FreeTimeAppender freeTimeAppender = new FreeTimeAppender(userZoneStartDate, userZonEndDate,
+				startDate.getDayOfWeek());
 		this.sort(events);
 		final Iterator<T> itEvent = events.iterator();
 
@@ -192,7 +199,8 @@ public abstract class AbstractEventHelper<T, D> implements EventHelper {
 			final DayOfWeek eventLocalStartDateDay = eventZonedStartDate.getDayOfWeek();
 			final ZonedDateTime eventZonedEndDate = this.getEventEndZoned(event);
 
-			freeTimeAppender.addEvent(eventZonedStartDate, eventZonedEndDate, eventLocalStartDateDay);
+			freeTimeAppender.addEvent(dateHelper.atZone(eventZonedStartDate, userZoneId),
+					dateHelper.atZone(eventZonedEndDate, userZoneId), eventLocalStartDateDay);
 		}
 
 		return freeTimeAppender.getFreeTimes();

@@ -90,9 +90,14 @@ public class DayDuration {
 
 	@SuppressWarnings("PMD.CollapsibleIfStatements")
 	private Boolean isBeforeBegin(final LocalDateTime checkedDate) {
+		return this.isBeforeBegin(checkedDate, Boolean.TRUE);
+	}
+
+	@SuppressWarnings("PMD.CollapsibleIfStatements")
+	private Boolean isBeforeBegin(final LocalDateTime checkedDate, final Boolean strict) {
 		Boolean result = Boolean.FALSE;
 		if (this.validDayOfWeek.contains(checkedDate.getDayOfWeek())) {
-			if (this.isBeforeBegin(checkedDate.toLocalTime())) {
+			if (this.isBeforeBegin(checkedDate.toLocalTime(), strict)) {
 				result = Boolean.TRUE;
 			}
 		}
@@ -100,9 +105,19 @@ public class DayDuration {
 	}
 
 	private Boolean isBeforeBegin(final LocalTime checkedLocalTime) {
-		// compare to NOT before instead of after to handle equals Dates
-		// (see : http://stackoverflow.com/a/13936632/8029150)
-		return !checkedLocalTime.isAfter(this.start.toLocalTime());
+		return this.isBeforeBegin(checkedLocalTime, Boolean.FALSE);
+	}
+
+	private Boolean isBeforeBegin(final LocalTime checkedLocalTime, final Boolean strict) {
+		Boolean isBeforeBegin;
+		if (strict) {
+			isBeforeBegin = checkedLocalTime.isBefore(this.start.toLocalTime());
+		} else {
+			// compare to NOT before instead of after to handle equals Dates
+			// (see : http://stackoverflow.com/a/13936632/8029150)
+			isBeforeBegin = !checkedLocalTime.isAfter(this.start.toLocalTime());
+		}
+		return isBeforeBegin;
 	}
 
 	@SuppressWarnings("PMD.CollapsibleIfStatements")
@@ -476,7 +491,7 @@ public class DayDuration {
 		LocalDate day = null;
 
 		if (nextDayOfWeek == checkedDate.getDayOfWeek()) {
-			if (this.isBeforeBegin(checkedDate.toLocalDateTime())) {
+			if (this.isBeforeBegin(checkedDate.toLocalDateTime(), Boolean.FALSE)) {
 				day = checkedDate.with(TemporalAdjusters.nextOrSame(nextDayOfWeek)).toLocalDate();
 			} else {
 				day = checkedDate.with(TemporalAdjusters.next(nextDayOfWeek)).toLocalDate();

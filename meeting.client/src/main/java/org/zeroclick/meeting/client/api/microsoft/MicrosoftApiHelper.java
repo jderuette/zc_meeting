@@ -431,6 +431,8 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 
 		newEvent.setCategories(new ArrayList<>());
 
+		newEvent.setResponseRequested(Boolean.FALSE);
+
 		final Event event = this.getEventHelper().create(newEvent, calendarToStoreEvent);
 
 		return null == event ? null : event.getId();

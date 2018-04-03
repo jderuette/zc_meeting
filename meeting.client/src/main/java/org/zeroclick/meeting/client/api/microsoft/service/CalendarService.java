@@ -59,7 +59,7 @@ public interface CalendarService {
 	Call<Event> getEvent(@Path("eventId") String eventId);
 
 	@DELETE("/v1.0/me/events/{eventId}")
-	Call<Event> deleteEvent(String eventId);
+	Call<Event> deleteEvent(@Path("eventId") String eventId);
 
 	// DO NOT use, attendee accept, but the event is owned by organizer ! user
 	// updateEvent instead

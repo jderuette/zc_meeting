@@ -34,6 +34,7 @@ import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
 import org.zeroclick.comon.text.TextsHelper;
 import org.zeroclick.configuration.client.user.ValidateCpsForm;
+import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
 import org.zeroclick.configuration.shared.duration.DurationCodeType;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper.SubscriptionHelperData;
@@ -46,9 +47,11 @@ import org.zeroclick.meeting.service.CalendarService;
 import org.zeroclick.meeting.service.CalendarService.EventIdentification;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationCreatedNotification;
+import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationModifiedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationCreatedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationModifiedNotification;
+import org.zeroclick.meeting.shared.calendar.IApiService;
 import org.zeroclick.meeting.shared.event.CreateEventPermission;
 import org.zeroclick.meeting.shared.event.EventCreatedNotification;
 import org.zeroclick.meeting.shared.event.EventFormData;
@@ -788,7 +791,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				final ZonedDateTime end = Table.this.getEndDateColumn().getSelectedZonedValue();
 				Long eventHeldBy = Table.this.getOrganizerColumn().getSelectedValue();
 				final String eventHeldEmail = Table.this.getOrganizerEmailColumn().getSelectedValue();
-				Long eventGuest = Table.this.getGuestIdColumn().getSelectedValue();
+				Long eventGuestId = Table.this.getGuestIdColumn().getSelectedValue();
 				final String eventGuestEmail = Table.this.getEmailColumn().getSelectedValue();
 				final String subject = Table.this.getSubjectColumn().getSelectedValue();
 				final String venue = Table.this.getVenueColumn().getSelectedValue();
@@ -799,13 +802,14 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 						throw new VetoException(TEXTS.get("zc.meeting.chooseDateFirst"));
 					}
 
+					final CalendarService calendarService = BEANS.get(CalendarService.class);
+
 					Table.this.getStateColumn().setValue(Table.this.getSelectedRow(), StateCodeType.AcceptedCode.ID);
 
 					if (null == eventHeldBy) {
 						eventHeldBy = userService.getUserIdByEmail(eventHeldEmail);
 					}
 					// External event for holder
-					final CalendarService calendarService = BEANS.get(CalendarService.class);
 					final EventIdentification externalOrganizerEventId = calendarService.createEvent(start, end,
 							eventHeldBy, eventGuestEmail, subject, venue, guestAutoAcceptEvent);
 					if (null == externalOrganizerEventId) {
@@ -817,7 +821,6 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 								externalOrganizerEventId.getEventId());
 					}
 
-					// TODO Djer use the API ID not the USER ID !!!!
 					final String organizerEventExternalHtmlLink = calendarService
 							.getEventExternalLink(externalOrganizerEventId, eventHeldBy);
 
@@ -826,21 +829,48 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					if (!guestAutoAcceptEvent) {
 						// Only if required to process "accept" in a other
 						// request
-						if (null == eventGuest) {
-							eventGuest = userService.getUserIdByEmail(eventGuestEmail);
+						if (null == eventGuestId) {
+							eventGuestId = userService.getUserIdByEmail(eventGuestEmail);
 						}
 
-						final EventIdentification externalGuestEvent = calendarService
-								.acceptCreatedEvent(externalOrganizerEventId, eventGuest, eventGuestEmail, eventHeldBy);
+						final EventIdentification externalGuestEvent = calendarService.acceptCreatedEvent(
+								externalOrganizerEventId, eventGuestId, eventGuestEmail, eventHeldBy);
 						if (null != externalGuestEvent) {
 							Table.this.getExternalIdRecipientColumn().setValue(Table.this.getSelectedRow(),
 									externalGuestEvent.getEventId());
 							guestEventExternalHtmlLink = calendarService.getEventExternalLink(externalGuestEvent,
-									eventGuest);
+									eventGuestId);
 						}
 					} else {
+						EventIdentification externalAttendeeEventId;
+						final IApiService apiService = BEANS.get(IApiService.class);
+						// if guest use a different provider as the organizer,
+						// and is autoAccepting events, we need to create a
+						// specific event (in his provider)
+
+						final CalendarConfigurationFormData organizerCalendarToStoreEvent = calendarService
+								.getUserCreateEventCalendar(eventHeldBy);
+						final ApiTableRowData organizerCalendarApi = apiService
+								.getApi(organizerCalendarToStoreEvent.getOAuthCredentialId().getValue());
+						final Long organizerProvider = organizerCalendarApi.getProvider();
+
+						final CalendarConfigurationFormData attendeeCalendarToStoreEvent = calendarService
+								.getUserCreateEventCalendar(eventGuestId);
+						final ApiTableRowData attendeeProviderCalendarApi = apiService
+								.getApi(attendeeCalendarToStoreEvent.getOAuthCredentialId().getValue());
+						final Long attendeeProvider = attendeeProviderCalendarApi.getProvider();
+
+						final boolean isSameProvider = organizerProvider.equals(attendeeProvider);
+
+						if (!isSameProvider) {
+							externalAttendeeEventId = calendarService.createEvent(start, end, eventGuestId,
+									eventHeldEmail, subject, venue, Boolean.TRUE);
+						} else {
+							externalAttendeeEventId = externalOrganizerEventId;
+						}
+
 						Table.this.getExternalIdRecipientColumn().setValue(Table.this.getSelectedRow(),
-								externalOrganizerEventId.getEventId());
+								externalAttendeeEventId.getEventId());
 					}
 
 					// Save at the end to save external IDs !
@@ -851,7 +881,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 					this.sendConfirmationEmail(formData, organizerEventExternalHtmlLink, eventHeldEmail, eventHeldBy,
 							eventGuestEmail);
-					this.sendConfirmationEmail(formData, guestEventExternalHtmlLink, eventGuestEmail, eventGuest,
+					this.sendConfirmationEmail(formData, guestEventExternalHtmlLink, eventGuestEmail, eventGuestId,
 							eventHeldEmail);
 
 					Table.this.resetInvalidatesEvent(start, end);

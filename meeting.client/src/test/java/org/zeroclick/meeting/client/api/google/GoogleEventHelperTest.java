@@ -194,6 +194,44 @@ public class GoogleEventHelperTest {
 	}
 
 	@Test
+	public void testGetFreeTime_ThreeEventBlockWholePeriodLongerThanMeeting_OneEventOverlapPotetialFreeTime() {
+		final ZonedDateTime startDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 00, 00),
+				ZoneId.of(DEFAULT_TIME_ZONE));
+		final ZonedDateTime endDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 30, 00),
+				ZoneId.of(DEFAULT_TIME_ZONE));
+
+		final ArrayList<Event> events = new ArrayList<>();
+		events.add(this.createBasicEvent("2018-03-26T07:15:00+02:00", "2018-03-26T08:08:00+02:00"));
+		events.add(this.createBasicEvent("2018-03-26T07:08:00+02:00", "2018-03-26T08:15:00+02:00"));
+		events.add(this.createBasicEvent("2018-03-26T08:12:00+02:00", "2018-03-26T08:30:00+02:00"));
+
+		final ZoneId userZoneId = ZoneId.of(DEFAULT_TIME_ZONE);
+
+		final List<DayDuration> freeTime = this.eventHelper.getFreeTime(startDate, endDate, events, userZoneId);
+
+		Assert.assertTrue("FreeTime should NOT exists but found " + freeTime, freeTime.isEmpty());
+	}
+
+	@Test
+	public void testGetFreeTime_ThreeEventBlockWholePeriodLongerThanMeeting_StartBeforeTwoUseless() {
+		final ZonedDateTime startDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 00, 00),
+				ZoneId.of(DEFAULT_TIME_ZONE));
+		final ZonedDateTime endDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 30, 00),
+				ZoneId.of(DEFAULT_TIME_ZONE));
+
+		final ArrayList<Event> events = new ArrayList<>();
+		events.add(this.createBasicEvent("2018-03-26T07:15:00+02:00", "2018-03-26T08:00:00+02:00"));
+		events.add(this.createBasicEvent("2018-03-26T07:15:00+02:00", "2018-03-26T08:45:00+02:00"));
+		events.add(this.createBasicEvent("2018-03-26T07:15:00+02:00", "2018-03-26T08:25:00+02:00"));
+
+		final ZoneId userZoneId = ZoneId.of(DEFAULT_TIME_ZONE);
+
+		final List<DayDuration> freeTime = this.eventHelper.getFreeTime(startDate, endDate, events, userZoneId);
+
+		Assert.assertTrue("FreeTime should NOT exists but found " + freeTime, freeTime.isEmpty());
+	}
+
+	@Test
 	public void testGetFreeTime_OneFreeTimeBeginsOfPeriod() {
 		final ZonedDateTime startDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 00, 00),
 				ZoneId.of(DEFAULT_TIME_ZONE));
@@ -213,10 +251,8 @@ public class GoogleEventHelperTest {
 
 		final OffsetTime expectedStartFreeTime = OffsetTime.of(8, 0, 0, 0, startDate.getOffset());
 		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
-		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
 
 		final OffsetTime expectedEndFreeTime = OffsetTime.of(8, 15, 0, 0, startDate.getOffset());
-		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
 		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
 
 	}
@@ -242,10 +278,8 @@ public class GoogleEventHelperTest {
 
 		final OffsetTime expectedStartFreeTime = OffsetTime.of(8, 0, 0, 0, startDate.getOffset());
 		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
-		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
 
 		final OffsetTime expectedEndFreeTime = OffsetTime.of(8, 5, 0, 0, startDate.getOffset());
-		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
 		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
 	}
 
@@ -271,10 +305,8 @@ public class GoogleEventHelperTest {
 
 		final OffsetTime expectedStartFreeTime = OffsetTime.of(8, 0, 0, 0, startDate.getOffset());
 		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
-		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
 
 		final OffsetTime expectedEndFreeTime = OffsetTime.of(8, 5, 0, 0, startDate.getOffset());
-		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
 		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
 	}
 
@@ -298,10 +330,8 @@ public class GoogleEventHelperTest {
 
 		final OffsetTime expectedStartFreeTime = OffsetTime.of(8, 0, 0, 0, startDate.getOffset());
 		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
-		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
 
 		final OffsetTime expectedEndFreeTime = OffsetTime.of(8, 5, 0, 0, startDate.getOffset());
-		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
 		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
 
 	}
@@ -327,10 +357,8 @@ public class GoogleEventHelperTest {
 
 		final OffsetTime expectedStartFreeTime = OffsetTime.of(8, 0, 0, 0, startDate.getOffset());
 		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
-		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
 
 		final OffsetTime expectedEndFreeTime = OffsetTime.of(8, 5, 0, 0, startDate.getOffset());
-		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
 		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
 
 	}
@@ -355,10 +383,8 @@ public class GoogleEventHelperTest {
 
 		final OffsetTime expectedStartFreeTime = OffsetTime.of(8, 20, 0, 0, startDate.getOffset());
 		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
-		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
 
 		final OffsetTime expectedEndFreeTime = OffsetTime.of(8, 30, 0, 0, startDate.getOffset());
-		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
 		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
 
 	}
@@ -385,10 +411,8 @@ public class GoogleEventHelperTest {
 
 		final OffsetTime expectedStartFreeTime = OffsetTime.of(8, 20, 0, 0, startDate.getOffset());
 		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
-		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
 
 		final OffsetTime expectedEndFreeTime = OffsetTime.of(8, 30, 0, 0, startDate.getOffset());
-		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
 		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
 
 	}
@@ -413,10 +437,8 @@ public class GoogleEventHelperTest {
 
 		final OffsetTime expectedStartFreeTime = OffsetTime.of(8, 20, 0, 0, startDate.getOffset());
 		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
-		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
 
 		final OffsetTime expectedEndFreeTime = OffsetTime.of(8, 30, 0, 0, startDate.getOffset());
-		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
 		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
 
 	}
@@ -443,10 +465,8 @@ public class GoogleEventHelperTest {
 
 		final OffsetTime expectedStartFreeTime = OffsetTime.of(8, 20, 0, 0, startDate.getOffset());
 		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
-		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
 
 		final OffsetTime expectedEndFreeTime = OffsetTime.of(8, 30, 0, 0, startDate.getOffset());
-		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
 		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
 
 	}
@@ -472,12 +492,9 @@ public class GoogleEventHelperTest {
 
 		final OffsetTime expectedStartFreeTime = OffsetTime.of(8, 20, 0, 0, startDate.getOffset());
 		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
-		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
 
 		final OffsetTime expectedEndFreeTime = OffsetTime.of(8, 30, 0, 0, startDate.getOffset());
 		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
-		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
-
 	}
 
 	@Test
@@ -501,12 +518,9 @@ public class GoogleEventHelperTest {
 
 		final OffsetTime expectedStartFreeTime = OffsetTime.of(8, 12, 0, 0, startDate.getOffset());
 		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
-		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
 
 		final OffsetTime expectedEndFreeTime = OffsetTime.of(8, 25, 0, 0, startDate.getOffset());
 		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
-		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
-
 	}
 
 	@Test
@@ -530,12 +544,9 @@ public class GoogleEventHelperTest {
 
 		final OffsetTime expectedStartFreeTime = OffsetTime.of(8, 12, 0, 0, startDate.getOffset());
 		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
-		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
 
 		final OffsetTime expectedEndFreeTime = OffsetTime.of(8, 25, 0, 0, startDate.getOffset());
 		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
-		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
-
 	}
 
 	@Test
@@ -559,12 +570,9 @@ public class GoogleEventHelperTest {
 
 		final OffsetTime expectedStartFreeTime = OffsetTime.of(8, 12, 0, 0, startDate.getOffset());
 		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
-		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
 
 		final OffsetTime expectedEndFreeTime = OffsetTime.of(8, 25, 0, 0, startDate.getOffset());
 		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
-		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
-
 	}
 
 	@Test
@@ -588,12 +596,9 @@ public class GoogleEventHelperTest {
 
 		final OffsetTime expectedStartFreeTime = OffsetTime.of(8, 12, 0, 0, startDate.getOffset());
 		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
-		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
 
 		final OffsetTime expectedEndFreeTime = OffsetTime.of(8, 25, 0, 0, startDate.getOffset());
 		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
-		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
-
 	}
 
 	@Test
@@ -612,28 +617,183 @@ public class GoogleEventHelperTest {
 
 		final List<DayDuration> freeTime = this.eventHelper.getFreeTime(startDate, endDate, events, userZoneId);
 
-		Assert.assertTrue("FreeTime should exists for only ONE period " + freeTime, freeTime.size() == 2);
+		Assert.assertTrue("FreeTime should exists for only TWO period " + freeTime, freeTime.size() == 2);
 
 		final DayDuration firstFreeTime = freeTime.get(0);
 
 		final OffsetTime expectedStartFreeTime = OffsetTime.of(8, 10, 0, 0, startDate.getOffset());
-		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
-		Assert.assertEquals("FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
-
+		Assert.assertEquals("First FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
 		final OffsetTime expectedEndFreeTime = OffsetTime.of(8, 12, 0, 0, startDate.getOffset());
-		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
-		Assert.assertEquals("FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
+		Assert.assertEquals("First FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
 
 		final DayDuration secondFreeTime = freeTime.get(1);
 
 		final OffsetTime expectedSecondStartFreeTime = OffsetTime.of(8, 15, 0, 0, startDate.getOffset());
-		Assert.assertEquals("FreeTime start is not valid", expectedSecondStartFreeTime, secondFreeTime.getStart());
-		Assert.assertEquals("FreeTime start is not valid", expectedSecondStartFreeTime, secondFreeTime.getStart());
-
+		Assert.assertEquals("Second FreeTime start is not valid", expectedSecondStartFreeTime,
+				secondFreeTime.getStart());
 		final OffsetTime expectedSecondEndFreeTime = OffsetTime.of(8, 25, 0, 0, startDate.getOffset());
-		Assert.assertEquals("FreeTime end is not valid", expectedSecondEndFreeTime, secondFreeTime.getEnd());
-		Assert.assertEquals("FreeTime end is not valid", expectedSecondEndFreeTime, secondFreeTime.getEnd());
+		Assert.assertEquals("Second FreeTime end is not valid", expectedSecondEndFreeTime, secondFreeTime.getEnd());
+	}
 
+	@Test
+	public void testGetFreeTime_TwoFreeTimeMidleOfPeriodStartingBeforePeriod() {
+		final ZonedDateTime startDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 00, 00),
+				ZoneId.of(DEFAULT_TIME_ZONE));
+		final ZonedDateTime endDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 30, 00),
+				ZoneId.of(DEFAULT_TIME_ZONE));
+
+		final ArrayList<Event> events = new ArrayList<>();
+		events.add(this.createBasicEvent("2018-03-26T07:30:00+02:00", "2018-03-26T08:10:00+02:00"));
+		events.add(this.createBasicEvent("2018-03-26T08:12:00+02:00", "2018-03-26T08:15:00+02:00"));
+		events.add(this.createBasicEvent("2018-03-26T08:25:00+02:00", "2018-03-26T08:30:00+02:00"));
+
+		final ZoneId userZoneId = ZoneId.of(DEFAULT_TIME_ZONE);
+
+		final List<DayDuration> freeTime = this.eventHelper.getFreeTime(startDate, endDate, events, userZoneId);
+
+		Assert.assertTrue("FreeTime should exists for only TWO period " + freeTime, freeTime.size() == 2);
+
+		final DayDuration firstFreeTime = freeTime.get(0);
+
+		final OffsetTime expectedStartFreeTime = OffsetTime.of(8, 10, 0, 0, startDate.getOffset());
+		Assert.assertEquals("First FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
+		final OffsetTime expectedEndFreeTime = OffsetTime.of(8, 12, 0, 0, startDate.getOffset());
+		Assert.assertEquals("First FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
+
+		final DayDuration secondFreeTime = freeTime.get(1);
+
+		final OffsetTime expectedSecondStartFreeTime = OffsetTime.of(8, 15, 0, 0, startDate.getOffset());
+		Assert.assertEquals("Second FreeTime start is not valid", expectedSecondStartFreeTime,
+				secondFreeTime.getStart());
+		final OffsetTime expectedSecondEndFreeTime = OffsetTime.of(8, 25, 0, 0, startDate.getOffset());
+		Assert.assertEquals("Second FreeTime end is not valid", expectedSecondEndFreeTime, secondFreeTime.getEnd());
+	}
+
+	@Test
+	public void testGetFreeTime_TwoFreeTimeMidleOfPeriodEndingBeforePeriod() {
+		final ZonedDateTime startDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 00, 00),
+				ZoneId.of(DEFAULT_TIME_ZONE));
+		final ZonedDateTime endDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 30, 00),
+				ZoneId.of(DEFAULT_TIME_ZONE));
+
+		final ArrayList<Event> events = new ArrayList<>();
+		events.add(this.createBasicEvent("2018-03-26T08:00:00+02:00", "2018-03-26T08:10:00+02:00"));
+		events.add(this.createBasicEvent("2018-03-26T08:12:00+02:00", "2018-03-26T08:15:00+02:00"));
+		events.add(this.createBasicEvent("2018-03-26T08:25:00+02:00", "2018-03-26T09:15:00+02:00"));
+
+		final ZoneId userZoneId = ZoneId.of(DEFAULT_TIME_ZONE);
+
+		final List<DayDuration> freeTime = this.eventHelper.getFreeTime(startDate, endDate, events, userZoneId);
+
+		Assert.assertTrue("FreeTime should exists for only TWO period " + freeTime, freeTime.size() == 2);
+
+		final DayDuration firstFreeTime = freeTime.get(0);
+
+		final OffsetTime expectedStartFreeTime = OffsetTime.of(8, 10, 0, 0, startDate.getOffset());
+		Assert.assertEquals("First FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
+		final OffsetTime expectedEndFreeTime = OffsetTime.of(8, 12, 0, 0, startDate.getOffset());
+		Assert.assertEquals("First FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
+
+		final DayDuration secondFreeTime = freeTime.get(1);
+
+		final OffsetTime expectedSecondStartFreeTime = OffsetTime.of(8, 15, 0, 0, startDate.getOffset());
+		Assert.assertEquals("Second FreeTime start is not valid", expectedSecondStartFreeTime,
+				secondFreeTime.getStart());
+		final OffsetTime expectedSecondEndFreeTime = OffsetTime.of(8, 25, 0, 0, startDate.getOffset());
+		Assert.assertEquals("Second FreeTime end is not valid", expectedSecondEndFreeTime, secondFreeTime.getEnd());
+	}
+
+	@Test
+	public void testGetFreeTime_TwoFreeTimeMidleOfPeriodWiderThanPeriod() {
+		final ZonedDateTime startDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 00, 00),
+				ZoneId.of(DEFAULT_TIME_ZONE));
+		final ZonedDateTime endDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 30, 00),
+				ZoneId.of(DEFAULT_TIME_ZONE));
+
+		final ArrayList<Event> events = new ArrayList<>();
+		events.add(this.createBasicEvent("2018-03-26T07:30:00+02:00", "2018-03-26T08:10:00+02:00"));
+		events.add(this.createBasicEvent("2018-03-26T08:12:00+02:00", "2018-03-26T08:15:00+02:00"));
+		events.add(this.createBasicEvent("2018-03-26T08:25:00+02:00", "2018-03-26T09:15:00+02:00"));
+
+		final ZoneId userZoneId = ZoneId.of(DEFAULT_TIME_ZONE);
+
+		final List<DayDuration> freeTime = this.eventHelper.getFreeTime(startDate, endDate, events, userZoneId);
+
+		Assert.assertTrue("FreeTime should exists for only TWO period " + freeTime, freeTime.size() == 2);
+
+		final DayDuration firstFreeTime = freeTime.get(0);
+
+		final OffsetTime expectedStartFreeTime = OffsetTime.of(8, 10, 0, 0, startDate.getOffset());
+		Assert.assertEquals("First FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
+		final OffsetTime expectedEndFreeTime = OffsetTime.of(8, 12, 0, 0, startDate.getOffset());
+		Assert.assertEquals("First FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
+
+		final DayDuration secondFreeTime = freeTime.get(1);
+
+		final OffsetTime expectedSecondStartFreeTime = OffsetTime.of(8, 15, 0, 0, startDate.getOffset());
+		Assert.assertEquals("Second FreeTime start is not valid", expectedSecondStartFreeTime,
+				secondFreeTime.getStart());
+		final OffsetTime expectedSecondEndFreeTime = OffsetTime.of(8, 25, 0, 0, startDate.getOffset());
+		Assert.assertEquals("Second FreeTime end is not valid", expectedSecondEndFreeTime, secondFreeTime.getEnd());
+	}
+
+	@Test
+	public void testGetFreeTime_TwoFreeTimeMidleOfPeriodWiderThanPeriodWithUseleddEvent() {
+		final ZonedDateTime startDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 00, 00),
+				ZoneId.of(DEFAULT_TIME_ZONE));
+		final ZonedDateTime endDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 30, 00),
+				ZoneId.of(DEFAULT_TIME_ZONE));
+
+		final ArrayList<Event> events = new ArrayList<>();
+		// == Event1
+		events.add(this.createBasicEvent("2018-03-26T07:30:00+02:00", "2018-03-26T08:10:00+02:00"));
+		// Event1.1 : inside Event1, same start
+		events.add(this.createBasicEvent("2018-03-26T07:30:00+02:00", "2018-03-26T08:08:00+02:00"));
+		// Event1.2 : inside Event1 same end
+		events.add(this.createBasicEvent("2018-03-26T08:00:00+02:00", "2018-03-26T08:08:00+02:00"));
+		// Event1.3 inside Event1
+		events.add(this.createBasicEvent("2018-03-26T08:00:00+02:00", "2018-03-26T08:05:00+02:00"));
+		// == Event2
+		events.add(this.createBasicEvent("2018-03-26T08:12:00+02:00", "2018-03-26T08:15:00+02:00"));
+		// Event2.1 : inside Event2, same start
+		events.add(this.createBasicEvent("2018-03-26T08:12:00+02:00", "2018-03-26T08:15:00+02:00"));
+		// Event2.2 : inside Event2 same end
+		events.add(this.createBasicEvent("2018-03-26T08:12:00+02:00", "2018-03-26T08:15:00+02:00"));
+		// Event2.3 : inside Event2
+		events.add(this.createBasicEvent("2018-03-26T08:12:00+02:00", "2018-03-26T08:14:00+02:00"));
+		// == Event3
+		events.add(this.createBasicEvent("2018-03-26T08:25:00+02:00", "2018-03-26T09:15:00+02:00"));
+		// Event3.1 : inside Event3 same start, ends before period end
+		events.add(this.createBasicEvent("2018-03-26T08:25:00+02:00", "2018-03-26T08:29:00+02:00"));
+		// Event3.2 : inside Event3 same start, ends before period end
+		events.add(this.createBasicEvent("2018-03-26T08:25:00+02:00", "2018-03-26T08:40:00+02:00"));
+		// Event3.3 : inside Event3 same end
+		events.add(this.createBasicEvent("2018-03-26T08:25:00+02:00", "2018-03-26T09:15:00+02:00"));
+		// Event3.4 : inside, end before period ends
+		events.add(this.createBasicEvent("2018-03-26T08:27:00+02:00", "2018-03-26T08:29:00+02:00"));
+		// Event3.5 : inside, end before period ends
+		events.add(this.createBasicEvent("2018-03-26T08:27:00+02:00", "2018-03-26T08:45:00+02:00"));
+
+		final ZoneId userZoneId = ZoneId.of(DEFAULT_TIME_ZONE);
+
+		final List<DayDuration> freeTime = this.eventHelper.getFreeTime(startDate, endDate, events, userZoneId);
+
+		Assert.assertTrue("FreeTime should exists for only TWO period " + freeTime, freeTime.size() == 2);
+
+		final DayDuration firstFreeTime = freeTime.get(0);
+
+		final OffsetTime expectedStartFreeTime = OffsetTime.of(8, 10, 0, 0, startDate.getOffset());
+		Assert.assertEquals("First FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
+		final OffsetTime expectedEndFreeTime = OffsetTime.of(8, 12, 0, 0, startDate.getOffset());
+		Assert.assertEquals("First FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
+
+		final DayDuration secondFreeTime = freeTime.get(1);
+
+		final OffsetTime expectedSecondStartFreeTime = OffsetTime.of(8, 15, 0, 0, startDate.getOffset());
+		Assert.assertEquals("Second FreeTime start is not valid", expectedSecondStartFreeTime,
+				secondFreeTime.getStart());
+		final OffsetTime expectedSecondEndFreeTime = OffsetTime.of(8, 25, 0, 0, startDate.getOffset());
+		Assert.assertEquals("Second FreeTime end is not valid", expectedSecondEndFreeTime, secondFreeTime.getEnd());
 	}
 
 	private Event createBasicEvent(final String startRfc3339, final String endRfc3339) {

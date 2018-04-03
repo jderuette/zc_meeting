@@ -82,16 +82,6 @@ public class MicrosoftEventHelper extends AbstractEventHelper<Event, DateTimeTim
 		return "";
 	}
 
-	// @Override
-	// private DateTimeTimeZone toDateTime(final ZonedDateTime dateTime, final
-	// ZoneId zoneId) {
-	// final DateTimeTimeZone mDate = new DateTimeTimeZone();
-	// final Date javaDate = Date.from(dateTime.toInstant());
-	// mDate.setDateTime(javaDate);
-	// mDate.setTimeZone(TimeZone.getTimeZone(zoneId).getDisplayName(Locale.ENGLISH));
-	// return mDate;
-	// }
-
 	@Override
 	public Event create(final Event newEvent, final CalendarConfigurationFormData calendarToStoreEvent) {
 		final MicrosoftApiHelper apiHelper = BEANS.get(MicrosoftApiHelper.class);

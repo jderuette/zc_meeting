@@ -92,37 +92,40 @@ public class FreeTimeAppender {
 
 		OffsetTime nextEnd = null;
 		OffsetTime nextStart = null;
+		Boolean isFirstLoop = Boolean.TRUE;
 
 		// search for Free Time in simplified EventTimeLine
 		final ListIterator<DayDuration> itFlattenedEvents = flattenedEvents.listIterator();
 
+		DayDuration nextCleanEvent = null;
+		DayDuration cleanEvent = null;
 		while (itFlattenedEvents.hasNext()) {
-			DayDuration cleanEvent = null;
-			DayDuration nextCleanEvent = null;
-			// first loop
-			if (null == previousEnd) {
+			if (isFirstLoop) {
 				cleanEvent = itFlattenedEvents.next();
-			} else {
-				cleanEvent = nextCleanEvent;
-			}
-			// init previous values
-			if (null == previousEnd) {
+				// init previous values
 				previousEnd = this.toOffsetTime(this.periodStart);
 				previousStart = this.toOffsetTime(this.periodStart);
-			}
-			// init next values
-			if (null == nextEnd) {
+
+				// init next values
+				if (null == nextCleanEvent) {
+					if (itFlattenedEvents.hasNext()) {
+						nextCleanEvent = itFlattenedEvents.next();
+						nextEnd = nextCleanEvent.getEnd();
+						nextStart = nextCleanEvent.getStart();
+					} else {
+						nextEnd = this.toOffsetTime(this.periodEnd);
+						nextStart = this.toOffsetTime(this.periodEnd); // ??
+					}
+				}
+			} else {
+				cleanEvent = nextCleanEvent;
 				if (itFlattenedEvents.hasNext()) {
 					nextCleanEvent = itFlattenedEvents.next();
 					nextEnd = nextCleanEvent.getEnd();
 					nextStart = nextCleanEvent.getStart();
-				} else {
-					nextEnd = this.toOffsetTime(this.periodEnd);
-					nextStart = this.toOffsetTime(this.periodEnd); // ??
 				}
 			}
-
-			if (cleanEvent.getStart().isAfter(previousEnd)) {
+			if (isFirstLoop && cleanEvent.getStart().isAfter(previousEnd)) {
 				freeTimes.add(new DayDuration(previousEnd, cleanEvent.getStart(),
 						CollectionUtility.arrayList(cleanEvent.getValidDayOfWeek())));
 			}
@@ -134,10 +137,8 @@ public class FreeTimeAppender {
 			previousEnd = cleanEvent.getEnd();
 			previousStart = cleanEvent.getStart();
 
-			if (itFlattenedEvents.hasNext()) {
-				nextCleanEvent = itFlattenedEvents.next();
-				nextEnd = nextCleanEvent.getEnd();
-				nextStart = nextCleanEvent.getStart();
+			if (isFirstLoop) {
+				isFirstLoop = Boolean.FALSE;
 			}
 		}
 
@@ -150,6 +151,7 @@ public class FreeTimeAppender {
 		final OffsetTime offsetPeriodEnd = this.toOffsetTime(this.periodEnd);
 		final List<DayOfWeek> validDays = CollectionUtility.arrayList(this.validDayOfWeek);
 		Boolean isFirstEvent = Boolean.TRUE;
+		DayDuration eventTOAdd = null;
 
 		if (null == this.eventTimeLine) {
 			// whole period available
@@ -159,19 +161,16 @@ public class FreeTimeAppender {
 			for (final DayDuration simpleEvent : this.eventTimeLine) {
 				if (isFirstEvent) {
 					isFirstEvent = Boolean.FALSE;
-					flattenedEvents.add(simpleEvent);
+					eventTOAdd = simpleEvent;
 				} else {
+
+					if (null != eventTOAdd) {
+						// previous loop need to add itself
+						flattenedEvents.add(eventTOAdd);
+						eventTOAdd = null;
+					}
 					// check if the current event need to extends an existing
 					// "flatenned Event"
-
-					/*
-					 * C- Current event as No "anchor" with current Event -> new
-					 * Fattend Event D- Current Event as 1 "anchor" with current
-					 * Event -> Extends FlattenedEvent D1- Current event Start
-					 * "anchor" -> Extends End of flattenEvent to end of current
-					 * Event D2- Current event End "Anchor" --> Extends
-					 * FLattenEvent to start of current Event
-					 */
 
 					final ListIterator<DayDuration> ItFlattenedEvents = flattenedEvents.listIterator();
 
@@ -181,6 +180,7 @@ public class FreeTimeAppender {
 						if (flattenedEvent.isInPeriod(simpleEvent.getStart().toLocalTime(),
 								simpleEvent.getEnd().toLocalTime())) {
 							// ignore currentEvent
+							eventTOAdd = null;
 							continue;
 						}
 						// Current Event enclose a flattened Event
@@ -189,23 +189,29 @@ public class FreeTimeAppender {
 							// FlatenedEvent change start/end to current Event
 							flattenedEvent.setStart(simpleEvent.getStart());
 							flattenedEvent.setEnd(simpleEvent.getEnd());
+							eventTOAdd = null;
 						} else if (simpleEvent.isInPeriod(flattenedEvent.getStart().toLocalTime())) {
 							// this event start in the flattened Event (and ends
 							// after, because no "inside" or "enclosed" occurs)
 							flattenedEvent.setStart(simpleEvent.getStart());
+							eventTOAdd = null;
 						} else if (simpleEvent.isInPeriod(flattenedEvent.getEnd().toLocalTime())) {
 							// this event ends in the flattened Event (and
 							// starts before, because no "inside" or "enclosed"
 							// occurs)
 							flattenedEvent.setEnd(simpleEvent.getEnd());
-
+							eventTOAdd = null;
 						} else {
 							// this event create a new FlattenEvent inside the
 							// period
-							ItFlattenedEvents.add(simpleEvent);
+							eventTOAdd = simpleEvent;
 						}
 					}
 				}
+			}
+			// if last Event need to be added
+			if (null != eventTOAdd) {
+				flattenedEvents.add(eventTOAdd);
 			}
 		}
 

@@ -101,47 +101,60 @@ public class CalendarService {
 			final ApiTableRowData calendarApiData = apiService.getApi(calendar.getOAuthCredentialId());
 			final ApiHelper apiHelper = ApiHelperFactory.get(calendarApiData);
 
-			final CalendarAviability creatEventAvaibilityInfo = apiHelper.getCalendarAviability(startDate, endDate,
+			final CalendarAviability createEventAvaibilityInfo = apiHelper.getCalendarAviability(startDate, endDate,
 					userId, calendar, userZoneId);
 
-			if (null == creatEventAvaibilityInfo.getEndLastEvent()) {
+			if (null == createEventAvaibilityInfo.getEndLastEvent()) {
 				LOG.info(new StringBuilder().append("No event found in calendars from : ").append(startDate)
 						.append(" to ").append(endDate).append(" for user : ").append(userId).toString());
 				// Do nothing special, recommendedNewDate = null meaning
 				// provided periods is OK
 			} else {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug(new StringBuilder(100).append(allConcurentEvent.size())
-							.append(" event(s) found in calendars from : ").append(startDate).append(" to ")
-							.append(endDate).append(" for user : ").append(userId).toString());
-				}
-				final List<DayDuration> freeTimes = creatEventAvaibilityInfo.getFreeTimes();
-
-				if (!freeTimes.isEmpty()) {
+				if (null != createEventAvaibilityInfo.getEndLastEvent()
+						&& !createEventAvaibilityInfo.getEndLastEvent().equals(startDate)) {
 					if (LOG.isDebugEnabled()) {
-						LOG.debug(new StringBuilder(100).append("FreeTime found in calendars from : ").append(startDate)
-								.append(" to ").append(endDate).append(" with periods : ").append(freeTimes)
-								.toString());
-					}
-					recommendedNewDate = SlotHelper.get().getNextValidDateTime(freeTimes, startDate, endDate);
-					if (null != recommendedNewDate) {
-						LOG.info(new StringBuilder().append("Recommanding new search from : ")
-								.append(recommendedNewDate).append(" (cause : ").append(userId)
-								.append(" has blocking event(s) but freeTime)").toString());
-					}
-				}
-				if (null == recommendedNewDate) {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug(new StringBuilder(100).append("No avilable periods found in freeTime from : ")
+						LOG.debug(new StringBuilder(100)
+								.append("Last event end at the same start, slot is aviallable from calendars from : ")
 								.append(startDate).append(" to ").append(endDate).append(" for user : ").append(userId)
 								.toString());
+						// Do nothing special, recommendedNewDate = null meaning
+						// provided periods is OK
 					}
-					// TODO Djer13 is required to add 1 minute ?
-					recommendedNewDate = creatEventAvaibilityInfo.getEndLastEvent().plus(Duration.ofMinutes(1));
-					LOG.info(new StringBuilder().append("Recommanding new search from : ").append(recommendedNewDate)
-							.append(" (cause : ").append(userId).append(" has whole period blocked by ")
-							.append(allConcurentEvent.size()).append(" event(s), last blocking event date ")
-							.append(creatEventAvaibilityInfo.getEndLastEvent()).toString());
+				} else {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug(new StringBuilder(100).append(allConcurentEvent.size())
+								.append(" event(s) found in calendars from : ").append(startDate).append(" to ")
+								.append(endDate).append(" for user : ").append(userId).toString());
+					}
+					final List<DayDuration> freeTimes = createEventAvaibilityInfo.getFreeTimes();
+
+					if (!freeTimes.isEmpty()) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(new StringBuilder(100).append("FreeTime found in calendars from : ")
+									.append(startDate).append(" to ").append(endDate).append(" with periods : ")
+									.append(freeTimes).toString());
+						}
+						recommendedNewDate = SlotHelper.get().getNextValidDateTime(freeTimes, startDate, endDate);
+						if (null != recommendedNewDate) {
+							LOG.info(new StringBuilder().append("Recommanding new search from : ")
+									.append(recommendedNewDate).append(" (cause : ").append(userId)
+									.append(" has blocking event(s) but freeTime)").toString());
+						}
+					}
+					if (null == recommendedNewDate) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(new StringBuilder(100).append("No avilable periods found in freeTime from : ")
+									.append(startDate).append(" to ").append(endDate).append(" for user : ")
+									.append(userId).toString());
+						}
+						// TODO Djer13 is required to add 1 minute ?
+						recommendedNewDate = createEventAvaibilityInfo.getEndLastEvent().plus(Duration.ofMinutes(1));
+						LOG.info(
+								new StringBuilder().append("Recommanding new search from : ").append(recommendedNewDate)
+										.append(" (cause : ").append(userId).append(" has whole period blocked by ")
+										.append(allConcurentEvent.size()).append(" event(s), last blocking event date ")
+										.append(createEventAvaibilityInfo.getEndLastEvent()).toString());
+					}
 				}
 			}
 		}
@@ -209,7 +222,7 @@ public class CalendarService {
 		return addCalendarApi;
 	}
 
-	private CalendarConfigurationFormData getUserCreateEventCalendar(final Long userId) {
+	public CalendarConfigurationFormData getUserCreateEventCalendar(final Long userId) {
 		final ICalendarConfigurationService calendarConfigurationService = BEANS
 				.get(ICalendarConfigurationService.class);
 
