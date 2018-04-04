@@ -31,6 +31,7 @@ import org.zeroclick.configuration.onboarding.OnBoardingUserForm;
 import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.meeting.client.api.event.EventHelper;
+import org.zeroclick.meeting.client.calendar.CalendarsConfigurationForm;
 import org.zeroclick.meeting.service.CalendarAviability;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
@@ -160,6 +161,21 @@ public abstract class AbstractApiHelper<E, F> implements ApiHelper {
 		}
 	}
 
+	@Override
+	public void askToChooseCalendarToAddEvent(final Long userId) {
+		final int userDecision = MessageBoxes.createYesNo()
+				.withHeader(TEXTS.get("zc.meeting.calendar.askToAddCalendarToStoreEvent.title"))
+				.withBody(TEXTS.get("zc.meeting.calendar.askToAddCalendarToStoreEvent.message.required"))
+				// .withYesButtonText(TEXTS.get("zc.subscription.notAllowed.yesButton"))
+				.withIconId(Icons.ExclamationMark).withSeverity(IStatus.WARNING).show();
+
+		if (userDecision == IMessageBox.YES_OPTION) {
+			final CalendarsConfigurationForm configForm = new CalendarsConfigurationForm();
+			configForm.startModify();
+		}
+	}
+
+	@Override
 	public void displayAddCalendarForm(final Long userId) {
 		final OnBoardingUserForm form = new OnBoardingUserForm();
 		form.getUserIdField().setValue(userId);

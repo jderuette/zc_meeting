@@ -38,6 +38,8 @@ public interface ApiHelper {
 
 	public void askToAddApi(final Long userId);
 
+	public void askToChooseCalendarToAddEvent(Long userId);
+
 	public void displayAddCalendarForm(final Long userId);
 
 	public String getAuthorisationLinksAsLi();

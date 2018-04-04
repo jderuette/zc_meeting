@@ -91,7 +91,7 @@ public class EventAdminTablePage extends AbstractEventsTablePage<Table> {
 				this.setVisible(
 						acs.getPermissionLevel(new UpdateEventPermission(rowId)) >= UpdateEventPermission.LEVEL_ALL);
 
-				this.setEnabled(EventAdminTablePage.this.isUserCalendarConfigured());
+				this.setEnabled(EventAdminTablePage.this.isUserAddCalendarConfigured());
 			}
 
 			@Override

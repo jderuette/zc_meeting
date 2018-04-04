@@ -58,7 +58,11 @@ import com.google.api.services.calendar.model.Event;
 public class CalendarService {
 	private static final Logger LOG = LoggerFactory.getLogger(CalendarService.class);
 
-	@SuppressWarnings("PMD.EmptyCatchBlock")
+	public Boolean isCalendarConfigured() {
+		final AccessControlService acs = BEANS.get(AccessControlService.class);
+		return this.isCalendarConfigured(acs.getZeroClickUserIdOfCurrentSubject());
+	}
+
 	public Boolean isCalendarConfigured(final Long userId) {
 		final ICalendarConfigurationService calendarConfigurationService = BEANS
 				.get(ICalendarConfigurationService.class);
@@ -69,9 +73,19 @@ public class CalendarService {
 		return calendarsConfig.getCalendarConfigTable().getRowCount() > 0;
 	}
 
-	public Boolean isCalendarConfigured() {
+	public Boolean isAddCalendarConfigured() {
 		final AccessControlService acs = BEANS.get(AccessControlService.class);
-		return this.isCalendarConfigured(acs.getZeroClickUserIdOfCurrentSubject());
+		return this.isAddCalendarConfigured(acs.getZeroClickUserIdOfCurrentSubject());
+	}
+
+	public Boolean isAddCalendarConfigured(final Long userId) {
+		Boolean addCalendarConfigured = Boolean.FALSE;
+		final CalendarConfigurationFormData configuredAddCalendar = this.getUserCreateEventCalendar(userId);
+
+		if (null != configuredAddCalendar && null != configuredAddCalendar.getCalendarConfigurationId()) {
+			addCalendarConfigured = Boolean.TRUE;
+		}
+		return addCalendarConfigured;
 	}
 
 	public ZonedDateTime canCreateEvent(final ZonedDateTime startDate, final ZonedDateTime endDate, final Long userId,

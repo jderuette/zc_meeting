@@ -654,12 +654,16 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			@Override
 			protected void execAction() {
+				final ApiHelper apiHelper = ApiHelperFactory.getCommonApiHelper();
 				if (!EventTablePage.this.isUserCalendarConfigured()) {
-					final ApiHelper apiHelper = ApiHelperFactory.getCommonApiHelper();
 					apiHelper.askToAddApi(Table.this.getCurrentUserId());
+				} else if (!EventTablePage.this.isUserAddCalendarConfigured()) {
+					// External calendar added, but no calendar chosen to add
+					// events
+					apiHelper.askToChooseCalendarToAddEvent(Table.this.getCurrentUserId());
 				}
 
-				if (!EventTablePage.this.isUserCalendarConfigured()) {
+				if (!EventTablePage.this.isUserAddCalendarConfigured()) {
 					// User won't configure required Data
 					return; // earlyBreak
 				}

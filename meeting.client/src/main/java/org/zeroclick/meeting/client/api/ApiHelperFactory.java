@@ -22,6 +22,8 @@ import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
 import org.zeroclick.configuration.shared.provider.ProviderCodeType;
 import org.zeroclick.meeting.client.api.google.GoogleApiHelper;
 import org.zeroclick.meeting.client.api.microsoft.MicrosoftApiHelper;
+import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationFormData.CalendarConfigTable.CalendarConfigTableRowData;
+import org.zeroclick.meeting.shared.calendar.IApiService;
 
 /**
  * @author djer
@@ -56,9 +58,21 @@ public class ApiHelperFactory {
 		return apiHelper;
 	}
 
+	public static ApiHelper get(final CalendarConfigTableRowData calendar) {
+		ApiHelper apiHelper = null;
+
+		if (null != calendar && null != calendar.getOAuthCredentialId()) {
+			final IApiService apiService = BEANS.get(IApiService.class);
+			final ApiTableRowData apiData = apiService.getApi(calendar.getOAuthCredentialId());
+			apiHelper = get(apiData);
+		}
+
+		return apiHelper;
+	}
+
 	/**
 	 * Useful to get access to Abstract Base API Helper
-	 * 
+	 *
 	 * @return
 	 */
 	public static ApiHelper getCommonApiHelper() {
