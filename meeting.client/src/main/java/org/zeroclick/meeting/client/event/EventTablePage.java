@@ -41,6 +41,7 @@ import org.zeroclick.configuration.shared.subscription.SubscriptionHelper.Subscr
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.meeting.client.NotificationHelper;
 import org.zeroclick.meeting.client.api.ApiHelper;
+import org.zeroclick.meeting.client.api.ApiHelperFactory;
 import org.zeroclick.meeting.client.common.SlotHelper;
 import org.zeroclick.meeting.client.event.EventTablePage.Table;
 import org.zeroclick.meeting.service.CalendarService;
@@ -654,7 +655,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			@Override
 			protected void execAction() {
 				if (!EventTablePage.this.isUserCalendarConfigured()) {
-					final ApiHelper apiHelper = BEANS.get(ApiHelper.class);
+					final ApiHelper apiHelper = ApiHelperFactory.getCommonApiHelper();
 					apiHelper.askToAddApi(Table.this.getCurrentUserId());
 				}
 

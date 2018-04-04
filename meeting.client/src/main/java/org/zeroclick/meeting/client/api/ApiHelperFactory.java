@@ -56,4 +56,13 @@ public class ApiHelperFactory {
 		return apiHelper;
 	}
 
+	/**
+	 * Useful to get access to Abstract Base API Helper
+	 * 
+	 * @return
+	 */
+	public static ApiHelper getCommonApiHelper() {
+		return BEANS.get(GoogleApiHelper.class);
+	}
+
 }
