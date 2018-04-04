@@ -584,10 +584,16 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 			final Long apiCredentialId) throws IOException {
 		LOG.debug("Creating model data for (Microsoft) calendar data : " + cal);
 		final CalendarConfigurationTableRowData calendarConfigData = new CalendarConfigurationTableRowData();
+		Boolean isMain = Boolean.FALSE;
+
+		// TODO Djer13 a way to know if a calendar is the main ?
+		if ("Calendar".equals(cal.getName())) {
+			isMain = Boolean.TRUE;
+		}
+
 		calendarConfigData.setExternalId(cal.getId());
 		calendarConfigData.setName(cal.getName());
-		// TODO Djer13 a way to know if a calendar is the main ?
-		calendarConfigData.setMain(false);
+		calendarConfigData.setMain(isMain);
 		calendarConfigData.setReadOnly(!cal.getCanEdit());
 		calendarConfigData.setUserId(userId);
 		calendarConfigData.setOAuthCredentialId(apiCredentialId);
