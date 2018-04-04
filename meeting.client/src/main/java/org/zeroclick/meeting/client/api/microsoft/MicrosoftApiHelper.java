@@ -28,6 +28,7 @@ import java.util.UUID;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.util.UriBuilder;
+import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.comon.text.StringHelper;
@@ -75,6 +76,8 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 	public static final String AUTHORITY = "https://login.microsoftonline.com";
 	private static final String AUTHORIZE_URL = AUTHORITY + "/common/oauth2/v2.0/authorize";
 
+	private static final String ADD_MICROSOFT_CALENDAR_URL = "/api/microsot/addCalendar";
+
 	private static String[] scopes = { "openid", "offline_access", "profile", "User.Read", "Calendars.ReadWrite" };
 
 	private String appId;
@@ -103,6 +106,32 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 			builder.append(scope).append(' ');
 		}
 		return builder.toString().trim();
+	}
+
+	@Override
+	public String getAuthorisationLink() {
+		final StringBuilder builder = new StringBuilder(64);
+		builder.append("<a>").append(this.buildAutorisationUrl(TEXTS.get("zc.api.provider.microsoft"))).append("</a>");
+
+		return builder.toString();
+	}
+
+	@Override
+	public String getAuthorisationLinksAsLi() {
+		final StringBuilder builder = new StringBuilder(64);
+		builder.append("<li>").append(this.buildAutorisationUrl(TEXTS.get("zc.api.provider.microsoft.outlook")))
+				.append("</li>").append("<li>")
+				.append(this.buildAutorisationUrl(TEXTS.get("zc.api.provider.microsoft.exchange"))).append("</li>");
+
+		return builder.toString();
+	}
+
+	private String buildAutorisationUrl(final String label) {
+		final StringBuilder builder = new StringBuilder(64);
+		builder.append("<a href='").append(ADD_MICROSOFT_CALENDAR_URL).append("' target='_blank'>").append(label)
+				.append("</a>");
+
+		return builder.toString();
 	}
 
 	private void loadConfig() {

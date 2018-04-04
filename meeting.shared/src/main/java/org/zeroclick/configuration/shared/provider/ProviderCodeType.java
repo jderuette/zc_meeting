@@ -55,7 +55,7 @@ public class ProviderCodeType extends AbstractCodeType<Long, Long> {
 
 		@Override
 		protected String getConfiguredText() {
-			return TEXTS.get("zc.api.provider.microsfot");
+			return TEXTS.get("zc.api.provider.microsoft");
 		}
 
 		@Override

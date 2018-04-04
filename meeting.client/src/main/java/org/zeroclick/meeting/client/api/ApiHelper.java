@@ -38,6 +38,10 @@ public interface ApiHelper {
 
 	public void askToAddApi(final Long userId);
 
+	public void displayAddCalendarForm(final Long userId);
+
+	public String getAuthorisationLinksAsLi();
+
 	public String getAccountEmail(final Long apiCredentialId);
 
 	public String getAccountsEmail(final CalendarConfigTableRowData[] calendarsConfigurationRows);

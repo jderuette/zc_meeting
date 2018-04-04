@@ -13,7 +13,6 @@ import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
 import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenuSeparator;
 import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.desktop.AbstractDesktop;
-import org.eclipse.scout.rt.client.ui.desktop.OpenUriAction;
 import org.eclipse.scout.rt.client.ui.desktop.notification.DesktopNotification;
 import org.eclipse.scout.rt.client.ui.desktop.outline.AbstractOutlineViewButton;
 import org.eclipse.scout.rt.client.ui.desktop.outline.IOutline;
@@ -59,6 +58,8 @@ import org.zeroclick.configuration.shared.user.ReadUserPermission;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.configuration.shared.user.UserModifiedNotification;
+import org.zeroclick.meeting.client.api.ApiHelper;
+import org.zeroclick.meeting.client.api.ApiHelperFactory;
 import org.zeroclick.meeting.client.api.google.GoogleApiHelper;
 import org.zeroclick.meeting.client.calendar.CalendarsConfigurationForm;
 import org.zeroclick.meeting.client.meeting.MeetingOutline;
@@ -368,7 +369,7 @@ public class Desktop extends AbstractDesktop {
 								.append(this.getClass().getName()).append(") : ").append(eventForm.getUserId())
 								.toString().toString());
 					}
-					Desktop.this.getMenu(AddGoogleCalendarMenu.class).setVisible(Boolean.TRUE);
+					Desktop.this.getMenu(AddCalendarMenu.class).setVisible(Boolean.TRUE);
 
 				} catch (final RuntimeException e) {
 					LOG.error("Could not handle new api. (" + this.getClass().getName() + ")", e);
@@ -412,10 +413,10 @@ public class Desktop extends AbstractDesktop {
 	}
 
 	@Order(2000)
-	public class AddGoogleCalendarMenu extends AbstractMenu {
+	public class AddCalendarMenu extends AbstractMenu {
 		@Override
 		protected String getConfiguredText() {
-			return TEXTS.get("zc.meeting.addGoogleCalendar");
+			return TEXTS.get("zc.meeting.addCalendar.short");
 		}
 
 		@Override
@@ -435,7 +436,12 @@ public class Desktop extends AbstractDesktop {
 
 		@Override
 		protected void execAction() {
-			ClientSession.get().getDesktop().openUri("/addGoogleCalendar", OpenUriAction.NEW_WINDOW);
+			final ApiHelper apiHelper = ApiHelperFactory.getCommonApiHelper();
+			final Long currentUserId = ((AccessControlService) BEANS.get(IAccessControlService.class))
+					.getZeroClickUserIdOfCurrentSubject();
+			apiHelper.displayAddCalendarForm(currentUserId);
+			// ClientSession.get().getDesktop().openUri("/addGoogleCalendar",
+			// OpenUriAction.NEW_WINDOW);
 		}
 
 		@Override
@@ -443,41 +449,6 @@ public class Desktop extends AbstractDesktop {
 			super.execInitAction();
 			this.setVisiblePermission(new CreateApiPermission());
 			// this.setVisible(!BEANS.get(GoogleApiHelper.class).isCalendarConfigured());
-		}
-	}
-
-	@Order(3000)
-	public class AddMicrosoftCalendarMenu extends AbstractMenu {
-		@Override
-		protected String getConfiguredText() {
-			return TEXTS.get("zc.meeting.addMicrosftCalendar");
-		}
-
-		@Override
-		protected String getConfiguredTooltipText() {
-			return TEXTS.get("zc.meeting.addCalendar.tooltips");
-		}
-
-		@Override
-		protected String getConfiguredIconId() {
-			return Icons.Calendar;
-		}
-
-		@Override
-		protected Set<? extends IMenuType> getConfiguredMenuTypes() {
-			return CollectionUtility.hashSet();
-		}
-
-		@Override
-		protected void execInitAction() {
-			super.execInitAction();
-			this.setVisiblePermission(new CreateApiPermission());
-			// this.setVisible(!BEANS.get(GoogleApiHelper.class).isCalendarConfigured());
-		}
-
-		@Override
-		protected void execAction() {
-			ClientSession.get().getDesktop().openUri("/api/microsot/addCalendar", OpenUriAction.NEW_WINDOW);
 		}
 	}
 

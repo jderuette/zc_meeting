@@ -66,6 +66,8 @@ public abstract class AbstractApiHelper<E, F> implements ApiHelper {
 		return currentUser.equals(userId);
 	}
 
+	public abstract String getAuthorisationLink();
+
 	@SuppressWarnings("PMD.EmptyCatchBlock")
 	public Boolean isCalendarConfigured(final Long userId) {
 		final ICalendarConfigurationService calendarConfigurationService = BEANS
@@ -154,12 +156,16 @@ public abstract class AbstractApiHelper<E, F> implements ApiHelper {
 				.withIconId(Icons.ExclamationMark).withSeverity(IStatus.WARNING).show();
 
 		if (userDecision == IMessageBox.YES_OPTION) {
-			final OnBoardingUserForm form = new OnBoardingUserForm();
-			form.getUserIdField().setValue(userId);
-			form.setEnabledPermission(new UpdateUserPermission(userId));
-			form.startModify();
-			form.waitFor();
+			this.displayAddCalendarForm(userId);
 		}
+	}
+
+	public void displayAddCalendarForm(final Long userId) {
+		final OnBoardingUserForm form = new OnBoardingUserForm();
+		form.getUserIdField().setValue(userId);
+		form.setEnabledPermission(new UpdateUserPermission(userId));
+		form.startModify();
+		form.waitFor();
 	}
 
 }

@@ -123,6 +123,10 @@ public abstract class AbstractApiTable extends AbstractTable {
 			}
 		}
 
+		if (this.isApiAdmin()) {
+			this.getTenantIdColumn().setVisible(true);
+		}
+
 		if (this.getConfiguredAutoLoad()) {
 			this.loadData();
 		}
@@ -406,6 +410,11 @@ public abstract class AbstractApiTable extends AbstractTable {
 		@Override
 		protected String getConfiguredHeaderText() {
 			return TEXTS.get("zc.api.tenantId");
+		}
+
+		@Override
+		protected boolean getConfiguredVisible() {
+			return false;
 		}
 
 		@Override

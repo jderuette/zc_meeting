@@ -113,10 +113,19 @@ public class GoogleApiHelper extends AbstractApiHelper<Credential, Calendar> {
 		return this.eventHelper;
 	}
 
-	public String getAddGoogleLink() {
+	@Override
+	public String getAuthorisationLink() {
 		final StringBuilder builder = new StringBuilder(64);
 		builder.append("<a href='").append(ADD_GOOGLE_CALENDAR_URL).append("' target='_blank'>")
-				.append(TEXTS.get("zc.meeting.addGoogleCalendar")).append("</a>");
+				.append(TEXTS.get("zc.api.provider.google")).append("</a>");
+
+		return builder.toString();
+	}
+
+	@Override
+	public String getAuthorisationLinksAsLi() {
+		final StringBuilder builder = new StringBuilder(64);
+		builder.append("<li>").append(this.getAuthorisationLink()).append("</li>");
 
 		return builder.toString();
 	}

@@ -29,6 +29,7 @@ import org.zeroclick.configuration.shared.onboarding.OnBoardingUserFormData;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.meeting.client.api.google.GoogleApiHelper;
+import org.zeroclick.meeting.client.api.microsoft.MicrosoftApiHelper;
 import org.zeroclick.meeting.service.CalendarService;
 
 @FormData(value = OnBoardingUserFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
@@ -183,10 +184,19 @@ public class OnBoardingUserForm extends AbstractForm {
 			}
 
 			@Override
+			protected int getConfiguredGridH() {
+				return 3;
+			}
+
+			@Override
 			protected void execInitField() {
 				super.execInitField();
 				this.setHtmlEnabled(Boolean.TRUE);
-				this.setValue(BEANS.get(GoogleApiHelper.class).getAddGoogleLink());
+				final StringBuilder sbValue = new StringBuilder(100);
+				sbValue.append("<ul>").append(BEANS.get(GoogleApiHelper.class).getAuthorisationLinksAsLi())
+						.append(BEANS.get(MicrosoftApiHelper.class).getAuthorisationLinksAsLi()).append("</ul>");
+
+				this.setValue(sbValue.toString());
 			}
 		}
 
