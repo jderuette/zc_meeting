@@ -26,6 +26,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.eclipse.scout.rt.platform.BEANS;
+import org.eclipse.scout.rt.platform.config.AbstractStringConfigProperty;
+import org.eclipse.scout.rt.platform.config.CONFIG;
 import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.util.UriBuilder;
 import org.eclipse.scout.rt.shared.TEXTS;
@@ -137,9 +139,9 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 	}
 
 	private void loadConfig() {
-		this.appId = "fedc1131-18df-41ab-a693-c90c430167c3";
-		this.appPassword = "aSYXS918?}^vlabsoDWP41?";
-		this.redirectUrl = "http://localhost:8082/api/microsoft/oauth2callback";
+		this.appId = CONFIG.getPropertyValue(MicrosoftClientIdProperty.class);
+		this.appPassword = CONFIG.getPropertyValue(MicrosoftClientSecretProperty.class);
+		this.redirectUrl = CONFIG.getPropertyValue(MicrosoftCallbackUrlProperty.class);
 	}
 
 	@Override
@@ -609,5 +611,50 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 
 	public String aslog(final Event event) {
 		return this.getEventHelper().asLog(event);
+	}
+
+	/**
+	 * Client id. This is recommended to use a credential File.
+	 */
+	public static class MicrosoftClientIdProperty extends AbstractStringConfigProperty {
+
+		@Override
+		protected String getDefaultValue() {
+			return "none";
+		}
+
+		@Override
+		public String getKey() {
+			return "contacts.api.microsoft.client.id";
+		}
+	}
+
+	/**
+	 * Client secret. This is recommended to use a credential File.
+	 */
+	public static class MicrosoftClientSecretProperty extends AbstractStringConfigProperty {
+
+		@Override
+		protected String getDefaultValue() {
+			return "noneSecret";
+		}
+
+		@Override
+		public String getKey() {
+			return "contacts.api.microsoft.client.secret";
+		}
+	}
+
+	public static class MicrosoftCallbackUrlProperty extends AbstractStringConfigProperty {
+
+		@Override
+		protected String getDefaultValue() {
+			return "/api/microsoft/oauth2callback";
+		}
+
+		@Override
+		public String getKey() {
+			return "contacts.api.microsoft.callback.url";
+		}
 	}
 }
