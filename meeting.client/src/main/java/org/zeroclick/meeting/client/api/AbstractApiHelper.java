@@ -27,10 +27,9 @@ import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.zeroclick.comon.user.AppUserHelper;
-import org.zeroclick.configuration.onboarding.OnBoardingUserForm;
 import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
-import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.meeting.client.api.event.EventHelper;
+import org.zeroclick.meeting.client.calendar.AddCalendarForm;
 import org.zeroclick.meeting.client.calendar.CalendarsConfigurationForm;
 import org.zeroclick.meeting.service.CalendarAviability;
 import org.zeroclick.meeting.shared.Icons;
@@ -172,16 +171,15 @@ public abstract class AbstractApiHelper<E, F> implements ApiHelper {
 		if (userDecision == IMessageBox.YES_OPTION) {
 			final CalendarsConfigurationForm configForm = new CalendarsConfigurationForm();
 			configForm.startModify();
+			configForm.waitFor();
 		}
 	}
 
 	@Override
 	public void displayAddCalendarForm(final Long userId) {
-		final OnBoardingUserForm form = new OnBoardingUserForm();
-		form.getUserIdField().setValue(userId);
-		form.setEnabledPermission(new UpdateUserPermission(userId));
-		form.startModify();
-		form.waitFor();
+		final AddCalendarForm configForm = new AddCalendarForm();
+		configForm.startModify();
+		configForm.waitFor();
 	}
 
 }

@@ -9,7 +9,6 @@ import org.eclipse.scout.rt.client.ui.form.AbstractFormHandler;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractButton;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractOkButton;
 import org.eclipse.scout.rt.client.ui.form.fields.groupbox.AbstractGroupBox;
-import org.eclipse.scout.rt.client.ui.form.fields.htmlfield.AbstractHtmlField;
 import org.eclipse.scout.rt.client.ui.form.fields.longfield.AbstractLongField;
 import org.eclipse.scout.rt.client.ui.form.fields.tablefield.AbstractTableField;
 import org.eclipse.scout.rt.platform.BEANS;
@@ -28,8 +27,6 @@ import org.zeroclick.configuration.onboarding.OnBoardingUserForm.MainBox.UserIdF
 import org.zeroclick.configuration.shared.onboarding.OnBoardingUserFormData;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
-import org.zeroclick.meeting.client.api.google.GoogleApiHelper;
-import org.zeroclick.meeting.client.api.microsoft.MicrosoftApiHelper;
 import org.zeroclick.meeting.service.CalendarService;
 
 @FormData(value = OnBoardingUserFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
@@ -80,10 +77,6 @@ public class OnBoardingUserForm extends AbstractForm {
 	public ApisTableField getApisTableField() {
 		return this.getFieldByClass(ApisTableField.class);
 	}
-
-	// public SlotConfigField getSlotConfigField() {
-	// return this.getFieldByClass(SlotConfigField.class);
-	// }
 
 	public EditSlotConfigButton getEditSlotConfigButton() {
 		return this.getFieldByClass(EditSlotConfigButton.class);
@@ -172,32 +165,7 @@ public class OnBoardingUserForm extends AbstractForm {
 		}
 
 		@Order(5000)
-		public class AddCalendarField extends AbstractHtmlField {
-			@Override
-			protected String getConfiguredLabel() {
-				return TEXTS.get("zc.meeting.addCalendar");
-			}
-
-			@Override
-			protected String getConfiguredTooltipText() {
-				return TEXTS.get("zc.meeting.addCalendar.tooltips");
-			}
-
-			@Override
-			protected int getConfiguredGridH() {
-				return 3;
-			}
-
-			@Override
-			protected void execInitField() {
-				super.execInitField();
-				this.setHtmlEnabled(Boolean.TRUE);
-				final StringBuilder sbValue = new StringBuilder(100);
-				sbValue.append("<ul>").append(BEANS.get(GoogleApiHelper.class).getAuthorisationLinksAsLi())
-						.append(BEANS.get(MicrosoftApiHelper.class).getAuthorisationLinksAsLi()).append("</ul>");
-
-				this.setValue(sbValue.toString());
-			}
+		public class AddCalendarField extends org.zeroclick.meeting.client.calendar.AddCalendarField {
 		}
 
 		@Order(6000)
@@ -216,7 +184,6 @@ public class OnBoardingUserForm extends AbstractForm {
 			public class Table extends AbstractApiTable {
 
 			}
-
 		}
 
 		@Order(100000)

@@ -440,8 +440,6 @@ public class Desktop extends AbstractDesktop {
 			final Long currentUserId = ((AccessControlService) BEANS.get(IAccessControlService.class))
 					.getZeroClickUserIdOfCurrentSubject();
 			apiHelper.displayAddCalendarForm(currentUserId);
-			// ClientSession.get().getDesktop().openUri("/addGoogleCalendar",
-			// OpenUriAction.NEW_WINDOW);
 		}
 
 		@Override
