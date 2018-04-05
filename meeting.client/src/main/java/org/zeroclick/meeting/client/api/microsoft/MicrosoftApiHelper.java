@@ -121,7 +121,9 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 		final StringBuilder builder = new StringBuilder(64);
 		builder.append("<li>").append(this.buildAutorisationUrl(TEXTS.get("zc.api.provider.microsoft.outlook")))
 				.append("</li>").append("<li>")
-				.append(this.buildAutorisationUrl(TEXTS.get("zc.api.provider.microsoft.exchange"))).append("</li>");
+				.append(this.buildAutorisationUrl(TEXTS.get("zc.api.provider.microsoft.exchange"))).append("</li>")
+				.append("<li>").append(this.buildAutorisationUrl(TEXTS.get("zc.api.provider.microsoft.office365")))
+				.append("</li>");
 
 		return builder.toString();
 	}
@@ -389,12 +391,14 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 			final PagedResult<org.zeroclick.meeting.client.api.microsoft.data.Calendar> calendarsList = calendarApiService
 					.getCalendar().getCalendars().execute().body();
 
-			for (final org.zeroclick.meeting.client.api.microsoft.data.Calendar calendarItem : calendarsList
-					.getValue()) {
-				@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
-				final StringBuilder calendarId = new StringBuilder();
-				calendarId.append(userId).append('_').append(calendarItem.getId()).append('_').append(apiId);
-				calendars.put(calendarId.toString(), this.toCalendarConfig(calendarItem, userId, apiId));
+			if (null != calendarsList && null != calendarsList.getValue()) {
+				for (final org.zeroclick.meeting.client.api.microsoft.data.Calendar calendarItem : calendarsList
+						.getValue()) {
+					@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
+					final StringBuilder calendarId = new StringBuilder();
+					calendarId.append(userId).append('_').append(calendarItem.getId()).append('_').append(apiId);
+					calendars.put(calendarId.toString(), this.toCalendarConfig(calendarItem, userId, apiId));
+				}
 			}
 
 		} catch (final IOException e) {
