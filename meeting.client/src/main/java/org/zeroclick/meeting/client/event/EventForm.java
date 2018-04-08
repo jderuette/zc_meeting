@@ -1231,8 +1231,8 @@ public class EventForm extends AbstractForm {
 					}
 
 					if (null == eventGuest) {
-						final UserForm userForm = new UserForm();
-						userForm.autoFillInviteUser(eventGuestEmail, eventHeldEmail, meetingSubject);
+						UserForm userForm = new UserForm();
+						userForm = userForm.autoFillInviteUser(eventGuestEmail, eventHeldEmail, meetingSubject);
 						// eventGuest = form.getUserIdField().getValue();
 						formData.getGuestId().setValue(userForm.getUserIdField().getValue());
 					} else {

@@ -11,7 +11,7 @@
 	</parent>
 
 	<properties>
-		<mailjet-version>4.0.5</mailjet-version>
+		<mailjet-version>4.1.1</mailjet-version>
 		<!-- TODO Djer13 allow check when I found a solution for java 8 Date API -->
 		<master_sanityCheck_skip>true</master_sanityCheck_skip>
 	</properties>
