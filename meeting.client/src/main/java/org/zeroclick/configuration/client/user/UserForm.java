@@ -818,6 +818,7 @@ public class UserForm extends AbstractForm {
 		// TODO Djer13 avoid DIRECT dependence with
 		// ScoutServiceCredentialVerifier. Use formBase.getCredentialVeirifer()
 		// ?
+		LOG.info("Hashing generated password");
 		final ScoutServiceCredentialVerifier service = BEANS.get(ScoutServiceCredentialVerifier.class);
 		return service.generatePassword(plainPassword);
 	}
@@ -879,7 +880,8 @@ public class UserForm extends AbstractForm {
 		return this;
 	}
 
-	private UserForm createUser(final String email, final Boolean isAutoFileld) {
+	private void createUser(final String email, final Boolean isAutoFileld) {
+		LOG.info("Creating a default User with email : " + email);
 		final Long defaultRole = 2l;
 		final Long subscriptionFreeId = 3l;
 
@@ -901,13 +903,10 @@ public class UserForm extends AbstractForm {
 		this.getSubscriptionBox().setValue(subscriptionFreeId);
 
 		this.setAutofilled(isAutoFileld);
-
-		super.doSave();
-
-		return this;
 	}
 
 	private void generateAndAddFormPassword() {
+		LOG.info("Generating a password sotored in current UserForm (No formData provided)");
 		this.generateAndAddFormPassword(null);
 	}
 
@@ -923,14 +922,16 @@ public class UserForm extends AbstractForm {
 			}
 		}
 
-		if (null == formData) {
-			// store to the curent form, should be exported as formData latter
-			this.getPasswordField().setValue(plainRandomPassword);
-			this.getConfirmPasswordField().setValue(plainRandomPassword);
-		} else {
+		if (null != formData) {
+			// Double saved Data in provided FormData and current UserForm
 			formData.getPassword().setValue(plainRandomPassword);
 			formData.getConfirmPassword().setValue(plainRandomPassword);
+			LOG.info("Generated password sotored in provided formData");
 		}
+		// store to the current form, should be exported as formData latter
+		this.getPasswordField().setValue(plainRandomPassword);
+		this.getConfirmPasswordField().setValue(plainRandomPassword);
+		LOG.info("Generated password sotored in current UserForm");
 	}
 
 	private String generatePasword() {
@@ -942,7 +943,8 @@ public class UserForm extends AbstractForm {
 		plainRandomPassword = plainRandomPassword.substring(0, 8);
 
 		// TODO Djer13 remove this when possible
-		LOG.info("Generated auto-createUser (after substring) partial : " + plainRandomPassword.substring(3, 6));
+		LOG.info("Generated auto-createUser (after invalid character replacement) partial : "
+				+ plainRandomPassword.substring(3, 6));
 
 		return plainRandomPassword;
 	}
