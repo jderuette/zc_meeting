@@ -30,6 +30,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.zeroclick.meeting.client.common.DayDuration;
+import org.zeroclick.meeting.service.CalendarAviability;
 
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.model.Event;
@@ -794,6 +795,58 @@ public class GoogleEventHelperTest {
 				secondFreeTime.getStart());
 		final OffsetTime expectedSecondEndFreeTime = OffsetTime.of(8, 25, 0, 0, startDate.getOffset());
 		Assert.assertEquals("Second FreeTime end is not valid", expectedSecondEndFreeTime, secondFreeTime.getEnd());
+	}
+
+	@Test
+	public void testGetCalendarAviability_noBlockingEvent() {
+		final ZonedDateTime startDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 00, 00),
+				ZoneId.of(DEFAULT_TIME_ZONE));
+		final ZonedDateTime endDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 30, 00),
+				ZoneId.of(DEFAULT_TIME_ZONE));
+
+		final ArrayList<Event> events = new ArrayList<>();
+
+		final ZoneId userZoneId = ZoneId.of(DEFAULT_TIME_ZONE);
+
+		final CalendarAviability calendarAviability = this.eventHelper.getCalendarAviability(startDate, endDate, events,
+				userZoneId);
+
+		Assert.assertNull("One freeTime should be found", calendarAviability.getFreeTimes());
+
+		Assert.assertNull("Last event should be null when no event blocking search",
+				calendarAviability.getEndLastEvent());
+	}
+
+	@Test
+	public void testGetCalendarAviability_oneEventBloking() {
+		final ZonedDateTime startDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 00, 00),
+				ZoneId.of(DEFAULT_TIME_ZONE));
+		final ZonedDateTime endDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 30, 00),
+				ZoneId.of(DEFAULT_TIME_ZONE));
+
+		final ArrayList<Event> events = new ArrayList<>();
+		events.add(this.createBasicEvent("2018-03-26T07:30:00+02:00", "2018-03-26T08:10:00+02:00"));
+
+		final ZoneId userZoneId = ZoneId.of(DEFAULT_TIME_ZONE);
+
+		final CalendarAviability calendarAviability = this.eventHelper.getCalendarAviability(startDate, endDate, events,
+				userZoneId);
+
+		Assert.assertTrue("One freeTime should be found", calendarAviability.getFreeTimes().size() == 1);
+		final DayDuration firstFreeTime = calendarAviability.getFreeTimes().get(0);
+
+		final OffsetTime expectedStartFreeTime = OffsetTime.of(8, 10, 0, 0, startDate.getOffset());
+		Assert.assertEquals("First FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
+		final OffsetTime expectedEndFreeTime = OffsetTime.of(8, 30, 0, 0, startDate.getOffset());
+		Assert.assertEquals("First FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
+
+		Assert.assertNotNull("Last event end time not provided", calendarAviability.getEndLastEvent());
+		final ZonedDateTime expectedLastEventEnd = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 10, 00),
+				ZoneId.of(DEFAULT_TIME_ZONE));
+		// time zone representation change (+02:00 VS Europe/Paris) but instants
+		// must be the same
+		Assert.assertEquals("Invalid end of last Event", expectedLastEventEnd.getNano(),
+				calendarAviability.getEndLastEvent().getNano());
 	}
 
 	private Event createBasicEvent(final String startRfc3339, final String endRfc3339) {

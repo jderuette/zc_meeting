@@ -158,11 +158,20 @@ public abstract class AbstractEventHelper<T, D> implements EventHelper {
 		return lastEvent;
 	}
 
+	/**
+	 * Search for freeTime in period startDate and endDate. Also retrieve last
+	 * event ends
+	 */
 	@Override
 	public CalendarAviability getCalendarAviability(final ZonedDateTime startDate, final ZonedDateTime endDate,
 			final Long userId, final AbstractCalendarConfigurationTableRowData calendar, final ZoneId userZoneId) {
-		final List<T> allConcurentEvent = new ArrayList<>();
-		allConcurentEvent.addAll(this.getEvents(startDate, endDate, userId, calendar));
+		final List<T> allConcurentEvent = this.getEvents(startDate, endDate, userId, calendar);
+
+		return this.getCalendarAviability(startDate, endDate, allConcurentEvent, userZoneId);
+	}
+
+	public CalendarAviability getCalendarAviability(final ZonedDateTime startDate, final ZonedDateTime endDate,
+			final List<T> allConcurentEvent, final ZoneId userZoneId) {
 
 		ZonedDateTime endLastEvent = null;
 		List<DayDuration> freeTimes = null;
