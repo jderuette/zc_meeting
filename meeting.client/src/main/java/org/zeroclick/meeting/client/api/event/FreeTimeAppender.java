@@ -75,8 +75,6 @@ public class FreeTimeAppender {
 
 		if (null != newFreeTime && null != newFreeTime.getStart() && null != newFreeTime.getEnd()) {
 			if (!this.freeTimes.contains(newFreeTime)) {
-				// TODO Djer13 check if other FreeTime period already contain
-				// this "new" FreeTime
 				this.freeTimes.add(newFreeTime);
 				isAdded = Boolean.TRUE;
 			}
