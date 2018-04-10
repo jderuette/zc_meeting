@@ -125,7 +125,7 @@ public class CalendarService {
 				// provided periods is OK
 			} else {
 				if (null != createEventAvaibilityInfo.getEndLastEvent()
-						&& !createEventAvaibilityInfo.getEndLastEvent().equals(startDate)) {
+						&& createEventAvaibilityInfo.getEndLastEvent().equals(startDate)) {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug(new StringBuilder(100)
 								.append("Last event end at the same start, slot is aviallable from calendars from : ")

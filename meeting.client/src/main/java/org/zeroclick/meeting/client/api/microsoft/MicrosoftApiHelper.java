@@ -78,7 +78,7 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 	public static final String AUTHORITY = "https://login.microsoftonline.com";
 	private static final String AUTHORIZE_URL = AUTHORITY + "/common/oauth2/v2.0/authorize";
 
-	private static final String ADD_MICROSOFT_CALENDAR_URL = "/api/microsot/addCalendar";
+	public static final String ADD_MICROSOFT_CALENDAR_URL = "/api/microsoft/addCalendar";
 
 	private static String[] scopes = { "openid", "offline_access", "profile", "User.Read", "Calendars.ReadWrite" };
 
@@ -122,9 +122,8 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 	public String getAuthorisationLinksAsLi() {
 		final StringBuilder builder = new StringBuilder(64);
 		builder.append("<li>").append(this.buildAutorisationUrl(TEXTS.get("zc.api.provider.microsoft.outlook")))
-				.append("</li>").append("<li>")
-				.append(this.buildAutorisationUrl(TEXTS.get("zc.api.provider.microsoft.exchange"))).append("</li>")
-				.append("<li>").append(this.buildAutorisationUrl(TEXTS.get("zc.api.provider.microsoft.office365")))
+				.append("</li><li>").append(this.buildAutorisationUrl(TEXTS.get("zc.api.provider.microsoft.exchange")))
+				.append("</li><li>").append(this.buildAutorisationUrl(TEXTS.get("zc.api.provider.microsoft.office365")))
 				.append("</li>");
 
 		return builder.toString();
@@ -141,7 +140,11 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 	private void loadConfig() {
 		this.appId = CONFIG.getPropertyValue(MicrosoftClientIdProperty.class);
 		this.appPassword = CONFIG.getPropertyValue(MicrosoftClientSecretProperty.class);
-		this.redirectUrl = CONFIG.getPropertyValue(MicrosoftCallbackUrlProperty.class);
+		this.redirectUrl = buildRedirectUri(CONFIG.getPropertyValue(MicrosoftCallbackUrlProperty.class));
+	}
+
+	public static String getRedirectUri() {
+		return buildRedirectUri(CONFIG.getPropertyValue(MicrosoftCallbackUrlProperty.class));
 	}
 
 	@Override

@@ -24,10 +24,14 @@ import java.util.Set;
 import org.eclipse.scout.rt.client.ui.messagebox.IMessageBox;
 import org.eclipse.scout.rt.client.ui.messagebox.MessageBoxes;
 import org.eclipse.scout.rt.platform.BEANS;
+import org.eclipse.scout.rt.platform.config.CONFIG;
 import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.shared.TEXTS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zeroclick.comon.user.AppUserHelper;
 import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
+import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
 import org.zeroclick.meeting.client.api.event.EventHelper;
 import org.zeroclick.meeting.client.calendar.AddCalendarForm;
 import org.zeroclick.meeting.client.calendar.CalendarsConfigurationForm;
@@ -40,6 +44,8 @@ import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationFormData.Cale
 import org.zeroclick.meeting.shared.calendar.IApiService;
 import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 
+import com.google.api.client.http.GenericUrl;
+
 /**
  *
  * @author djer
@@ -50,6 +56,8 @@ import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
  *            type of Calendar service
  */
 public abstract class AbstractApiHelper<E, F> implements ApiHelper {
+
+	private static final Logger LOG = LoggerFactory.getLogger(AbstractApiHelper.class);
 
 	protected abstract EventHelper getEventHelper();
 
@@ -180,6 +188,17 @@ public abstract class AbstractApiHelper<E, F> implements ApiHelper {
 		final AddCalendarForm configForm = new AddCalendarForm();
 		configForm.startModify();
 		configForm.waitFor();
+	}
+
+	protected static String buildRedirectUri(final String callbackUrl) {
+		final String frontUrl = CONFIG.getPropertyValue(ApplicationUrlProperty.class);
+		final GenericUrl url = new GenericUrl(frontUrl);
+		url.setRawPath(callbackUrl);
+		final String urlString = url.build();
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new StringBuilder().append("Google API redirect URI : ").append(urlString).toString());
+		}
+		return urlString;
 	}
 
 }

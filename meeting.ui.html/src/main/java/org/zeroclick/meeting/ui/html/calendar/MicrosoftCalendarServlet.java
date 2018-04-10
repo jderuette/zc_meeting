@@ -16,7 +16,6 @@ limitations under the License.
 package org.zeroclick.meeting.ui.html.calendar;
 
 import java.io.IOException;
-import java.security.Principal;
 import java.util.UUID;
 
 import javax.servlet.ServletException;
@@ -24,56 +23,52 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.eclipse.scout.rt.client.IClientSession;
 import org.eclipse.scout.rt.platform.BEANS;
-import org.eclipse.scout.rt.platform.config.CONFIG;
-import org.eclipse.scout.rt.ui.html.AbstractUiServletRequestHandler;
-import org.eclipse.scout.rt.ui.html.HttpSessionHelper;
-import org.eclipse.scout.rt.ui.html.ISessionStore;
-import org.eclipse.scout.rt.ui.html.UiHtmlConfigProperties.MaxUserIdleTimeProperty;
-import org.eclipse.scout.rt.ui.html.json.JsonRequestHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.meeting.client.api.microsoft.MicrosoftApiHelper;
+import org.zeroclick.meeting.ui.html.AbstractApiServletRequestHandler;
+import org.zeroclick.meeting.ui.html.HtmlResponseHelper;
 
 /**
  * @author djer
  *
  */
-public class MicrosoftCalendarServlet extends AbstractUiServletRequestHandler {
+public class MicrosoftCalendarServlet extends AbstractApiServletRequestHandler {
 
 	private static final Logger LOG = LoggerFactory.getLogger(MicrosoftCalendarServlet.class);
 
-	private final int m_maxUserIdleTime = CONFIG.getPropertyValue(MaxUserIdleTimeProperty.class).intValue();
-	private final HttpSessionHelper m_httpSessionHelper = BEANS.get(HttpSessionHelper.class);
-	private final JsonRequestHelper m_jsonRequestHelper = BEANS.get(JsonRequestHelper.class);
-
 	private final MicrosoftApiHelper microsoftApiHelper = BEANS.get(MicrosoftApiHelper.class);
 
-	private static final String SERVLET_PATH = "/api/microsot/addCalendar";
+	private final String registeredPath;
+
+	public MicrosoftCalendarServlet() {
+		this.registeredPath = MicrosoftApiHelper.ADD_MICROSOFT_CALENDAR_URL;
+	}
 
 	@Override
-	public boolean handleGet(final HttpServletRequest req, final HttpServletResponse resp)
+	protected String getRegistredServletPath() {
+		return this.registeredPath;
+	}
+
+	@Override
+	protected Logger getLogger() {
+		return LOG;
+	}
+
+	@Override
+	protected boolean processGet(final HttpServletRequest req, final HttpServletResponse resp)
 			throws ServletException, IOException {
-
-		if (!req.getPathInfo().equals(SERVLET_PATH)) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug(
-						new StringBuilder().append("MicrosoftCalendarServlet ignore the request because requested : [")
-								.append(req.getPathInfo()).append("] path does not match configured : [")
-								.append(SERVLET_PATH).append(']').toString());
-			}
-			return false;
-		}
-
-		LOG.info("Entering do get");
-
+		final HtmlResponseHelper responseHelper = new HtmlResponseHelper();
 		final UUID state = UUID.randomUUID();
 		final UUID nonce = UUID.randomUUID();
 
 		final HttpSession session = req.getSession();
 		if (null == session) {
-			LOG.error("No Active Session, canno't create new (microsfot) API");
+			final String erroMessage = "No Active Session, canno't create new (microsfot) API";
+			LOG.error(erroMessage);
+			responseHelper.addErrorMessage(erroMessage);
+			resp.getWriter().write(responseHelper.getPageContent());
 		} else {
 			session.setAttribute("state", state);
 			session.setAttribute("nonce", nonce);
@@ -85,23 +80,9 @@ public class MicrosoftCalendarServlet extends AbstractUiServletRequestHandler {
 		return true;
 	}
 
-	protected IClientSession loadSession(final HttpServletRequest req, final HttpServletResponse resp)
+	@Override
+	protected boolean processPost(final HttpServletRequest req, final HttpServletResponse resp)
 			throws ServletException, IOException {
-		final HttpSession httpSession = req.getSession();
-		final ISessionStore sessionStore = this.m_httpSessionHelper.getSessionStore(httpSession);
-
-		final String currentUser = req.getRemoteUser();
-
-		IClientSession currentUserSession = null;
-
-		for (final IClientSession session : sessionStore.getClientSessionMap().values()) {
-			for (final Principal pricnipal : session.getSubject().getPrincipals()) {
-				if (pricnipal.getName().equals(currentUser)) {
-					currentUserSession = session;
-				}
-			}
-		}
-
-		return currentUserSession;
+		return this.processGet(req, resp);
 	}
 }

@@ -48,7 +48,6 @@ import org.slf4j.LoggerFactory;
 import org.zeroclick.comon.text.TextsHelper;
 import org.zeroclick.configuration.shared.api.ApiTablePageData;
 import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
-import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
 import org.zeroclick.meeting.client.api.AbstractApiHelper;
 import org.zeroclick.meeting.client.api.ApiCalendar;
 import org.zeroclick.meeting.client.api.ApiCredential;
@@ -69,7 +68,6 @@ import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.DataStoreFactory;
@@ -93,7 +91,7 @@ public class GoogleApiHelper extends AbstractApiHelper<Credential, Calendar> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(GoogleApiHelper.class);
 
-	public static final String ADD_GOOGLE_CALENDAR_URL = "/addGoogleCalendar";
+	public static final String ADD_GOOGLE_CALENDAR_URL = "/api/microsot/addGoogleCalendar";
 	private GoogleEventHelper eventHelper;
 
 	private CallTrackerService<Long> callTracker;
@@ -156,16 +154,8 @@ public class GoogleApiHelper extends AbstractApiHelper<Credential, Calendar> {
 						.setApprovalPrompt("force").build();
 	}
 
-	private String getRedirectUri() throws ServletException, IOException {
-		final String frontUrl = CONFIG.getPropertyValue(ApplicationUrlProperty.class);
-		final GenericUrl url = new GenericUrl(frontUrl);
-		final String callbackUrl = CONFIG.getPropertyValue(GoogleCallbackUrlProperty.class);
-		url.setRawPath(callbackUrl);
-		final String urlString = url.build();
-		if (LOG.isDebugEnabled()) {
-			LOG.debug(new StringBuilder().append("Google APi redirect URI : ").append(urlString).toString());
-		}
-		return urlString;
+	public static String getRedirectUri() {
+		return buildRedirectUri(CONFIG.getPropertyValue(GoogleCallbackUrlProperty.class));
 	}
 
 	/** Lock on the flow and credential. */

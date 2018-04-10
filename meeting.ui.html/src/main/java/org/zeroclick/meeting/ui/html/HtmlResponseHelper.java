@@ -29,11 +29,11 @@ public class HtmlResponseHelper {
 	}
 
 	public void addSuccessMessage(final String message) {
-		this.content.append("<b>").append(message).append("</b><br/>");
+		this.content.append("<b style='color:green'>").append(message).append("</b><br/>");
 	}
 
 	public void addErrorMessage(final String message) {
-		this.content.append("<b style='font-color:red'>").append(message).append("</b><br/>");
+		this.content.append("<b style='color:red'>").append(message).append("</b><br/>");
 	}
 
 	public String getPageContent() {

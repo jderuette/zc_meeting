@@ -39,44 +39,7 @@
 		<servlet-name>UiServlet</servlet-name>
 		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
-
-	<servlet>
-		<servlet-name>CalendarServlet</servlet-name>
-		<servlet-class>org.zeroclick.meeting.client.calendar.CalendarServletSample</servlet-class>
-	</servlet>
-	<servlet-mapping>
-		<servlet-name>CalendarServlet</servlet-name>
-		<url-pattern>/addGoogleCalendar</url-pattern>
-	</servlet-mapping>
-
-	<servlet>
-		<servlet-name>GoogleApiServletCallback</servlet-name>
-		<servlet-class>org.zeroclick.meeting.client.api.google.GoogleApiServletCallback</servlet-class>
-	</servlet>
-	<servlet-mapping>
-		<servlet-name>GoogleApiServletCallback</servlet-name>
-		<url-pattern>/oauth2callback</url-pattern>
-	</servlet-mapping>
 	
-	<!-- 
-	<servlet>
-		<servlet-name>MicrosoftCalendarServlet</servlet-name>
-		<servlet-class>org.zeroclick.meeting.ui.html.calendar.MicrosoftCalendarServlet</servlet-class>
-	</servlet>
-	<servlet-mapping>
-		<servlet-name>MicrosoftCalendarServlet</servlet-name>
-		<url-pattern>/addMicrosoftCalendar</url-pattern>
-	</servlet-mapping>
-
-	<servlet-mapping>
-		<servlet-name>MicrosoftApiServletCallback</servlet-name>
-		<url-pattern>/microsoft/oauth2callback</url-pattern>
-	</servlet-mapping>
-	<servlet>
-		<servlet-name>MicrosoftApiServletCallback</servlet-name>
-		<servlet-class>org.zeroclick.meeting.ui.html.calendar.MicrosoftApiOAuthCallback</servlet-class>
-	</servlet>
- -->
 	<session-config>
 		<!-- Session timeout in minutes -->
 		<!-- (Note: Do not use a short timeout in DEV mode to allow longer debugging 
