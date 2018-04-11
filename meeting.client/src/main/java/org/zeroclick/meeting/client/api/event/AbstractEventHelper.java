@@ -177,7 +177,7 @@ public abstract class AbstractEventHelper<T, D> implements EventHelper {
 	public CalendarAviability getCalendarAviability(final ZonedDateTime startDate, final ZonedDateTime endDate,
 			final List<T> allConcurentEvent, final ZoneId userZoneId) {
 		LOG.info(new StringBuilder().append("Searching for calendar aviability in ").append(allConcurentEvent.size())
-				.append("events").toString());
+				.append(" events").toString());
 
 		ZonedDateTime endLastEvent = null;
 		List<DayDuration> freeTimes = null;
@@ -189,7 +189,7 @@ public abstract class AbstractEventHelper<T, D> implements EventHelper {
 			final int nbFreeTimePeriods = null == freeTimes ? 0 : freeTimes.size();
 			final String lastEventEnd = null == endLastEvent ? "" : endLastEvent.toString();
 			LOG.info("Calendars has " + nbFreeTimePeriods + " freeTimes periods, last blocking event ends at : "
-					+ lastEventEnd + "(event : " + this.asLog(lastEvent) + ")");
+					+ lastEventEnd + " (event : " + this.asLog(lastEvent) + ")");
 		}
 
 		return new CalendarAviability(endLastEvent, freeTimes);
