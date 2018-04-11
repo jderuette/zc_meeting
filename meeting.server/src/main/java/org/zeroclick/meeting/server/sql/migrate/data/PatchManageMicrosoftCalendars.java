@@ -47,7 +47,7 @@ public class PatchManageMicrosoftCalendars extends AbstractDataPatcher {
 	 */
 	@Override
 	public Version getVersion() {
-		return Version.valueOf("1.1.12");
+		return Version.valueOf("1.1.13");
 	}
 
 	/*

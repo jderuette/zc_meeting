@@ -1,4 +1,4 @@
-Sun Feb 25 15:33:21 CET 2018 Thread[Thread-1,5,main] Cleanup action starting
+Tue Apr 10 22:04:33 CEST 2018 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -138,7 +138,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Sun Feb 25 15:33:21 CET 2018 Thread[Thread-1,5,main] Cleanup action starting
+Tue Apr 10 22:04:33 CEST 2018 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -278,7 +278,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Sun Feb 25 15:33:21 CET 2018 Thread[Thread-1,5,main] Cleanup action starting
+Tue Apr 10 22:04:33 CEST 2018 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -418,7 +418,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Sun Feb 25 15:33:21 CET 2018 Thread[Thread-1,5,main] Cleanup action starting
+Tue Apr 10 22:04:33 CEST 2018 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -558,7 +558,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Sun Feb 25 15:33:21 CET 2018 Thread[Thread-1,5,main] Cleanup action starting
+Tue Apr 10 22:04:34 CEST 2018 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -698,7 +698,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Sun Feb 25 15:33:21 CET 2018 Thread[Thread-1,5,main] Cleanup action starting
+Tue Apr 10 22:04:34 CEST 2018 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -838,7 +838,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Sun Feb 25 15:33:21 CET 2018 Thread[Thread-1,5,main] Cleanup action starting
+Tue Apr 10 22:04:34 CEST 2018 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -978,7 +978,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Sun Feb 25 15:33:21 CET 2018 Thread[Thread-1,5,main] Cleanup action starting
+Tue Apr 10 22:04:34 CEST 2018 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -1118,7 +1118,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Sun Feb 25 15:33:21 CET 2018 Thread[Thread-1,5,main] Cleanup action starting
+Tue Apr 10 22:04:34 CEST 2018 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -1262,7 +1262,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Sun Feb 25 15:33:21 CET 2018 Thread[Thread-1,5,main] Cleanup action starting
+Tue Apr 10 22:04:34 CEST 2018 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -1402,7 +1402,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Sun Feb 25 15:33:21 CET 2018 Thread[Thread-1,5,main] Cleanup action starting
+Tue Apr 10 22:04:34 CEST 2018 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -1548,7 +1548,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Sun Feb 25 15:33:21 CET 2018 Thread[Thread-1,5,main] Cleanup action starting
+Tue Apr 10 22:04:34 CEST 2018 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -1692,7 +1692,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Sun Feb 25 15:33:21 CET 2018 Thread[Thread-1,5,main] Cleanup action starting
+Tue Apr 10 22:04:34 CEST 2018 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -1838,7 +1838,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Sun Feb 25 15:33:21 CET 2018 Thread[Thread-1,5,main] Cleanup action starting
+Tue Apr 10 22:04:34 CEST 2018 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -1982,7 +1982,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Sun Feb 25 15:33:21 CET 2018 Thread[Thread-1,5,main] Cleanup action starting
+Tue Apr 10 22:04:34 CEST 2018 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -2122,7 +2122,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Sun Feb 25 15:33:21 CET 2018 Thread[Thread-1,5,main] Cleanup action starting
+Tue Apr 10 22:04:34 CEST 2018 Thread[Thread-1,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -2266,7 +2266,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.internal.PlatformStarter.run(PlatformStarter.java:32)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Sun Feb 25 15:33:21 CET 2018 Thread[scout-thread-25,5,main] Cleanup action starting
+Tue Apr 10 22:04:34 CEST 2018 Thread[scout-thread-24,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
@@ -2394,7 +2394,7 @@ ERROR XJ004: Database 'memory:zeroclick-database' not found.
 	at org.eclipse.scout.rt.platform.job.internal.NamedThreadFactory$1.run(NamedThreadFactory.java:54)
 ============= end nested exception, level (1) ===========
 Cleanup action completed
-Sun Feb 25 15:33:21 CET 2018 Thread[scout-thread-25,5,main] Cleanup action starting
+Tue Apr 10 22:04:34 CEST 2018 Thread[scout-thread-24,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:zeroclick-database' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
