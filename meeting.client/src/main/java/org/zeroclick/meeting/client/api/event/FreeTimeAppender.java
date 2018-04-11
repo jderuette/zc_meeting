@@ -125,11 +125,11 @@ public class FreeTimeAppender {
 			}
 			if (isFirstLoop && cleanEvent.getStart().isAfter(previousEnd)) {
 				freeTimes.add(new DayDuration(previousEnd, cleanEvent.getStart(),
-						CollectionUtility.arrayList(cleanEvent.getValidDayOfWeek())));
+						CollectionUtility.arrayList(cleanEvent.getValidDayOfWeek()), Boolean.FALSE));
 			}
 			if (cleanEvent.getEnd().isBefore(nextStart)) {
 				freeTimes.add(new DayDuration(cleanEvent.getEnd(), nextStart,
-						CollectionUtility.arrayList(cleanEvent.getValidDayOfWeek())));
+						CollectionUtility.arrayList(cleanEvent.getValidDayOfWeek()), Boolean.FALSE));
 			}
 
 			previousEnd = cleanEvent.getEnd();

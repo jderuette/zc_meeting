@@ -167,7 +167,7 @@ public abstract class AbstractEventHelper<T, D> implements EventHelper {
 			final Long userId, final AbstractCalendarConfigurationTableRowData calendar, final ZoneId userZoneId) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(
-					new StringBuilder().append("calculating calendat aviability fro user ").append(userId).toString());
+					new StringBuilder().append("calculating calendar aviability for user ").append(userId).toString());
 		}
 		final List<T> allConcurentEvent = this.getEvents(startDate, endDate, userId, calendar);
 
