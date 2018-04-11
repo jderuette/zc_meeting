@@ -815,7 +815,7 @@ public class GoogleEventHelperTest {
 	}
 
 	@Test
-	public void testGetCalendarAviability_noBlockingEvent_noEvents() {
+	public void testGetCalendarAviability_noBlockingEvent() {
 		final ZonedDateTime startDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 00, 00),
 				ZoneId.of(DEFAULT_TIME_ZONE));
 		final ZonedDateTime endDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 30, 00),
@@ -835,7 +835,7 @@ public class GoogleEventHelperTest {
 	}
 
 	@Test
-	public void testGetCalendarAviability_oneEventBloking() {
+	public void testGetCalendarAviability_oneEventBloking_beginOfPeriod() {
 		final ZonedDateTime startDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 00, 00),
 				ZoneId.of(DEFAULT_TIME_ZONE));
 		final ZonedDateTime endDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 30, 00),
@@ -866,6 +866,38 @@ public class GoogleEventHelperTest {
 				calendarAviability.getEndLastEvent().getNano());
 	}
 
+	@Test
+	public void testGetCalendarAviability_oneEventBloking_endOfPeriod() {
+		final ZonedDateTime startDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 00, 00),
+				ZoneId.of(DEFAULT_TIME_ZONE));
+		final ZonedDateTime endDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 30, 00),
+				ZoneId.of(DEFAULT_TIME_ZONE));
+
+		final ArrayList<Event> events = new ArrayList<>();
+		events.add(this.createBasicEvent("2018-03-26T08:15:00+02:00", "2018-03-26T10:00:00+02:00"));
+
+		final ZoneId userZoneId = ZoneId.of(DEFAULT_TIME_ZONE);
+
+		final CalendarAviability calendarAviability = this.eventHelper.getCalendarAviability(startDate, endDate, events,
+				userZoneId);
+
+		Assert.assertTrue("One freeTime should be found", calendarAviability.getFreeTimes().size() == 1);
+		final DayDuration firstFreeTime = calendarAviability.getFreeTimes().get(0);
+
+		final OffsetTime expectedStartFreeTime = OffsetTime.of(8, 0, 0, 0, startDate.getOffset());
+		Assert.assertEquals("First FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
+		final OffsetTime expectedEndFreeTime = OffsetTime.of(8, 15, 0, 0, startDate.getOffset());
+		Assert.assertEquals("First FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
+
+		Assert.assertNotNull("Last event end time not provided", calendarAviability.getEndLastEvent());
+		final ZonedDateTime expectedLastEventEnd = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 10, 0, 00),
+				ZoneId.of(DEFAULT_TIME_ZONE));
+		// time zone representation change (+02:00 VS Europe/Paris) but instants
+		// must be the same
+		Assert.assertEquals("Invalid end of last Event", expectedLastEventEnd.getNano(),
+				calendarAviability.getEndLastEvent().getNano());
+	}
+
 	private Event createBasicEvent(final String startRfc3339, final String endRfc3339) {
 		return this.createBasicEvent(startRfc3339, endRfc3339, DEFAULT_TIME_ZONE);
 	}
@@ -873,18 +905,27 @@ public class GoogleEventHelperTest {
 	private Event createBasicEvent(final String startRfc3339, final String endRfc3339, final String timeZone) {
 		final Event event = new Event();
 
-		final EventDateTime start = new EventDateTime();
-		start.setDate(DateTime.parseRfc3339(startRfc3339));
-		start.setTimeZone(timeZone);
-
-		final EventDateTime end = new EventDateTime();
-		end.setDate(DateTime.parseRfc3339(endRfc3339));
-		end.setTimeZone(timeZone);
-
-		event.setStart(start);
-		event.setEnd(end);
+		event.setStart(this.createEventDateTime(startRfc3339, timeZone));
+		event.setEnd(this.createEventDateTime(endRfc3339, timeZone));
 
 		return event;
+	}
+
+	private EventDateTime createEventDateTime(final String dateRfc3339, final String timeZone) {
+		final EventDateTime dateTime = new EventDateTime();
+
+		if (dateRfc3339.contains("T")) {
+			// as a Time part
+			dateTime.setDateTime(DateTime.parseRfc3339(dateRfc3339));
+		} else {
+			// a fullDay event
+			dateTime.setDate(DateTime.parseRfc3339(dateRfc3339));
+		}
+
+		dateTime.setDate(DateTime.parseRfc3339(dateRfc3339));
+		dateTime.setTimeZone(timeZone);
+
+		return dateTime;
 	}
 
 }
