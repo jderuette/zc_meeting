@@ -123,6 +123,23 @@ public class GoogleEventHelperTest {
 	}
 
 	@Test
+	public void testGetFreeTime_OneEventBlockWholePeriodFullDay() {
+		final ZonedDateTime startDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 00, 00),
+				ZoneId.of(DEFAULT_TIME_ZONE));
+		final ZonedDateTime endDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 30, 00),
+				ZoneId.of(DEFAULT_TIME_ZONE));
+
+		final ArrayList<Event> events = new ArrayList<>();
+		events.add(this.createBasicEvent("2018-03-26", "2018-03-27"));
+
+		final ZoneId userZoneId = ZoneId.of(DEFAULT_TIME_ZONE);
+
+		final List<DayDuration> freeTime = this.eventHelper.getFreeTime(startDate, endDate, events, userZoneId);
+
+		Assert.assertTrue("FreeTime should NOT exists but found " + freeTime, freeTime.isEmpty());
+	}
+
+	@Test
 	public void testGetFreeTime_TwoEventBlockWholePeriod() {
 		final ZonedDateTime startDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 00, 00),
 				ZoneId.of(DEFAULT_TIME_ZONE));
@@ -798,7 +815,7 @@ public class GoogleEventHelperTest {
 	}
 
 	@Test
-	public void testGetCalendarAviability_noBlockingEvent() {
+	public void testGetCalendarAviability_noBlockingEvent_noEvents() {
 		final ZonedDateTime startDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 00, 00),
 				ZoneId.of(DEFAULT_TIME_ZONE));
 		final ZonedDateTime endDate = ZonedDateTime.of(LocalDateTime.of(2018, 03, 26, 8, 30, 00),

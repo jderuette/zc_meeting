@@ -17,6 +17,7 @@ package org.zeroclick.meeting.client.api.google;
 
 import java.time.ZoneOffset;
 import java.util.Date;
+import java.util.TimeZone;
 
 import org.zeroclick.meeting.client.api.AbstractProviderDateHelper;
 
@@ -39,6 +40,23 @@ public class GoogleDateHelper extends AbstractProviderDateHelper<EventDateTime> 
 		DateTime date = null;
 		if (null == providerSpecificDate.getDateTime()) {
 			date = providerSpecificDate.getDate();
+
+			// FullDay Date has a TimeZoneShift to 0 even with a TimeZone
+			// different than UTC
+			final String timeZoneString = providerSpecificDate.getTimeZone();
+			if (null != timeZoneString && !"UTC".equals(timeZoneString) && !"Z".equals(timeZoneString)
+					&& !"GMT".equals(timeZoneString)) {
+				// set correct timeZone shift
+				final TimeZone timeZone = TimeZone.getTimeZone(timeZoneString);
+				final long pseudoUtcTime = new Date(date.getValue()).getTime();
+				final int millisecondOffset = timeZone.getOffset(pseudoUtcTime);
+				// the value "is normalized to UTC" so we need to **remove** the
+				// offset
+				final long utcTime = pseudoUtcTime - millisecondOffset;
+				final int offsetInMinutes = millisecondOffset == 0 ? 0 : millisecondOffset / 1000 / 60;
+
+				date = new DateTime(utcTime, offsetInMinutes);
+			}
 		} else {
 			date = providerSpecificDate.getDateTime();
 		}

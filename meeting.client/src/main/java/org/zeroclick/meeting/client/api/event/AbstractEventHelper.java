@@ -165,6 +165,10 @@ public abstract class AbstractEventHelper<T, D> implements EventHelper {
 	@Override
 	public CalendarAviability getCalendarAviability(final ZonedDateTime startDate, final ZonedDateTime endDate,
 			final Long userId, final AbstractCalendarConfigurationTableRowData calendar, final ZoneId userZoneId) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(
+					new StringBuilder().append("calculating calendat aviability fro user ").append(userId).toString());
+		}
 		final List<T> allConcurentEvent = this.getEvents(startDate, endDate, userId, calendar);
 
 		return this.getCalendarAviability(startDate, endDate, allConcurentEvent, userZoneId);
@@ -172,6 +176,8 @@ public abstract class AbstractEventHelper<T, D> implements EventHelper {
 
 	public CalendarAviability getCalendarAviability(final ZonedDateTime startDate, final ZonedDateTime endDate,
 			final List<T> allConcurentEvent, final ZoneId userZoneId) {
+		LOG.info(new StringBuilder().append("Searching for calendar aviability in ").append(allConcurentEvent.size())
+				.append("events").toString());
 
 		ZonedDateTime endLastEvent = null;
 		List<DayDuration> freeTimes = null;
@@ -179,6 +185,11 @@ public abstract class AbstractEventHelper<T, D> implements EventHelper {
 			freeTimes = this.getFreeTime(startDate, endDate, allConcurentEvent, userZoneId);
 			final T lastEvent = this.getLastEvent(allConcurentEvent);
 			endLastEvent = this.fromEventDateTime(this.getEventEnd(lastEvent));
+
+			final int nbFreeTimePeriods = null == freeTimes ? 0 : freeTimes.size();
+			final String lastEventEnd = null == endLastEvent ? "" : endLastEvent.toString();
+			LOG.info("Calendars has " + nbFreeTimePeriods + " freeTimes periods, last blocking event ends at : "
+					+ lastEventEnd + "(event : " + this.asLog(lastEvent) + ")");
 		}
 
 		return new CalendarAviability(endLastEvent, freeTimes);
