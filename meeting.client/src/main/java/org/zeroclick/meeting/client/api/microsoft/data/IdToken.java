@@ -52,6 +52,10 @@ public class IdToken {
 	private String objectId;
 
 	public static IdToken parseEncodedToken(final String encodedToken, final String nonce) {
+		if (null == encodedToken) {
+			LOG.error("Canno't create IdToken from a null encodedToken");
+			return null; // early break
+		}
 		// Encoded token is in three parts, separated by '.'
 		final String[] tokenParts = encodedToken.split("\\.");
 
