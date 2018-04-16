@@ -105,8 +105,8 @@ public class DateHelper {
 		final int dateMinutOeffsetFromUtc = dateFromUser.getTimezoneOffset();
 		Date utcDate = dateFromUser;
 		if (dateMinutOeffsetFromUtc != 0) {
-			final ZonedDateTime zdt = ZonedDateTime.from(dateFromUser.toInstant());
-			zdt.plusMinutes(dateMinutOeffsetFromUtc);
+			ZonedDateTime zdt = ZonedDateTime.ofInstant(dateFromUser.toInstant(), ZoneId.of("Z"));
+			zdt = zdt.plusMinutes(dateMinutOeffsetFromUtc);
 			utcDate = Date.from(zdt.toInstant());
 		}
 		return utcDate;

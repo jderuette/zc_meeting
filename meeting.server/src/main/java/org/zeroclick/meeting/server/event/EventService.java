@@ -36,7 +36,6 @@ import org.zeroclick.meeting.shared.event.ReadEventPermission;
 import org.zeroclick.meeting.shared.event.RejectEventFormData;
 import org.zeroclick.meeting.shared.event.StateCodeType;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
-import org.zeroclick.meeting.shared.security.AccessControlService;
 
 public class EventService extends AbstractCommonService implements IEventService {
 
@@ -244,14 +243,12 @@ public class EventService extends AbstractCommonService implements IEventService
 
 	private Set<String> buildNotifiedUsers(final EventFormData formData) {
 		// Notify Users for EventTable update
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-
 		final Set<String> notifiedUsers = new HashSet<>();
 		if (null != formData.getGuestId().getValue()) {
-			notifiedUsers.addAll(acs.getUserNotificationIds(formData.getGuestId().getValue()));
+			notifiedUsers.addAll(this.getUserNotificationIds(formData.getGuestId().getValue()));
 		}
 		if (null != formData.getOrganizer().getValue()) {
-			notifiedUsers.addAll(acs.getUserNotificationIds(formData.getOrganizer().getValue()));
+			notifiedUsers.addAll(this.getUserNotificationIds(formData.getOrganizer().getValue()));
 		}
 		return notifiedUsers;
 	}

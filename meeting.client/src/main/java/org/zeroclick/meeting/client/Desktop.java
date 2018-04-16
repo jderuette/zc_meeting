@@ -6,31 +6,23 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import org.eclipse.scout.rt.client.context.ClientRunContexts;
-import org.eclipse.scout.rt.client.job.ModelJobs;
 import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
 import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
 import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenuSeparator;
 import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.desktop.AbstractDesktop;
-import org.eclipse.scout.rt.client.ui.desktop.notification.DesktopNotification;
 import org.eclipse.scout.rt.client.ui.desktop.outline.AbstractOutlineViewButton;
 import org.eclipse.scout.rt.client.ui.desktop.outline.IOutline;
 import org.eclipse.scout.rt.client.ui.desktop.outline.pages.IPage;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
-import org.eclipse.scout.rt.platform.job.Jobs;
 import org.eclipse.scout.rt.platform.nls.NlsLocale;
-import org.eclipse.scout.rt.platform.status.IStatus;
-import org.eclipse.scout.rt.platform.status.Status;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.platform.util.StringUtility;
-import org.eclipse.scout.rt.platform.util.concurrent.IRunnable;
 import org.eclipse.scout.rt.shared.AbstractIcons;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.notification.INotificationListener;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
-import org.eclipse.scout.rt.shared.services.common.security.IAccessControlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.comon.user.AppUserHelper;
@@ -73,7 +65,7 @@ import org.zeroclick.meeting.shared.calendar.IApiService;
 import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.calendar.ReadApiPermission;
 import org.zeroclick.meeting.shared.event.ReadEventPermission;
-import org.zeroclick.meeting.shared.security.AccessControlService;
+import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
 
 /**
  * <h3>{@link Desktop}</h3>
@@ -141,8 +133,8 @@ public class Desktop extends AbstractDesktop {
 	private void checkAndUpdateRequiredDatas() {
 		final CalendarService calendarService = BEANS.get(CalendarService.class);
 		final IUserService userService = BEANS.get(IUserService.class);
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-		final Long currentUserId = acs.getZeroClickUserIdOfCurrentSubject();
+		final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
+		final Long currentUserId = acsHelper.getZeroClickUserIdOfCurrentSubject();
 
 		this.cleanInvalidApiKey(currentUserId);
 
@@ -267,34 +259,6 @@ public class Desktop extends AbstractDesktop {
 	protected Boolean isMySelf(final Long userId) {
 		final Long currentUser = BEANS.get(AppUserHelper.class).getCurrentUserId();
 		return currentUser.equals(userId);
-	}
-
-	public void addNotification(final Integer severity, final Long duration, final Boolean closable,
-			final String messageKey) {
-		final IStatus status = new Status(TEXTS.get(messageKey), severity);
-		this.addNotification(status, duration, closable);
-	}
-
-	public void addNotification(final Integer severity, final Long duration, final Boolean closable,
-			final String messageKey, final String... messageArguments) {
-		final IStatus status = new Status(TEXTS.get(messageKey, messageArguments), severity);
-		this.addNotification(status, duration, closable);
-	}
-
-	private void addNotification(final IStatus status, final Long duration, final Boolean closable) {
-		Jobs.schedule(new IRunnable() {
-
-			@Override
-			@SuppressWarnings("PMD.SignatureDeclareThrowsException")
-			public void run() throws Exception {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug(new StringBuilder().append("Adding desktop notification : ").append(status.getMessage())
-							.append("(").append(status.getClass()).append(")").toString());
-				}
-				final DesktopNotification desktopNotification = new DesktopNotification(status, duration, closable);
-				ClientSession.get().getDesktop().addNotification(desktopNotification);
-			}
-		}, ModelJobs.newInput(ClientRunContexts.copyCurrent()).withName("adding desktop notification (in ModelJob)"));
 	}
 
 	private INotificationListener<ApiCreatedNotification> createApiCreatedListener() {
@@ -437,7 +401,8 @@ public class Desktop extends AbstractDesktop {
 		@Override
 		protected void execAction() {
 			final ApiHelper apiHelper = ApiHelperFactory.getCommonApiHelper();
-			final Long currentUserId = ((AccessControlService) BEANS.get(IAccessControlService.class))
+
+			final Long currentUserId = BEANS.get(IAccessControlServiceHelper.class)
 					.getZeroClickUserIdOfCurrentSubject();
 			apiHelper.displayAddCalendarForm(currentUserId);
 		}
@@ -501,10 +466,7 @@ public class Desktop extends AbstractDesktop {
 
 			@Override
 			protected void execAction() {
-				// AccessControlService = clientSide Access Control Service.
-				// getUserIdOfCurrentUser() implemented in super abstract
-				// parent.
-				final Long currentUserId = ((AccessControlService) BEANS.get(IAccessControlService.class))
+				final Long currentUserId = BEANS.get(IAccessControlServiceHelper.class)
 						.getZeroClickUserIdOfCurrentSubject();
 				final UserForm form = new UserForm();
 				form.getUserIdField().setValue(currentUserId);

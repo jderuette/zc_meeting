@@ -38,7 +38,7 @@ import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.calendar.ReadApiPermission;
 import org.zeroclick.meeting.shared.calendar.UpdateApiPermission;
 import org.zeroclick.meeting.shared.event.IEventService;
-import org.zeroclick.meeting.shared.security.AccessControlService;
+import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
 
 public class ApiService extends AbstractCommonService implements IApiService {
 
@@ -251,20 +251,20 @@ public class ApiService extends AbstractCommonService implements IApiService {
 	}
 
 	private void sendCreatedNotifications(final ApiFormData formData) {
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-		BEANS.get(ClientNotificationRegistry.class).putForUsers(acs.getUserNotificationIds(formData.getUserId()),
+		final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
+		BEANS.get(ClientNotificationRegistry.class).putForUsers(acsHelper.getUserNotificationIds(formData.getUserId()),
 				new ApiCreatedNotification(formData));
 	}
 
 	private void sendDeletedNotifications(final ApiFormData formData) {
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-		BEANS.get(ClientNotificationRegistry.class).putForUsers(acs.getUserNotificationIds(formData.getUserId()),
+		final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
+		BEANS.get(ClientNotificationRegistry.class).putForUsers(acsHelper.getUserNotificationIds(formData.getUserId()),
 				new ApiDeletedNotification(formData));
 	}
 
 	private void sendMoifiedNotifications(final ApiFormData formData) {
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-		BEANS.get(ClientNotificationRegistry.class).putForUsers(acs.getUserNotificationIds(formData.getUserId()),
+		final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
+		BEANS.get(ClientNotificationRegistry.class).putForUsers(acsHelper.getUserNotificationIds(formData.getUserId()),
 				new ApiModifiedNotification(formData));
 	}
 

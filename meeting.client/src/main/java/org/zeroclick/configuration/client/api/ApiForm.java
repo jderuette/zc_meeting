@@ -33,6 +33,7 @@ import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CreateApiPermission;
 import org.zeroclick.meeting.shared.calendar.DeleteApiPermission;
 import org.zeroclick.meeting.shared.calendar.IApiService;
+import org.zeroclick.meeting.shared.calendar.UpdateApiPermission;
 import org.zeroclick.ui.form.fields.emailfield.EmailField;
 
 @FormData(value = ApiFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
@@ -298,10 +299,10 @@ public class ApiForm extends AbstractForm {
 			formData = service.load(formData);
 			ApiForm.this.importFormData(formData);
 
-			final int userPermissionLevel = ACCESS.getLevel(new DeleteApiPermission((Long) null));
+			final int userPermissionLevel = ACCESS.getLevel(new UpdateApiPermission((Long) null));
 
-			ApiForm.this.setVisibleGranted(userPermissionLevel > DeleteApiPermission.LEVEL_OWN);
-			ApiForm.this.setEnabledGranted(userPermissionLevel > DeleteApiPermission.LEVEL_OWN);
+			ApiForm.this.setVisibleGranted(userPermissionLevel > UpdateApiPermission.LEVEL_OWN);
+			ApiForm.this.setEnabledGranted(userPermissionLevel > UpdateApiPermission.LEVEL_OWN);
 
 		}
 

@@ -11,8 +11,8 @@ import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.zeroclick.configuration.client.user.ViewCpsForm.MainBox.CloseButton;
+import org.zeroclick.configuration.client.user.ViewCpsForm.MainBox.ContractsField;
 import org.zeroclick.configuration.client.user.ViewCpsForm.MainBox.CpsTextField;
-import org.zeroclick.configuration.client.user.ViewCpsForm.MainBox.MyHtmlField;
 import org.zeroclick.configuration.client.user.ViewCpsForm.MainBox.SubscriptionIdField;
 import org.zeroclick.configuration.client.user.ViewCpsForm.MainBox.UserIdField;
 import org.zeroclick.configuration.shared.params.IAppParamsService;
@@ -40,8 +40,8 @@ public class ViewCpsForm extends AbstractForm {
 		return this.getFieldByClass(MainBox.class);
 	}
 
-	public MyHtmlField getMyHtmlField() {
-		return this.getFieldByClass(MyHtmlField.class);
+	public ContractsField getContractsField() {
+		return this.getFieldByClass(ContractsField.class);
 	}
 
 	public SubscriptionIdField getSubscriptionIdField() {
@@ -166,7 +166,7 @@ public class ViewCpsForm extends AbstractForm {
 		}
 
 		@Order(5000)
-		public class MyHtmlField extends AbstractHtmlField {
+		public class ContractsField extends AbstractHtmlField {
 			@Override
 			protected String getConfiguredLabel() {
 				return TEXTS.get("zc.user.role.subscription.contracts");

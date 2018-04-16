@@ -2,7 +2,6 @@ package org.zeroclick.common.document;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.eclipse.scout.rt.platform.BEANS;
@@ -22,7 +21,6 @@ import org.zeroclick.common.shared.document.ReadDocumentPermission;
 import org.zeroclick.common.shared.document.UpdateDocumentPermission;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateSubscription;
-import org.zeroclick.meeting.shared.security.AccessControlService;
 
 public class DocumentService extends AbstractCommonService implements IDocumentService {
 
@@ -147,10 +145,6 @@ public class DocumentService extends AbstractCommonService implements IDocumentS
 
 	private Set<String> buildNotifiedUsers(final DocumentFormData formData) {
 		// Notify Users for EventTable update
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-
-		final Set<String> notifiedUsers = new HashSet<>();
-		notifiedUsers.addAll(acs.getUserNotificationIds(acs.getZeroClickUserIdOfCurrentSubject()));
-		return notifiedUsers;
+		return this.getCurrentUserNotificationIds();
 	}
 }

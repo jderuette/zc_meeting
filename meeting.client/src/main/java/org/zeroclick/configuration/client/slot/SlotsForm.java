@@ -153,7 +153,6 @@ public class SlotsForm extends AbstractForm {
 
 		@Override
 		protected void execLoad() {
-
 			SlotsForm.this.getSlotsDescriptionField().setValue(TEXTS.get("zc.meeting.slot.configuration.description"));
 		}
 

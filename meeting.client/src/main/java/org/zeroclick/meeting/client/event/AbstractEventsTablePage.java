@@ -87,7 +87,7 @@ import org.zeroclick.meeting.shared.event.ReadEventExtendedPropsPermission;
 import org.zeroclick.meeting.shared.event.StateCodeType;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
 import org.zeroclick.meeting.shared.eventb.AbstractEventsTablePageData;
-import org.zeroclick.meeting.shared.security.AccessControlService;
+import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
 import org.zeroclick.ui.action.menu.AbstractCancelMenu;
 import org.zeroclick.ui.form.columns.zoneddatecolumn.AbstractZonedDateColumn;
 
@@ -1243,8 +1243,8 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		}
 
 		protected Long getCurrentUserId() {
-			final AccessControlService acs = BEANS.get(AccessControlService.class);
-			return acs.getZeroClickUserIdOfCurrentSubject();
+			final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
+			return acsHelper.getZeroClickUserIdOfCurrentSubject();
 		}
 
 		@Override

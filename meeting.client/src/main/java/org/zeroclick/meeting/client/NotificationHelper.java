@@ -15,8 +15,15 @@ limitations under the License.
  */
 package org.zeroclick.meeting.client;
 
+import org.eclipse.scout.rt.client.context.ClientRunContexts;
+import org.eclipse.scout.rt.client.job.ModelJobs;
+import org.eclipse.scout.rt.client.ui.desktop.notification.DesktopNotification;
 import org.eclipse.scout.rt.platform.ApplicationScoped;
+import org.eclipse.scout.rt.platform.job.Jobs;
 import org.eclipse.scout.rt.platform.status.IStatus;
+import org.eclipse.scout.rt.platform.status.Status;
+import org.eclipse.scout.rt.platform.util.concurrent.IRunnable;
+import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,54 +41,76 @@ public class NotificationHelper {
 	private static final Long DURATION_LONG = 15000L;
 
 	public void addProcessingNotification(final String messageKey) {
-		this.addDesktopNotification(IStatus.INFO, DURATION_SHORT, messageKey);
+		this.addNotification(IStatus.INFO, DURATION_SHORT, messageKey);
 	}
 
 	public void addProcessingNotification(final String messageKey, final String... messageArguments) {
-		this.addDesktopNotification(IStatus.INFO, DURATION_SHORT, messageKey, messageArguments);
+		this.addNotification(IStatus.INFO, DURATION_SHORT, messageKey, messageArguments);
 	}
 
 	public void addProccessedNotification(final String messageKey) {
-		this.addDesktopNotification(IStatus.OK, DURATION_MEDIUM, messageKey);
+		this.addNotification(IStatus.OK, DURATION_MEDIUM, messageKey);
 	}
 
 	public void addProccessedNotification(final String messageKey, final String... messageArguments) {
-		this.addDesktopNotification(IStatus.OK, DURATION_MEDIUM, messageKey, messageArguments);
+		this.addNotification(IStatus.OK, DURATION_MEDIUM, messageKey, messageArguments);
 	}
 
 	public void addWarningNotification(final String messageKey) {
-		this.addDesktopNotification(IStatus.WARNING, DURATION_MEDIUM, messageKey);
+		this.addNotification(IStatus.WARNING, DURATION_MEDIUM, messageKey);
 	}
 
 	public void addWarningNotification(final String messageKey, final String... messageArguments) {
-		this.addDesktopNotification(IStatus.WARNING, DURATION_MEDIUM, messageKey, messageArguments);
+		this.addNotification(IStatus.WARNING, DURATION_MEDIUM, messageKey, messageArguments);
 	}
 
 	public void addErrorNotification(final String messageKey) {
-		this.addDesktopNotification(IStatus.ERROR, DURATION_LONG, messageKey);
+		this.addNotification(IStatus.ERROR, DURATION_LONG, messageKey);
 	}
 
 	public void addErrorNotification(final String messageKey, final String... messageArguments) {
-		this.addDesktopNotification(IStatus.ERROR, DURATION_LONG, messageKey, messageArguments);
+		this.addNotification(IStatus.ERROR, DURATION_LONG, messageKey, messageArguments);
 	}
 
-	private void addDesktopNotification(final Integer severity, final Long duration, final String messageKey) {
-		this.addDesktopNotification(severity, duration, messageKey, (String[]) null);
+	private void addNotification(final Integer severity, final Long duration, final String messageKey) {
+		this.addNotification(severity, duration, messageKey, (String[]) null);
 	}
 
-	private void addDesktopNotification(final Integer severity, final Long duration, final String messageKey,
-			final String... messageArguments) {
-		final Desktop desktop = (Desktop) ClientSession.get().getDesktop();
+	public void addNotification(final Integer severity, final Long duration, final Boolean closable,
+			final String messageKey) {
+		final IStatus status = new Status(TEXTS.get(messageKey), severity);
+		this.addNotification(status, duration, closable);
+	}
 
-		if (null != desktop) {
-			if (null == messageArguments) {
-				desktop.addNotification(severity, duration, Boolean.TRUE, messageKey);
-			} else {
-				desktop.addNotification(severity, duration, Boolean.TRUE, messageKey, messageArguments);
+	public void addNotification(final Integer severity, final Long duration, final Boolean closable,
+			final String messageKey, final String... messageArguments) {
+		final IStatus status = new Status(TEXTS.get(messageKey, messageArguments), severity);
+		this.addNotification(status, duration, closable);
+	}
+
+	private void addNotification(final IStatus status, final Long duration, final Boolean closable) {
+		Jobs.schedule(new IRunnable() {
+
+			@Override
+			@SuppressWarnings("PMD.SignatureDeclareThrowsException")
+			public void run() throws Exception {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug(new StringBuilder().append("Adding desktop notification : ").append(status.getMessage())
+							.append("(").append(status.getClass()).append(")").toString());
+				}
+				final DesktopNotification desktopNotification = new DesktopNotification(status, duration, closable);
+				ClientSession.get().getDesktop().addNotification(desktopNotification);
 			}
+		}, ModelJobs.newInput(ClientRunContexts.copyCurrent()).withName("adding desktop notification (in ModelJob)"));
+	}
+
+	private void addNotification(final Integer severity, final Long duration, final String messageKey,
+			final String... messageArguments) {
+
+		if (null == messageArguments) {
+			this.addNotification(severity, duration, Boolean.TRUE, messageKey);
 		} else {
-			LOG.warn("Unable to publish Notification because desktop is null, severity : " + severity
-					+ ", messageKey : " + messageKey);
+			this.addNotification(severity, duration, Boolean.TRUE, messageKey, messageArguments);
 		}
 	}
 }

@@ -46,7 +46,7 @@ import org.zeroclick.meeting.shared.calendar.IApiService;
 import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.IEventService;
-import org.zeroclick.meeting.shared.security.AccessControlService;
+import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
 
 import com.google.api.services.calendar.model.Event;
 
@@ -59,8 +59,8 @@ public class CalendarService {
 	private static final Logger LOG = LoggerFactory.getLogger(CalendarService.class);
 
 	public Boolean isCalendarConfigured() {
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-		return this.isCalendarConfigured(acs.getZeroClickUserIdOfCurrentSubject());
+		final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
+		return this.isCalendarConfigured(acsHelper.getZeroClickUserIdOfCurrentSubject());
 	}
 
 	public Boolean isCalendarConfigured(final Long userId) {
@@ -74,8 +74,8 @@ public class CalendarService {
 	}
 
 	public Boolean isAddCalendarConfigured() {
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-		return this.isAddCalendarConfigured(acs.getZeroClickUserIdOfCurrentSubject());
+		final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
+		return this.isAddCalendarConfigured(acsHelper.getZeroClickUserIdOfCurrentSubject());
 	}
 
 	public Boolean isAddCalendarConfigured(final Long userId) {

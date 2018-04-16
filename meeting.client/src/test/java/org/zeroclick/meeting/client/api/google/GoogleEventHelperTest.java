@@ -898,38 +898,6 @@ public class GoogleEventHelperTest {
 				calendarAviability.getEndLastEvent().getNano());
 	}
 
-	@Test
-	public void testGetCalendarAviability_oneEventBloking_endOfPeriod2() {
-		final ZonedDateTime startDate = ZonedDateTime.of(LocalDateTime.of(2018, 04, 18, 16, 15, 00),
-				ZoneId.of(DEFAULT_TIME_ZONE));
-		final ZonedDateTime endDate = ZonedDateTime.of(LocalDateTime.of(2018, 04, 18, 17, 15, 00),
-				ZoneId.of(DEFAULT_TIME_ZONE));
-
-		final ArrayList<Event> events = new ArrayList<>();
-		events.add(this.createBasicEvent("2018-04-18T17:00:00+02:00", "2018-04-18T18:00:00+02:00"));
-
-		final ZoneId userZoneId = ZoneId.of(DEFAULT_TIME_ZONE);
-
-		final CalendarAviability calendarAviability = this.eventHelper.getCalendarAviability(startDate, endDate, events,
-				userZoneId);
-
-		Assert.assertTrue("One freeTime should be found", calendarAviability.getFreeTimes().size() == 1);
-		final DayDuration firstFreeTime = calendarAviability.getFreeTimes().get(0);
-
-		final OffsetTime expectedStartFreeTime = OffsetTime.of(16, 15, 0, 0, startDate.getOffset());
-		Assert.assertEquals("First FreeTime start is not valid", expectedStartFreeTime, firstFreeTime.getStart());
-		final OffsetTime expectedEndFreeTime = OffsetTime.of(17, 00, 0, 0, startDate.getOffset());
-		Assert.assertEquals("First FreeTime end is not valid", expectedEndFreeTime, firstFreeTime.getEnd());
-
-		Assert.assertNotNull("Last event end time not provided", calendarAviability.getEndLastEvent());
-		final ZonedDateTime expectedLastEventEnd = ZonedDateTime.of(LocalDateTime.of(2018, 04, 18, 18, 0, 00),
-				ZoneId.of(DEFAULT_TIME_ZONE));
-		// time zone representation change (+02:00 VS Europe/Paris) but instants
-		// must be the same
-		Assert.assertEquals("Invalid end of last Event", expectedLastEventEnd.getNano(),
-				calendarAviability.getEndLastEvent().getNano());
-	}
-
 	private Event createBasicEvent(final String startRfc3339, final String endRfc3339) {
 		return this.createBasicEvent(startRfc3339, endRfc3339, DEFAULT_TIME_ZONE);
 	}
@@ -954,7 +922,6 @@ public class GoogleEventHelperTest {
 			dateTime.setDate(DateTime.parseRfc3339(dateRfc3339));
 		}
 
-		dateTime.setDate(DateTime.parseRfc3339(dateRfc3339));
 		dateTime.setTimeZone(timeZone);
 
 		return dateTime;

@@ -20,10 +20,6 @@ public class AddCalendarForm extends AbstractForm {
 		return TEXTS.get("zc.meeting.calendar.addCalendar");
 	}
 
-	public void startModify() {
-		this.startInternalExclusive(new ModifyHandler());
-	}
-
 	public void startNew() {
 		this.startInternal(new NewHandler());
 	}
@@ -38,6 +34,10 @@ public class AddCalendarForm extends AbstractForm {
 
 	public OkButton getOkButton() {
 		return this.getFieldByClass(OkButton.class);
+	}
+
+	public AddCalendarField getAddCalendarField() {
+		return this.getFieldByClass(AddCalendarField.class);
 	}
 
 	public ApisTableField getApisTableField() {
@@ -85,17 +85,6 @@ public class AddCalendarForm extends AbstractForm {
 
 		@Order(101000)
 		public class CancelButton extends AbstractCancelButton {
-		}
-	}
-
-	public class ModifyHandler extends AbstractFormHandler {
-
-		@Override
-		protected void execLoad() {
-		}
-
-		@Override
-		protected void execStore() {
 		}
 	}
 

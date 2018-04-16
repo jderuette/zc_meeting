@@ -25,7 +25,7 @@ import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.zeroclick.configuration.shared.slot.ReadSlotPermission;
 import org.zeroclick.meeting.shared.calendar.ReadCalendarConfigurationPermission;
 import org.zeroclick.meeting.shared.event.ReadEventPermission;
-import org.zeroclick.meeting.shared.security.AccessControlService;
+import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
 
 /**
  * @author djer
@@ -35,8 +35,8 @@ import org.zeroclick.meeting.shared.security.AccessControlService;
 public class UserHelper {
 
 	public Long getCurrentUserId() {
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-		return acs.getZeroClickUserIdOfCurrentSubject();
+		final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
+		return acsHelper.getZeroClickUserIdOfCurrentSubject();
 	}
 
 	public Subject getCurrentUserSubject() {

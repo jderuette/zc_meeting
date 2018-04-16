@@ -51,7 +51,7 @@ import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.calendar.UpdateCalendarConfigurationPermission;
-import org.zeroclick.meeting.shared.security.AccessControlService;
+import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
 import org.zeroclick.ui.action.menu.AbstractEditMenu;
 
 /**
@@ -250,7 +250,8 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 			final CalendarService calendarService = BEANS.get(CalendarService.class);
 
 			if (!calendarService.isCalendarConfigured()) {
-				googleHelper.askToAddApi(BEANS.get(AccessControlService.class).getZeroClickUserIdOfCurrentSubject());
+				googleHelper
+						.askToAddApi(BEANS.get(IAccessControlServiceHelper.class).getZeroClickUserIdOfCurrentSubject());
 			}
 			if (!calendarService.isCalendarConfigured()) {
 				// User really won't provide required data

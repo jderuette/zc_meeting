@@ -400,7 +400,6 @@ public class UserService extends AbstractCommonService implements IUserService {
 		if (!isCreation && !ACCESS.check(new UpdateUserPermission(formData.getUserId().getValue()))) {
 			super.throwAuthorizationFailed();
 		}
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(new StringBuilder().append("Store User with Id :").append(formData.getUserId().getValue())
@@ -408,7 +407,7 @@ public class UserService extends AbstractCommonService implements IUserService {
 					.append(" (Login : " + formData.getLogin().getValue()).append(")").toString());
 		}
 
-		final boolean isMySelf = acs.getZeroClickUserIdOfCurrentSubject().equals(formData.getUserId().getValue());
+		final boolean isMySelf = this.isMyself(formData.getUserId().getValue());
 
 		SQL.update(SQLs.USER_UPDATE, formData);
 

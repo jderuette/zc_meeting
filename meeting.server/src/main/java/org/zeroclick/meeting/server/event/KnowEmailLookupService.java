@@ -9,7 +9,7 @@ import org.zeroclick.meeting.server.sql.AbstractCombinedMultiSqlLookupService;
 import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.server.sql.SqlLookupConfiguration;
 import org.zeroclick.meeting.shared.event.IKnowEmailLookupService;
-import org.zeroclick.meeting.shared.security.AccessControlService;
+import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
 
 public class KnowEmailLookupService extends AbstractCombinedMultiSqlLookupService<String>
 		implements IKnowEmailLookupService {
@@ -17,8 +17,8 @@ public class KnowEmailLookupService extends AbstractCombinedMultiSqlLookupServic
 	@Override
 	protected List<SqlLookupConfiguration> getConfiguredSqlSelects() {
 		final List<SqlLookupConfiguration> sqls = new ArrayList<>();
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-		final Long currentUserId = acs.getZeroClickUserIdOfCurrentSubject();
+		final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
+		final Long currentUserId = acsHelper.getZeroClickUserIdOfCurrentSubject();
 		sqls.add(new SqlLookupConfiguration(SQLs.EVENT_SELECT_KNOWN_ATTENDEE_LOOKUP,
 				new NVPair("currentUser", currentUserId)));
 		sqls.add(new SqlLookupConfiguration(SQLs.EVENT_SELECT_KNOWN_HOST_LOOKUP,

@@ -186,7 +186,7 @@ public abstract class AbstractApiHelper<E, F> implements ApiHelper {
 	@Override
 	public void displayAddCalendarForm(final Long userId) {
 		final AddCalendarForm configForm = new AddCalendarForm();
-		configForm.startModify();
+		configForm.startNew();
 		configForm.waitFor();
 	}
 

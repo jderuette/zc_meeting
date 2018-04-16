@@ -15,6 +15,8 @@ limitations under the License.
  */
 package org.zeroclick.meeting.client.api.microsoft;
 
+import java.time.DateTimeException;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Date;
 
@@ -35,6 +37,7 @@ public class MicrosoftDateHelper extends AbstractProviderDateHelper<DateTimeTime
 	@Override
 	protected ZoneOffset timeOffset(final DateTimeTimeZone providerSpecificDate) {
 		String timeZone = null;
+		ZoneOffset zoneOffset = null;
 		final String microsoftTimeZone = providerSpecificDate.getTimeZone();
 
 		if ("UTC".equals(microsoftTimeZone)) {
@@ -45,6 +48,15 @@ public class MicrosoftDateHelper extends AbstractProviderDateHelper<DateTimeTime
 			timeZone = microsoftTimeZone;
 		}
 
-		return ZoneOffset.of(timeZone);
+		try {
+			// timeZone is +mm:hh or -hh:mm or similar
+			zoneOffset = ZoneOffset.of(timeZone);
+		} catch (final DateTimeException dte) {
+			// timeZone is an ID (like Europe/Paris
+			final ZoneId zoneId = ZoneId.of(timeZone);
+			zoneOffset = zoneId.getRules().getOffset(providerSpecificDate.getDateTime().toInstant());
+		}
+
+		return zoneOffset;
 	}
 }

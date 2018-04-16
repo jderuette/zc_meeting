@@ -275,7 +275,6 @@ public class OnBoardingUserForm extends AbstractForm {
 			OnBoardingUserForm.this.importFormData(formData);
 
 			OnBoardingUserForm.this.initFormAfterLoad();
-
 			OnBoardingUserForm.this.setEnabledPermission(new UpdateUserPermission(formData.getUserId().getValue()));
 		}
 

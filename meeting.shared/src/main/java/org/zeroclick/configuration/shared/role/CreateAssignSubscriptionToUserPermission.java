@@ -2,7 +2,7 @@ package org.zeroclick.configuration.shared.role;
 
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.shared.security.BasicHierarchyPermission;
-import org.zeroclick.meeting.shared.security.AccessControlService;
+import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
 
 /**
  *
@@ -38,8 +38,8 @@ public class CreateAssignSubscriptionToUserPermission extends BasicHierarchyPerm
 
 		if (other instanceof CreateAssignSubscriptionToUserPermission) {
 			final Long userId = ((CreateAssignSubscriptionToUserPermission) other).getUserId();
-			final AccessControlService acs = BEANS.get(AccessControlService.class);
-			final Long currentUserId = acs.getZeroClickUserIdOfCurrentSubject();
+			final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
+			final Long currentUserId = acsHelper.getZeroClickUserIdOfCurrentSubject();
 			if (currentUserId.equals(userId)) {
 				result = LEVEL_OWN;
 			}
