@@ -24,6 +24,9 @@ import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.zeroclick.comon.date.DateHelper;
 import org.zeroclick.configuration.shared.duration.DurationCodeType;
+import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationFormData;
+import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationFormData.CalendarConfigTable.CalendarConfigTableRowData;
+import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.RejectEventFormData;
@@ -36,6 +39,8 @@ public class RejectEventFormTest {
 
 	@BeanMock
 	private IEventService mockSvc;
+	@BeanMock
+	private ICalendarConfigurationService calendarConfigurationMockSvc;
 
 	private IBean<?> beanRegistration;
 	private IBean<?> venueBeanRegistration;
@@ -103,6 +108,67 @@ public class RejectEventFormTest {
 
 		final BeanMetaData VenueLookupServiceBean = new BeanMetaData(VenueLookupServiceMock.class);
 		this.venueBeanRegistration = TestingUtility.registerBean(VenueLookupServiceBean);
+
+		final CalendarsConfigurationFormData calendarsDataTableAnswer = new CalendarsConfigurationFormData();
+
+		final CalendarConfigTableRowData firstCalendar = calendarsDataTableAnswer.getCalendarConfigTable().addRow();
+		firstCalendar.setUserId(1L);
+		firstCalendar.setAddEventToCalendar(true);
+		firstCalendar.setCalendarConfigurationId(1L);
+		firstCalendar.setExternalId("UnitTestMainCalendarExternalId");
+		firstCalendar.setMain(true);
+		firstCalendar.setName("UnitTestMain");
+		firstCalendar.setOAuthCredentialId(1L);
+		firstCalendar.setProcess(true);
+		firstCalendar.setProcessFreeEvent(false);
+		firstCalendar.setProcessFullDayEvent(true);
+		firstCalendar.setProcessNotRegistredOnEvent(false);
+		firstCalendar.setReadOnly(false);
+
+		final CalendarConfigTableRowData secondCalendar = calendarsDataTableAnswer.getCalendarConfigTable().addRow();
+		secondCalendar.setUserId(1L);
+		secondCalendar.setAddEventToCalendar(false);
+		secondCalendar.setCalendarConfigurationId(1L);
+		secondCalendar.setExternalId("UnitTestSharedCalendarExternalId");
+		secondCalendar.setMain(true);
+		secondCalendar.setName("UnitTestShared");
+		secondCalendar.setOAuthCredentialId(1L);
+		secondCalendar.setProcess(true);
+		secondCalendar.setProcessFreeEvent(false);
+		secondCalendar.setProcessFullDayEvent(true);
+		secondCalendar.setProcessNotRegistredOnEvent(false);
+		secondCalendar.setReadOnly(false);
+
+		final CalendarConfigTableRowData thirdCalendar = calendarsDataTableAnswer.getCalendarConfigTable().addRow();
+		thirdCalendar.setUserId(1L);
+		thirdCalendar.setAddEventToCalendar(false);
+		thirdCalendar.setCalendarConfigurationId(1L);
+		thirdCalendar.setExternalId("UnitTestUnusedCalendarExternalId");
+		thirdCalendar.setMain(true);
+		thirdCalendar.setName("UnitTestUnused");
+		thirdCalendar.setOAuthCredentialId(1L);
+		thirdCalendar.setProcess(false);
+		thirdCalendar.setProcessFreeEvent(false);
+		thirdCalendar.setProcessFullDayEvent(true);
+		thirdCalendar.setProcessNotRegistredOnEvent(false);
+		thirdCalendar.setReadOnly(false);
+
+		final CalendarConfigTableRowData FourthCalendar = calendarsDataTableAnswer.getCalendarConfigTable().addRow();
+		FourthCalendar.setUserId(1L);
+		FourthCalendar.setAddEventToCalendar(false);
+		FourthCalendar.setCalendarConfigurationId(1L);
+		FourthCalendar.setExternalId("UnitTestAutoCalendarExternalId");
+		FourthCalendar.setMain(true);
+		FourthCalendar.setName("UnitTestAuto");
+		FourthCalendar.setOAuthCredentialId(1L);
+		FourthCalendar.setProcess(false);
+		FourthCalendar.setProcessFreeEvent(false);
+		FourthCalendar.setProcessFullDayEvent(false);
+		FourthCalendar.setProcessNotRegistredOnEvent(false);
+		FourthCalendar.setReadOnly(true);
+
+		Mockito.when(this.calendarConfigurationMockSvc.getCalendarConfigurationTableData(Matchers.any(Boolean.class)))
+				.thenReturn(calendarsDataTableAnswer);
 	}
 
 	@After
