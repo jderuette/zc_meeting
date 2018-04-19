@@ -21,6 +21,7 @@ import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateSubscription;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateVenue;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchEventAddCreatedDate;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchEventRejectReason;
+import org.zeroclick.meeting.server.sql.migrate.data.PatchExtendsAccesToken;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchManageMicrosoftCalendars;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchSlotTable;
 import org.zeroclick.meeting.shared.event.StateCodeType;
@@ -195,6 +196,10 @@ public interface SQLs {
 	String OAUHTCREDENTIAL_PATCH_ALTER_ACCES_TOKEN_COLUMN_LENGHT = "ALTER TABLE "
 			+ PatchManageMicrosoftCalendars.PATCHED_TABLE + " ALTER COLUMN "
 			+ PatchManageMicrosoftCalendars.PATCHED_COLUMN + " TYPE VARCHAR(1500)";
+
+	String OAUHTCREDENTIAL_PATCH_ALTER_ACCES_TOKEN_COLUMN_TO_2500_LENGHT = "ALTER TABLE "
+			+ PatchExtendsAccesToken.PATCHED_TABLE + " ALTER COLUMN " + PatchExtendsAccesToken.PATCHED_COLUMN
+			+ " TYPE VARCHAR(2500)";
 
 	String OAUHTCREDENTIAL_PATCH_ALTER_REFRESH_TOKEN_COLUMN_LENGHT = "ALTER TABLE "
 			+ PatchManageMicrosoftCalendars.PATCHED_TABLE + " ALTER COLUMN "

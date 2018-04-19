@@ -596,7 +596,7 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 		Boolean isMain = Boolean.FALSE;
 
 		// TODO Djer13 a way to know if a calendar is the main ?
-		if ("Calendar".equals(cal.getName())) {
+		if ("Calendar".equals(cal.getName()) || "Calendrier".equals(cal.getName())) {
 			isMain = Boolean.TRUE;
 		}
 

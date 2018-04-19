@@ -281,6 +281,13 @@ public class Desktop extends AbstractDesktop {
 						notificationHelper.addProccessedNotification(
 								"zc.meeting.calendar.notification.createdCalendarsConfig",
 								apiForm.getAccountEmail().getValue());
+
+						// if no calendar to add event after autoConfig, warn
+						// the user
+						if (!calendarService.isAddCalendarConfigured()) {
+							notificationHelper
+									.addWarningNotification("zc.meeting.calendar.notification.noCalendarToAddEvent");
+						}
 					}
 
 				} catch (final RuntimeException e) {
@@ -311,6 +318,13 @@ public class Desktop extends AbstractDesktop {
 						notificationHelper.addProccessedNotification(
 								"zc.meeting.calendar.notification.modifiedCalendarsConfig",
 								apiForm.getAccountEmail().getValue());
+
+						// if no calendar to add event after autoConfig, warn
+						// the user
+						if (!calendarService.isAddCalendarConfigured()) {
+							notificationHelper
+									.addWarningNotification("zc.meeting.calendar.notification.noCalendarToAddEvent");
+						}
 					}
 
 				} catch (final RuntimeException e) {
@@ -334,6 +348,18 @@ public class Desktop extends AbstractDesktop {
 								.toString().toString());
 					}
 					Desktop.this.getMenu(AddCalendarMenu.class).setVisible(Boolean.TRUE);
+
+					final CalendarService calendarService = BEANS.get(CalendarService.class);
+					final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+
+					notificationHelper.addProccessedNotification("zc.api.deleted");
+
+					// if no calendar to add event after autoConfig, warn
+					// the user
+					if (!calendarService.isAddCalendarConfigured()) {
+						notificationHelper
+								.addWarningNotification("zc.meeting.calendar.notification.noCalendarToAddEvent");
+					}
 
 				} catch (final RuntimeException e) {
 					LOG.error("Could not handle new api. (" + this.getClass().getName() + ")", e);
