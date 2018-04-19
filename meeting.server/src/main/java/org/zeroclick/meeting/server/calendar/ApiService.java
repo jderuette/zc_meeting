@@ -146,6 +146,8 @@ public class ApiService extends AbstractCommonService implements IApiService {
 			apis = this.getDataCacheByUser().get(userId);
 		}
 
+		final ApiTablePageData visibleApis = new ApiTablePageData();
+
 		if (apis.getRowCount() > 0) {
 			// Local cache to avoid multiple validation of same apiCredentialId
 			final Map<Long, Boolean> alreadyCheckReadAcces = new HashMap<>();
@@ -160,12 +162,26 @@ public class ApiService extends AbstractCommonService implements IApiService {
 					LOG.warn("User : " + super.userHelper.getCurrentUserId() + " try to access UserApi : "
 							+ row.getApiCredentialId() + " belonging to user : " + row.getUserId()
 							+ " but hasen't acces. Silently removing this (api) row");
-					apis.removeRow(row);
+				} else {
+					final ApiTableRowData visibleRow = visibleApis.addRow();
+					this.copyRow(row, visibleRow);
 				}
 			}
 		}
 
-		return apis;
+		return visibleApis;
+	}
+
+	private void copyRow(final ApiTableRowData source, final ApiTableRowData dest) {
+		dest.setAccessToken(source.getAccessToken());
+		dest.setAccountEmail(source.getAccountEmail());
+		dest.setApiCredentialId(source.getApiCredentialId());
+		dest.setExpirationTimeMilliseconds(source.getExpirationTimeMilliseconds());
+		dest.setProvider(source.getProvider());
+		dest.setRefreshToken(source.getRefreshToken());
+		dest.setRowState(source.getRowState());
+		dest.setTenantId(source.getTenantId());
+		dest.setUserId(source.getUserId());
 	}
 
 	@Override

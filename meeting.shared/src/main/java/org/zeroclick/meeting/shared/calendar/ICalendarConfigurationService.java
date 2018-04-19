@@ -14,6 +14,8 @@ public interface ICalendarConfigurationService extends IService {
 	CalendarConfigurationTablePageData getCalendarConfigurationTableData(SearchFilter filter,
 			Boolean displayAllForAdmin);
 
+	CalendarConfigurationTablePageData getCalendarConfiguration(Long userId);
+
 	CalendarsConfigurationFormData getCalendarConfigurationTableData(Boolean displayAllForAdmin);
 
 	void autoConfigure(Map<String, AbstractCalendarConfigurationTableRowData> calendars);

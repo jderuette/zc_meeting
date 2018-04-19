@@ -41,7 +41,7 @@ import org.zeroclick.meeting.client.common.DayDuration;
 import org.zeroclick.meeting.client.common.SlotHelper;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
-import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationFormData;
+import org.zeroclick.meeting.shared.calendar.CalendarConfigurationTablePageData;
 import org.zeroclick.meeting.shared.calendar.IApiService;
 import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.event.EventFormData;
@@ -67,10 +67,10 @@ public class CalendarService {
 		final ICalendarConfigurationService calendarConfigurationService = BEANS
 				.get(ICalendarConfigurationService.class);
 
-		final CalendarsConfigurationFormData calendarsConfig = calendarConfigurationService
-				.getCalendarConfigurationTableData(Boolean.FALSE);
+		final CalendarConfigurationTablePageData calendarsConfig = calendarConfigurationService
+				.getCalendarConfiguration(userId);
 
-		return calendarsConfig.getCalendarConfigTable().getRowCount() > 0;
+		return calendarsConfig.getRowCount() > 0;
 	}
 
 	public Boolean isAddCalendarConfigured() {
