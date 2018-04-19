@@ -64,6 +64,8 @@ public class TextsHelper extends TEXTS {
 	 * Wrap TEXTS.get to allow locale based on the specified user ID instead
 	 * currentUser locale
 	 *
+	 * @param userId
+	 *            : userId to extract his locale
 	 * @param key
 	 * @param messageArguments
 	 * @return

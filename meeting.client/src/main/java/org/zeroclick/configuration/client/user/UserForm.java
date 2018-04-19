@@ -671,13 +671,13 @@ public class UserForm extends AbstractForm {
 
 		@Override
 		protected void execStore() {
-
 			final IUserService service = BEANS.get(IUserService.class);
 			final UserFormData formData = new UserFormData();
 			UserForm.this.exportFormData(formData);
 			final String modifiedPassword = formData.getPassword().getValue();
 			if (null != modifiedPassword) {
 				formData.setHashedPassword(UserForm.this.hashPassword(modifiedPassword));
+				UserForm.this.setHashedPassword(modifiedPassword);
 			}
 
 			final String currentUserId = ((AccessControlService) BEANS.get(IAccessControlService.class))
@@ -728,6 +728,8 @@ public class UserForm extends AbstractForm {
 			// BEANS.get(AppUserHelper.class);
 			// final Date startDate =
 			// appUserHelper.getUserNowInHisTimeZone(this.getUserIdField().getValue());
+			LOG.info("Subscription has changed, handling the new subscription for userId : "
+					+ this.getUserIdField().getValue());
 			final ValidateCpsForm validateCpsForm = new ValidateCpsForm();
 			validateCpsForm.getUserIdField().setValue(this.getUserIdField().getValue());
 			validateCpsForm.getSubscriptionIdField().setValue(this.getSubscriptionBox().getValue());
@@ -737,6 +739,8 @@ public class UserForm extends AbstractForm {
 				validateCpsForm.startNew(this.getSubscriptionBox().getValue());
 				validateCpsForm.waitFor();
 				if (!validateCpsForm.isFormStored()) {
+					LOG.info("User did not accept new CPS, reseting is subscription to the previous one for userId : "
+							+ this.getUserIdField().getValue());
 					this.getSubscriptionBox().resetValue();
 					subscriptionAndCpsValid = Boolean.FALSE;
 				}
@@ -788,7 +792,16 @@ public class UserForm extends AbstractForm {
 			LOG.warn("No Generated Plain Paswword during saving new User. Generating one");
 			this.generateAndAddFormPassword(formData);
 		}
-		formData.setHashedPassword(UserForm.this.hashPassword(formData.getPassword().getValue()));
+
+		// should not happen
+		if (null == formData.getPassword().getValue()) {
+			LOG.error(
+					"No Generated Plain Paswword during saving new User even after a first new password generation. Generating one again");
+			this.generateAndAddFormPassword(formData);
+		}
+		final String hashedPassword = UserForm.this.hashPassword(formData.getPassword().getValue());
+		formData.setHashedPassword(hashedPassword);
+		this.setHashedPassword(hashedPassword);
 
 		if (null == formData.getAutofilled()) {
 			formData.setAutofilled(Boolean.FALSE);
@@ -818,9 +831,15 @@ public class UserForm extends AbstractForm {
 		// TODO Djer13 avoid DIRECT dependence with
 		// ScoutServiceCredentialVerifier. Use formBase.getCredentialVeirifer()
 		// ?
-		LOG.info("Hashing generated password");
+		String hashedPassword = null;
+		if (null == plainPassword) {
+			LOG.error("Trying to hash a null password, a default one will be created");
+		} else {
+			LOG.info("Hashing generated password with lenght : " + plainPassword.length());
+		}
 		final ScoutServiceCredentialVerifier service = BEANS.get(ScoutServiceCredentialVerifier.class);
-		return service.generatePassword(plainPassword);
+		hashedPassword = service.generatePassword(plainPassword);
+		return hashedPassword;
 	}
 
 	private void sendUserInviteEmail() {
