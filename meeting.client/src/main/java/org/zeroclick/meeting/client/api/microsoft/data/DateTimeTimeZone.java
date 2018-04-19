@@ -53,4 +53,13 @@ public class DateTimeTimeZone {
 	public void setTimeZone(final String timeZone) {
 		this.timeZone = timeZone;
 	}
+
+	@Override
+	public String toString() {
+		final StringBuilder builder = new StringBuilder();
+		builder.append("DateTimeTimeZone [dateTime=").append(this.dateTime).append(", timeZone=").append(this.timeZone)
+				.append("]");
+		return builder.toString();
+	}
+
 }

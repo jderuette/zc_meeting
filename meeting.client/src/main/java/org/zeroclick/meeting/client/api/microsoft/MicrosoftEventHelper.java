@@ -69,7 +69,7 @@ public class MicrosoftEventHelper extends AbstractEventHelper<Event, DateTimeTim
 			}
 			final StringBuilder builder = new StringBuilder();
 			builder.append("Microsoft event : ").append(event.getId()).append(", start : ").append(event.getStart())
-					.append(", end : ").append(event.getEnd()).append(", status").append(responseStatus)
+					.append(", end : ").append(event.getEnd()).append(", status : ").append(responseStatus)
 					.append(", showAs : ").append(event.getShowAs()).append(", from recurent event : ")
 					.append(event.getRecurrence()).append(", summary : ").append(event.getSubject());
 			if (maximumDetails) {
