@@ -15,6 +15,7 @@ limitations under the License.
  */
 package org.zeroclick.meeting.client.api;
 
+import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
@@ -35,6 +36,7 @@ import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
 import org.zeroclick.meeting.client.api.event.EventHelper;
 import org.zeroclick.meeting.client.calendar.AddCalendarForm;
 import org.zeroclick.meeting.client.calendar.CalendarsConfigurationForm;
+import org.zeroclick.meeting.client.common.CallTrackerService;
 import org.zeroclick.meeting.service.CalendarAviability;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
@@ -58,6 +60,12 @@ import com.google.api.client.http.GenericUrl;
 public abstract class AbstractApiHelper<E, F> implements ApiHelper {
 
 	private static final Logger LOG = LoggerFactory.getLogger(AbstractApiHelper.class);
+
+	protected CallTrackerService<Long> callTracker;
+
+	public AbstractApiHelper() {
+		this.callTracker = new CallTrackerService<>(5, Duration.ofMinutes(1), "GoogleApiHelper create API flow");
+	}
 
 	protected abstract EventHelper getEventHelper();
 

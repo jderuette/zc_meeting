@@ -15,10 +15,13 @@ limitations under the License.
  */
 package org.zeroclick.meeting.client.api.microsoft.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * @author djer
  * @see {@link https://developer.microsoft.com/fr-fr/graph/docs/api-reference/v1.0/resources/location}
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Location {
 
 	private PhysicalAddress address;

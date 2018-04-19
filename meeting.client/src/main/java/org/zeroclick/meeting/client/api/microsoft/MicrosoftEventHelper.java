@@ -122,7 +122,7 @@ public class MicrosoftEventHelper extends AbstractEventHelper<Event, DateTimeTim
 			throw new VetoException(TEXTS.get("zc.meeting.calendarProviderRequired"));
 		}
 
-		final String microsoftdStartDate = this.toISO8601DateTime(startDate);
+		final String microsoftStartDate = this.toISO8601DateTime(startDate);
 		final String microsoftEndDate = this.toISO8601DateTime(endDate);
 
 		// Sort by start time in descending order
@@ -136,7 +136,7 @@ public class MicrosoftEventHelper extends AbstractEventHelper<Event, DateTimeTim
 		final List<Event> events = new ArrayList<>();
 		try {
 			eventsPage = mCalendarService.getCalendar()
-					.getEvents(microsoftdStartDate, microsoftEndDate, sort, properties, maxResults).execute().body();
+					.getEvents(microsoftStartDate, microsoftEndDate, sort, properties, maxResults).execute().body();
 			events.addAll(CollectionUtility.arrayList(eventsPage.getValue()));
 
 			// FIXME Djer13 handle multi page results

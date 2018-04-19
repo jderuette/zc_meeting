@@ -19,7 +19,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
-import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -48,10 +47,10 @@ import org.slf4j.LoggerFactory;
 import org.zeroclick.comon.text.TextsHelper;
 import org.zeroclick.configuration.shared.api.ApiTablePageData;
 import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
+import org.zeroclick.configuration.shared.provider.ProviderCodeType;
 import org.zeroclick.meeting.client.api.AbstractApiHelper;
 import org.zeroclick.meeting.client.api.ApiCalendar;
 import org.zeroclick.meeting.client.api.ApiCredential;
-import org.zeroclick.meeting.client.common.CallTrackerService;
 import org.zeroclick.meeting.client.common.UserAccessRequiredException;
 import org.zeroclick.meeting.service.CalendarService.EventIdentification;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
@@ -94,12 +93,10 @@ public class GoogleApiHelper extends AbstractApiHelper<Credential, Calendar> {
 	public static final String ADD_GOOGLE_CALENDAR_URL = "/api/microsot/addGoogleCalendar";
 	private GoogleEventHelper eventHelper;
 
-	private CallTrackerService<Long> callTracker;
 	private DataStoreFactory dataStoreFactory;
 
 	@PostConstruct
 	public void init() {
-		this.callTracker = new CallTrackerService<>(5, Duration.ofMinutes(1), "GoogleApiHelper create API flow");
 		this.dataStoreFactory = new ScoutDataStoreFactory();
 	}
 
@@ -209,9 +206,11 @@ public class GoogleApiHelper extends AbstractApiHelper<Credential, Calendar> {
 
 		if (null != userApis && userApis.getRowCount() > 0) {
 			for (final ApiTableRowData aUserApi : userApis.getRows()) {
-				final ApiCredential<Credential> apiCredential = this.getApiCredential(aUserApi);
-				if (null != apiCredential) {
-					credentials.add(apiCredential);
+				if (aUserApi.getProvider().equals(ProviderCodeType.GoogleCode.ID)) {
+					final ApiCredential<Credential> apiCredential = this.getApiCredential(aUserApi);
+					if (null != apiCredential) {
+						credentials.add(apiCredential);
+					}
 				}
 			}
 		}
