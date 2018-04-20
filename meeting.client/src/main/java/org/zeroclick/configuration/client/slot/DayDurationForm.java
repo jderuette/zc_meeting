@@ -137,6 +137,14 @@ public class DayDurationForm extends AbstractForm {
 			return this.getFieldByClass(HoursBox.class);
 		}
 
+		public WorkDayBox getWorkDayBox() {
+			return this.getFieldByClass(WorkDayBox.class);
+		}
+
+		public WeekEndDaysBox getWeekEndDaysBox() {
+			return this.getFieldByClass(WeekEndDaysBox.class);
+		}
+
 		@Order(1500)
 		public class HoursBox extends AbstractSequenceBox {
 			@Override
@@ -226,6 +234,26 @@ public class DayDurationForm extends AbstractForm {
 				return false;
 			}
 
+			public MondayField getMondayField() {
+				return this.getFieldByClass(MondayField.class);
+			}
+
+			public TuesdayField getTuesdayField() {
+				return this.getFieldByClass(TuesdayField.class);
+			}
+
+			public WednesdayField getWednesdayField() {
+				return this.getFieldByClass(WednesdayField.class);
+			}
+
+			public ThursdayField getThursdayField() {
+				return this.getFieldByClass(ThursdayField.class);
+			}
+
+			public FridayField getFridayField() {
+				return this.getFieldByClass(FridayField.class);
+			}
+
 			@Order(1000)
 			public class MondayField extends AbstractBooleanField {
 				@Override
@@ -282,6 +310,14 @@ public class DayDurationForm extends AbstractForm {
 			@Override
 			protected boolean getConfiguredAutoCheckFromTo() {
 				return false;
+			}
+
+			public SaturdayField getSaturdayField() {
+				return this.getFieldByClass(SaturdayField.class);
+			}
+
+			public SundayField getSundayField() {
+				return this.getFieldByClass(SundayField.class);
 			}
 
 			@Order(1000)

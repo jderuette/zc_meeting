@@ -21,6 +21,8 @@ import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateSubscription;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchCreateVenue;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchEventAddCreatedDate;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchEventRejectReason;
+import org.zeroclick.meeting.server.sql.migrate.data.PatchExtendsAccesToken;
+import org.zeroclick.meeting.server.sql.migrate.data.PatchManageMicrosoftCalendars;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchSlotTable;
 import org.zeroclick.meeting.shared.event.StateCodeType;
 
@@ -137,25 +139,31 @@ public interface SQLs {
 	String OAUHTCREDENTIAL_CREATE_TABLE = "CREATE TABLE OAUHTCREDENTIAL (api_credential_id INTEGER NOT NULL CONSTRAINT OAUHTCREDENTIAL_PK PRIMARY KEY, user_id INTEGER, access_token VARCHAR(200), expiration_time_milliseconds BIGINT, refresh_token VARCHAR(200), provider INTEGER, repository_id VARCHAR(200), provider_data __blobType__)";
 
 	String OAUHTCREDENTIAL_PAGE_SELECT = "SELECT api_credential_id, access_token, expiration_time_milliseconds, refresh_token, user_id, provider, "
-			+ PatchAddEmailToApi.PATCHED_ADDED_COLUMN + " FROM OAUHTCREDENTIAL WHERE 1=1";
+			+ PatchAddEmailToApi.PATCHED_ADDED_COLUMN + ", "
+			+ PatchManageMicrosoftCalendars.PATCHED_ADDED_COLUMN_TENANT_ID + " FROM OAUHTCREDENTIAL WHERE 1=1";
 	String OAUHTCREDENTIAL_PAGE_SELECT_FILTER_USER = " AND user_id = :currentUser";
-	String OAUHTCREDENTIAL_PAGE_DATA_SELECT_INTO = " INTO :{page.apiCredentialId}, :{page.accessToken}, :{page.expirationTimeMilliseconds}, :{page.refreshToken}, :{page.userId}, :{page.provider}, :{page.accountEmail}";
+	String OAUHTCREDENTIAL_PAGE_SELECT_FILTER_API_CREDENTIAL_ID = " AND api_credential_id = :apiCredentialId";
+	String OAUHTCREDENTIAL_PAGE_DATA_SELECT_INTO = " INTO :{page.apiCredentialId}, :{page.accessToken}, :{page.expirationTimeMilliseconds}, :{page.refreshToken}, :{page.userId}, :{page.provider}, :{page.accountEmail}, :{page.tenantId}";
 
 	String OAUHTCREDENTIAL_INSERT = "INSERT INTO OAUHTCREDENTIAL (api_credential_id, user_id) VALUES (:apiCredentialId, :userId)";
 
 	String OAUHTCREDENTIAL_UPDATE_WITHOUT_ACCOUNT_EMAIL = "UPDATE OAUHTCREDENTIAL SET user_id=:userId,  access_token=:accessToken, expiration_time_milliseconds=:expirationTimeMilliseconds, refresh_token=:refreshToken, provider=:provider, repository_id=:repositoryId, provider_data=:providerData WHERE api_credential_id=:apiCredentialId";
 	String OAUHTCREDENTIAL_UPDATE = "UPDATE OAUHTCREDENTIAL SET user_id=:userId,  access_token=:accessToken, expiration_time_milliseconds=:expirationTimeMilliseconds, refresh_token=:refreshToken, provider=:provider, repository_id=:repositoryId, provider_data=:providerData, account_email=:accountEmail WHERE api_credential_id=:apiCredentialId";
+	String OAUHTCREDENTIAL_UPDATE_WITH_TENANT_ID = "UPDATE OAUHTCREDENTIAL SET user_id=:userId,  access_token=:accessToken, expiration_time_milliseconds=:expirationTimeMilliseconds, refresh_token=:refreshToken, provider=:provider, repository_id=:repositoryId, provider_data=:providerData, account_email=:accountEmail, "
+			+ PatchManageMicrosoftCalendars.PATCHED_ADDED_COLUMN_TENANT_ID
+			+ "=:tenantId WHERE api_credential_id=:apiCredentialId";
 
 	String OAUHTCREDENTIAL_SELECT_OWNER = "SELECT user_id FROM OAUHTCREDENTIAL WHERE api_credential_id=:apiCredentialId INTO :userId";
 
 	String OAUHTCREDENTIAL_SELECT = "SELECT api_credential_id, access_token, expiration_time_milliseconds, refresh_token, user_id, provider, repository_id, provider_data, "
-			+ PatchAddEmailToApi.PATCHED_ADDED_COLUMN + " FROM OAUHTCREDENTIAL WHERE 1=1";
+			+ PatchAddEmailToApi.PATCHED_ADDED_COLUMN + ", "
+			+ PatchManageMicrosoftCalendars.PATCHED_ADDED_COLUMN_TENANT_ID + " FROM OAUHTCREDENTIAL WHERE 1=1";
 	String OAUHTCREDENTIAL_SELECT_API_ID = "SELECT api_credential_id FROM OAUHTCREDENTIAL WHERE 1=1";
 	String OAUHTCREDENTIAL_SELECT_GOOGLE_DATA = "SELECT google_data FROM OAUHTCREDENTIAL WHERE provider=1";
 
 	String OAUHTCREDENTIAL_SELECT_BY_ACCOUNT_EMAIL = "SELECT api_credential_id FROM OAUHTCREDENTIAL WHERE user_id=:userId AND account_email=:accountEmail";
 
-	String OAUHTCREDENTIAL_SELECT_INTO = " INTO :apiCredentialId, :accessToken, :expirationTimeMilliseconds, :refreshToken, :userId, :provider, :repositoryId, :providerData, :accountEmail";
+	String OAUHTCREDENTIAL_SELECT_INTO = " INTO :apiCredentialId, :accessToken, :expirationTimeMilliseconds, :refreshToken, :userId, :provider, :repositoryId, :providerData, :accountEmail, :tenantId";
 	String OAUHTCREDENTIAL_SELECT_INTO_API_ID = " INTO :apiCredentialId";
 
 	String OAUHTCREDENTIAL_SELECT_PROVIDER_DATA_ONLY = "SELECT provider_data FROM OAUHTCREDENTIAL WHERE 1=1";
@@ -184,6 +192,22 @@ public interface SQLs {
 
 	String OAUHTCREDENTIAL_PATCH_ADD_EMAIL_COLUMN = "ALTER TABLE " + PatchAddEmailToApi.PATCHED_TABLE + " ADD COLUMN "
 			+ PatchAddEmailToApi.PATCHED_ADDED_COLUMN + " VARCHAR(120)";
+
+	String OAUHTCREDENTIAL_PATCH_ALTER_ACCES_TOKEN_COLUMN_LENGHT = "ALTER TABLE "
+			+ PatchManageMicrosoftCalendars.PATCHED_TABLE + " ALTER COLUMN "
+			+ PatchManageMicrosoftCalendars.PATCHED_COLUMN + " TYPE VARCHAR(1500)";
+
+	String OAUHTCREDENTIAL_PATCH_ALTER_ACCES_TOKEN_COLUMN_TO_2500_LENGHT = "ALTER TABLE "
+			+ PatchExtendsAccesToken.PATCHED_TABLE + " ALTER COLUMN " + PatchExtendsAccesToken.PATCHED_COLUMN
+			+ " TYPE VARCHAR(2500)";
+
+	String OAUHTCREDENTIAL_PATCH_ALTER_REFRESH_TOKEN_COLUMN_LENGHT = "ALTER TABLE "
+			+ PatchManageMicrosoftCalendars.PATCHED_TABLE + " ALTER COLUMN "
+			+ PatchManageMicrosoftCalendars.PATCHED_COLUMN_REFRESH_TOKEN + " TYPE VARCHAR(1500)";
+
+	String OAUHTCREDENTIAL_PATCH_ALTER_ADD_TENANT_ID_COLUMN = "ALTER TABLE "
+			+ PatchManageMicrosoftCalendars.PATCHED_TABLE + " ADD COLUMN "
+			+ PatchManageMicrosoftCalendars.PATCHED_ADDED_COLUMN_TENANT_ID + " VARCHAR(512)";
 
 	/**
 	 * Roles and permissions

@@ -101,6 +101,7 @@ public abstract class AbstractApiTable extends AbstractTable {
 			this.getExpirationTimeMillisecondsColumn().setVisible(true);
 			this.getRefreshTokenColumn().setVisible(true);
 			this.getUserIdColumn().setVisible(true);
+			this.getApiCredentialIdColumn().setDisplayable(true);
 
 		} else {
 			// avoid registering handler for "all user" in admin
@@ -120,6 +121,10 @@ public abstract class AbstractApiTable extends AbstractTable {
 			if (null != deleteMenu) {
 				deleteMenu.setVisible(false);
 			}
+		}
+
+		if (this.isApiAdmin()) {
+			this.getTenantIdColumn().setVisible(true);
 		}
 
 		if (this.getConfiguredAutoLoad()) {
@@ -224,6 +229,10 @@ public abstract class AbstractApiTable extends AbstractTable {
 
 	public AccountEmailColumn getAccountEmailColumn() {
 		return this.getColumnSet().getColumnByClass(AccountEmailColumn.class);
+	}
+
+	public TenantIdColumn getTenantIdColumn() {
+		return this.getColumnSet().getColumnByClass(TenantIdColumn.class);
 	}
 
 	public ProviderColumn getProviderColumn() {
@@ -388,6 +397,24 @@ public abstract class AbstractApiTable extends AbstractTable {
 		@Override
 		protected String getConfiguredHeaderText() {
 			return TEXTS.get("zc.api.accountEmail");
+		}
+
+		@Override
+		protected int getConfiguredWidth() {
+			return 256;
+		}
+	}
+
+	@Order(8000)
+	public class TenantIdColumn extends AbstractStringColumn {
+		@Override
+		protected String getConfiguredHeaderText() {
+			return TEXTS.get("zc.api.tenantId");
+		}
+
+		@Override
+		protected boolean getConfiguredVisible() {
+			return false;
 		}
 
 		@Override

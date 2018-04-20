@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.zeroclick</groupId>
 		<artifactId>meeting</artifactId>
-		<version>1.1.12</version>
+		<version>1.1.14</version>
 		<relativePath>../meeting/pom.xml</relativePath>
 	</parent>
 
@@ -55,12 +55,47 @@
 			<artifactId>google-api-services-people</artifactId>
 			<version>v1-rev217-1.22.0</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.mailjet</groupId>
 			<artifactId>mailjet-client</artifactId>
 			<version>${mailjet-version}</version>
 		</dependency>
+
+		<!-- Microsoft API -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>2.7.4</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-annotations</artifactId>
+			<version>2.7.4</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.7.4</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.squareup.retrofit2</groupId>
+			<artifactId>retrofit</artifactId>
+			<version>2.3.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.squareup.retrofit2</groupId>
+			<artifactId>converter-jackson</artifactId>
+			<version>2.3.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>logging-interceptor</artifactId>
+			<version>3.10.0</version>
+		</dependency>
+
 
 	</dependencies>
 </project>

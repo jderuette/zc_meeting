@@ -6,32 +6,23 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import org.eclipse.scout.rt.client.context.ClientRunContexts;
-import org.eclipse.scout.rt.client.job.ModelJobs;
 import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
 import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
 import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenuSeparator;
 import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.desktop.AbstractDesktop;
-import org.eclipse.scout.rt.client.ui.desktop.OpenUriAction;
-import org.eclipse.scout.rt.client.ui.desktop.notification.DesktopNotification;
 import org.eclipse.scout.rt.client.ui.desktop.outline.AbstractOutlineViewButton;
 import org.eclipse.scout.rt.client.ui.desktop.outline.IOutline;
 import org.eclipse.scout.rt.client.ui.desktop.outline.pages.IPage;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
-import org.eclipse.scout.rt.platform.job.Jobs;
 import org.eclipse.scout.rt.platform.nls.NlsLocale;
-import org.eclipse.scout.rt.platform.status.IStatus;
-import org.eclipse.scout.rt.platform.status.Status;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.platform.util.StringUtility;
-import org.eclipse.scout.rt.platform.util.concurrent.IRunnable;
 import org.eclipse.scout.rt.shared.AbstractIcons;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.notification.INotificationListener;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
-import org.eclipse.scout.rt.shared.services.common.security.IAccessControlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.comon.user.AppUserHelper;
@@ -59,9 +50,12 @@ import org.zeroclick.configuration.shared.user.ReadUserPermission;
 import org.zeroclick.configuration.shared.user.UpdateUserPermission;
 import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.configuration.shared.user.UserModifiedNotification;
+import org.zeroclick.meeting.client.api.ApiHelper;
+import org.zeroclick.meeting.client.api.ApiHelperFactory;
+import org.zeroclick.meeting.client.api.google.GoogleApiHelper;
 import org.zeroclick.meeting.client.calendar.CalendarsConfigurationForm;
-import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
 import org.zeroclick.meeting.client.meeting.MeetingOutline;
+import org.zeroclick.meeting.service.CalendarService;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
@@ -71,7 +65,7 @@ import org.zeroclick.meeting.shared.calendar.IApiService;
 import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.calendar.ReadApiPermission;
 import org.zeroclick.meeting.shared.event.ReadEventPermission;
-import org.zeroclick.meeting.shared.security.AccessControlService;
+import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
 
 /**
  * <h3>{@link Desktop}</h3>
@@ -137,16 +131,16 @@ public class Desktop extends AbstractDesktop {
 	}
 
 	private void checkAndUpdateRequiredDatas() {
-		final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
+		final CalendarService calendarService = BEANS.get(CalendarService.class);
 		final IUserService userService = BEANS.get(IUserService.class);
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-		final Long currentUserId = acs.getZeroClickUserIdOfCurrentSubject();
+		final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
+		final Long currentUserId = acsHelper.getZeroClickUserIdOfCurrentSubject();
 
 		this.cleanInvalidApiKey(currentUserId);
 
 		// default user timezone
 		final String currentUserTimeZone = userService.getUserTimeZone(currentUserId);
-		final Boolean isCalendarConfigured = googleHelper.isCalendarConfigured();
+		final Boolean isCalendarConfigured = calendarService.isCalendarConfigured();
 		if (null == currentUserTimeZone || !isCalendarConfigured) {
 			final OnBoardingUserForm form = new OnBoardingUserForm();
 			form.getUserIdField().setValue(currentUserId);
@@ -221,7 +215,8 @@ public class Desktop extends AbstractDesktop {
 			LOG.info("Auto-importing user Calendars for user : " + userId);
 
 			try {
-				googleHelper.autoConfigureCalendars();
+				final CalendarService calendarService = BEANS.get(CalendarService.class);
+				calendarService.autoConfigureCalendars();
 			} catch (final Exception ex) {
 				LOG.error("Error while importing (Google) calendar for user Id : " + userId, ex);
 			}
@@ -266,34 +261,6 @@ public class Desktop extends AbstractDesktop {
 		return currentUser.equals(userId);
 	}
 
-	public void addNotification(final Integer severity, final Long duration, final Boolean closable,
-			final String messageKey) {
-		final IStatus status = new Status(TEXTS.get(messageKey), severity);
-		this.addNotification(status, duration, closable);
-	}
-
-	public void addNotification(final Integer severity, final Long duration, final Boolean closable,
-			final String messageKey, final String... messageArguments) {
-		final IStatus status = new Status(TEXTS.get(messageKey, messageArguments), severity);
-		this.addNotification(status, duration, closable);
-	}
-
-	private void addNotification(final IStatus status, final Long duration, final Boolean closable) {
-		Jobs.schedule(new IRunnable() {
-
-			@Override
-			@SuppressWarnings("PMD.SignatureDeclareThrowsException")
-			public void run() throws Exception {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug(new StringBuilder().append("Adding desktop notification : ").append(status.getMessage())
-							.append("(").append(status.getClass()).append(")").toString());
-				}
-				final DesktopNotification desktopNotification = new DesktopNotification(status, duration, closable);
-				ClientSession.get().getDesktop().addNotification(desktopNotification);
-			}
-		}, ModelJobs.newInput(ClientRunContexts.copyCurrent()).withName("adding desktop notification (in ModelJob)"));
-	}
-
 	private INotificationListener<ApiCreatedNotification> createApiCreatedListener() {
 		this.apiCreatedListener = new INotificationListener<ApiCreatedNotification>() {
 			@Override
@@ -308,12 +275,19 @@ public class Desktop extends AbstractDesktop {
 						final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 
 						notificationHelper.addProccessedNotification("zc.api.added");
-						final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
-						googleHelper.autoConfigureCalendars();
+						final CalendarService calendarService = BEANS.get(CalendarService.class);
+						calendarService.autoConfigureCalendars();
 
 						notificationHelper.addProccessedNotification(
 								"zc.meeting.calendar.notification.createdCalendarsConfig",
 								apiForm.getAccountEmail().getValue());
+
+						// if no calendar to add event after autoConfig, warn
+						// the user
+						if (!calendarService.isAddCalendarConfigured()) {
+							notificationHelper
+									.addWarningNotification("zc.meeting.calendar.notification.noCalendarToAddEvent");
+						}
 					}
 
 				} catch (final RuntimeException e) {
@@ -338,12 +312,19 @@ public class Desktop extends AbstractDesktop {
 						final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 
 						notificationHelper.addProccessedNotification("zc.api.modified");
-						final GoogleApiHelper googleHelper = BEANS.get(GoogleApiHelper.class);
-						googleHelper.autoConfigureCalendars();
+						final CalendarService calendarService = BEANS.get(CalendarService.class);
+						calendarService.autoConfigureCalendars();
 
 						notificationHelper.addProccessedNotification(
 								"zc.meeting.calendar.notification.modifiedCalendarsConfig",
 								apiForm.getAccountEmail().getValue());
+
+						// if no calendar to add event after autoConfig, warn
+						// the user
+						if (!calendarService.isAddCalendarConfigured()) {
+							notificationHelper
+									.addWarningNotification("zc.meeting.calendar.notification.noCalendarToAddEvent");
+						}
 					}
 
 				} catch (final RuntimeException e) {
@@ -366,7 +347,19 @@ public class Desktop extends AbstractDesktop {
 								.append(this.getClass().getName()).append(") : ").append(eventForm.getUserId())
 								.toString().toString());
 					}
-					Desktop.this.getMenu(AddGoogleCalendarMenu.class).setVisible(Boolean.TRUE);
+					Desktop.this.getMenu(AddCalendarMenu.class).setVisible(Boolean.TRUE);
+
+					final CalendarService calendarService = BEANS.get(CalendarService.class);
+					final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
+
+					notificationHelper.addProccessedNotification("zc.api.deleted");
+
+					// if no calendar to add event after autoConfig, warn
+					// the user
+					if (!calendarService.isAddCalendarConfigured()) {
+						notificationHelper
+								.addWarningNotification("zc.meeting.calendar.notification.noCalendarToAddEvent");
+					}
 
 				} catch (final RuntimeException e) {
 					LOG.error("Could not handle new api. (" + this.getClass().getName() + ")", e);
@@ -410,10 +403,10 @@ public class Desktop extends AbstractDesktop {
 	}
 
 	@Order(2000)
-	public class AddGoogleCalendarMenu extends AbstractMenu {
+	public class AddCalendarMenu extends AbstractMenu {
 		@Override
 		protected String getConfiguredText() {
-			return TEXTS.get("zc.meeting.addGoogleCalendar");
+			return TEXTS.get("zc.meeting.addCalendar.short");
 		}
 
 		@Override
@@ -433,7 +426,11 @@ public class Desktop extends AbstractDesktop {
 
 		@Override
 		protected void execAction() {
-			ClientSession.get().getDesktop().openUri("/addGoogleCalendar", OpenUriAction.NEW_WINDOW);
+			final ApiHelper apiHelper = ApiHelperFactory.getCommonApiHelper();
+
+			final Long currentUserId = BEANS.get(IAccessControlServiceHelper.class)
+					.getZeroClickUserIdOfCurrentSubject();
+			apiHelper.displayAddCalendarForm(currentUserId);
 		}
 
 		@Override
@@ -444,7 +441,7 @@ public class Desktop extends AbstractDesktop {
 		}
 	}
 
-	@Order(3000)
+	@Order(4000)
 	public class UserMenu extends AbstractMenu {
 
 		@Override
@@ -495,10 +492,7 @@ public class Desktop extends AbstractDesktop {
 
 			@Override
 			protected void execAction() {
-				// AccessControlService = clientSide Access Control Service.
-				// getUserIdOfCurrentUser() implemented in super abstract
-				// parent.
-				final Long currentUserId = ((AccessControlService) BEANS.get(IAccessControlService.class))
+				final Long currentUserId = BEANS.get(IAccessControlServiceHelper.class)
 						.getZeroClickUserIdOfCurrentSubject();
 				final UserForm form = new UserForm();
 				form.getUserIdField().setValue(currentUserId);

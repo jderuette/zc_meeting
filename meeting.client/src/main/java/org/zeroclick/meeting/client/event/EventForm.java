@@ -88,7 +88,7 @@ import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.KnowEmailLookupCall;
 import org.zeroclick.meeting.shared.event.StateCodeType;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
-import org.zeroclick.meeting.shared.security.AccessControlService;
+import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
 import org.zeroclick.ui.action.menu.AbstractAddMenu;
 
 @FormData(value = EventFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
@@ -1206,7 +1206,7 @@ public class EventForm extends AbstractForm {
 
 				@Override
 				public void run() {
-					final AccessControlService acs = BEANS.get(AccessControlService.class);
+					final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
 					final IEventService eventService = BEANS.get(IEventService.class);
 					final IUserService userService = BEANS.get(IUserService.class);
 
@@ -1223,7 +1223,7 @@ public class EventForm extends AbstractForm {
 					formData.getGuestId().setValue(eventGuest);
 
 					// required *before* save (for sending email)
-					formData.setLastModifier(acs.getZeroClickUserIdOfCurrentSubject());
+					formData.setLastModifier(acsHelper.getZeroClickUserIdOfCurrentSubject());
 
 					final String venueKey = TextsHelper.getKeyByText(venue);
 					if (null != venueKey) {

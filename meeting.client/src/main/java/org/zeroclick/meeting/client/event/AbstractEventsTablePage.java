@@ -47,10 +47,12 @@ import org.zeroclick.configuration.client.slot.DayDurationModifiedNotificationHa
 import org.zeroclick.configuration.client.user.UserModifiedNotificationHandler;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
 import org.zeroclick.configuration.shared.api.ApiDeletedNotification;
+import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
 import org.zeroclick.configuration.shared.duration.DurationCodeType;
 import org.zeroclick.configuration.shared.params.IAppParamsService;
 import org.zeroclick.configuration.shared.params.ParamCreatedNotification;
 import org.zeroclick.configuration.shared.params.ParamModifiedNotification;
+import org.zeroclick.configuration.shared.provider.ProviderCodeType;
 import org.zeroclick.configuration.shared.slot.DayDurationFormData;
 import org.zeroclick.configuration.shared.slot.DayDurationModifiedNotification;
 import org.zeroclick.configuration.shared.slot.SlotCodeType;
@@ -59,20 +61,24 @@ import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.configuration.shared.user.UserModifiedNotification;
 import org.zeroclick.configuration.shared.venue.VenueLookupCall;
 import org.zeroclick.meeting.client.NotificationHelper;
+import org.zeroclick.meeting.client.api.google.GoogleApiHelper;
+import org.zeroclick.meeting.client.api.microsoft.MicrosoftApiHelper;
 import org.zeroclick.meeting.client.calendar.CalendarConfigurationCreatedNotificationHandler;
 import org.zeroclick.meeting.client.calendar.CalendarConfigurationModifiedNotificationHandler;
 import org.zeroclick.meeting.client.calendar.CalendarsConfigurationCreatedNotificationHandler;
 import org.zeroclick.meeting.client.calendar.CalendarsConfigurationModifiedNotificationHandler;
 import org.zeroclick.meeting.client.common.CallTrackerService;
 import org.zeroclick.meeting.client.event.EventTablePage.Table.NewEventMenu;
-import org.zeroclick.meeting.client.google.api.GoogleApiHelper;
+import org.zeroclick.meeting.service.CalendarService;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationCreatedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationModifiedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationCreatedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationFormData;
+import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationFormData.CalendarConfigTable.CalendarConfigTableRowData;
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationModifiedNotification;
+import org.zeroclick.meeting.shared.calendar.IApiService;
 import org.zeroclick.meeting.shared.event.EventCreatedNotification;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.EventModifiedNotification;
@@ -81,7 +87,7 @@ import org.zeroclick.meeting.shared.event.ReadEventExtendedPropsPermission;
 import org.zeroclick.meeting.shared.event.StateCodeType;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
 import org.zeroclick.meeting.shared.eventb.AbstractEventsTablePageData;
-import org.zeroclick.meeting.shared.security.AccessControlService;
+import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
 import org.zeroclick.ui.action.menu.AbstractCancelMenu;
 import org.zeroclick.ui.form.columns.zoneddatecolumn.AbstractZonedDateColumn;
 
@@ -109,11 +115,15 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 	protected INotificationListener<ParamModifiedNotification> paramModifiedListener;
 
 	protected boolean isUserCalendarConfigured() {
-		return BEANS.get(GoogleApiHelper.class).isCalendarConfigured();
+		return BEANS.get(CalendarService.class).isCalendarConfigured();
+	}
+
+	protected boolean isUserAddCalendarConfigured() {
+		return BEANS.get(CalendarService.class).isAddCalendarConfigured();
 	}
 
 	protected boolean isOrganizerCalendarConfigured(final ITableRow row) {
-		return BEANS.get(GoogleApiHelper.class)
+		return BEANS.get(CalendarService.class)
 				.isCalendarConfigured(this.getTable().getOrganizerColumn().getValue(row));
 	}
 
@@ -711,14 +721,53 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 							}
 
 							if (Table.this.isMySelf(userId)) {
-								final GoogleApiHelper googleApiHelper = BEANS.get(GoogleApiHelper.class);
-								googleApiHelper.autoConfigureCalendars();
+								Boolean isGoogleApiCalendar = Boolean.FALSE;
+								Boolean isMicrosoftApiCalendar = Boolean.FALSE;
+								if (calendarsConfigurationFormData.getCalendarConfigTable().getRowCount() > 0) {
+									// perform a refresh on Each provider, if
+									// user as a provider's API
+									for (final CalendarConfigTableRowData calendar : calendarsConfigurationFormData
+											.getCalendarConfigTable().getRows()) {
+										final IApiService apiService = BEANS.get(IApiService.class);
+										final ApiTableRowData apiData = apiService
+												.getApi(calendar.getOAuthCredentialId());
+
+										final Long apiProvider = apiData.getProvider();
+
+										if (ProviderCodeType.GoogleCode.ID.equals(apiProvider)) {
+											isGoogleApiCalendar = Boolean.TRUE;
+										} else if (ProviderCodeType.MicrosoftCode.ID.equals(apiProvider)) {
+											isMicrosoftApiCalendar = Boolean.TRUE;
+										}
+
+										// if both are modified, we can avoid
+										// testing other calendars
+										if (isGoogleApiCalendar && isMicrosoftApiCalendar) {
+											break;
+										}
+									}
+								}
 
 								final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
-								notificationHelper.addProccessedNotification(
-										"zc.meeting.calendar.notification.modifiedCalendarsConfig",
-										googleApiHelper.getAccountsEmail(
-												calendarsConfigurationFormData.getCalendarConfigTable().getRows()));
+
+								if (isGoogleApiCalendar) {
+									final GoogleApiHelper googleApiHelper = BEANS.get(GoogleApiHelper.class);
+									googleApiHelper.autoConfigureCalendars();
+									notificationHelper.addProccessedNotification(
+											"zc.meeting.calendar.notification.modifiedCalendarsConfig",
+											googleApiHelper.getAccountsEmail(
+													calendarsConfigurationFormData.getCalendarConfigTable().getRows()));
+								}
+
+								if (isMicrosoftApiCalendar) {
+									final MicrosoftApiHelper microsoftApiHelper = BEANS.get(MicrosoftApiHelper.class);
+									microsoftApiHelper.autoConfigureCalendars();
+
+									notificationHelper.addProccessedNotification(
+											"zc.meeting.calendar.notification.modifiedCalendarsConfig",
+											microsoftApiHelper.getAccountsEmail(
+													calendarsConfigurationFormData.getCalendarConfigTable().getRows()));
+								}
 							}
 
 							Table.this.refreshAutoFillDate();
@@ -980,7 +1029,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			final String rowState = this.getStateColumn().getValue(row.getRowIndex());
 			final Boolean alreadyProcessed = AbstractEventsTablePage.this.isEventProcessed(eventId);
 			return null != row && !alreadyProcessed && CompareUtility.equals(StateCodeType.AskedCode.ID, rowState)
-					&& startDateEmpty && endDateEmpty && BEANS.get(GoogleApiHelper.class).isCalendarConfigured(hostId)
+					&& startDateEmpty && endDateEmpty && BEANS.get(CalendarService.class).isCalendarConfigured(hostId)
 					// &&
 					// BEANS.get(GoogleApiHelper.class).isCalendarConfigured(attendeeId)
 					&& this.isTimeZoneValid(attendeeId) && this.isTimeZoneValid(hostId) && this.isGuestCurrentUser(row);
@@ -1194,8 +1243,8 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		}
 
 		protected Long getCurrentUserId() {
-			final AccessControlService acs = BEANS.get(AccessControlService.class);
-			return acs.getZeroClickUserIdOfCurrentSubject();
+			final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
+			return acsHelper.getZeroClickUserIdOfCurrentSubject();
 		}
 
 		@Override

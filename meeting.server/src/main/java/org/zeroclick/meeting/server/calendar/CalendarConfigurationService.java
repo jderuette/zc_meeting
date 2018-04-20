@@ -1,5 +1,6 @@
 package org.zeroclick.meeting.server.calendar;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -21,6 +22,7 @@ import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationCreatedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
+import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData.UserId;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationModifiedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationTablePageData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationTablePageData.CalendarConfigurationTableRowData;
@@ -89,20 +91,91 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 	@Override
 	public CalendarConfigurationTablePageData getCalendarConfigurationTableData(final SearchFilter filter,
 			final Boolean displayAllForAdmin) {
-		final CalendarConfigurationTablePageData pageData = new CalendarConfigurationTablePageData();
+		Long userId = null;
 
-		String ownerFilter = "";
-		Long currentConnectedUserId = 0L;
-		if (!displayAllForAdmin || ACCESS.getLevel(new CreateCalendarConfigurationPermission(
-				(Long) null)) != CreateCalendarConfigurationPermission.LEVEL_ALL) {
-			ownerFilter = SQLs.CALENDAR_CONFIG_FILTER_CURRENT_USER;
-			currentConnectedUserId = super.userHelper.getCurrentUserId();
+		if (null != filter && null != filter.getFormData()
+				&& null != filter.getFormData().getFieldByClass(UserId.class)) {
+			userId = filter.getFormData().getFieldByClass(UserId.class).getValue();
 		}
 
-		final String sql = SQLs.CALENDAR_CONFIG_PAGE_SELECT + ownerFilter + SQLs.CALENDAR_CONFIG_PAGE_SELECT_INTO;
+		final Boolean isAdmin = ACCESS.getLevel(
+				new ReadCalendarConfigurationPermission((Long) null)) == ReadCalendarConfigurationPermission.LEVEL_ALL;
+		final Boolean standardUserCanAccesUserId = ACCESS.getLevel(
+				new ReadCalendarConfigurationPermission(userId)) >= ReadCalendarConfigurationPermission.LEVEL_INVOLVED;
 
-		SQL.selectInto(sql, new NVPair("page", pageData), new NVPair("currentUser", currentConnectedUserId));
-		return pageData;
+		if (isAdmin) {
+			if (null == userId && !displayAllForAdmin) {
+				userId = super.userHelper.getCurrentUserId();
+			}
+		} else if (!standardUserCanAccesUserId) {
+			userId = super.userHelper.getCurrentUserId();
+		}
+
+		if (!isAdmin && !displayAllForAdmin && null == userId) {
+			LOG.warn(
+					"Trying to get APIs of null userId from a non admin or not listing ALL CalendarConfiguration (as admin)");
+			userId = super.userHelper.getCurrentUserId();
+		}
+		CalendarConfigurationTablePageData pageData = new CalendarConfigurationTablePageData();
+
+		// String ownerFilter = "";
+		// Long currentConnectedUserId = 0L;
+		// if (!displayAllForAdmin || ACCESS.getLevel(new
+		// CreateCalendarConfigurationPermission(
+		// (Long) null)) != CreateCalendarConfigurationPermission.LEVEL_ALL) {
+		// ownerFilter = SQLs.CALENDAR_CONFIG_FILTER_CURRENT_USER;
+		// currentConnectedUserId = super.userHelper.getCurrentUserId();
+		// }
+
+		if (null == userId) {
+			// load for admin. Cached does not handle null "key"
+			pageData = this.loadForCacheByUserId(null);
+		} else {
+			pageData = this.getDataCacheByUser().get(userId);
+		}
+		// Filter user specific visibility on a COPY else cache is modified !
+		final CalendarConfigurationTablePageData visiblePageData = new CalendarConfigurationTablePageData();
+
+		if (pageData.getRowCount() > 0) {
+			// Local cache to avoid multiple validation of same apiCredentialId
+			final Map<Long, Boolean> alreadyCheckReadAcces = new HashMap<>();
+			// Post check permission base on OAuthId
+			for (final CalendarConfigurationTableRowData row : pageData.getRows()) {
+				if (null == alreadyCheckReadAcces.get(row.getOAuthCredentialId())) {
+					@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
+					final Boolean canRead = ACCESS
+							.check(new ReadCalendarConfigurationPermission(row.getOAuthCredentialId()));
+					alreadyCheckReadAcces.put(row.getOAuthCredentialId(), canRead);
+				}
+				if (!alreadyCheckReadAcces.get(row.getOAuthCredentialId())) {
+					LOG.warn("User : " + super.userHelper.getCurrentUserId() + " try to access CalendarConfig : "
+							+ row.getCalendarConfigurationId() + " from apiId : " + row.getOAuthCredentialId()
+							+ " belonging to user : " + row.getUserId()
+							+ " but hasen't acces. Silently removing this (calendarConfig) row");
+				} else {
+					final CalendarConfigurationTableRowData visibleRow = visiblePageData.addRow();
+					this.copyRow(row, visibleRow);
+				}
+			}
+		}
+
+		return visiblePageData;
+	}
+
+	private void copyRow(final CalendarConfigurationTableRowData source, final CalendarConfigurationTableRowData dest) {
+		dest.setAddEventToCalendar(source.getAddEventToCalendar());
+		dest.setCalendarConfigurationId(source.getCalendarConfigurationId());
+		dest.setExternalId(source.getExternalId());
+		dest.setMain(source.getMain());
+		dest.setName(source.getName());
+		dest.setOAuthCredentialId(source.getOAuthCredentialId());
+		dest.setProcess(source.getProcess());
+		dest.setProcessFreeEvent(source.getProcessFreeEvent());
+		dest.setProcessFullDayEvent(source.getProcessFullDayEvent());
+		dest.setProcessNotRegistredOnEvent(source.getProcessNotRegistredOnEvent());
+		dest.setReadOnly(source.getReadOnly());
+		dest.setRowState(source.getRowState());
+		dest.setUserId(source.getUserId());
 	}
 
 	@Override
@@ -122,6 +195,16 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		SQL.selectInto(sql, new NVPair("page", formData.getCalendarConfigTable()),
 				new NVPair("currentUser", currentConnectedUserId));
 		return formData;
+	}
+
+	@Override
+	public CalendarConfigurationTablePageData getCalendarConfiguration(final Long userId) {
+		final SearchFilter filter = new SearchFilter();
+		final CalendarConfigurationFormData calendarConfigurationSearchFilterForm = new CalendarConfigurationFormData();
+		calendarConfigurationSearchFilterForm.getUserId().setValue(userId);
+		filter.setFormData(calendarConfigurationSearchFilterForm);
+
+		return this.getCalendarConfigurationTableData(filter, Boolean.FALSE);
 	}
 
 	@Override
@@ -205,6 +288,9 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 			this.checkPermission(new UpdateCalendarConfigurationPermission(row.getOAuthCredentialId()));
 			SQL.insert(SQLs.CALENDAR_CONFIG_UPDATE + SQLs.GENERIC_WHERE_FOR_SECURE_AND + SQLs.CALENDAR_CONFIG_FILTER_ID
 					+ SQLs.CALENDAR_CONFIG_FILTER_EXTERNAL_ID, row);
+
+			this.dataCache.clearCache(row.getCalendarConfigurationId());
+			this.dataCacheByUserId.clearCache(row.getUserId());
 		}
 
 		this.sendModifiedNotifications(formData);
@@ -264,7 +350,7 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		}
 	}
 
-	private void delete(final String externalId, final Long apiCredentialId) {
+	private void delete(final String externalId, final Long apiCredentialId, final Long userId) {
 		// permission based on API permissions (not calendar permissions)
 		this.checkPermission(new DeleteApiPermission(apiCredentialId));
 
@@ -278,6 +364,9 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 			LOG.warn(new StringBuffer().append("No row deleted calendars configuration : ").append(externalId)
 					.append(" for API ID : ").append(apiCredentialId).toString());
 		}
+
+		this.dataCache.clearCache(apiCredentialId);
+		this.dataCacheByUserId.clearCache(userId);
 	}
 
 	@Override
@@ -349,7 +438,8 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 
 				} else {
 					LOG.info(new StringBuffer().append("Calendar configuration : ")
-							.append(existingCalendarConfigId + " (name : ").append(existingCalendarConfig.getName())
+							.append(existingCalendarConfigId + " (name : ")
+							.append(existingCalendarConfig.getName().getValue())
 							.append(") don't need to be save during sync").toString());
 				}
 			}
@@ -371,7 +461,7 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 					LOG.info(new StringBuffer().append("Calendar : ").append(calendar.getExternalId())
 							.append(" does not exist anymore in provider data, removing it from user config")
 							.toString());
-					this.delete(calendar.getExternalId(), calendar.getOAuthCredentialId());
+					this.delete(calendar.getExternalId(), calendar.getOAuthCredentialId(), calendar.getUserId());
 				}
 			}
 		}
@@ -487,6 +577,33 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 		}
 
 		return configuredCalendars;
+	}
+
+	@Override
+	public Long getCalendarApiId(final String calendarId, final Long calendarOwnerId) {
+		Long calendarLinkedApiId = null;
+		final Set<AbstractCalendarConfigurationTableRowData> userCalendars = this.getUsedCalendars(calendarOwnerId);
+
+		if (null != userCalendars && userCalendars.size() > 0) {
+			for (final AbstractCalendarConfigurationTableRowData calendarConfig : userCalendars) {
+				if (calendarConfig.getExternalId().equals(calendarId)) {
+					calendarLinkedApiId = calendarConfig.getOAuthCredentialId();
+					break;
+				}
+			}
+		}
+
+		if (null == calendarLinkedApiId) {
+			Integer nbUserCalendars = 0;
+			if (null != userCalendars) {
+				nbUserCalendars = userCalendars.size();
+			}
+			LOG.warn(new StringBuilder().append("No Api Id found for calendar ID : ").append(calendarId)
+					.append(" for user ID : ").append(calendarOwnerId).append("(in ").append(nbUserCalendars)
+					.append(" calendars)").toString());
+		}
+
+		return calendarLinkedApiId;
 	}
 
 	private void sendModifiedNotifications(final CalendarsConfigurationFormData formData) {

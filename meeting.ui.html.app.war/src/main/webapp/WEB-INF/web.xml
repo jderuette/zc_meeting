@@ -41,30 +41,10 @@
     <servlet-name>UiServlet</servlet-name>
     <url-pattern>/*</url-pattern>
   </servlet-mapping>
-  
-     <servlet>
-    <servlet-name>CalendarServlet</servlet-name>
-    <servlet-class>org.zeroclick.meeting.client.calendar.CalendarServletSample</servlet-class>
-  </servlet>
-
-  <servlet-mapping>
-    <servlet-name>CalendarServlet</servlet-name>
-    <url-pattern>/addGoogleCalendar</url-pattern>
-  </servlet-mapping>
-  
-   <servlet>
-    <servlet-name>GoogleApiServletCallback</servlet-name>
-    <servlet-class>org.zeroclick.meeting.client.google.api.GoogleApiServletCallback</servlet-class>
-  </servlet>
-
-  <servlet-mapping>
-    <servlet-name>GoogleApiServletCallback</servlet-name>
-    <url-pattern>/oauth2callback</url-pattern>
-  </servlet-mapping>
 
   <session-config>
     <!-- Session timeout in minutes -->
-    <session-timeout>5</session-timeout>
+    <session-timeout>20</session-timeout>
     <cookie-config>
       <http-only>true</http-only>
       <!-- disable 'secure' flag below if an unencrypted channel (no https) is used -->

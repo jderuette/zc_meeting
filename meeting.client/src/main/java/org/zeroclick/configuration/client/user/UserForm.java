@@ -27,6 +27,7 @@ import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.platform.util.Base64Utility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
+import org.eclipse.scout.rt.shared.services.common.security.AbstractAccessControlService;
 import org.eclipse.scout.rt.shared.services.common.security.IAccessControlService;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.slf4j.Logger;
@@ -63,6 +64,7 @@ import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
 import org.zeroclick.meeting.client.NotificationHelper;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.security.AccessControlService;
+import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
 import org.zeroclick.ui.form.columns.zoneddatecolumn.AbstractZonedDateColumn;
 
 @FormData(value = UserFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
@@ -241,8 +243,7 @@ public class UserForm extends AbstractForm {
 	}
 
 	private Boolean isMyself() {
-		final Long currentUserId = ((AccessControlService) BEANS.get(IAccessControlService.class))
-				.getZeroClickUserIdOfCurrentSubject();
+		final Long currentUserId = BEANS.get(IAccessControlServiceHelper.class).getZeroClickUserIdOfCurrentSubject();
 		return null != currentUserId && currentUserId.equals(UserForm.this.getUserIdField().getValue());
 	}
 
@@ -251,7 +252,7 @@ public class UserForm extends AbstractForm {
 	}
 
 	private Boolean isUserLoggedWithEmail() {
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
+		final AbstractAccessControlService<String> acs = BEANS.get(AccessControlService.class);
 		final IUserService userServcie = BEANS.get(IUserService.class);
 
 		final String curentUserId = acs.getUserIdOfCurrentUser();
@@ -680,8 +681,7 @@ public class UserForm extends AbstractForm {
 				UserForm.this.setHashedPassword(modifiedPassword);
 			}
 
-			final String currentUserId = ((AccessControlService) BEANS.get(IAccessControlService.class))
-					.getUserIdOfCurrentUser();
+			final String currentUserId = BEANS.get(IAccessControlService.class).getUserIdOfCurrentSubject();
 			// if loggedIn with Email can change login, else can change email.
 			// Else user session NEED to be reloaded with new login/email.
 			final Boolean userLoginChanged = UserForm.this.getLoginField().getValueChanged();

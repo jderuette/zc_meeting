@@ -7,6 +7,7 @@ import org.eclipse.scout.rt.platform.service.IService;
 import org.eclipse.scout.rt.shared.TunnelToServer;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.zeroclick.configuration.shared.api.ApiTablePageData;
+import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
 
 @TunnelToServer
 public interface IApiService extends IService {
@@ -16,6 +17,8 @@ public interface IApiService extends IService {
 	ApiTablePageData getApiTableData(boolean displayAllForAdmin);
 
 	ApiTablePageData getApis(Long userId);
+
+	ApiTableRowData getApi(Long apiCredentialId);
 
 	ApiFormData prepareCreate(ApiFormData formData);
 
@@ -29,7 +32,7 @@ public interface IApiService extends IService {
 
 	ApiFormData store(ApiFormData formData);
 
-	ApiFormData storeAccountEmail(ApiFormData formData, Long userId, String accountEmail);
+	ApiFormData storeAccountEmail(ApiFormData formData, String accountEmail);
 
 	void delete(ApiFormData formData);
 

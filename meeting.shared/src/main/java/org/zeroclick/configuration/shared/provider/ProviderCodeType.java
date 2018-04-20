@@ -35,11 +35,27 @@ public class ProviderCodeType extends AbstractCodeType<Long, Long> {
 	@Order(2000)
 	public static class TestProviderCode extends AbstractCode<Long> {
 		private static final long serialVersionUID = 1L;
-		public static final long ID = 2L;
+		public static final Long ID = 2L;
 
 		@Override
 		protected String getConfiguredText() {
 			return TEXTS.get("zc.api.provider.testProvider");
+		}
+
+		@Override
+		public Long getId() {
+			return ID;
+		}
+	}
+
+	@Order(3000)
+	public static class MicrosoftCode extends AbstractCode<Long> {
+		private static final long serialVersionUID = 1L;
+		public static final Long ID = 3L;
+
+		@Override
+		protected String getConfiguredText() {
+			return TEXTS.get("zc.api.provider.microsoft");
 		}
 
 		@Override

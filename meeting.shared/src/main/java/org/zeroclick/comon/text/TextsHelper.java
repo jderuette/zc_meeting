@@ -26,7 +26,7 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.shared.user.IUserService;
-import org.zeroclick.meeting.shared.security.AccessControlService;
+import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
 
 /**
  * @author djer
@@ -37,19 +37,19 @@ public class TextsHelper extends TEXTS {
 
 	/**
 	 * see TEXTS.get(String)<br/>
-	 * Simillar to TEXTS.get(String) but Always use the key as default fallback.
+	 * Similar to TEXTS.get(String) but Always use the key as default fallback.
 	 *
 	 * @param key
 	 * @return
 	 */
 	public static String get(final String key) {
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-		return get(acs.getZeroClickUserIdOfCurrentSubject(), key);
+		final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
+		return get(acsHelper.getZeroClickUserIdOfCurrentSubject(), key);
 	}
 
 	/**
 	 * see TEXTS.get(String)<br/>
-	 * SImillar to TEXTS.get(String) to allow locale based on the specified user
+	 * Similar to TEXTS.get(String) to allow locale based on the specified user
 	 * ID instead currentUser locale. Always use the key as default fallback.
 	 *
 	 * @param key

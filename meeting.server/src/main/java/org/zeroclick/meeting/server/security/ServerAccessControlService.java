@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.shared.role.IAppPermissionService;
 import org.zeroclick.meeting.shared.security.AccessControlService;
+import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
 
 /**
  * <h3>{@link AccessControlService}</h3>
@@ -110,7 +111,8 @@ public class ServerAccessControlService extends AccessControlService {
 	@Override
 	public void clearUserCache(final Set<String> userIds) {
 		this.clearCache(userIds);
-		this.clearUserIdsCache(userIds);
+		final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
+		acsHelper.clearUserIdsCache(userIds);
 	}
 
 	public void clearCacheOfUsersIds(final Collection<String> cacheKeys) throws ProcessingException {

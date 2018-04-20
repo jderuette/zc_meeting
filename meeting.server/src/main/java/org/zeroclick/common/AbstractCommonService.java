@@ -43,7 +43,7 @@ import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.meeting.server.sql.DatabaseProperties.SuperUserSubjectProperty;
 import org.zeroclick.meeting.shared.event.IEventService;
-import org.zeroclick.meeting.shared.security.AccessControlService;
+import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
 
 /**
  * @author djer
@@ -121,8 +121,13 @@ public abstract class AbstractCommonService {
 	}
 
 	protected Set<String> getUserNotificationIds(final Long ownerObjectId) {
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-		return acs.getUserNotificationIds(ownerObjectId);
+		final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
+		return acsHelper.getUserNotificationIds(ownerObjectId);
+	}
+
+	protected Set<String> getCurrentUserNotificationIds() {
+		final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
+		return acsHelper.getUserNotificationIds(acsHelper.getZeroClickUserIdOfCurrentSubject());
 	}
 
 	protected String getCurrentUserEmail() {
@@ -150,6 +155,11 @@ public abstract class AbstractCommonService {
 		}
 
 		return firstSuperUserPrincipal;
+	}
+
+	protected Boolean isMyself(final Long userId) {
+		final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
+		return acsHelper.getZeroClickUserIdOfCurrentSubject().equals(userId);
 	}
 
 	protected Boolean isCurrentUserSuperUser() {

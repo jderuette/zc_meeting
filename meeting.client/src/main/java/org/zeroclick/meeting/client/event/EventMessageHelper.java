@@ -148,13 +148,15 @@ public class EventMessageHelper {
 	}
 
 	public String[] buildValuesForLocaleMessages(final EventFormData formData, final Long recipientUserId,
-			final Event externalEvent, final String... otherParams) {
+			final String externalhtmlLink, final String... otherParams) {
 		final List<String> values = CollectionUtility
 				.arrayList(this.buildValuesForLocaleMessages(formData, recipientUserId));
 
-		values.add(externalEvent.getHtmlLink()); // 14
+		values.add(externalhtmlLink); // 14
 
 		for (final String param : otherParams) {
+			// otherParticpantEmail => 15
+			// warningManualManageEvent =>16
 			values.add(param);
 		}
 

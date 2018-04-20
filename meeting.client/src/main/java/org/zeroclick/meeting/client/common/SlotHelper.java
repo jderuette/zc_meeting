@@ -52,16 +52,23 @@ public class SlotHelper {
 	private static SlotHelper instance;
 	private static ISlotService slotService;
 
-	private SlotHelper() {
+	private SlotHelper(final Boolean instanciateRemoteServiceFacade) {
 		// Singleton
-		if (null == slotService) {
+		if (instanciateRemoteServiceFacade && null == slotService) {
 			slotService = BEANS.get(ISlotService.class);
 		}
 	}
 
 	public static SlotHelper get() {
 		if (null == instance) {
-			instance = new SlotHelper();
+			instance = new SlotHelper(Boolean.TRUE);
+		}
+		return instance;
+	}
+
+	public static SlotHelper get(final Boolean instanciateRemoteServiceFacade) {
+		if (null == instance) {
+			instance = new SlotHelper(instanciateRemoteServiceFacade);
 		}
 		return instance;
 	}
@@ -144,16 +151,17 @@ public class SlotHelper {
 				startCal.setTime(startTime);
 				endCal.setTime(endTime);
 
-				daysDurations.add(new DayDuration(
-						OffsetTime.of(startCal.get(Calendar.HOUR_OF_DAY), startCal.get(Calendar.MINUTE), 0, 0,
-								userZoneId.getRules().getOffset(forDate.toInstant())),
-						OffsetTime.of(endCal.get(Calendar.HOUR_OF_DAY), endCal.get(Calendar.MINUTE), 0, 0,
-								userZoneId.getRules().getOffset(forDate.toInstant())),
-						this.buildListOfWeekDay(dayDurationData)));
+				daysDurations.add(new DayDuration(this.toUserOffsetTime(startCal, userZoneId),
+						this.toUserOffsetTime(endCal, userZoneId), this.buildListOfWeekDay(dayDurationData)));
 			}
 		}
 
 		return daysDurations;
+	}
+
+	public OffsetTime toUserOffsetTime(final Calendar dateCal, final ZoneId userZoneId) {
+		return OffsetTime.of(dateCal.get(Calendar.HOUR_OF_DAY), dateCal.get(Calendar.MINUTE), 0, 0,
+				userZoneId.getRules().getOffset(dateCal.toInstant()));
 	}
 
 	private List<DayOfWeek> buildListOfWeekDay(final DayDurationFormData dayDurationData) {
@@ -278,7 +286,6 @@ public class SlotHelper {
 			}
 		}
 		if (null == nextValidLocalDate) {
-			// this date isn't in a period, we try to found the next one
 			nextValidLocalDate = this.getClosestForwardDate(periods, checkedDate, endDate);
 		}
 		if (null == nextValidLocalDate) {
@@ -313,13 +320,15 @@ public class SlotHelper {
 		}
 
 		for (final DayDuration period : periods) {
-			if (null == endDate) {
-				if (period.isInValidFuture(checkedDate)) {
-					return period.getNextOrSameDate(checkedDate);
-				}
-			} else {
-				if (period.isInValidFuture(checkedDate, endDate)) {
-					return period.getNextOrSameDate(checkedDate);
+			if (period.isWeeklyerpetual()) {
+				if (null == endDate) {
+					if (period.isInValidFuture(checkedDate)) {
+						return period.getNextOrSameDate(checkedDate);
+					}
+				} else {
+					if (period.isInValidFuture(checkedDate, endDate)) {
+						return period.getNextOrSameDate(checkedDate);
+					}
 				}
 			}
 		}
@@ -342,7 +351,9 @@ public class SlotHelper {
 
 		while (itPeriod.hasNext()) {
 			final DayDuration period = itPeriod.next();
-			nextValidDates.put(period, period.getNextOrSameDate(checkedDate));
+			if (period.isWeeklyerpetual()) {
+				nextValidDates.put(period, period.getNextOrSameDate(checkedDate));
+			}
 		}
 
 		for (final DayDuration period : nextValidDates.keySet()) {

@@ -44,11 +44,11 @@ public class DayDuration {
 
 	private static final Logger LOG = LoggerFactory.getLogger(DayDuration.class);
 
-	private final OffsetTime start;
-	private final OffsetTime end;
+	private OffsetTime start;
+	private OffsetTime end;
 	private final List<DayOfWeek> validDayOfWeek;
 	private final Boolean weeklyerpetual;
-	private final Boolean defaultFromSlot;
+	final Boolean defaultFromSlot;
 
 	public DayDuration(final OffsetTime start, final OffsetTime end) {
 		this.start = start;
@@ -89,56 +89,86 @@ public class DayDuration {
 	}
 
 	@SuppressWarnings("PMD.CollapsibleIfStatements")
-	public Boolean isBeforeBegin(final LocalDateTime checkedDate) {
+	private Boolean isBeforeBegin(final LocalDateTime checkedDate) {
+		return this.isBeforeBegin(checkedDate, Boolean.TRUE);
+	}
+
+	@SuppressWarnings("PMD.CollapsibleIfStatements")
+	private Boolean isBeforeBegin(final LocalDateTime checkedDate, final Boolean strict) {
 		Boolean result = Boolean.FALSE;
 		if (this.validDayOfWeek.contains(checkedDate.getDayOfWeek())) {
-			// compare to NOT before instead of after to handle equals Dates
-			// (see : http://stackoverflow.com/a/13936632/8029150)
-			if (!checkedDate.toLocalTime().isAfter(this.start.toLocalTime())) {
+			if (this.isBeforeBegin(checkedDate.toLocalTime(), strict)) {
 				result = Boolean.TRUE;
 			}
 		}
 		return result;
+	}
+
+	private Boolean isBeforeBegin(final LocalTime checkedLocalTime) {
+		return this.isBeforeBegin(checkedLocalTime, Boolean.FALSE);
+	}
+
+	private Boolean isBeforeBegin(final LocalTime checkedLocalTime, final Boolean strict) {
+		Boolean isBeforeBegin;
+		if (strict) {
+			isBeforeBegin = checkedLocalTime.isBefore(this.start.toLocalTime());
+		} else {
+			// compare to NOT before instead of after to handle equals Dates
+			// (see : http://stackoverflow.com/a/13936632/8029150)
+			isBeforeBegin = !checkedLocalTime.isAfter(this.start.toLocalTime());
+		}
+		return isBeforeBegin;
 	}
 
 	@SuppressWarnings("PMD.CollapsibleIfStatements")
 	private Boolean isAfterBegin(final LocalDateTime checkedDate) {
 		Boolean result = Boolean.FALSE;
 		if (this.validDayOfWeek.contains(checkedDate.getDayOfWeek())) {
-			// compare to NOT before instead of after to handle equals Dates
-			// (see : http://stackoverflow.com/a/13936632/8029150)
-			if (!checkedDate.toLocalTime().isBefore(this.start.toLocalTime())) {
+			if (this.isAfterBegin(checkedDate.toLocalTime())) {
 				result = Boolean.TRUE;
 			}
 		}
 		return result;
+	}
+
+	private Boolean isAfterBegin(final LocalTime checkedLocalTime) {
+		// compare to NOT before instead of after to handle equals Dates
+		// (see : http://stackoverflow.com/a/13936632/8029150)
+		return !checkedLocalTime.isBefore(this.start.toLocalTime());
 	}
 
 	@SuppressWarnings("PMD.CollapsibleIfStatements")
 	private Boolean isBeforeEnd(final LocalDateTime checkedDate) {
 		Boolean result = Boolean.FALSE;
 		if (this.validDayOfWeek.contains(checkedDate.getDayOfWeek())) {
-			// compare to NOT after instead of before to handle equals Dates
-			// (see : http://stackoverflow.com/a/13936632/8029150)
-			if (!checkedDate.toLocalTime().isAfter(this.end.toLocalTime())) {
+			if (this.isBeforeEnd(checkedDate.toLocalTime())) {
 				result = Boolean.TRUE;
 			}
 		}
 		return result;
 	}
 
-	@SuppressWarnings("PMD.CollapsibleIfStatements")
-	public Boolean isAfterEnd(final LocalDateTime checkedDate) {
+	private Boolean isBeforeEnd(final LocalTime checkedLocalTime) {
+		// compare to NOT after instead of before to handle equals Dates
+		// (see : http://stackoverflow.com/a/13936632/8029150)
+		return !checkedLocalTime.isAfter(this.end.toLocalTime());
+	}
+
+	@SuppressWarnings({ "PMD.CollapsibleIfStatements", "unused" })
+	private Boolean isAfterEnd(final LocalDateTime checkedDate) {
 		Boolean result = Boolean.FALSE;
 		if (this.validDayOfWeek.contains(checkedDate.getDayOfWeek())) {
-			// compare to NOT after instead of before to handle equals Dates
-			// (see : http://stackoverflow.com/a/13936632/8029150)
-			if (!checkedDate.toLocalTime().isBefore(this.end.toLocalTime())) {
+			if (this.isAfterEnd(checkedDate.toLocalTime())) {
 				result = Boolean.TRUE;
 			}
 		}
 		return result;
+	}
 
+	private Boolean isAfterEnd(final LocalTime checkedLocalTime) {
+		// compare to NOT after instead of before to handle equals Dates
+		// (see : http://stackoverflow.com/a/13936632/8029150)
+		return !checkedLocalTime.isBefore(this.end.toLocalTime());
 	}
 
 	public Boolean isInPeriod(final ZonedDateTime checkedDate) {
@@ -147,22 +177,7 @@ public class DayDuration {
 
 		// Day of week is in on of the allowed Days
 		if (this.validDayOfWeek.contains(checkedDate.getDayOfWeek())) {
-			// Check if hours is between the start and end
-			if (this.isAfterBegin(localCheckdDateTime)) {
-				if (this.isBeforeEnd(localCheckdDateTime)) {
-					isInperiod = Boolean.TRUE;
-				} else {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug(new StringBuilder(100).append(checkedDate)
-								.append(" not valid beacuase is after period end ").append(this).toString());
-					}
-				}
-			} else {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug(new StringBuilder(100).append(checkedDate)
-							.append(" not valid beacuase is before period start ").append(this).toString());
-				}
-			}
+			isInperiod = this.isInPeriod(localCheckdDateTime.toLocalTime());
 		} else {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug(new StringBuilder(100).append(checkedDate).append('(').append(checkedDate.getDayOfWeek())
@@ -171,6 +186,32 @@ public class DayDuration {
 		}
 
 		return isInperiod;
+	}
+
+	public Boolean isInPeriod(final LocalTime checkedLocalTime) {
+		Boolean isInperiod = Boolean.FALSE;
+		// Check if hours is between the start and end
+		if (this.isAfterBegin(checkedLocalTime)) {
+			if (this.isBeforeEnd(checkedLocalTime)) {
+				isInperiod = Boolean.TRUE;
+			} else {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug(new StringBuilder(100).append(checkedLocalTime)
+							.append(" not valid beacuase is after period end ").append(this).toString());
+				}
+			}
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(new StringBuilder(100).append(checkedLocalTime)
+						.append(" not valid beacuase is before period start ").append(this).toString());
+			}
+		}
+		return isInperiod;
+
+	}
+
+	public Boolean isInPeriod(final LocalTime startDate, final LocalTime endDate) {
+		return this.isInPeriod(startDate) && this.isInPeriod(endDate);
 	}
 
 	public Boolean isInPeriod(final ZonedDateTime startDate, final ZonedDateTime endDate) {
@@ -450,7 +491,7 @@ public class DayDuration {
 		LocalDate day = null;
 
 		if (nextDayOfWeek == checkedDate.getDayOfWeek()) {
-			if (this.isBeforeBegin(checkedDate.toLocalDateTime())) {
+			if (this.isBeforeBegin(checkedDate.toLocalDateTime(), Boolean.FALSE)) {
 				day = checkedDate.with(TemporalAdjusters.nextOrSame(nextDayOfWeek)).toLocalDate();
 			} else {
 				day = checkedDate.with(TemporalAdjusters.next(nextDayOfWeek)).toLocalDate();
@@ -462,6 +503,60 @@ public class DayDuration {
 		final LocalDateTime nextValidLocalDate = LocalDateTime.of(day, this.getStart().toLocalTime());
 
 		return nextValidLocalDate;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (this.end == null ? 0 : this.end.hashCode());
+		result = prime * result + (this.start == null ? 0 : this.start.hashCode());
+		result = prime * result + (this.validDayOfWeek == null ? 0 : this.validDayOfWeek.hashCode());
+		result = prime * result + (this.weeklyerpetual == null ? 0 : this.weeklyerpetual.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (this.getClass() != obj.getClass()) {
+			return false;
+		}
+		final DayDuration other = (DayDuration) obj;
+		if (this.end == null) {
+			if (other.end != null) {
+				return false;
+			}
+		} else if (!this.end.equals(other.end)) {
+			return false;
+		}
+		if (this.start == null) {
+			if (other.start != null) {
+				return false;
+			}
+		} else if (!this.start.equals(other.start)) {
+			return false;
+		}
+		if (this.validDayOfWeek == null) {
+			if (other.validDayOfWeek != null) {
+				return false;
+			}
+		} else if (!this.validDayOfWeek.equals(other.validDayOfWeek)) {
+			return false;
+		}
+		if (this.weeklyerpetual == null) {
+			if (other.weeklyerpetual != null) {
+				return false;
+			}
+		} else if (!this.weeklyerpetual.equals(other.weeklyerpetual)) {
+			return false;
+		}
+		return true;
 	}
 
 	/*
@@ -481,8 +576,16 @@ public class DayDuration {
 		return this.start;
 	}
 
+	public void setStart(final OffsetTime start) {
+		this.start = start;
+	}
+
 	public OffsetTime getEnd() {
 		return this.end;
+	}
+
+	public void setEnd(final OffsetTime end) {
+		this.end = end;
 	}
 
 	public List<DayOfWeek> getValidDayOfWeek() {

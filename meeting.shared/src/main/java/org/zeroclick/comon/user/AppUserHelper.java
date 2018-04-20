@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.comon.date.DateHelper;
 import org.zeroclick.configuration.shared.user.IUserService;
-import org.zeroclick.meeting.shared.security.AccessControlService;
+import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
 
 /**
  * @author djer
@@ -52,12 +52,12 @@ public class AppUserHelper {
 
 	public ZoneId getCurrentUserTimeZone() {
 		final IUserService userService = BEANS.get(IUserService.class);
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
+		final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
 		ZoneId userZoneId = ZoneId.of("UTC");
 		if (null != userService) {
-			userZoneId = this.getUserZoneId(acs.getZeroClickUserIdOfCurrentSubject());
+			userZoneId = this.getUserZoneId(acsHelper.getZeroClickUserIdOfCurrentSubject());
 		} else {
-			LOG.warn("No timeZone configured or user : " + acs.getZeroClickUserIdOfCurrentSubject());
+			LOG.warn("No timeZone configured or user : " + acsHelper.getZeroClickUserIdOfCurrentSubject());
 		}
 		return userZoneId;
 	}
@@ -74,8 +74,8 @@ public class AppUserHelper {
 	}
 
 	public Long getCurrentUserId() {
-		final AccessControlService acs = BEANS.get(AccessControlService.class);
-		final Long currentUser = acs.getZeroClickUserIdOfCurrentSubject();
+		final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
+		final Long currentUser = acsHelper.getZeroClickUserIdOfCurrentSubject();
 		return currentUser;
 	}
 }
