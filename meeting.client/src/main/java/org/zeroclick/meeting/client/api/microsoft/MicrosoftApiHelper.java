@@ -483,6 +483,8 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 	@Override
 	protected Boolean delete(final String calendarId, final String eventId, final CalendarService calendarService) {
 		Boolean eventDeleted = Boolean.FALSE;
+		LOG.info(new StringBuilder().append("Deleting a Microsoft event : ").append(eventId).append(" in calendar : ")
+				.append(eventId).toString());
 		try {
 			calendarService.deleteEvent(eventId).execute().body();
 			eventDeleted = Boolean.TRUE;

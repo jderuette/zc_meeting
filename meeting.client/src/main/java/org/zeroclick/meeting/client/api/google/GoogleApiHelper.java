@@ -598,6 +598,10 @@ public class GoogleApiHelper extends AbstractApiHelper<Credential, Calendar> {
 	@Override
 	protected Boolean delete(final String calendarId, final String eventId, final Calendar apiCalendarService) {
 		Boolean eventDeleted = Boolean.FALSE;
+
+		LOG.info(new StringBuilder().append("Deleting a Google event : ").append(eventId).append(" in calendar : ")
+				.append(eventId).toString());
+
 		try {
 			apiCalendarService.events().delete(calendarId, eventId).execute();
 			eventDeleted = Boolean.TRUE;

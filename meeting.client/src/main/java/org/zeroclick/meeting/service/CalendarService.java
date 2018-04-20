@@ -28,7 +28,6 @@ import java.util.Set;
 import org.eclipse.scout.rt.platform.ApplicationScoped;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.exception.VetoException;
-import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.comon.user.AppUserHelper;
@@ -179,32 +178,55 @@ public class CalendarService {
 
 	public void deleteEvent(final Long eventId) {
 		final IEventService eventService = BEANS.get(IEventService.class);
+		final EventFormData event = eventService.load(eventId);
+
+		final String externalIdOrganizerId = event.getExternalIdOrganizer();
+		final Boolean organizerEventDeleted = this.deleteEvent(event, externalIdOrganizerId,
+				event.getOrganizer().getValue());
+		Boolean attendeeEventDeleted = null;
+
+		final String externalIdAttendeeId = event.getExternalIdRecipient();
+		if (null != externalIdAttendeeId && null != externalIdOrganizerId
+				&& !externalIdOrganizerId.equals(externalIdAttendeeId)) {
+			attendeeEventDeleted = this.deleteEvent(event, externalIdAttendeeId, event.getGuestId().getValue());
+		}
+
+		if (!organizerEventDeleted) {
+			throw new VetoException("Error Organizer event not deleted");
+		}
+		if (null != attendeeEventDeleted && !attendeeEventDeleted) {
+			throw new VetoException("Error Guest event not deleted");
+		}
+	}
+
+	private Boolean deleteEvent(final EventFormData event, final String externalEventId, final Long userId) {
+		Boolean eventDeleted = Boolean.FALSE;
 		final ICalendarConfigurationService calendarConfigurationService = BEANS
 				.get(ICalendarConfigurationService.class);
 
-		final EventFormData event = eventService.load(eventId);
-
-		if (null == event.getExternalIdOrganizer()) {
-			LOG.info("Event : " + eventId + " has no external organizer ID, no event to delete in connected calendars");
+		if (null == externalEventId) {
+			LOG.info("Event : " + event.getEventId()
+					+ " has no external Event Id, no event to delete in connected calendars");
 		} else {
 			final CalendarConfigurationFormData calendarToStoreEvent = calendarConfigurationService
-					.getCalendarToStoreEvents(event.getOrganizer().getValue());
+					.getCalendarToStoreEvents(userId);
 
-			LOG.info(this.buildRejectLog("Deleting", eventId, event.getExternalIdOrganizer(),
-					calendarToStoreEvent.getExternalId().getValue(), event.getOrganizer().getValue()));
+			LOG.info(this.buildRejectLog("Deleting", event.getEventId(), externalEventId,
+					calendarToStoreEvent.getExternalId().getValue(), userId));
 
 			final IApiService apiService = BEANS.get(IApiService.class);
-			final ApiTablePageData organizerApis = apiService.getApis(event.getOrganizer().getValue());
+			final ApiTablePageData userApis = apiService.getApis(userId);
 
-			Boolean eventDeleted = Boolean.FALSE;
-			if (organizerApis.getRowCount() > 0) {
-				for (final ApiTableRowData organizerApi : organizerApis.getRows()) {
-					final ApiHelper apiHelper = ApiHelperFactory.get(organizerApi);
+			if (userApis.getRowCount() > 0) {
+				for (final ApiTableRowData userApi : userApis.getRows()) {
+					final ApiHelper apiHelper = ApiHelperFactory.get(userApi);
 
 					if (null != apiHelper) {
 						eventDeleted = apiHelper.delete(calendarToStoreEvent.getExternalId().getValue(),
-								event.getExternalIdOrganizer(), organizerApi.getApiCredentialId());
+								externalEventId, userApi.getApiCredentialId());
 						if (eventDeleted) {
+							LOG.info(this.buildRejectLog("Deleted", event.getEventId(), externalEventId,
+									calendarToStoreEvent.getExternalId().getValue(), userId));
 							break;
 						}
 					}
@@ -212,12 +234,12 @@ public class CalendarService {
 			}
 
 			if (!eventDeleted) {
-				LOG.warn(this.buildRejectLog("Error while deleting (No api has deleted the event)", eventId,
-						event.getExternalIdOrganizer(), calendarToStoreEvent.getExternalId().getValue(),
-						event.getOrganizer().getValue()));
-				throw new VetoException(TEXTS.get("zc.meeting.error.deletingEvent"));
+				LOG.warn(this.buildRejectLog("Error while deleting event (No api has deleted the event)",
+						event.getEventId(), externalEventId, calendarToStoreEvent.getExternalId().getValue(), userId));
 			}
 		}
+
+		return eventDeleted;
 	}
 
 	private String buildRejectLog(final String prefix, final Long eventId, final String externalId,
