@@ -155,6 +155,8 @@ public class EventMessageHelper {
 		values.add(externalhtmlLink); // 14
 
 		for (final String param : otherParams) {
+			// otherParticpantEmail => 15
+			// warningManualManageEvent =>16
 			values.add(param);
 		}
 

@@ -39,6 +39,7 @@ public class NotificationHelper {
 	private static final Long DURATION_SHORT = 5000L;
 	private static final Long DURATION_MEDIUM = 10000L;
 	private static final Long DURATION_LONG = 15000L;
+	private static final Long DURATION_VERY_LONG = 20000L;
 
 	public void addProcessingNotification(final String messageKey) {
 		this.addNotification(IStatus.INFO, DURATION_SHORT, messageKey);
@@ -57,19 +58,19 @@ public class NotificationHelper {
 	}
 
 	public void addWarningNotification(final String messageKey) {
-		this.addNotification(IStatus.WARNING, DURATION_MEDIUM, messageKey);
+		this.addNotification(IStatus.WARNING, DURATION_LONG, messageKey);
 	}
 
 	public void addWarningNotification(final String messageKey, final String... messageArguments) {
-		this.addNotification(IStatus.WARNING, DURATION_MEDIUM, messageKey, messageArguments);
+		this.addNotification(IStatus.WARNING, DURATION_LONG, messageKey, messageArguments);
 	}
 
 	public void addErrorNotification(final String messageKey) {
-		this.addNotification(IStatus.ERROR, DURATION_LONG, messageKey);
+		this.addNotification(IStatus.ERROR, DURATION_VERY_LONG, messageKey);
 	}
 
 	public void addErrorNotification(final String messageKey, final String... messageArguments) {
-		this.addNotification(IStatus.ERROR, DURATION_LONG, messageKey, messageArguments);
+		this.addNotification(IStatus.ERROR, DURATION_VERY_LONG, messageKey, messageArguments);
 	}
 
 	private void addNotification(final Integer severity, final Long duration, final String messageKey) {

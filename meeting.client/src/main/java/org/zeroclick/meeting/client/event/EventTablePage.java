@@ -831,6 +831,8 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 					String guestEventExternalHtmlLink = organizerEventExternalHtmlLink;
 
+					Boolean isAttendeeCalendarToStoreEventConfigured = Boolean.FALSE;
+
 					if (!guestAutoAcceptEvent) {
 						// Only if required to process "accept" in a other
 						// request
@@ -861,21 +863,27 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 						final CalendarConfigurationFormData attendeeCalendarToStoreEvent = calendarService
 								.getUserCreateEventCalendar(eventGuestId);
-						final ApiTableRowData attendeeProviderCalendarApi = apiService
-								.getApi(attendeeCalendarToStoreEvent.getOAuthCredentialId().getValue());
-						final Long attendeeProvider = attendeeProviderCalendarApi.getProvider();
 
-						final boolean isSameProvider = organizerProvider.equals(attendeeProvider);
+						if (null != attendeeCalendarToStoreEvent) {
+							isAttendeeCalendarToStoreEventConfigured = Boolean.TRUE;
+							final ApiTableRowData attendeeProviderCalendarApi = apiService
+									.getApi(attendeeCalendarToStoreEvent.getOAuthCredentialId().getValue());
+							final Long attendeeProvider = attendeeProviderCalendarApi.getProvider();
 
-						if (!isSameProvider) {
-							externalAttendeeEventId = calendarService.createEvent(start, end, eventGuestId,
-									eventHeldEmail, subject, venue, Boolean.TRUE);
+							final boolean isSameProvider = organizerProvider.equals(attendeeProvider);
+							if (isSameProvider) {
+								externalAttendeeEventId = externalOrganizerEventId;
+							} else {
+								externalAttendeeEventId = calendarService.createEvent(start, end, eventGuestId,
+										eventHeldEmail, subject, venue, Boolean.TRUE);
+							}
+
+							Table.this.getExternalIdRecipientColumn().setValue(Table.this.getSelectedRow(),
+									externalAttendeeEventId.getEventId());
 						} else {
-							externalAttendeeEventId = externalOrganizerEventId;
+							notificationHelper.addWarningNotification(
+									"zc.meeting.calendar.noAddEvent.cannotCreateEvent", eventHeldEmail);
 						}
-
-						Table.this.getExternalIdRecipientColumn().setValue(Table.this.getSelectedRow(),
-								externalAttendeeEventId.getEventId());
 					}
 
 					// Save at the end to save external IDs !
@@ -885,9 +893,9 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					final EventFormData formData = Table.this.saveEventCurrentRow();
 
 					this.sendConfirmationEmail(formData, organizerEventExternalHtmlLink, eventHeldEmail, eventHeldBy,
-							eventGuestEmail);
+							eventGuestEmail, Boolean.TRUE);
 					this.sendConfirmationEmail(formData, guestEventExternalHtmlLink, eventGuestEmail, eventGuestId,
-							eventHeldEmail);
+							eventHeldEmail, isAttendeeCalendarToStoreEventConfigured);
 
 					Table.this.resetInvalidatesEvent(start, end);
 					Table.this.autoFillDates();
@@ -899,11 +907,19 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			}
 
 			private void sendConfirmationEmail(final EventFormData formData, final String eventHtmlLink,
-					final String recipient, final Long recipientUserId, final String otherParticpantEmail) {
+					final String recipient, final Long recipientUserId, final String otherParticpantEmail,
+					final Boolean isAddCalendarConfigured) {
 				final IMailSender mailSender = BEANS.get(IMailSender.class);
 
-				final String[] values = EventTablePage.this.getEventMessageHelper()
-						.buildValuesForLocaleMessages(formData, recipientUserId, eventHtmlLink, otherParticpantEmail);
+				String warningManualManageEvent = "";
+
+				if (!isAddCalendarConfigured) {
+					warningManualManageEvent = TextsHelper.get(recipientUserId,
+							"zc.meeting.email.event.confirm.requireManualEventManagement");
+				}
+
+				final String[] values = EventTablePage.this.getEventMessageHelper().buildValuesForLocaleMessages(
+						formData, recipientUserId, eventHtmlLink, otherParticpantEmail, warningManualManageEvent);
 
 				final String subject = TextsHelper.get(recipientUserId, "zc.meeting.email.event.confirm.subject",
 						values);
