@@ -122,6 +122,7 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 	public String getAuthorisationLinksAsLi() {
 		final StringBuilder builder = new StringBuilder(64);
 		builder.append("<li>").append(this.buildAutorisationUrl(TEXTS.get("zc.api.provider.microsoft.outlook")))
+				.append("</li><li>").append(this.buildAutorisationUrl(TEXTS.get("zc.api.provider.microsoft.skype")))
 				.append("</li><li>").append(this.buildAutorisationUrl(TEXTS.get("zc.api.provider.microsoft.exchange")))
 				.append("</li><li>").append(this.buildAutorisationUrl(TEXTS.get("zc.api.provider.microsoft.office365")))
 				.append("</li>");
