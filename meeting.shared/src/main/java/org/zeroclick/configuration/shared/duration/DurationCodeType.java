@@ -1,10 +1,16 @@
 package org.zeroclick.configuration.shared.duration;
 
+import java.text.NumberFormat;
+import java.util.Locale;
+
+import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.code.AbstractCode;
 import org.eclipse.scout.rt.shared.services.common.code.AbstractCodeType;
 import org.eclipse.scout.rt.shared.services.common.code.ICode;
+import org.zeroclick.configuration.shared.user.IUserService;
+import org.zeroclick.configuration.shared.user.UserFormData;
 
 @SuppressWarnings("PMD.ShortVariable")
 public class DurationCodeType extends AbstractCodeType<Long, Long> {
@@ -43,12 +49,21 @@ public class DurationCodeType extends AbstractCodeType<Long, Long> {
 		return builder.toString();
 	}
 
-	private static Integer convertMinuteToHours(final Double nbMinutes) {
-		int minutesToHours = nbMinutes.intValue();
+	private static String convertMinuteToHours(final Double nbMinutes) {
+		double minutesToHours = nbMinutes.doubleValue();
 		if (minutesToHours >= 60) {
 			minutesToHours = minutesToHours / 60;
 		}
-		return minutesToHours;
+
+		final IUserService userService = BEANS.get(IUserService.class);
+		final UserFormData userDetails = userService.getCurrentUserDetails();
+
+		Locale connectedUserLocal = Locale.getDefault();
+		if (null != userDetails.getLanguage().getValue()) {
+			connectedUserLocal = Locale.forLanguageTag(userDetails.getLanguage().getValue());
+		}
+		final NumberFormat formater = NumberFormat.getInstance(connectedUserLocal);
+		return formater.format(minutesToHours);
 	}
 
 	public static Double getValue(final Long durationId) {

@@ -449,6 +449,21 @@ public class Desktop extends AbstractDesktop {
 			return AbstractIcons.Person;
 		}
 
+		@Override
+		protected String getConfiguredText() {
+			final IUserService userService = BEANS.get(IUserService.class);
+			final UserFormData userDetails = userService.getCurrentUserDetails();
+			// return TEXTS.get("zc.user.loggedAs",
+			// userDetails.getEmail().getValue());
+			String userDisplayText = null;
+			if (null != userDetails.getLogin().getValue()) {
+				userDisplayText = userDetails.getLogin().getValue();
+			} else {
+				userDisplayText = userDetails.getEmail().getValue();
+			}
+			return userDisplayText;
+		}
+
 		@Order(1000)
 		public class WhoAmIMenuMenu extends AbstractMenu {
 			@Override
