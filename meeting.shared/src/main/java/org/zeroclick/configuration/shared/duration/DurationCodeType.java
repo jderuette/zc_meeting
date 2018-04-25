@@ -145,6 +145,27 @@ public class DurationCodeType extends AbstractCodeType<Long, Long> {
 	}
 
 	@Order(5000)
+	public static class AHalfCode extends AbstractCode<Long> {
+		private static final long serialVersionUID = 1L;
+		public static final long ID = 6L;
+
+		@Override
+		protected String getConfiguredText() {
+			return DurationCodeType.getText(this.getConfiguredValue());
+		}
+
+		@Override
+		protected Double getConfiguredValue() {
+			return 90D;
+		}
+
+		@Override
+		public Long getId() {
+			return ID;
+		}
+	}
+
+	@Order(6000)
 	public static class TwoHourCode extends AbstractCode<Long> {
 		private static final long serialVersionUID = 1L;
 		public static final long ID = 5L;
