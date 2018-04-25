@@ -870,7 +870,7 @@ public class UserForm extends AbstractForm {
 					newUser.getEmailField().getValue(), newUser.getPasswordField().getValue());
 		}
 		try {
-			mailSender.sendEmail(newUser.getEmailField().getValue(), subject, messageBody);
+			mailSender.sendEmail(newUser.getEmailField().getValue(), subject, messageBody, Boolean.FALSE);
 
 			final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 			notificationHelper.addProcessingNotification("zc.user.notification.invitedUser",
