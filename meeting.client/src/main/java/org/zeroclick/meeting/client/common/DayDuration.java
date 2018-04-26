@@ -84,7 +84,7 @@ public class DayDuration {
 		this.defaultFromSlot = isDefaultFromSlot;
 	}
 
-	private Long getDuration(final ChronoUnit unit) {
+	public Long getDuration(final ChronoUnit unit) {
 		return this.start.until(this.end, unit);
 	}
 

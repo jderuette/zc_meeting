@@ -458,6 +458,17 @@ public class SlotHelper {
 		return Boolean.FALSE;
 	}
 
+	public Boolean slotCanMatchDuration(final Long slot, final Long currentUserId, final Double durationinMinutes) {
+		final List<DayDuration> periods = this.getUserPeriods(slot, currentUserId);
+
+		for (final DayDuration period : periods) {
+			if (period.getDuration(ChronoUnit.MINUTES) >= durationinMinutes) {
+				return Boolean.TRUE; // early break
+			}
+		}
+		return Boolean.FALSE;
+	}
+
 	public static class DayOfWeekLists {
 		public static final List<DayOfWeek> ALL_DAYS = new ArrayList<>(
 				Arrays.asList(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY,

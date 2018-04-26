@@ -848,6 +848,28 @@ public class EventForm extends AbstractForm {
 						EventForm.this.getMaximalStartDateField().validateCurrentValue();
 						PeriodeBox.this.checkAvailableDaysInSlot(EventForm.this.getMinimalStartDateField().getValue(),
 								EventForm.this.getMaximalStartDateField().getValue());
+						this.checkDuration(EventForm.this.getDurationField().getValue());
+					}
+
+					public void checkDuration(final Long value) {
+						final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
+						final Long durationId = EventForm.this.getDurationField().getValue();
+						final Long slot = EventForm.this.getSlotField().getValue();
+
+						final Double durationinMinutes = DurationCodeType.getValue(durationId);
+						// TODO Djer filter available period with min/max Date
+						// if set ?
+						final Boolean isDurationValid = SlotHelper.get().slotCanMatchDuration(slot,
+								appUserHelper.getCurrentUserId(), durationinMinutes);
+
+						if (!isDurationValid) {
+							EventForm.this.getSlotField()
+									.addErrorStatus(new DefaultFieldStatus(
+											TEXTS.get("zc.meeting.slot.noSlotWithDuration",
+													DurationCodeType.getText(durationinMinutes)),
+											Icons.ExclamationMark, IFieldStatus.ERROR));
+						}
+
 					}
 				}
 			}
@@ -1000,6 +1022,8 @@ public class EventForm extends AbstractForm {
 						EventForm.this.getMaximalStartDateField().getValue());
 				EventForm.this.getMinimalStartDateField().validateCurrentValue();
 				EventForm.this.getMaximalStartDateField().validateCurrentValue();
+
+				EventForm.this.getSlotField().checkDuration(this.getValue());
 			}
 
 			@Override
