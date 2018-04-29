@@ -31,7 +31,6 @@ import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractStringColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.IColumn;
 import org.eclipse.scout.rt.client.ui.form.FormEvent;
 import org.eclipse.scout.rt.client.ui.form.FormListener;
-import org.eclipse.scout.rt.client.ui.form.fields.smartfield.AbstractSmartField;
 import org.eclipse.scout.rt.client.ui.messagebox.IMessageBox;
 import org.eclipse.scout.rt.client.ui.messagebox.MessageBoxes;
 import org.eclipse.scout.rt.platform.BEANS;
@@ -40,14 +39,12 @@ import org.eclipse.scout.rt.platform.exception.ProcessingException;
 import org.eclipse.scout.rt.platform.html.internal.HtmlPlainBuilder;
 import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
-import org.eclipse.scout.rt.platform.util.ToStringBuilder;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.code.ICodeType;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.comon.text.UserHelper;
-import org.zeroclick.configuration.client.api.AbstractApiTable.ProviderColumn;
 import org.zeroclick.configuration.shared.api.ApiLookupCall;
 import org.zeroclick.configuration.shared.provider.ProviderCodeType;
 import org.zeroclick.meeting.client.api.google.GoogleApiHelper;
@@ -416,27 +413,15 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 	}
 
 	@Order(3000)
-	public class ProviderField extends AbstractSmartField<Long> {
+	public class ProviderColumn extends AbstractSmartColumn<Long> {
 		@Override
-		protected String getConfiguredLabel() {
+		protected String getConfiguredHeaderText() {
 			return TEXTS.get("zc.api.provider");
-		}
-
-		@Override
-		protected boolean getConfiguredMandatory() {
-			return Boolean.TRUE;
 		}
 
 		@Override
 		protected Class<? extends ICodeType<Long, Long>> getConfiguredCodeType() {
 			return ProviderCodeType.class;
-		}
-
-		@Override
-		public String toString() {
-			final ToStringBuilder sbuilder = new ToStringBuilder(this);
-			sbuilder.attr(this.getValue());
-			return sbuilder.toString();
 		}
 	}
 
