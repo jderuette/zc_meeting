@@ -63,6 +63,7 @@ public class CalendarsConfigurationFormData extends AbstractFormData {
 			private static final long serialVersionUID = 1L;
 			public static final String calendarConfigurationId = "calendarConfigurationId";
 			public static final String oAuthCredentialId = "oAuthCredentialId";
+			public static final String provider = "provider";
 			public static final String externalId = "externalId";
 			public static final String name = "name";
 			public static final String readOnly = "readOnly";
@@ -75,6 +76,7 @@ public class CalendarsConfigurationFormData extends AbstractFormData {
 			public static final String userId = "userId";
 			private Long m_calendarConfigurationId;
 			private Long m_oAuthCredentialId;
+			private Long m_provider;
 			private String m_externalId;
 			private String m_name;
 			private Boolean m_readOnly;
@@ -100,6 +102,14 @@ public class CalendarsConfigurationFormData extends AbstractFormData {
 
 			public void setOAuthCredentialId(Long newOAuthCredentialId) {
 				m_oAuthCredentialId = newOAuthCredentialId;
+			}
+
+			public Long getProvider() {
+				return m_provider;
+			}
+
+			public void setProvider(Long newProvider) {
+				m_provider = newProvider;
 			}
 
 			public String getExternalId() {

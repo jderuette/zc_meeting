@@ -51,5 +51,15 @@ public class CalendarConfigurationTablePageData extends AbstractCalendarConfigur
 	public static class CalendarConfigurationTableRowData extends AbstractCalendarConfigurationTableRowData {
 
 		private static final long serialVersionUID = 1L;
+		public static final String provider = "provider";
+		private Long m_provider;
+
+		public Long getProvider() {
+			return m_provider;
+		}
+
+		public void setProvider(Long newProvider) {
+			m_provider = newProvider;
+		}
 	}
 }

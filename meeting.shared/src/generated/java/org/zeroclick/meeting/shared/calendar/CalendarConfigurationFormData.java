@@ -55,6 +55,10 @@ public class CalendarConfigurationFormData extends AbstractFormData {
 		return getFieldByClass(ProcessNotRegistredOnEvent.class);
 	}
 
+	public Provider getProvider() {
+		return getFieldByClass(Provider.class);
+	}
+
 	public ReadOnly getReadOnly() {
 		return getFieldByClass(ReadOnly.class);
 	}
@@ -109,6 +113,11 @@ public class CalendarConfigurationFormData extends AbstractFormData {
 	}
 
 	public static class ProcessNotRegistredOnEvent extends AbstractValueFieldData<Boolean> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class Provider extends AbstractValueFieldData<Long> {
 
 		private static final long serialVersionUID = 1L;
 	}

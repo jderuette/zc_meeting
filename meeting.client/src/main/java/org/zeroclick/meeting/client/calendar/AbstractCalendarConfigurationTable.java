@@ -451,6 +451,11 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 		}
 
 		@Override
+		protected boolean getConfiguredEditable() {
+			return false;
+		}
+
+		@Override
 		protected int getConfiguredWidth() {
 			return 150;
 		}
