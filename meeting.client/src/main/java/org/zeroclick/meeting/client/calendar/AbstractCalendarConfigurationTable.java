@@ -31,6 +31,7 @@ import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractStringColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.IColumn;
 import org.eclipse.scout.rt.client.ui.form.FormEvent;
 import org.eclipse.scout.rt.client.ui.form.FormListener;
+import org.eclipse.scout.rt.client.ui.form.fields.smartfield.AbstractSmartField;
 import org.eclipse.scout.rt.client.ui.messagebox.IMessageBox;
 import org.eclipse.scout.rt.client.ui.messagebox.MessageBoxes;
 import org.eclipse.scout.rt.platform.BEANS;
@@ -39,12 +40,16 @@ import org.eclipse.scout.rt.platform.exception.ProcessingException;
 import org.eclipse.scout.rt.platform.html.internal.HtmlPlainBuilder;
 import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
+import org.eclipse.scout.rt.platform.util.ToStringBuilder;
 import org.eclipse.scout.rt.shared.TEXTS;
+import org.eclipse.scout.rt.shared.services.common.code.ICodeType;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.comon.text.UserHelper;
+import org.zeroclick.configuration.client.api.AbstractApiTable.ProviderColumn;
 import org.zeroclick.configuration.shared.api.ApiLookupCall;
+import org.zeroclick.configuration.shared.provider.ProviderCodeType;
 import org.zeroclick.meeting.client.api.google.GoogleApiHelper;
 import org.zeroclick.meeting.service.CalendarService;
 import org.zeroclick.meeting.shared.Icons;
@@ -161,6 +166,10 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 
 	public ExternalIdColumn getExternalIdColumn() {
 		return this.getColumnSet().getColumnByClass(ExternalIdColumn.class);
+	}
+
+	public ProviderColumn getProviderColumn() {
+		return this.getColumnSet().getColumnByClass(ProviderColumn.class);
 	}
 
 	public NameColumn getNameColumn() {
@@ -407,6 +416,31 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 	}
 
 	@Order(3000)
+	public class ProviderField extends AbstractSmartField<Long> {
+		@Override
+		protected String getConfiguredLabel() {
+			return TEXTS.get("zc.api.provider");
+		}
+
+		@Override
+		protected boolean getConfiguredMandatory() {
+			return Boolean.TRUE;
+		}
+
+		@Override
+		protected Class<? extends ICodeType<Long, Long>> getConfiguredCodeType() {
+			return ProviderCodeType.class;
+		}
+
+		@Override
+		public String toString() {
+			final ToStringBuilder sbuilder = new ToStringBuilder(this);
+			sbuilder.attr(this.getValue());
+			return sbuilder.toString();
+		}
+	}
+
+	@Order(4000)
 	public class ExternalIdColumn extends AbstractStringColumn {
 		@Override
 		protected String getConfiguredHeaderText() {
@@ -424,7 +458,7 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 		}
 	}
 
-	@Order(4000)
+	@Order(5000)
 	public class NameColumn extends AbstractStringColumn {
 		@Override
 		protected String getConfiguredHeaderText() {
@@ -437,7 +471,7 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 		}
 	}
 
-	@Order(5000)
+	@Order(6000)
 	public class ReadOnlyColumn extends AbstractBooleanColumn {
 		@Override
 		protected String getConfiguredHeaderText() {
@@ -455,7 +489,7 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 		}
 	}
 
-	@Order(6000)
+	@Order(7000)
 	public class MainColumn extends AbstractBooleanColumn {
 		@Override
 		protected String getConfiguredHeaderText() {
@@ -473,7 +507,7 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 		}
 	}
 
-	@Order(7000)
+	@Order(8000)
 	public class ProcessColumn extends AbstractBooleanColumn {
 		@Override
 		protected String getConfiguredHeaderText() {
@@ -491,7 +525,7 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 		}
 	}
 
-	@Order(8000)
+	@Order(9000)
 	public class AddEventToCalendarColumn extends AbstractBooleanColumn {
 		@Override
 		protected String getConfiguredHeaderText() {
@@ -555,7 +589,7 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 		}
 	}
 
-	@Order(9000)
+	@Order(10000)
 	public class ProcessFullDayEventColumn extends AbstractBooleanColumn {
 		@Override
 		protected String getConfiguredHeaderText() {
@@ -578,7 +612,7 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 		}
 	}
 
-	@Order(10000)
+	@Order(11000)
 	public class ProcessFreeEventColumn extends AbstractBooleanColumn {
 		@Override
 		protected String getConfiguredHeaderText() {
@@ -601,7 +635,7 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 		}
 	}
 
-	@Order(11000)
+	@Order(12000)
 	public class ProcessNotRegistredOnEventColumn extends AbstractBooleanColumn {
 		@Override
 		protected String getConfiguredHeaderText() {
@@ -624,7 +658,7 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 		}
 	}
 
-	@Order(12000)
+	@Order(13000)
 	public class UserIdColumn extends AbstractLongColumn {
 		@Override
 		protected String getConfiguredHeaderText() {
