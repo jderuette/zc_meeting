@@ -240,7 +240,7 @@ public class ApiService extends AbstractCommonService implements IApiService {
 		Boolean isNew = Boolean.FALSE;
 
 		final Long existingApiByEmailAccount = this.getApiIdByAccountEmail(formData.getUserId(),
-				formData.getAccountEmail().getValue());
+				formData.getProvider().getValue(), formData.getAccountEmail().getValue());
 
 		if (null == existingApiByEmailAccount) {
 			LOG.info("Creating new API in DB for user : " + formData.getUserIdProperty().getValue()
@@ -311,7 +311,7 @@ public class ApiService extends AbstractCommonService implements IApiService {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("No API ID but an account's email found, using accountsEmail to load api Data");
 			}
-			oAuthId = this.getApiIdByAccountEmail(userId, accountsEmail);
+			oAuthId = this.getApiIdByAccountEmail(userId, formData.getProvider().getValue(), accountsEmail);
 		}
 
 		if (null == oAuthId) {
@@ -345,10 +345,11 @@ public class ApiService extends AbstractCommonService implements IApiService {
 		return cachedData;
 	}
 
-	private ApiFormData loadByAccountsEmail(final Long userId, final String accountEmail) {
+	private ApiFormData loadByAccountsEmail(final Long userId, final Long providerId, final String accountEmail) {
 		final ApiFormData input = new ApiFormData();
 		input.setUserId(userId);
 		input.getAccountEmail().setValue(accountEmail);
+		input.getProvider().setValue(providerId);
 		return this.load(input, Boolean.FALSE);
 	}
 
@@ -380,7 +381,8 @@ public class ApiService extends AbstractCommonService implements IApiService {
 	public ApiFormData storeAccountEmail(final ApiFormData newDataForm, final String accountEmail) {
 		ApiFormData updatedData = null;
 		// if already an API with this Email for this user
-		final ApiFormData exstingCredentialId = this.loadByAccountsEmail(newDataForm.getUserId(), accountEmail);
+		final ApiFormData exstingCredentialId = this.loadByAccountsEmail(newDataForm.getUserId(),
+				newDataForm.getProvider().getValue(), accountEmail);
 
 		if (null != exstingCredentialId && null != exstingCredentialId.getApiCredentialId()
 				&& !exstingCredentialId.getApiCredentialId().equals(newDataForm.getApiCredentialId())) {
@@ -498,7 +500,7 @@ public class ApiService extends AbstractCommonService implements IApiService {
 		return matchingApi.getApiCredentialId();
 	}
 
-	private Long getApiIdByAccountEmail(final Long userId, final String accountsEmail) {
+	private Long getApiIdByAccountEmail(final Long userId, final Long providerId, final String accountsEmail) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(new StringBuffer().append("Searching API Id  : ").append(userId)
 					.append(" with account's email : ").append(accountsEmail).toString());
@@ -510,7 +512,16 @@ public class ApiService extends AbstractCommonService implements IApiService {
 		if (null != cachedData && cachedData.getRowCount() > 0) {
 			for (final ApiTableRowData cachedApi : cachedData.getRows()) {
 				if (null != cachedApi.getAccountEmail() && cachedApi.getAccountEmail().equals(accountsEmail)) {
-					matchingApi = cachedApi;
+					if (cachedApi.getProvider().equals(providerId)) {
+						matchingApi = cachedApi;
+					} else {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(new StringBuilder().append("Api found with accountsEmail : ")
+									.append(accountsEmail).append(" but now with correct provider found : ")
+									.append(cachedApi.getProvider()).append(" searched : ").append(providerId)
+									.toString());
+						}
+					}
 					break;
 				}
 			}
@@ -519,8 +530,8 @@ public class ApiService extends AbstractCommonService implements IApiService {
 		if (null == matchingApi) {
 			// No api for this user
 			LOG.info(new StringBuilder().append("No Api for user : ").append(userId).append(" with email : ")
-					.append(accountsEmail).append(" in ").append(cachedData.getRowCount()).append(" api forthis user")
-					.toString());
+					.append(accountsEmail).append(" and roviderID : ").append(providerId).append(" in ")
+					.append(cachedData.getRowCount()).append(" api forthis user").toString());
 			return null; // early break;
 		}
 		this.checkApiAcces(matchingApi);
