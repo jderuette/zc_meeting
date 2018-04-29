@@ -8,10 +8,14 @@ import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractCancelButton;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractOkButton;
 import org.eclipse.scout.rt.client.ui.form.fields.groupbox.AbstractGroupBox;
 import org.eclipse.scout.rt.client.ui.form.fields.longfield.AbstractLongField;
+import org.eclipse.scout.rt.client.ui.form.fields.smartfield.AbstractSmartField;
 import org.eclipse.scout.rt.client.ui.form.fields.stringfield.AbstractStringField;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
+import org.eclipse.scout.rt.platform.util.ToStringBuilder;
 import org.eclipse.scout.rt.shared.TEXTS;
+import org.eclipse.scout.rt.shared.services.common.code.ICodeType;
+import org.zeroclick.configuration.shared.provider.ProviderCodeType;
 import org.zeroclick.meeting.client.calendar.CalendarConfigurationForm.MainBox.AddEventToCalendarField;
 import org.zeroclick.meeting.client.calendar.CalendarConfigurationForm.MainBox.CalendarConfigurationIdField;
 import org.zeroclick.meeting.client.calendar.CalendarConfigurationForm.MainBox.CancelButton;
@@ -24,6 +28,7 @@ import org.zeroclick.meeting.client.calendar.CalendarConfigurationForm.MainBox.P
 import org.zeroclick.meeting.client.calendar.CalendarConfigurationForm.MainBox.ProcessFreeEventField;
 import org.zeroclick.meeting.client.calendar.CalendarConfigurationForm.MainBox.ProcessFullDayEventField;
 import org.zeroclick.meeting.client.calendar.CalendarConfigurationForm.MainBox.ProcessNotRegistredOnEventField;
+import org.zeroclick.meeting.client.calendar.CalendarConfigurationForm.MainBox.ProviderField;
 import org.zeroclick.meeting.client.calendar.CalendarConfigurationForm.MainBox.ReadOnlyField;
 import org.zeroclick.meeting.client.calendar.CalendarConfigurationForm.MainBox.UserIdField;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
@@ -95,6 +100,10 @@ public class CalendarConfigurationForm extends AbstractForm {
 		return this.getFieldByClass(ReadOnlyField.class);
 	}
 
+	public ProviderField getProviderField() {
+		return this.getFieldByClass(ProviderField.class);
+	}
+
 	public NameField getNameField() {
 		return this.getFieldByClass(NameField.class);
 	}
@@ -124,7 +133,7 @@ public class CalendarConfigurationForm extends AbstractForm {
 
 			@Override
 			protected boolean getConfiguredEnabled() {
-				return Boolean.FALSE;
+				return false;
 			}
 
 			@Override
@@ -147,7 +156,7 @@ public class CalendarConfigurationForm extends AbstractForm {
 
 			@Override
 			protected boolean getConfiguredEnabled() {
-				return Boolean.FALSE;
+				return false;
 			}
 
 			@Override
@@ -161,6 +170,11 @@ public class CalendarConfigurationForm extends AbstractForm {
 			@Override
 			protected String getConfiguredLabel() {
 				return TEXTS.get("zc.meeting.calendar.name");
+			}
+
+			@Override
+			protected boolean getConfiguredEnabled() {
+				return false;
 			}
 
 			@Override
@@ -178,7 +192,7 @@ public class CalendarConfigurationForm extends AbstractForm {
 
 			@Override
 			protected boolean getConfiguredEnabled() {
-				return Boolean.FALSE;
+				return false;
 			}
 
 		}
@@ -245,7 +259,7 @@ public class CalendarConfigurationForm extends AbstractForm {
 
 			@Override
 			protected boolean getConfiguredEnabled() {
-				return Boolean.FALSE;
+				return false;
 			}
 
 			@Override
@@ -260,6 +274,31 @@ public class CalendarConfigurationForm extends AbstractForm {
 		}
 
 		@Order(12000)
+		public class ProviderField extends AbstractSmartField<Long> {
+			@Override
+			protected String getConfiguredLabel() {
+				return TEXTS.get("zc.api.provider");
+			}
+
+			@Override
+			protected boolean getConfiguredEnabled() {
+				return false;
+			}
+
+			@Override
+			protected Class<? extends ICodeType<Long, Long>> getConfiguredCodeType() {
+				return ProviderCodeType.class;
+			}
+
+			@Override
+			public String toString() {
+				final ToStringBuilder sbuilder = new ToStringBuilder(this);
+				sbuilder.attr(this.getValue());
+				return sbuilder.toString();
+			}
+		}
+
+		@Order(13000)
 		public class UserIdField extends AbstractLongField {
 			@Override
 			protected String getConfiguredLabel() {
@@ -268,7 +307,7 @@ public class CalendarConfigurationForm extends AbstractForm {
 
 			@Override
 			protected boolean getConfiguredEnabled() {
-				return Boolean.FALSE;
+				return false;
 			}
 
 			@Override

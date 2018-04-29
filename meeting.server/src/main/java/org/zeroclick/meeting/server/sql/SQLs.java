@@ -740,9 +740,9 @@ public interface SQLs {
 			+ "_OAUHTCREDENTIAL_FK FOREIGN KEY (oAuth_credential_id) REFERENCES OAUHTCREDENTIAL(api_credential_id))";
 	String CALENDAR_CONFIG_JOIN_OAUTH = " INNER JOIN OAUHTCREDENTIAL ON oAuth_credential_id=api_credential_id";
 
-	String CALENDAR_CONFIG_PAGE_SELECT = "select agenda_config_id, external_id, name, read_only, main, process, add_event_to_calendar, process_full_day_event, process_busy_event, process_not_registred_on_event, oAuth_credential_id, user_id FROM "
+	String CALENDAR_CONFIG_PAGE_SELECT = "select agenda_config_id, external_id, name, read_only, main, process, add_event_to_calendar, process_full_day_event, process_busy_event, process_not_registred_on_event, oAuth_credential_id, user_id, OAUHTCREDENTIAL.provider FROM "
 			+ PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME + CALENDAR_CONFIG_JOIN_OAUTH + " WHERE 1=1";
-	String CALENDAR_CONFIG_PAGE_SELECT_INTO = " INTO :{page.calendarConfigurationId}, :{page.externalId}, :{page.name}, :{page.readOnly}, :{page.main}, :{page.process}, :{page.addEventToCalendar}, :{page.processFullDayEvent}, :{page.ProcessFreeEvent}, :{page.processNotRegistredOnEvent}, :{page.OAuthCredentialId}, :{page.userId}";
+	String CALENDAR_CONFIG_PAGE_SELECT_INTO = " INTO :{page.calendarConfigurationId}, :{page.externalId}, :{page.name}, :{page.readOnly}, :{page.main}, :{page.process}, :{page.addEventToCalendar}, :{page.processFullDayEvent}, :{page.ProcessFreeEvent}, :{page.processNotRegistredOnEvent}, :{page.OAuthCredentialId}, :{page.userId}, :{page.provider}";
 
 	String CALENDAR_CONFIG_FILTER_ID = " AND agenda_config_id = :calendarConfigurationId";
 	String CALENDAR_CONFIG_FILTER_CURRENT_USER = " AND user_id = :currentUser";
@@ -752,13 +752,13 @@ public interface SQLs {
 	String CALENDAR_CONFIG_FILTER_ADD_EVENT = " AND add_event_to_calendar='true'";
 	String CALENDAR_CONFIG_FILTER_PROCESSED = " AND process = 'true'";
 
-	String CALENDAR_CONFIG_SELECT = "select agenda_config_id, external_id, name, main, read_only, process, add_event_to_calendar, process_full_day_event, process_busy_event, process_not_registred_on_event, oAuth_credential_id, user_id FROM "
+	String CALENDAR_CONFIG_SELECT = "select agenda_config_id, external_id, name, main, read_only, process, add_event_to_calendar, process_full_day_event, process_busy_event, process_not_registred_on_event, oAuth_credential_id, user_id, OAUHTCREDENTIAL.provider FROM "
 			+ PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME + CALENDAR_CONFIG_JOIN_OAUTH;
 
 	String CALENDAR_CONFIG_SELECT_ID = "select agenda_config_id FROM "
 			+ PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME + CALENDAR_CONFIG_JOIN_OAUTH;
 
-	String CALENDAR_CONFIG_SELECT_INTO = " INTO :calendarConfigurationId, :externalId, :name, :main, :readOnly, :process, :addEventToCalendar, :processFullDayEvent, :processFreeEvent, :processNotRegistredOnEvent, :oAuthCredentialId, :userId";
+	String CALENDAR_CONFIG_SELECT_INTO = " INTO :calendarConfigurationId, :externalId, :name, :main, :readOnly, :process, :addEventToCalendar, :processFullDayEvent, :processFreeEvent, :processNotRegistredOnEvent, :oAuthCredentialId, :userId, :provider";
 
 	String CALENDAR_CONFIG_SELECT_OWNER = "SELECT user_id FROM " + PatchConfigureCalendar.CALENDAR_CONFIG_TABLE_NAME
 			+ CALENDAR_CONFIG_JOIN_OAUTH + " WHERE agenda_config_id=:calendarConfigurationId";
