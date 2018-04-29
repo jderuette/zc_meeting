@@ -95,7 +95,7 @@ public class MailjetMailSender implements IMailSender {
 
 		final String subjectWithEnv = subjectBuilder.toString();
 
-		LOG.info("Sending mail to : " + recipientTo + " subject : " + subjectWithEnv + " BodySize : "
+		LOG.info("Sending mail to : " + recipientTo + ", subject : " + subjectWithEnv + ", BodySize : "
 				+ messageBodyWithFooter.length());
 
 		if (LOG.isDebugEnabled()) {

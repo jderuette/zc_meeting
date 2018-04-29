@@ -18,9 +18,7 @@ package org.zeroclick.meeting.client.api;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.eclipse.scout.rt.client.ui.messagebox.IMessageBox;
 import org.eclipse.scout.rt.client.ui.messagebox.MessageBoxes;
@@ -40,10 +38,7 @@ import org.zeroclick.meeting.client.common.CallTrackerService;
 import org.zeroclick.meeting.service.CalendarAviability;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
-import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationFormData;
-import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationFormData.CalendarConfigTable.CalendarConfigTableRowData;
-import org.zeroclick.meeting.shared.calendar.IApiService;
 import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 
 import com.google.api.client.http.GenericUrl;
@@ -93,35 +88,6 @@ public abstract class AbstractApiHelper<E, F> implements ApiHelper {
 				.getCalendarConfigurationTableData(Boolean.FALSE);
 
 		return calendarsConfig.getCalendarConfigTable().getRowCount() > 0;
-	}
-
-	@Override
-	public String getAccountsEmail(final CalendarConfigTableRowData[] calendarsConfigurationRows) {
-		final StringBuilder accountsEmails = new StringBuilder();
-		final IApiService apiService = BEANS.get(IApiService.class);
-
-		if (null != calendarsConfigurationRows && calendarsConfigurationRows.length > 0) {
-
-			final Set<Long> modifiedOAuthIds = new HashSet<>();
-			for (final CalendarConfigTableRowData calendarConfig : calendarsConfigurationRows) {
-				if (null != calendarConfig.getOAuthCredentialId()) {
-					modifiedOAuthIds.add(calendarConfig.getOAuthCredentialId());
-				}
-			}
-
-			if (null != modifiedOAuthIds && modifiedOAuthIds.size() > 0) {
-				final String separator = ", ";
-				for (final Long modifiedOAuthId : modifiedOAuthIds) {
-					final ApiFormData apiData = apiService.load(modifiedOAuthId);
-					accountsEmails.append(apiData.getAccountEmail().getValue()).append(separator);
-				}
-				if (accountsEmails.length() >= separator.length()) {
-					accountsEmails.delete(accountsEmails.length() - separator.length(), accountsEmails.length());
-				}
-			}
-		}
-
-		return accountsEmails.toString();
 	}
 
 	public abstract E getCredential(final Long oAuthCredentialId);

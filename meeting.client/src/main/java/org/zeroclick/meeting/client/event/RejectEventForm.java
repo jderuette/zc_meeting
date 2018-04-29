@@ -484,7 +484,7 @@ public class RejectEventForm extends AbstractForm {
 		}
 
 		try {
-			mailSender.sendEmail(destEmail, subject, content);
+			mailSender.sendEmail(destEmail, subject, content, Boolean.FALSE);
 		} catch (final MailException e) {
 			LOG.error("Cannot send email for : " + destEmail + ", subject : " + subject, e);
 			throw new VetoException(TEXTS.get("zc.common.cannotSendEmail"));

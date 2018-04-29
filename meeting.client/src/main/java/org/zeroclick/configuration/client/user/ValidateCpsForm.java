@@ -647,7 +647,7 @@ public class ValidateCpsForm extends AbstractForm {
 					valuesArray);
 
 			try {
-				mailSender.sendEmail(recipient, subject, content);
+				mailSender.sendEmail(recipient, subject, content, Boolean.FALSE);
 			} catch (final MailException e) {
 				throw new VetoException(TEXTS.get("zc.common.cannotSendEmail"));
 			}

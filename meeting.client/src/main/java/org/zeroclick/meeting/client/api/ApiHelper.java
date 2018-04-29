@@ -25,7 +25,6 @@ import org.zeroclick.meeting.service.CalendarAviability;
 import org.zeroclick.meeting.service.CalendarService.EventIdentification;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
-import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationFormData.CalendarConfigTable.CalendarConfigTableRowData;
 
 /**
  * @author djer
@@ -45,8 +44,6 @@ public interface ApiHelper {
 	public String getAuthorisationLinksAsLi();
 
 	public String getAccountEmail(final Long apiCredentialId);
-
-	public String getAccountsEmail(final CalendarConfigTableRowData[] calendarsConfigurationRows);
 
 	public void autoConfigureCalendars();
 

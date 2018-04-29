@@ -178,11 +178,13 @@ public class CalendarsConfigurationForm extends AbstractForm implements IPageFor
 			final CalendarsConfigurationFormData formData = new CalendarsConfigurationFormData();
 			CalendarsConfigurationForm.this.exportFormData(formData);
 
+			final ICalendarConfigurationService calendarConfigurationService = BEANS
+					.get(ICalendarConfigurationService.class);
+
 			final List<ITableRow> modifiedRows = CalendarsConfigurationForm.this.getCalendarConfigTableField()
 					.getTable().getUpdatedRows();
 			if (modifiedRows.size() > 0) {
-				final ICalendarConfigurationService calendarConfigurationService = BEANS
-						.get(ICalendarConfigurationService.class);
+
 				// remove unmodified rows, to avoid useless work on server side
 				final CalendarConfigTableRowData[] exportedRows = formData.getCalendarConfigTable().getRows();
 				for (final CalendarConfigTableRowData row : exportedRows) {
@@ -190,9 +192,9 @@ public class CalendarsConfigurationForm extends AbstractForm implements IPageFor
 						formData.getCalendarConfigTable().removeRow(row);
 					}
 				}
-
-				calendarConfigurationService.store(formData);
 			}
+
+			calendarConfigurationService.store(formData);
 		}
 
 		private Boolean isModified(final CalendarConfigTableRowData row, final List<ITableRow> modifiedRows) {

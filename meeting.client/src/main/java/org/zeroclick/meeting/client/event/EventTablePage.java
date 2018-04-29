@@ -926,7 +926,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				final String content = TextsHelper.get(recipientUserId, "zc.meeting.email.event.confirm.html", values);
 
 				try {
-					mailSender.sendEmail(recipient, subject, content);
+					mailSender.sendEmail(recipient, subject, content, Boolean.FALSE);
 				} catch (final MailException e) {
 					throw new VetoException(TEXTS.get("zc.common.cannotSendEmail"));
 				}

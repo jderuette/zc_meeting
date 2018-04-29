@@ -1286,7 +1286,7 @@ public class EventForm extends AbstractForm {
 					values);
 
 			try {
-				mailSender.sendEmail(recipient, subject, content);
+				mailSender.sendEmail(recipient, subject, content, Boolean.FALSE);
 			} catch (final MailException e) {
 				LOG.error("Cannot send email to " + recipient + " with subject : " + subject + " for event ID : "
 						+ formData.getEventId(), e);

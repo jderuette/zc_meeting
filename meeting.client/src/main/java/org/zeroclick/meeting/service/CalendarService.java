@@ -21,6 +21,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,8 +40,10 @@ import org.zeroclick.meeting.client.api.ApiHelperFactory;
 import org.zeroclick.meeting.client.common.DayDuration;
 import org.zeroclick.meeting.client.common.SlotHelper;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
+import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationTablePageData;
+import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationFormData.CalendarConfigTable.CalendarConfigTableRowData;
 import org.zeroclick.meeting.shared.calendar.IApiService;
 import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.event.EventFormData;
@@ -207,6 +210,8 @@ public class CalendarService {
 		if (null == externalEventId) {
 			LOG.info("Event : " + event.getEventId()
 					+ " has no external Event Id, no event to delete in connected calendars");
+			// no error during delete, because no deletion required
+			eventDeleted = Boolean.TRUE;
 		} else {
 			final CalendarConfigurationFormData calendarToStoreEvent = calendarConfigurationService
 					.getCalendarToStoreEvents(userId);
@@ -376,6 +381,34 @@ public class CalendarService {
 					.get(ICalendarConfigurationService.class);
 			calendarConfigurationService.autoConfigure(calendars);
 		}
+	}
+
+	public String getAccountsEmail(final CalendarConfigTableRowData[] calendarsConfigurationRows) {
+		final StringBuilder accountsEmails = new StringBuilder();
+		final IApiService apiService = BEANS.get(IApiService.class);
+
+		if (null != calendarsConfigurationRows && calendarsConfigurationRows.length > 0) {
+
+			final Set<Long> modifiedOAuthIds = new HashSet<>();
+			for (final CalendarConfigTableRowData calendarConfig : calendarsConfigurationRows) {
+				if (null != calendarConfig.getOAuthCredentialId()) {
+					modifiedOAuthIds.add(calendarConfig.getOAuthCredentialId());
+				}
+			}
+
+			if (null != modifiedOAuthIds && modifiedOAuthIds.size() > 0) {
+				final String separator = ", ";
+				for (final Long modifiedOAuthId : modifiedOAuthIds) {
+					final ApiFormData apiData = apiService.load(modifiedOAuthId);
+					accountsEmails.append(apiData.getAccountEmail().getValue()).append(separator);
+				}
+				if (accountsEmails.length() >= separator.length()) {
+					accountsEmails.delete(accountsEmails.length() - separator.length(), accountsEmails.length());
+				}
+			}
+		}
+
+		return accountsEmails.toString();
 	}
 
 	private Long getCurrentUserId() {
