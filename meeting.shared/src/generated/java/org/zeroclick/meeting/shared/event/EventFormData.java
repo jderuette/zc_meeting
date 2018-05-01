@@ -24,6 +24,10 @@ public class EventFormData extends AbstractFormData {
 		return getFieldByClass(CreatedDate.class);
 	}
 
+	public Description getDescription() {
+		return getFieldByClass(Description.class);
+	}
+
 	public Duration getDuration() {
 		return getFieldByClass(Duration.class);
 	}
@@ -175,6 +179,11 @@ public class EventFormData extends AbstractFormData {
 	}
 
 	public static class CreatedDate extends AbstractValueFieldData<Date> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class Description extends AbstractValueFieldData<String> {
 
 		private static final long serialVersionUID = 1L;
 	}

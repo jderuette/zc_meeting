@@ -20,7 +20,6 @@ import org.eclipse.scout.rt.client.ui.form.AbstractForm;
 import org.eclipse.scout.rt.client.ui.form.AbstractFormHandler;
 import org.eclipse.scout.rt.client.ui.form.IForm;
 import org.eclipse.scout.rt.client.ui.form.fields.DefaultFieldStatus;
-import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractButton;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractCancelButton;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractOkButton;
 import org.eclipse.scout.rt.client.ui.form.fields.datefield.AbstractDateField;
@@ -60,6 +59,7 @@ import org.zeroclick.meeting.client.NotificationHelper;
 import org.zeroclick.meeting.client.common.SlotHelper;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.CancelButton;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.CreatedDateField;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.DescriptionField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.DurationField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.EmailChooserBox;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.EmailChooserBox.MultipleEmailBox;
@@ -78,9 +78,10 @@ import org.zeroclick.meeting.client.event.EventForm.MainBox.PeriodeBox.SlotSeque
 import org.zeroclick.meeting.client.event.EventForm.MainBox.PeriodeBox.SlotSequenceBox.AdvancePeriodButton;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.PeriodeBox.SlotSequenceBox.SlotField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.ReasonField;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.SlotSequenceBox.ContentButton;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.SlotSequenceBox.SubjectField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.StartDateField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.StateField;
-import org.zeroclick.meeting.client.event.EventForm.MainBox.SubjectField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.VenueField;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.event.EventFormData;
@@ -90,6 +91,7 @@ import org.zeroclick.meeting.shared.event.StateCodeType;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
 import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
 import org.zeroclick.ui.action.menu.AbstractAddMenu;
+import org.zeroclick.ui.form.fields.button.moreoptions.AbstractMoreOptionButton;
 
 @FormData(value = EventFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class EventForm extends AbstractForm {
@@ -308,6 +310,14 @@ public class EventForm extends AbstractForm {
 		return this.getFieldByClass(MaximalStartDateField.class);
 	}
 
+	public ContentButton getContentButton() {
+		return this.getFieldByClass(ContentButton.class);
+	}
+
+	public DescriptionField getDescriptionField() {
+		return this.getFieldByClass(DescriptionField.class);
+	}
+
 	public OkButton getOkButton() {
 		return this.getFieldByClass(OkButton.class);
 	}
@@ -353,32 +363,124 @@ public class EventForm extends AbstractForm {
 		}
 
 		@Order(3000)
-		public class SubjectField extends AbstractStringField {
+		public class SlotSequenceBox extends AbstractSequenceBox {
 			@Override
 			protected String getConfiguredLabel() {
-				return TEXTS.get("zc.meeting.event.subject");
+				return null;
 			}
 
 			@Override
-			protected boolean getConfiguredMandatory() {
-				return Boolean.TRUE;
+			protected boolean getConfiguredLabelVisible() {
+				return Boolean.FALSE;
 			}
 
 			@Override
-			protected int getConfiguredMaxLength() {
-				return 256;
+			protected boolean getConfiguredAutoCheckFromTo() {
+				return false;
 			}
 
-			@Override
-			protected String execValidateValue(final String rawValue) {
-				if (null != rawValue && rawValue.length() > 150) {
-					throw new VetoException(TEXTS.get("zc.meeting.event.subject.tooLong"));
+			@Order(1000)
+			public class ContentButton extends AbstractMoreOptionButton {
+				@Override
+				protected void showFields() {
+					EventForm.this.getDescriptionField().setVisible(true);
 				}
-				return rawValue;
+
+				@Override
+				protected void hideFields() {
+					EventForm.this.getDescriptionField().setVisible(false);
+				}
+			}
+
+			@Order(2000)
+			public class SubjectField extends AbstractStringField {
+				@Override
+				protected String getConfiguredLabel() {
+					return TEXTS.get("zc.meeting.event.subject");
+				}
+
+				@Override
+				protected boolean getConfiguredMandatory() {
+					return Boolean.TRUE;
+				}
+
+				@Override
+				protected int getConfiguredMaxLength() {
+					return 256;
+				}
+
+				@Override
+				protected String execValidateValue(final String rawValue) {
+					if (null != rawValue && rawValue.length() > 150) {
+						throw new VetoException(TEXTS.get("zc.meeting.event.subject.tooLong"));
+					}
+					return rawValue;
+				}
 			}
 		}
 
 		@Order(4000)
+		public class DescriptionField extends AbstractStringField {
+
+			public static final int MAX_SIZE = 7000;
+
+			@Override
+			protected String getConfiguredLabel() {
+				return TEXTS.get("zc.meeting.event.description");
+			}
+
+			@Override
+			protected boolean getConfiguredHtmlEnabled() {
+				return false;
+			}
+
+			@Override
+			protected boolean getConfiguredMultilineText() {
+				return Boolean.TRUE;
+			}
+
+			@Override
+			protected boolean getConfiguredVisible() {
+				return false;
+			}
+
+			@Override
+			protected boolean getConfiguredMandatory() {
+				return false;
+			}
+
+			@Override
+			protected int getConfiguredMaxLength() {
+				return 500000;
+			}
+
+			@Override
+			protected int getConfiguredGridH() {
+				return 3;
+			}
+
+			@Override
+			protected int getConfiguredGridW() {
+				return 2;
+			}
+
+			@Override
+			protected int getConfiguredLabelPosition() {
+				return LABEL_POSITION_TOP;
+			}
+
+			@Override
+			protected String execValidateValue(final String rawValue) {
+				if (null != rawValue && rawValue.length() > MAX_SIZE) {
+					throw new VetoException(TEXTS.get("zc.meeting.event.description.tooLong",
+							String.valueOf(rawValue.length()), String.valueOf(MAX_SIZE)));
+				}
+				this.clearErrorStatus();
+				return rawValue;
+			}
+		}
+
+		@Order(5000)
 		public class EmailChooserBox extends AbstractTabBox {
 
 			@Order(1000)
@@ -720,7 +822,7 @@ public class EventForm extends AbstractForm {
 			}
 		}
 
-		@Order(5000)
+		@Order(6000)
 		public class GuestIdField extends AbstractLongField {
 			@Override
 			protected String getConfiguredLabel() {
@@ -733,7 +835,7 @@ public class EventForm extends AbstractForm {
 			}
 		}
 
-		@Order(6000)
+		@Order(7000)
 		public class PeriodeBox extends AbstractGroupBox {
 			@Override
 			protected String getConfiguredLabel() {
@@ -763,61 +865,15 @@ public class EventForm extends AbstractForm {
 				}
 
 				@Order(1000)
-				public class AdvancePeriodButton extends AbstractButton {
-					private static final String ICON_DISABLE = Icons.CaretRight;
-					private static final String ICON_ENABLED = Icons.CaretDown;
-
+				public class AdvancePeriodButton extends AbstractMoreOptionButton {
 					@Override
-					protected String getConfiguredLabel() {
-						return null;
-					}
-
-					@Override
-					protected int getConfiguredDisplayStyle() {
-						return DISPLAY_STYLE_TOGGLE;
-					}
-
-					@Override
-					protected boolean getConfiguredLabelVisible() {
-						return Boolean.FALSE;
-					}
-
-					@Override
-					protected String getConfiguredIconId() {
-						return ICON_DISABLE;
-					}
-
-					@Override
-					protected boolean getConfiguredProcessButton() {
-						return Boolean.FALSE;
-					}
-
-					@Override
-					protected void execSelectionChanged(final boolean selection) {
-						if (this.isSelected()) {
-							this.show();
-						} else {
-							this.hide();
-						}
-					}
-
-					// @Override
-					// protected void execClickAction() {
-					// if (this.isSelected()) {
-					// this.show();
-					// } else {
-					// this.hide();
-					// }
-					// }
-
-					private void show() {
-						this.setIconId(ICON_ENABLED);
+					protected void showFields() {
 						EventForm.this.getMinimalStartDateField().setVisible(Boolean.TRUE);
 						EventForm.this.getMaximalStartDateField().setVisible(Boolean.TRUE);
 					}
 
-					private void hide() {
-						this.setIconId(ICON_DISABLE);
+					@Override
+					protected void hideFields() {
 						EventForm.this.getMinimalStartDateField().setVisible(Boolean.FALSE);
 						EventForm.this.getMinimalStartDateField().setValue(null);
 						EventForm.this.getMaximalStartDateField().setVisible(Boolean.FALSE);
@@ -1003,7 +1059,7 @@ public class EventForm extends AbstractForm {
 			}
 		}
 
-		@Order(7000)
+		@Order(8000)
 		public class DurationField extends AbstractSmartField<Long> {
 			@Override
 			protected String getConfiguredLabel() {
@@ -1032,7 +1088,7 @@ public class EventForm extends AbstractForm {
 			}
 		}
 
-		@Order(8000)
+		@Order(9000)
 		public class VenueField extends AbstractProposalField<String> {
 			@Override
 			protected String getConfiguredLabel() {
@@ -1045,7 +1101,7 @@ public class EventForm extends AbstractForm {
 			}
 		}
 
-		@Order(9000)
+		@Order(10000)
 		public class StateField extends AbstractSmartField<String> {
 			@Override
 			protected String getConfiguredLabel() {
@@ -1063,7 +1119,7 @@ public class EventForm extends AbstractForm {
 			}
 		}
 
-		@Order(10000)
+		@Order(11000)
 		public class StartDateField extends AbstractDateField {
 			@Override
 			protected String getConfiguredLabel() {
@@ -1076,7 +1132,7 @@ public class EventForm extends AbstractForm {
 			}
 		}
 
-		@Order(11000)
+		@Order(12000)
 		public class EndDateField extends AbstractDateField {
 			@Override
 			protected String getConfiguredLabel() {
@@ -1089,7 +1145,7 @@ public class EventForm extends AbstractForm {
 			}
 		}
 
-		@Order(12000)
+		@Order(13000)
 		public class ReasonField extends AbstractStringField {
 			@Override
 			protected String getConfiguredLabel() {
@@ -1107,7 +1163,7 @@ public class EventForm extends AbstractForm {
 			}
 		}
 
-		@Order(13000)
+		@Order(14000)
 		public class CreatedDateField extends AbstractDateField {
 			@Override
 			protected String getConfiguredLabel() {
