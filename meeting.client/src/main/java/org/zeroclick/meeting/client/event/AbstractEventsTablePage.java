@@ -436,10 +436,10 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			return Boolean.FALSE;
 		}
 
-		@Override
-		protected boolean getConfiguredSortEnabled() {
-			return Boolean.FALSE;
-		}
+		// @Override
+		// protected boolean getConfiguredSortEnabled() {
+		// return Boolean.FALSE;
+		// }
 
 		@Override
 		protected boolean getConfiguredTableStatusVisible() {
@@ -455,6 +455,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		protected void execInitTable() {
 			super.execInitTable();
 			this.setTableStatusVisible(Boolean.FALSE);
+			// this.sort();
 		}
 
 		@Override
