@@ -76,7 +76,7 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 
 	@Override
 	protected boolean getConfiguredHeaderEnabled() {
-		return true;
+		return false;
 	}
 
 	@Override
@@ -108,6 +108,8 @@ public abstract class AbstractCalendarConfigurationTable extends AbstractTable {
 		if (!userHelper.isCalendarAdmin()) {
 			final RefreshMenu refreshMenu = this.getMenuByClass(RefreshMenu.class);
 			refreshMenu.setVisible(false);
+		} else {
+			this.setHeaderEnabled(true);
 		}
 
 		if (AbstractCalendarConfigurationTable.this.isDisplayAllUsers()) {
