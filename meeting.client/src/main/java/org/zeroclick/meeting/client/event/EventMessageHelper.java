@@ -134,6 +134,8 @@ public class EventMessageHelper {
 		values.add(venue);// 12
 		values.add(new ApplicationUrlProperty().getValue()); // 13
 
+		values.add(formData.getDescription().getValue());// 14
+
 		return CollectionUtility.toArray(values, String.class);
 	}
 
@@ -142,7 +144,7 @@ public class EventMessageHelper {
 		final List<String> values = CollectionUtility
 				.arrayList(this.buildValuesForLocaleMessages(formData, recipientUserId));
 
-		values.add(externalEvent.getHtmlLink()); // 14
+		values.add(externalEvent.getHtmlLink()); // 15
 
 		return CollectionUtility.toArray(values, String.class);
 	}
@@ -152,11 +154,11 @@ public class EventMessageHelper {
 		final List<String> values = CollectionUtility
 				.arrayList(this.buildValuesForLocaleMessages(formData, recipientUserId));
 
-		values.add(externalhtmlLink); // 14
+		values.add(externalhtmlLink); // 15
 
 		for (final String param : otherParams) {
-			// otherParticpantEmail => 15
-			// warningManualManageEvent =>16
+			// otherParticpantEmail => 16
+			// warningManualManageEvent =>17
 			values.add(param);
 		}
 
