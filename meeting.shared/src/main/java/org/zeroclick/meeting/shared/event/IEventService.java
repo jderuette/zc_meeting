@@ -30,6 +30,8 @@ public interface IEventService extends IService {
 
 	RejectEventFormData load(RejectEventFormData formData);
 
+	String loadDescription(Long eventId);
+
 	EventFormData store(EventFormData formData);
 
 	boolean isOwn(Long eventId);

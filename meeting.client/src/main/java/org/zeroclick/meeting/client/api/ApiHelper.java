@@ -59,7 +59,7 @@ public interface ApiHelper {
 
 	public String createEvent(ZonedDateTime startDate, ZonedDateTime endDate, String subject, Long forUserId,
 			String location, String withEmail, Boolean guestAutoAcceptMeeting, String envDisplay,
-			CalendarConfigurationFormData calendarToStoreEvent);
+			CalendarConfigurationFormData calendarToStoreEvent, String description);
 
 	public String getEventHtmlLink(EventIdentification eventIdentification, Long apiCredentialId);
 

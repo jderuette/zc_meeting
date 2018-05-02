@@ -574,13 +574,15 @@ public class GoogleApiHelper extends AbstractApiHelper<Credential, Calendar> {
 	@Override
 	public String createEvent(final ZonedDateTime startDate, final ZonedDateTime endDate, final String subject,
 			final Long forUserId, final String location, final String withEmail, final Boolean guestAutoAcceptMeeting,
-			final String envDisplay, final CalendarConfigurationFormData calendarToStoreEvent) {
+			final String envDisplay, final CalendarConfigurationFormData calendarToStoreEvent,
+			final String description) {
 		final Event newEvent = new Event();
 		newEvent.setStart(this.toEventDateTime(startDate));
 		newEvent.setEnd(this.toEventDateTime(endDate));
 		newEvent.setSummary(envDisplay + " " + subject + TextsHelper.get(forUserId, "zc.common.email.subject.suffix"));
 		newEvent.setLocation(TextsHelper.get(forUserId, location));
 		newEvent.setDescription(subject);
+		newEvent.setDescription(description);
 
 		final EventAttendee attendeeEmail = new EventAttendee().setEmail(withEmail);
 		if (guestAutoAcceptMeeting) {

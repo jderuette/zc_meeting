@@ -318,6 +318,18 @@ public class EventService extends AbstractCommonService implements IEventService
 	}
 
 	@Override
+	public String loadDescription(final Long eventId) {
+		String description = null;
+		final Object[][] eventDescription = SQL.select(
+				SQLs.EVENT_SELECT_DESCRIPTION_DATA_ONLY + SQLs.EVENT_FILTER_EVENT_ID, new NVPair("eventId", eventId));
+		if (eventDescription.length == 1) {
+			description = this.byteToStringField((byte[]) eventDescription[0][0]);
+		}
+
+		return description;
+	}
+
+	@Override
 	public EventFormData store(final EventFormData formData) {
 		return this.store(formData, Boolean.FALSE);
 	}

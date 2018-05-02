@@ -275,7 +275,7 @@ public class CalendarService {
 
 	public EventIdentification createEvent(final ZonedDateTime startDate, final ZonedDateTime endDate,
 			final Long forUserId, final String withEmail, final String subject, final String location,
-			final Boolean guestAutoAcceptMeeting) throws IOException {
+			final Boolean guestAutoAcceptMeeting, final String description) throws IOException {
 		final CalendarConfigurationFormData calendarToStoreEvent = this.getUserCreateEventCalendar(forUserId);
 		final ApiTableRowData eventCreatorApi = this.getCalendarApi(calendarToStoreEvent);
 
@@ -292,7 +292,7 @@ public class CalendarService {
 		final String envDisplay = new ApplicationEnvProperty().displayAsText();
 
 		final String createdEventId = apiHelper.createEvent(startDate, endDate, subject, forUserId, location, withEmail,
-				guestAutoAcceptMeeting, envDisplay, calendarToStoreEvent);
+				guestAutoAcceptMeeting, envDisplay, calendarToStoreEvent, description);
 
 		return new EventIdentification(createdEventId, calendarToStoreEvent.getExternalId().getValue());
 	}

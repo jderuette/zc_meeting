@@ -429,7 +429,8 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 	@Override
 	public String createEvent(final ZonedDateTime startDate, final ZonedDateTime endDate, final String subject,
 			final Long forUserId, final String location, final String withEmail, final Boolean guestAutoAcceptMeeting,
-			final String envDisplay, final CalendarConfigurationFormData calendarToStoreEvent) {
+			final String envDisplay, final CalendarConfigurationFormData calendarToStoreEvent,
+			final String description) {
 
 		final Event newEvent = new Event();
 
@@ -445,8 +446,8 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 		newEvent.setBodyPreview(subject);
 
 		final ItemBody body = new ItemBody();
-		body.setContentType("Text");
-		body.setContent(subject);
+		body.setContentType("HTML");
+		body.setContent(description);
 		newEvent.setBody(body);
 
 		final Collection<Attendee> attendees = new ArrayList<>();

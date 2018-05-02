@@ -787,10 +787,12 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			@Override
 			protected void execAction() {
 				final Boolean guestAutoAcceptEvent = Boolean.TRUE;
+				final IEventService eventService = BEANS.get(IEventService.class);
 
 				final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 				notificationHelper.addProcessingNotification("zc.meeting.notification.acceptingEvent");
 
+				final Long eventId = Table.this.getEventIdColumn().getSelectedValue();
 				final IUserService userService = BEANS.get(IUserService.class);
 				final ZonedDateTime start = Table.this.getStartDateColumn().getSelectedZonedValue();
 				final ZonedDateTime end = Table.this.getEndDateColumn().getSelectedZonedValue();
@@ -800,6 +802,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				final String eventGuestEmail = Table.this.getEmailColumn().getSelectedValue();
 				final String subject = Table.this.getSubjectColumn().getSelectedValue();
 				final String venue = Table.this.getVenueColumn().getSelectedValue();
+				final String description = eventService.loadDescription(eventId);
 
 				try {
 					if (null == start || null == end) {
@@ -816,7 +819,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					}
 					// External event for holder
 					final EventIdentification externalOrganizerEventId = calendarService.createEvent(start, end,
-							eventHeldBy, eventGuestEmail, subject, venue, guestAutoAcceptEvent);
+							eventHeldBy, eventGuestEmail, subject, venue, guestAutoAcceptEvent, description);
 					if (null == externalOrganizerEventId) {
 						LOG.warn(new StringBuilder().append("Event not created for user : ").append(eventHeldBy)
 								.append(" and he is the organizer ! (subject : ").append(subject).append(")")
@@ -875,7 +878,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 								externalAttendeeEventId = externalOrganizerEventId;
 							} else {
 								externalAttendeeEventId = calendarService.createEvent(start, end, eventGuestId,
-										eventHeldEmail, subject, venue, Boolean.TRUE);
+										eventHeldEmail, subject, venue, Boolean.TRUE, description);
 							}
 
 							Table.this.getExternalIdRecipientColumn().setValue(Table.this.getSelectedRow(),
