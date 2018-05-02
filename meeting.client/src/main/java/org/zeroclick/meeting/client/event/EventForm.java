@@ -110,6 +110,8 @@ public class EventForm extends AbstractForm {
 	private Long lastModifier;
 	private String previousState;
 
+	private byte[] descriptionData;
+
 	private EventMessageHelper eventMessageHelper;
 
 	@FormData
@@ -160,6 +162,16 @@ public class EventForm extends AbstractForm {
 	@FormData
 	public void setPreviousState(final String previousState) {
 		this.previousState = previousState;
+	}
+
+	@FormData
+	public byte[] getDescriptionData() {
+		return null == this.descriptionData ? null : this.descriptionData.clone();
+	}
+
+	@FormData
+	public void setDescriptionData(final byte[] descriptionData) {
+		this.descriptionData = null == descriptionData ? null : descriptionData.clone();
 	}
 
 	@Override

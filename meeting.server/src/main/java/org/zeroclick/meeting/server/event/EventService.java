@@ -267,6 +267,18 @@ public class EventService extends AbstractCommonService implements IEventService
 	public EventFormData load(final EventFormData formData) {
 		super.checkPermission(new ReadEventPermission(formData.getEventId()));
 		SQL.selectInto(SQLs.EVENT_SELECT, formData);
+
+		// if (null == formData.getDescription().getValue()) {
+		// // force load BLOB data
+		// final Object[][] eventDescription = SQL.select(
+		// SQLs.EVENT_SELECT_DESCRIPTION_DATA_ONLY + SQLs.EVENT_FILTER_EVENT_ID,
+		// new NVPair("eventId", formData.getEventId()));
+		// if (eventDescription.length == 1) {
+		// formData.getDescription().setValue(String.valueOf(eventDescription[0][0]));
+		// }
+		// }
+
+		formData.getDescription().setValue(this.byteToStringField(formData.getDescriptionData()));
 		return formData;
 	}
 
@@ -290,6 +302,11 @@ public class EventService extends AbstractCommonService implements IEventService
 		if (null == formData.getLastModifier()) {
 			formData.setLastModifier(super.userHelper.getCurrentUserId());
 		}
+
+		if (null != formData.getDescription().getValue()) {
+			formData.setDescriptionData(this.stringFiledToByte(formData.getDescription().getValue()));
+		}
+
 		SQL.update(SQLs.EVENT_UPDATE, formData);
 
 		this.updateParticipantsPermissions(formData);

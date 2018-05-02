@@ -15,6 +15,7 @@ limitations under the License.
  */
 package org.zeroclick.common;
 
+import java.io.UnsupportedEncodingException;
 import java.security.AccessController;
 import java.security.Permission;
 import java.security.Principal;
@@ -213,5 +214,33 @@ public abstract class AbstractCommonService {
 
 	private RunContext buildNewTransactionRunContext() {
 		return new ServerRunContextProducer().produce(this.userHelper.getCurrentUserSubject());
+	}
+
+	protected byte[] stringFiledToByte(final String content) {
+		byte[] byteData;
+		final String encoding = "UTF-8";
+
+		try {
+			byteData = content.getBytes(encoding);
+		} catch (final UnsupportedEncodingException e) {
+			throw new VetoException("Can't extract + " + encoding + " content");
+		}
+
+		return byteData;
+	}
+
+	protected String byteToStringField(final byte[] dbContent) {
+		String stringData = null;
+
+		final String encoding = "UTF-8";
+
+		if (null != dbContent) {
+			try {
+				stringData = new String(dbContent, encoding);
+			} catch (final UnsupportedEncodingException e) {
+				throw new VetoException("Can't transform to " + encoding + " content");
+			}
+		}
+		return stringData;
 	}
 }

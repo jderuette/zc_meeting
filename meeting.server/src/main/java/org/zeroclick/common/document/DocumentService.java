@@ -1,11 +1,9 @@
 package org.zeroclick.common.document;
 
-import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.Set;
 
 import org.eclipse.scout.rt.platform.BEANS;
-import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.holders.NVPair;
 import org.eclipse.scout.rt.server.clientnotification.ClientNotificationRegistry;
 import org.eclipse.scout.rt.server.jdbc.SQL;
@@ -74,7 +72,7 @@ public class DocumentService extends AbstractCommonService implements IDocumentS
 		super.checkPermission(new ReadDocumentPermission());
 		SQL.selectInto(SQLs.DOCUMENT_SELECT + SQLs.DOCUMENT_SELECT_INTO, formData);
 
-		formData.getContent().setValue(this.getContent(formData.getContentData()));
+		formData.getContent().setValue(this.byteToStringField(formData.getContentData()));
 
 		this.loadLinkedRoles(formData);
 
@@ -102,7 +100,7 @@ public class DocumentService extends AbstractCommonService implements IDocumentS
 	private DocumentFormData store(final DocumentFormData formData, final Boolean duringCreate) {
 		super.checkPermission(new UpdateDocumentPermission());
 		formData.getLastModificationDate().setValue(new Date());
-		formData.setContentData(this.getContentData(formData.getContent().getValue()));
+		formData.setContentData(this.stringFiledToByte(formData.getContent().getValue()));
 
 		SQL.update(SQLs.DOCUMENT_UPDATE, formData);
 
@@ -110,31 +108,6 @@ public class DocumentService extends AbstractCommonService implements IDocumentS
 			this.sendModifiedNotifications(formData);
 		}
 		return formData;
-	}
-
-	private byte[] getContentData(final String content) {
-		byte[] contentData;
-
-		try {
-			contentData = content.getBytes("UTF-8");
-		} catch (final UnsupportedEncodingException e) {
-			throw new VetoException("Content not valid (encoding)");
-		}
-
-		return contentData;
-	}
-
-	private String getContent(final byte[] dbStredContent) {
-		String content = null;
-
-		if (null != dbStredContent) {
-			try {
-				content = new String(dbStredContent, "UTF-8");
-			} catch (final UnsupportedEncodingException e) {
-				throw new VetoException("Content not valid (encoding)");
-			}
-		}
-		return content;
 	}
 
 	private void sendModifiedNotifications(final DocumentFormData formData) {

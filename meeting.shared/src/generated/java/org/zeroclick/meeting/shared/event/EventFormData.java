@@ -28,6 +28,24 @@ public class EventFormData extends AbstractFormData {
 		return getFieldByClass(Description.class);
 	}
 
+	/**
+	 * access method for property DescriptionData.
+	 */
+	public byte[] getDescriptionData() {
+		return getDescriptionDataProperty().getValue();
+	}
+
+	/**
+	 * access method for property DescriptionData.
+	 */
+	public void setDescriptionData(byte[] descriptionData) {
+		getDescriptionDataProperty().setValue(descriptionData);
+	}
+
+	public DescriptionDataProperty getDescriptionDataProperty() {
+		return getPropertyByClass(DescriptionDataProperty.class);
+	}
+
 	public Duration getDuration() {
 		return getFieldByClass(Duration.class);
 	}
@@ -184,6 +202,11 @@ public class EventFormData extends AbstractFormData {
 	}
 
 	public static class Description extends AbstractValueFieldData<String> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class DescriptionDataProperty extends AbstractPropertyData<byte[]> {
 
 		private static final long serialVersionUID = 1L;
 	}
