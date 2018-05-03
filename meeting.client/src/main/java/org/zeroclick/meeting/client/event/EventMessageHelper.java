@@ -134,7 +134,13 @@ public class EventMessageHelper {
 		values.add(venue);// 12
 		values.add(new ApplicationUrlProperty().getValue()); // 13
 
-		values.add(formData.getDescription().getValue());// 14
+		String description = null;
+		final String separator = "<hr/>";
+		if (null != formData.getDescription().getValue()) {
+			description = new StringBuilder().append(separator).append(formData.getDescription().getValue())
+					.append(separator).toString();
+			values.add(description);// 14
+		}
 
 		return CollectionUtility.toArray(values, String.class);
 	}
