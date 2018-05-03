@@ -27,15 +27,15 @@ import com.github.zafarkhaja.semver.Version;
  * @author djer
  *
  */
-public class PatchAddEventDescription extends AbstractDataPatcher {
+public class PatchAddEventRefusedBy extends AbstractDataPatcher {
 
 	public static final String PATCHED_TABLE = "EVENT";
-	public static final String PATCHED_ADDED_DESCRIPTION_COLUMN = "description";
+	public static final String PATCHED_ADDED_REFUSED_BY_COLUMN = "refused_by";
 
-	private static final Logger LOG = LoggerFactory.getLogger(PatchAddEventDescription.class);
+	private static final Logger LOG = LoggerFactory.getLogger(PatchAddEventRefusedBy.class);
 
-	public PatchAddEventDescription() {
-		this.setDescription("Add description event's column and default required params key/value");
+	public PatchAddEventRefusedBy() {
+		this.setDescription("Add refused by event's column and default required params key/value");
 	}
 
 	/*
@@ -57,7 +57,7 @@ public class PatchAddEventDescription extends AbstractDataPatcher {
 	@Override
 	protected void execute() {
 		if (super.canMigrate()) {
-			LOG.info("Add description event's column will be apply to the data");
+			LOG.info("Add refused by event's column will be apply to the data");
 			final Boolean strtcureAltered = this.migrateStrucutre();
 			if (strtcureAltered) {
 				this.migrateData();
@@ -66,13 +66,13 @@ public class PatchAddEventDescription extends AbstractDataPatcher {
 	}
 
 	private Boolean migrateStrucutre() {
-		LOG.info("Add description event's column upgrading data strcuture");
+		LOG.info("Add refused by event's column upgrading data strcuture");
 		Boolean structureAltered = Boolean.FALSE;
 
 		if (this.getDatabaseHelper().existTable(PATCHED_TABLE)) {
-			if (!this.getDatabaseHelper().isColumnExists(PATCHED_TABLE, PATCHED_ADDED_DESCRIPTION_COLUMN)) {
-				final String blobType = this.getDatabaseHelper().getBlobType();
-				SQL.insert(SQLs.EVENT_ALTER_TABLE_ADD_DESCRIPTION_DATE.replace("__blobType__", blobType));
+			if (!this.getDatabaseHelper().isColumnExists(PATCHED_TABLE, PATCHED_ADDED_REFUSED_BY_COLUMN)) {
+				SQL.insert(SQLs.EVENT_ALTER_TABLE_ADD_REFUSE_BY);
+				SQL.insert(SQLs.EVENT_ALTER_TABLE_ADD_REFUSE_BY_FK_USER);
 				structureAltered = Boolean.TRUE;
 			}
 		}
@@ -84,15 +84,15 @@ public class PatchAddEventDescription extends AbstractDataPatcher {
 	}
 
 	private void migrateData() {
-		LOG.info("Add description event's column upgraing default data");
+		LOG.info("Add refused by event's column upgraing default data");
 	}
 
 	@Override
 	public void undo() {
-		LOG.info("Add description event's date downgrading data strcuture");
+		LOG.info("Add Mrefused by event's date downgrading data strcuture");
 		if (this.getDatabaseHelper().existTable(PATCHED_TABLE)) {
-			if (this.getDatabaseHelper().isColumnExists(PATCHED_TABLE, PATCHED_ADDED_DESCRIPTION_COLUMN)) {
-				this.getDatabaseHelper().removeColumn(PATCHED_TABLE, PATCHED_ADDED_DESCRIPTION_COLUMN);
+			if (this.getDatabaseHelper().isColumnExists(PATCHED_TABLE, PATCHED_ADDED_REFUSED_BY_COLUMN)) {
+				this.getDatabaseHelper().removeColumn(PATCHED_TABLE, PATCHED_ADDED_REFUSED_BY_COLUMN);
 			}
 		}
 	}

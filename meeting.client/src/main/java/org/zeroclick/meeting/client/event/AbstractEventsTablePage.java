@@ -56,6 +56,7 @@ import org.zeroclick.configuration.shared.slot.DayDurationModifiedNotification;
 import org.zeroclick.configuration.shared.slot.SlotCodeType;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UserFormData;
+import org.zeroclick.configuration.shared.user.UserLookupCall;
 import org.zeroclick.configuration.shared.user.UserModifiedNotification;
 import org.zeroclick.configuration.shared.venue.VenueLookupCall;
 import org.zeroclick.meeting.client.NotificationHelper;
@@ -1465,6 +1466,10 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			return this.getColumnSet().getColumnByClass(MaximalStartDateColumn.class);
 		}
 
+		public AbstractEventsTablePage<?>.Table.RefusedByColumn getRefusedByColumn() {
+			return this.getColumnSet().getColumnByClass(RefusedByColumn.class);
+		}
+
 		public AbstractEventsTablePage<?>.Table.OrganizerColumn getOrganizerColumn() {
 			return this.getColumnSet().getColumnByClass(OrganizerColumn.class);
 		}
@@ -1783,7 +1788,30 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			}
 		}
 
-		@Order(4500)
+		@Order(4000)
+		public class RefusedByColumn extends AbstractSmartColumn<Long> {
+			@Override
+			protected String getConfiguredHeaderText() {
+				return TEXTS.get("zc.meeting.refusedBy");
+			}
+
+			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.FALSE;
+			}
+
+			@Override
+			protected Class<? extends ILookupCall<Long>> getConfiguredLookupCall() {
+				return UserLookupCall.class;
+			}
+
+			@Override
+			protected int getConfiguredWidth() {
+				return 100;
+			}
+		}
+
+		@Order(5000)
 		public class ExternalIdOrganizerColumn extends AbstractStringColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
@@ -1801,7 +1829,7 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			}
 		}
 
-		@Order(5000)
+		@Order(6000)
 		public class ExternalIdRecipientColumn extends AbstractStringColumn {
 			@Override
 			protected String getConfiguredHeaderText() {

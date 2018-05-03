@@ -48,16 +48,17 @@ public class EventAdminTablePage extends AbstractEventsTablePage<Table> {
 		@Override
 		protected void execInitTable() {
 			super.execInitTable();
-			this.getEventIdColumn().setVisible(Boolean.TRUE);
+			this.getEventIdColumn().setVisible(true);
 
-			this.getExternalIdOrganizerColumn().setVisible(Boolean.TRUE);
-			this.getExternalIdRecipientColumn().setVisible(Boolean.TRUE);
-			this.getReasonColumn().setVisible(Boolean.TRUE);
-			super.getStateColumn().setVisible(Boolean.TRUE);
-			this.getOrganizerColumn().setVisible(Boolean.TRUE);
-			this.getOrganizerEmailColumn().setVisible(Boolean.TRUE);
-			this.getEmailColumn().setVisible(Boolean.TRUE);
-			this.getGuestIdColumn().setVisible(Boolean.TRUE);
+			this.getExternalIdOrganizerColumn().setVisible(true);
+			this.getExternalIdRecipientColumn().setVisible(true);
+			this.getReasonColumn().setVisible(true);
+			super.getStateColumn().setVisible(true);
+			this.getOrganizerColumn().setVisible(true);
+			this.getOrganizerEmailColumn().setVisible(true);
+			this.getEmailColumn().setVisible(true);
+			this.getGuestIdColumn().setVisible(true);
+			this.getRefusedByColumn().setVisible(true);
 		}
 
 		@Override

@@ -49,11 +49,12 @@ public class EventProcessedTablePage extends AbstractEventsTablePage<Table> {
 		@Override
 		protected void initConfig() {
 			super.initConfig();
-			this.getReasonColumn().setVisible(Boolean.TRUE);
-			this.getOrganizerEmailColumn().setVisible(Boolean.TRUE);
-			this.getEmailColumn().setVisible(Boolean.TRUE);
-			super.getStateColumn().setVisible(Boolean.TRUE);
+			this.getReasonColumn().setVisible(true);
+			this.getOrganizerEmailColumn().setVisible(true);
+			this.getEmailColumn().setVisible(true);
+			super.getStateColumn().setVisible(true);
 			super.getStateColumn().setOrder(10);
+			this.getRefusedByColumn().setVisible(true);
 		}
 
 		@Override

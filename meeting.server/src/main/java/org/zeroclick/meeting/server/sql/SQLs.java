@@ -14,6 +14,7 @@ import org.zeroclick.configuration.shared.role.IRoleTypeLookupService;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchAddEmailToApi;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchAddEventDescription;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchAddEventMinAndMaxDate;
+import org.zeroclick.meeting.server.sql.migrate.data.PatchAddEventRefusedBy;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchAddLastLogin;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchAddSlotCode;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchConfigureCalendar;
@@ -60,7 +61,8 @@ public interface SQLs {
 
 	String EVENT_PAGE_SELECT = "SELECT event_id, organizer, organizer_email, duration, slot, email, guest_id, state, reason, subject, venue, startDate, endDate, externalIdRecipient, externalIdOrganizer, "
 			+ PatchEventAddCreatedDate.PATCHED_COLUMN + ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MIN_DATE_COLUMN
-			+ ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MAX_DATE_COLUMN + " FROM EVENT WHERE 1=1";
+			+ ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MAX_DATE_COLUMN + ", "
+			+ PatchAddEventRefusedBy.PATCHED_ADDED_REFUSED_BY_COLUMN + " FROM EVENT WHERE 1=1";
 	// + "CASE WHEN organizer = :currentUser THEN 1 ELSE 0 END AS held"
 	// + "CASE WHEN email = :currentUserEmail THEN 1 ELSE 0 END AS guest FROM
 	// EVENT WHERE 1=1";
@@ -78,7 +80,7 @@ public interface SQLs {
 	String EVENT_PAGE_SELECT_FILTER_RECIPIENT = " OR email = :currentUserEmail";
 	String EVENT_PAGE_SELECT_FILTER_USER_OR_RECIPIENT = " AND (organizer = :currentUser OR guest_id = :currentUser)";
 
-	String EVENT_PAGE_DATA_SELECT_INTO = " INTO :{page.eventId}, :{page.organizer}, :{page.organizerEmail}, :{page.duration}, :{page.slot}, :{page.email}, :{page.guestId}, :{page.state}, :{page.reason}, :{page.subject}, :{page.venue}, :{page.startDate}, :{page.endDate}, :{page.externalIdRecipient}, :{page.externalIdOrganizer}, :{page.createdDate}, :{page.minimalStartDate}, :{page.maximalStartDate}";
+	String EVENT_PAGE_DATA_SELECT_INTO = " INTO :{page.eventId}, :{page.organizer}, :{page.organizerEmail}, :{page.duration}, :{page.slot}, :{page.email}, :{page.guestId}, :{page.state}, :{page.reason}, :{page.subject}, :{page.venue}, :{page.startDate}, :{page.endDate}, :{page.externalIdRecipient}, :{page.externalIdOrganizer}, :{page.createdDate}, :{page.minimalStartDate}, :{page.maximalStartDate}, :{page.refusedBy}";
 
 	String EVENT_SELECT_USERS_EVENT_GUEST = "SELECT event_id, organizer FROM EVENT WHERE guest_id=:currentUser";
 	String EVENT_SELECT_USERS_EVENT_HOST = "SELECT event_id, guest_id FROM EVENT WHERE organizer=:currentUser";
@@ -91,16 +93,17 @@ public interface SQLs {
 			+ PatchEventAddCreatedDate.PATCHED_COLUMN + "=:createdDate, "
 			+ PatchAddEventMinAndMaxDate.PATCHED_ADDED_MIN_DATE_COLUMN + "=:minimalStartDate, "
 			+ PatchAddEventMinAndMaxDate.PATCHED_ADDED_MAX_DATE_COLUMN + "=:maximalStartDate, "
-			+ PatchAddEventDescription.PATCHED_ADDED_DESCRIPTION_COLUMN + "=:descriptionData WHERE 1=1 "
-			+ EVENT_FILTER_EVENT_ID;
-	String EVENT_UPDATE_STATE = "UPDATE EVENT SET state=:state, reason=:reason WHERE 1=1 " + EVENT_FILTER_EVENT_ID;
+			+ PatchAddEventDescription.PATCHED_ADDED_DESCRIPTION_COLUMN + "=:descriptionData, "
+			+ PatchAddEventRefusedBy.PATCHED_ADDED_REFUSED_BY_COLUMN + "=:refusedBy WHERE 1=1 " + EVENT_FILTER_EVENT_ID;
+	String EVENT_UPDATE_STATE = "UPDATE EVENT SET state=:state, reason=:reason, "
+			+ PatchAddEventRefusedBy.PATCHED_ADDED_REFUSED_BY_COLUMN + "=:refusedBy WHERE 1=1 " + EVENT_FILTER_EVENT_ID;
 
 	String EVENT_SELECT = "SELECT duration, slot, email, guest_id, state, reason, subject, venue, startDate, endDate, externalIdRecipient, externalIdOrganizer, organizer, organizer_email, "
 			+ PatchEventAddCreatedDate.PATCHED_COLUMN + ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MIN_DATE_COLUMN
 			+ ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MAX_DATE_COLUMN + ", "
-			+ PatchAddEventDescription.PATCHED_ADDED_DESCRIPTION_COLUMN + " FROM EVENT WHERE 1=1 "
-			+ EVENT_FILTER_EVENT_ID
-			+ " INTO :duration, :slot, :email, :guestId, :state, :reason, :subject, :venue, :startDate, :endDate, :externalIdRecipient, :externalIdOrganizer, :organizer, :organizerEmail, :createdDate, :minimalStartDate, :maximalStartDate, :descriptionData";
+			+ PatchAddEventDescription.PATCHED_ADDED_DESCRIPTION_COLUMN + ", "
+			+ PatchAddEventRefusedBy.PATCHED_ADDED_REFUSED_BY_COLUMN + " FROM EVENT WHERE 1=1 " + EVENT_FILTER_EVENT_ID
+			+ " INTO :duration, :slot, :email, :guestId, :state, :reason, :subject, :venue, :startDate, :endDate, :externalIdRecipient, :externalIdOrganizer, :organizer, :organizerEmail, :createdDate, :minimalStartDate, :maximalStartDate, :descriptionData, :refusedBy";
 
 	String EVENT_SELECT_REJECT = "SELECT organizer_email, email, subject, venue, organizer, guest_id, externalIdOrganizer, externalIdRecipient FROM EVENT WHERE 1=1 "
 			+ EVENT_FILTER_EVENT_ID
@@ -146,6 +149,13 @@ public interface SQLs {
 
 	String EVENT_ALTER_TABLE_ADD_DESCRIPTION_DATE = "ALTER TABLE EVENT ADD COLUMN "
 			+ PatchAddEventDescription.PATCHED_ADDED_DESCRIPTION_COLUMN + " __blobType__";
+
+	String EVENT_ALTER_TABLE_ADD_REFUSE_BY = "ALTER TABLE EVENT ADD COLUMN "
+			+ PatchAddEventRefusedBy.PATCHED_ADDED_REFUSED_BY_COLUMN + " INTEGER";
+
+	String EVENT_ALTER_TABLE_ADD_REFUSE_BY_FK_USER = "ALTER TABLE " + PatchAddEventRefusedBy.PATCHED_TABLE
+			+ " ADD CONSTRAINT EVENT_USER_REFUSED_BY_FK FOREIGN KEY ("
+			+ PatchAddEventRefusedBy.PATCHED_ADDED_REFUSED_BY_COLUMN + ") REFERENCES APP_USER(user_id)";
 
 	/**
 	 * OAuth credential
@@ -476,6 +486,7 @@ public interface SQLs {
 
 	String USER_SELECT = "SELECT user_id, login, email, password, time_zone, invited_by, language FROM APP_USER WHERE 1=1";
 	String USER_SELECT_ID_ONLY = "SELECT user_id FROM APP_USER WHERE 1=1";
+	String USER_SELECT_LOOKUP = "SELECT DISTINCT user_id, email FROM APP_USER WHERE 1=1 <key> AND user_id=:key</key><text> AND email LIKE :text</text> <all></all>";
 
 	String USER_SELECT_FILTER_ID = " AND user_id=:currentUser";
 	String USER_SELECT_FILTER_EMAIL = " AND email=:email";

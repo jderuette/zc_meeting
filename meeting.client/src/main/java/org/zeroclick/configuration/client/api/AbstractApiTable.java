@@ -17,7 +17,6 @@ package org.zeroclick.configuration.client.api;
 
 import org.eclipse.scout.rt.client.ui.basic.table.AbstractTable;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractLongColumn;
-import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractNumberColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractSmartColumn;
 import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractStringColumn;
 import org.eclipse.scout.rt.client.ui.form.FormListener;
@@ -27,11 +26,13 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.notification.INotificationListener;
 import org.eclipse.scout.rt.shared.services.common.code.ICodeType;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
+import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
 import org.zeroclick.configuration.shared.api.ApiDeletedNotification;
 import org.zeroclick.configuration.shared.provider.ProviderCodeType;
+import org.zeroclick.configuration.shared.user.UserLookupCall;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.DeleteApiPermission;
 import org.zeroclick.meeting.shared.calendar.IApiService;
@@ -360,39 +361,6 @@ public abstract class AbstractApiTable extends AbstractTable {
 	}
 
 	@Order(6000)
-	public class UserIdColumn extends AbstractNumberColumn<Long> {
-		@Override
-		protected String getConfiguredHeaderText() {
-			return TEXTS.get("zc.user.userId");
-		}
-
-		@Override
-		protected boolean getConfiguredVisible() {
-			return false;
-		}
-
-		@Override
-		protected boolean getConfiguredSummary() {
-			return Boolean.TRUE;
-		}
-
-		@Override
-		protected int getConfiguredWidth() {
-			return 128;
-		}
-
-		@Override
-		protected Long getConfiguredMinValue() {
-			return 0l;
-		}
-
-		@Override
-		protected Long getConfiguredMaxValue() {
-			return Long.MAX_VALUE;
-		}
-	}
-
-	@Order(7000)
 	public class AccountEmailColumn extends AbstractStringColumn {
 		@Override
 		protected String getConfiguredHeaderText() {
@@ -405,7 +373,7 @@ public abstract class AbstractApiTable extends AbstractTable {
 		}
 	}
 
-	@Order(8000)
+	@Order(7000)
 	public class TenantIdColumn extends AbstractStringColumn {
 		@Override
 		protected String getConfiguredHeaderText() {
@@ -420,6 +388,29 @@ public abstract class AbstractApiTable extends AbstractTable {
 		@Override
 		protected int getConfiguredWidth() {
 			return 256;
+		}
+	}
+
+	@Order(9000)
+	public class UserIdColumn extends AbstractSmartColumn<Long> {
+		@Override
+		protected String getConfiguredHeaderText() {
+			return TEXTS.get("zc.api.user.email");
+		}
+
+		@Override
+		protected boolean getConfiguredVisible() {
+			return Boolean.FALSE;
+		}
+
+		@Override
+		protected Class<? extends ILookupCall<Long>> getConfiguredLookupCall() {
+			return UserLookupCall.class;
+		}
+
+		@Override
+		protected int getConfiguredWidth() {
+			return 200;
 		}
 	}
 

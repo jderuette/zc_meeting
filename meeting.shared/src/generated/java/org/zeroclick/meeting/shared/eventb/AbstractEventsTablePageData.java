@@ -67,6 +67,7 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 		public static final String state = "state";
 		public static final String startDate = "startDate";
 		public static final String endDate = "endDate";
+		public static final String refusedBy = "refusedBy";
 		public static final String externalIdOrganizer = "externalIdOrganizer";
 		public static final String externalIdRecipient = "externalIdRecipient";
 		public static final String reason = "reason";
@@ -85,6 +86,7 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 		private String m_state;
 		private Date m_startDate;
 		private Date m_endDate;
+		private Long m_refusedBy;
 		private String m_externalIdOrganizer;
 		private String m_externalIdRecipient;
 		private String m_reason;
@@ -207,6 +209,14 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 
 		public void setEndDate(Date newEndDate) {
 			m_endDate = newEndDate;
+		}
+
+		public Long getRefusedBy() {
+			return m_refusedBy;
+		}
+
+		public void setRefusedBy(Long newRefusedBy) {
+			m_refusedBy = newRefusedBy;
 		}
 
 		public String getExternalIdOrganizer() {

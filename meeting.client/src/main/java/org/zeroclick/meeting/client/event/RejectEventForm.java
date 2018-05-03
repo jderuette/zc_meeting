@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
 import org.zeroclick.comon.text.TextsHelper;
+import org.zeroclick.comon.user.AppUserHelper;
 import org.zeroclick.meeting.client.ClientSession;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
 import org.zeroclick.meeting.client.NotificationHelper;
@@ -426,6 +427,8 @@ public class RejectEventForm extends AbstractForm {
 			Jobs.schedule(new IRunnable() {
 				@Override
 				public void run() {
+					final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
+
 					final RejectEventFormData formData = new RejectEventFormData();
 					RejectEventForm.this.exportFormData(formData);
 
@@ -435,7 +438,8 @@ public class RejectEventForm extends AbstractForm {
 					final IEventService service = BEANS.get(IEventService.class);
 
 					formData.setState(StateCodeType.RefusededCode.ID);
-					final EventFormData fullEventFormData = service.storeNewState(formData);
+					final EventFormData fullEventFormData = service.storeNewState(formData,
+							appUserHelper.getCurrentUserId());
 
 					RejectEventForm.this.sendEmail(fullEventFormData);
 				}

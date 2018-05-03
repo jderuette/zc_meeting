@@ -40,6 +40,8 @@ public interface IEventService extends IService {
 
 	EventFormData storeNewState(RejectEventFormData formData);
 
+	EventFormData storeNewState(RejectEventFormData formData, Long userIdRefusing);
+
 	/**
 	 * Get pending events for current connected user
 	 *

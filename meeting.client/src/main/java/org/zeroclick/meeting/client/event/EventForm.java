@@ -78,6 +78,7 @@ import org.zeroclick.meeting.client.event.EventForm.MainBox.PeriodeBox.SlotSeque
 import org.zeroclick.meeting.client.event.EventForm.MainBox.PeriodeBox.SlotSequenceBox.AdvancePeriodButton;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.PeriodeBox.SlotSequenceBox.SlotField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.ReasonField;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.RefusedByField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.SlotSequenceBox.ContentButton;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.SlotSequenceBox.SubjectField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.StartDateField;
@@ -328,6 +329,10 @@ public class EventForm extends AbstractForm {
 
 	public DescriptionField getDescriptionField() {
 		return this.getFieldByClass(DescriptionField.class);
+	}
+
+	public RefusedByField getRefusedByField() {
+		return this.getFieldByClass(RefusedByField.class);
 	}
 
 	public OkButton getOkButton() {
@@ -1176,6 +1181,29 @@ public class EventForm extends AbstractForm {
 		}
 
 		@Order(14000)
+		public class RefusedByField extends AbstractLongField {
+			@Override
+			protected String getConfiguredLabel() {
+				return TEXTS.get("zc.meeting.refusedBy");
+			}
+
+			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.FALSE;
+			}
+
+			@Override
+			protected Long getConfiguredMinValue() {
+				return -999999999999L;
+			}
+
+			@Override
+			protected Long getConfiguredMaxValue() {
+				return 999999999999L;
+			}
+		}
+
+		@Order(15000)
 		public class CreatedDateField extends AbstractDateField {
 			@Override
 			protected String getConfiguredLabel() {

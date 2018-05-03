@@ -180,6 +180,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 		@Override
 		protected void initConfig() {
+
 			super.initConfig();
 			// this.addDefaultFilters();
 			this.getOrganizerEmailColumn().setVisible(Boolean.TRUE);

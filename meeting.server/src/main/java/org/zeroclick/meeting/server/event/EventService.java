@@ -336,8 +336,18 @@ public class EventService extends AbstractCommonService implements IEventService
 
 	@Override
 	public EventFormData storeNewState(final RejectEventFormData formData) {
+		final String newState = formData.getState();
+		if (StateCodeType.RefusededCode.ID.equals(newState)) {
+			return this.storeNewState(formData, this.userHelper.getCurrentUserId());
+		} else {
+			return this.storeNewState(formData, null);
+		}
+	}
+
+	@Override
+	public EventFormData storeNewState(final RejectEventFormData formData, final Long userIdRefusing) {
 		super.checkPermission(new UpdateEventPermission(formData.getEventId()));
-		SQL.update(SQLs.EVENT_UPDATE_STATE, formData);
+		SQL.update(SQLs.EVENT_UPDATE_STATE, formData, new NVPair("refusedBy", userIdRefusing));
 
 		// reload the **full** event data after update
 		final EventFormData eventFormData = new EventFormData();
@@ -460,4 +470,5 @@ public class EventService extends AbstractCommonService implements IEventService
 					new NVPair("durationminutes", code.getValue().intValue()));
 		}
 	}
+
 }

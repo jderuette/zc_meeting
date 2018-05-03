@@ -113,6 +113,7 @@ public class EventAskedTablePage extends EventTablePage {
 
 		@Override
 		protected void initConfig() {
+
 			super.initConfig();
 			this.getOrganizerEmailColumn().setVisible(Boolean.FALSE);
 			this.getEmailColumn().setVisible(Boolean.TRUE);
