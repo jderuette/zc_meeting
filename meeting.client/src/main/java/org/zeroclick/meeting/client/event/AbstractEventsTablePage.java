@@ -1085,9 +1085,10 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			datas.add(formData.getState().getValue());
 			datas.add(formData.getStartDate().getValue());
 			datas.add(formData.getEndDate().getValue());
+			datas.add(formData.getRefusedBy().getValue());
+			datas.add(formData.getReason().getValue());
 			datas.add(formData.getExternalIdOrganizer());
 			datas.add(formData.getExternalIdRecipient());
-			datas.add(formData.getReason().getValue());
 			return datas;
 		}
 
@@ -1812,6 +1813,24 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 		}
 
 		@Order(5000)
+		public class ReasonColumn extends AbstractStringColumn {
+			@Override
+			protected String getConfiguredHeaderText() {
+				return TEXTS.get("zc.meeting.rejectReason");
+			}
+
+			@Override
+			protected boolean getConfiguredVisible() {
+				return Boolean.FALSE;
+			}
+
+			@Override
+			protected int getConfiguredWidth() {
+				return 100;
+			}
+		}
+
+		@Order(6000)
 		public class ExternalIdOrganizerColumn extends AbstractStringColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
@@ -1829,29 +1848,11 @@ public abstract class AbstractEventsTablePage<T extends AbstractEventsTablePage<
 			}
 		}
 
-		@Order(6000)
+		@Order(7000)
 		public class ExternalIdRecipientColumn extends AbstractStringColumn {
 			@Override
 			protected String getConfiguredHeaderText() {
 				return TEXTS.get("zc.meeting.externalId");
-			}
-
-			@Override
-			protected boolean getConfiguredVisible() {
-				return Boolean.FALSE;
-			}
-
-			@Override
-			protected int getConfiguredWidth() {
-				return 100;
-			}
-		}
-
-		@Order(6000)
-		public class ReasonColumn extends AbstractStringColumn {
-			@Override
-			protected String getConfiguredHeaderText() {
-				return TEXTS.get("zc.meeting.rejectReason");
 			}
 
 			@Override

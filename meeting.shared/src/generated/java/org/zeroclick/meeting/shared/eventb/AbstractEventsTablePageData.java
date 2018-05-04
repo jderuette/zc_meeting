@@ -68,9 +68,9 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 		public static final String startDate = "startDate";
 		public static final String endDate = "endDate";
 		public static final String refusedBy = "refusedBy";
+		public static final String reason = "reason";
 		public static final String externalIdOrganizer = "externalIdOrganizer";
 		public static final String externalIdRecipient = "externalIdRecipient";
-		public static final String reason = "reason";
 		private Long m_eventId;
 		private Long m_organizer;
 		private String m_organizerEmail;
@@ -87,9 +87,9 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 		private Date m_startDate;
 		private Date m_endDate;
 		private Long m_refusedBy;
+		private String m_reason;
 		private String m_externalIdOrganizer;
 		private String m_externalIdRecipient;
-		private String m_reason;
 
 		public Long getEventId() {
 			return m_eventId;
@@ -219,6 +219,14 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 			m_refusedBy = newRefusedBy;
 		}
 
+		public String getReason() {
+			return m_reason;
+		}
+
+		public void setReason(String newReason) {
+			m_reason = newReason;
+		}
+
 		public String getExternalIdOrganizer() {
 			return m_externalIdOrganizer;
 		}
@@ -233,14 +241,6 @@ public abstract class AbstractEventsTablePageData extends AbstractTablePageData 
 
 		public void setExternalIdRecipient(String newExternalIdRecipient) {
 			m_externalIdRecipient = newExternalIdRecipient;
-		}
-
-		public String getReason() {
-			return m_reason;
-		}
-
-		public void setReason(String newReason) {
-			m_reason = newReason;
 		}
 	}
 }

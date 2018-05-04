@@ -438,7 +438,6 @@ public class EventForm extends AbstractForm {
 
 		@Order(4000)
 		public class DescriptionField extends AbstractStringField {
-
 			public static final int MAX_SIZE = 7000;
 
 			@Override
@@ -1348,6 +1347,14 @@ public class EventForm extends AbstractForm {
 					final String venueKey = TextsHelper.getKeyByText(venue);
 					if (null != venueKey) {
 						formData.getVenue().setValue(venueKey);
+					}
+
+					// convert new lines to HTML <br/>
+					if (null != formData.getDescription().getValue()
+							&& !formData.getDescription().getValue().isEmpty()) {
+						final String cleanedRawValue = formData.getDescription().getValue()
+								.replaceAll("(\r\n|\n\r|\r|\n)", "<br />");
+						formData.getDescription().setValue(cleanedRawValue);
 					}
 
 					if (null == eventGuest) {
