@@ -788,15 +788,15 @@ public class UserForm extends AbstractForm {
 		final UserFormData formData = new UserFormData();
 		UserForm.this.exportFormData(formData);
 
-		if (null == formData.getPassword().getValue()) {
-			LOG.warn("No Generated Plain Paswword during saving new User. Generating one");
+		if (null == formData.getPassword().getValue() || "".equals(formData.getPassword().getValue())) {
+			LOG.warn("No Generated Plain Pasword during saving new User. Generating one");
 			this.generateAndAddFormPassword(formData);
 		}
 
 		// should not happen
-		if (null == formData.getPassword().getValue()) {
+		if (null == formData.getPassword().getValue() || "".equals(formData.getPassword().getValue())) {
 			LOG.warn(
-					"No Generated Plain Paswword during saving new User even after a first new password generation. Generating one again");
+					"No Generated Plain Pasword during saving new User even after a first new password generation. Generating one again");
 			this.generateAndAddFormPassword(formData);
 		}
 		final String hashedPassword = UserForm.this.hashPassword(formData.getPassword().getValue());
