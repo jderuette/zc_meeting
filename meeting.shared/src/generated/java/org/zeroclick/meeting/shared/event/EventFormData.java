@@ -180,6 +180,10 @@ public class EventFormData extends AbstractFormData {
 		return getFieldByClass(RefusedBy.class);
 	}
 
+	public Role getRole() {
+		return getFieldByClass(Role.class);
+	}
+
 	public Slot getSlot() {
 		return getFieldByClass(Slot.class);
 	}
@@ -340,6 +344,11 @@ public class EventFormData extends AbstractFormData {
 	}
 
 	public static class RefusedBy extends AbstractValueFieldData<Long> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class Role extends AbstractValueFieldData<String> {
 
 		private static final long serialVersionUID = 1L;
 	}

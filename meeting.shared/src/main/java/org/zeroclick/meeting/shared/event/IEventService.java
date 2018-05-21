@@ -14,9 +14,20 @@ public interface IEventService extends IService {
 
 	EventTablePageData getEventTableData(SearchFilter filter);
 
-	AbstractTablePageData getEventAskedTableData(SearchFilter filter);
+	EventAskedTablePageData getEventAskedTableData(SearchFilter filter);
 
 	AbstractTablePageData getEventProcessedTableData(SearchFilter filter);
+
+	/**
+	 * *deprecated* used only for "old" data migration process (before 1.1.15 :
+	 * multi guest meetings)
+	 *
+	 * @param filter
+	 * @return
+	 *
+	 */
+	@Deprecated
+	AbstractTablePageData getEventAdminTableDataOld(SearchFilter filter);
 
 	AbstractTablePageData getEventAdminTableData(SearchFilter filter);
 

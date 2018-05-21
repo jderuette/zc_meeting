@@ -116,7 +116,7 @@ public class EventAskedTablePage extends EventTablePage {
 
 			super.initConfig();
 			this.getOrganizerEmailColumn().setVisible(Boolean.FALSE);
-			this.getEmailColumn().setVisible(Boolean.TRUE);
+			// this.getEmailColumn().setVisible(Boolean.TRUE);
 			this.getStartDateColumn().setVisible(Boolean.FALSE);
 			this.getEndDateColumn().setVisible(Boolean.FALSE);
 		}

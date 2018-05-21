@@ -89,7 +89,7 @@ public class PatchAddEventDescription extends AbstractDataPatcher {
 
 	@Override
 	public void undo() {
-		LOG.info("Add description event's date downgrading data strcuture");
+		LOG.info("Add description event's downgrading data strcuture");
 		if (this.getDatabaseHelper().existTable(PATCHED_TABLE)) {
 			if (this.getDatabaseHelper().isColumnExists(PATCHED_TABLE, PATCHED_ADDED_DESCRIPTION_COLUMN)) {
 				this.getDatabaseHelper().removeColumn(PATCHED_TABLE, PATCHED_ADDED_DESCRIPTION_COLUMN);

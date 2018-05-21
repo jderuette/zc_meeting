@@ -25,8 +25,10 @@ import org.zeroclick.meeting.server.sql.migrate.data.PatchEventAddCreatedDate;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchEventRejectReason;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchExtendsAccesToken;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchManageMicrosoftCalendars;
+import org.zeroclick.meeting.server.sql.migrate.data.PatchMultiInviteeMeeting;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchSlotTable;
 import org.zeroclick.meeting.shared.event.StateCodeType;
+import org.zeroclick.meeting.shared.event.involevment.EventRoleCodeType;
 
 @SuppressWarnings("PMD.LongVariable")
 public interface SQLs {
@@ -59,35 +61,89 @@ public interface SQLs {
 
 	String AND_LIKE_CAUSE = "AND LOWER(%s) LIKE LOWER(:%s || '%%') ";
 
-	String EVENT_PAGE_SELECT = "SELECT event_id, organizer, organizer_email, duration, slot, email, guest_id, state, reason, subject, venue, startDate, endDate, externalIdRecipient, externalIdOrganizer, "
+	String EVENT_PAGE_SELECT = "SELECT EVENT.event_id, duration, slot, subject, venue, "
+			+ PatchEventAddCreatedDate.PATCHED_COLUMN + ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MIN_DATE_COLUMN
+			+ ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MAX_DATE_COLUMN + " FROM EVENT INNER JOIN "
+			+ PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE
+			+ " invo ON event.event_id=invo.event_id WHERE 1=1";
+
+	String EVENT_PAGE_DATA_SELECT_INTO = " INTO :{page.eventId}, :{page.duration}, :{page.slot}, :{page.subject}, :{page.venue}, :{page.createdDate}, :{page.minimalStartDate}, :{page.maximalStartDate}";
+
+	String EVENT_PAGE_SELECT_INVITED = "SELECT EVENT.event_id, duration, slot, subject, venue, "
+			+ PatchEventAddCreatedDate.PATCHED_COLUMN + ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MIN_DATE_COLUMN
+			+ ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MAX_DATE_COLUMN + " FROM EVENT INNER JOIN "
+			+ PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE
+			+ " invo ON (event.event_id=invo.event_id AND role= '" + EventRoleCodeType.RequiredGuestCode.ID
+			+ "') INNER JOIN APP_USER guestUser ON invo.user_id=guestUser.user_id WHERE 1=1";
+
+	String EVENT_PAGE_DATA_SELECT_INTO_ORGANIZED = " INTO :{page.eventId}, :{page.duration}, :{page.slot}, :{page.subject}, :{page.venue}, :{page.createdDate}, :{page.minimalStartDate}, :{page.maximalStartDate}";
+
+	String EVENT_PAGE_SELECT_ORGANIZED = "SELECT EVENT.event_id, duration, organizerUser.email as organizerEmail, organizerUser.user_id as organizer, slot, subject, venue, "
+			+ PatchEventAddCreatedDate.PATCHED_COLUMN + ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MIN_DATE_COLUMN
+			+ ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MAX_DATE_COLUMN + " FROM EVENT INNER JOIN "
+			+ PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE
+			+ " invo ON (event.event_id=invo.event_id AND role= '" + EventRoleCodeType.OrganizerCode.ID
+			+ "') INNER JOIN APP_USER organizerUser ON invo.user_id=organizerUser.user_id WHERE 1=1";
+
+	String EVENT_PAGE_DATA_SELECT_INTO_INVITED = " INTO :{page.eventId}, :{page.duration}, :{page.organizerEmail}, :{page.organizer}:, {page.slot}, :{page.subject}, :{page.venue}, :{page.createdDate}, :{page.minimalStartDate}, :{page.maximalStartDate}";
+
+	String EVENT_BY_INVOLVEMENT_PAGE_SELECT = "SELECT * FROM"
+			+ " (SELECT event.event_id, organizerUser.user_id as organizer, organizerUser.email as organizer_email, "
+			+ " duration, event.slot, guestUser.email as email, guestUser.user_id as guest_id, invo.state as state, invo.role, invo.reason as reason, event.subject, event.venue, "
+			+ " event.startDate, event.endDate, guest_ext_event.external_id as externalIdRecipient, orga_ext_event.external_id as externalIdOrganizer, "
+			+ PatchEventAddCreatedDate.PATCHED_COLUMN + ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MIN_DATE_COLUMN
+			+ ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MAX_DATE_COLUMN + ", "
+			+ PatchAddEventRefusedBy.PATCHED_ADDED_REFUSED_BY_COLUMN + " FROM "
+			+ PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE + " invo"
+			// Event
+			+ " INNER JOIN EVENT event ON invo.event_id = EVENT.event_id" +
+
+			// organizer external event
+			" LEFT OUTER JOIN " + PatchMultiInviteeMeeting.PATCHED_CREATED_EXTERNAL_EVENT_TABLE
+			+ " orga_ext_event ON (invo.external_event_id = orga_ext_event.external_id AND invo.role='"
+			+ EventRoleCodeType.OrganizerCode.ID + "')" +
+			// guest external event
+			" LEFT OUTER JOIN " + PatchMultiInviteeMeeting.PATCHED_CREATED_EXTERNAL_EVENT_TABLE
+			+ " guest_ext_event ON (invo.external_event_id = guest_ext_event.external_id AND invo.role='"
+			+ EventRoleCodeType.RequiredGuestCode.ID + "')"
+
+			// Guest User
+			// + " LEFT OUTER JOIN APP_USER guestUser ON (invo.user_id =
+			// guestUser.user_id AND invo.role='"
+			// + EventRoleCodeType.RequiredGuestCode.ID + "')"
+			+ " INNER JOIN (SELECT guestUserInternal.* FROM APP_USER guestUserInternal INNER JOIN "
+			+ PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE
+			+ " invoGuest ON guestUserInternal.user_id = invoGuest.user_id" + " WHERE invoGuest.role='"
+			+ EventRoleCodeType.RequiredGuestCode.ID + "') guestUser on guestUser.user_id = event.guest_id"
+
+			// Organizer User
+			// " LEFT OUTER JOIN APP_USER organizerUser ON (invo.user_id =
+			// organizerUser.user_id AND invo.role='"
+			// + EventRoleCodeType.OrganizerCode.ID + "')" +
+			+ " INNER JOIN (SELECT ornaizerUserInternal.* FROM APP_USER ornaizerUserInternal INNER JOIN "
+			+ PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE
+			+ " invoOrga ON ornaizerUserInternal.user_id = invoOrga.user_id" + " WHERE invoOrga.role='"
+			+ EventRoleCodeType.OrganizerCode.ID + "') organizerUser ON organizerUser.user_id = event.organizer"
+			+ " WHERE 1=1 __viewFilter__) eventData" + " WHERE 1=1";
+
+	String EVENT_PAGE_SELECT_OLD = "SELECT event_id, organizer, organizer_email, duration, slot, email, guest_id, state, reason, subject, venue, startDate, endDate, externalIdRecipient, externalIdOrganizer, "
 			+ PatchEventAddCreatedDate.PATCHED_COLUMN + ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MIN_DATE_COLUMN
 			+ ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MAX_DATE_COLUMN + ", "
 			+ PatchAddEventRefusedBy.PATCHED_ADDED_REFUSED_BY_COLUMN + " FROM EVENT WHERE 1=1";
-	// + "CASE WHEN organizer = :currentUser THEN 1 ELSE 0 END AS held"
-	// + "CASE WHEN email = :currentUserEmail THEN 1 ELSE 0 END AS guest FROM
-	// EVENT WHERE 1=1";
-
-	// String EVENT_PAGE_SELECT_FROM = " FROM EVENT WHERE 1=1";
-
-	// String EVENT_PAGE_SELECT_ALL = EVENT_PAGE_SELECT + ", 0 as held, 0 as
-	// guest";
-	// String EVENT_PAGE_SELECT_HELD = EVENT_PAGE_SELECT + ", 1 as held, 0 as
-	// guest";
-	// String EVENT_PAGE_SELECT_GUEST = EVENT_PAGE_SELECT + ", 0 as held , 1 as
-	// guest";
+	String EVENT_PAGE_DATA_SELECT_INTO_OLD = " INTO :{page.eventId}, :{page.organizer}, :{page.organizerEmail}, :{page.duration}, :{page.slot}, :{page.email}, :{page.guestId}, :{page.state}, :{page.reason}, :{page.subject}, :{page.venue}, :{page.startDate}, :{page.endDate}, :{page.externalIdRecipient}, :{page.externalIdOrganizer}, :{page.createdDate}, :{page.minimalStartDate}, :{page.maximalStartDate}, :{page.refusedBy}";
 
 	String EVENT_PAGE_SELECT_FILTER_USER = " AND organizer = :currentUser";
 	String EVENT_PAGE_SELECT_FILTER_RECIPIENT = " OR email = :currentUserEmail";
-	String EVENT_PAGE_SELECT_FILTER_USER_OR_RECIPIENT = " AND (organizer = :currentUser OR guest_id = :currentUser)";
 
-	String EVENT_PAGE_DATA_SELECT_INTO = " INTO :{page.eventId}, :{page.organizer}, :{page.organizerEmail}, :{page.duration}, :{page.slot}, :{page.email}, :{page.guestId}, :{page.state}, :{page.reason}, :{page.subject}, :{page.venue}, :{page.startDate}, :{page.endDate}, :{page.externalIdRecipient}, :{page.externalIdOrganizer}, :{page.createdDate}, :{page.minimalStartDate}, :{page.maximalStartDate}, :{page.refusedBy}";
+	String EVENT_PAGE_SELECT_FILTER_USER_OR_RECIPIENT = " AND (organizer = :currentUser OR guest_id = :currentUser)";
+	String EVENT_BY_INVOLVEMENT_PAGE_SELECT_FILTER_USER_OR_RECIPIENT = " AND (__tableFIlter__.user_id = :currentUser)";
 
 	String EVENT_SELECT_USERS_EVENT_GUEST = "SELECT event_id, organizer FROM EVENT WHERE guest_id=:currentUser";
 	String EVENT_SELECT_USERS_EVENT_HOST = "SELECT event_id, guest_id FROM EVENT WHERE organizer=:currentUser";
 	String EVENT_SELECT_FILTER_SATE = " AND state=:state";
-	String EVENT_FILTER_EVENT_ID = "AND event_id=:eventId";
+	String EVENT_FILTER_EVENT_ID = " AND event_id=:eventId";
 
-	String EVENT_INSERT = "INSERT INTO EVENT (event_id, organizer) " + "VALUES (:eventId, :organizer)";
+	String EVENT_INSERT = "INSERT INTO EVENT (event_id, organizer) VALUES (:eventId, :organizer)";
 
 	String EVENT_UPDATE = "UPDATE EVENT SET organizer_email=:organizerEmail, duration=:duration, slot=:slot, email=:email, guest_id=:guestId, state=:state, subject=:subject, venue=:venue, startDate=:startDate, endDate=:endDate, externalIdRecipient=:externalIdRecipient, externalIdOrganizer=:externalIdOrganizer, "
 			+ PatchEventAddCreatedDate.PATCHED_COLUMN + "=:createdDate, "
@@ -98,12 +154,12 @@ public interface SQLs {
 	String EVENT_UPDATE_STATE = "UPDATE EVENT SET state=:state, reason=:reason, "
 			+ PatchAddEventRefusedBy.PATCHED_ADDED_REFUSED_BY_COLUMN + "=:refusedBy WHERE 1=1 " + EVENT_FILTER_EVENT_ID;
 
-	String EVENT_SELECT = "SELECT duration, slot, email, guest_id, state, reason, subject, venue, startDate, endDate, externalIdRecipient, externalIdOrganizer, organizer, organizer_email, "
+	String EVENT_SELECT = "SELECT duration, slot, email, guest_id, state, '' as role, reason, subject, venue, startDate, endDate, externalIdRecipient, externalIdOrganizer, organizer, organizer_email, "
 			+ PatchEventAddCreatedDate.PATCHED_COLUMN + ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MIN_DATE_COLUMN
 			+ ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MAX_DATE_COLUMN + ", "
 			+ PatchAddEventDescription.PATCHED_ADDED_DESCRIPTION_COLUMN + ", "
 			+ PatchAddEventRefusedBy.PATCHED_ADDED_REFUSED_BY_COLUMN + " FROM EVENT WHERE 1=1 " + EVENT_FILTER_EVENT_ID
-			+ " INTO :duration, :slot, :email, :guestId, :state, :reason, :subject, :venue, :startDate, :endDate, :externalIdRecipient, :externalIdOrganizer, :organizer, :organizerEmail, :createdDate, :minimalStartDate, :maximalStartDate, :descriptionData, :refusedBy";
+			+ " INTO :duration, :slot, :email, :guestId, :state, :role, :reason, :subject, :venue, :startDate, :endDate, :externalIdRecipient, :externalIdOrganizer, :organizer, :organizerEmail, :createdDate, :minimalStartDate, :maximalStartDate, :descriptionData, :refusedBy";
 
 	String EVENT_SELECT_REJECT = "SELECT organizer_email, email, subject, venue, organizer, guest_id, externalIdOrganizer, externalIdRecipient FROM EVENT WHERE 1=1 "
 			+ EVENT_FILTER_EVENT_ID
@@ -158,7 +214,112 @@ public interface SQLs {
 			+ PatchAddEventRefusedBy.PATCHED_ADDED_REFUSED_BY_COLUMN + ") REFERENCES APP_USER(user_id)";
 
 	/**
-	 * OAuth credential
+	 * Involvement for event to handle multiple invitee
+	 */
+	String INVOLVEMENT_CREATE_TABLE = "CREATE TABLE " + PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE
+			+ " (event_id INTEGER NOT NULL, user_id INTEGER NOT NULL, role VARCHAR(200) NOT NULL, invited_by INTEGER NOT NULL, "
+			+ PatchMultiInviteeMeeting.PATCHED_MOOVED_STATE_COLUMN + " VARCHAR(50), "
+			+ PatchMultiInviteeMeeting.PATCHED_MOOVED_REASON_COLUMN + " VARCHAR(250), external_event_id INTEGER)";
+
+	String INVOLVEMENT_PK = "ALTER TABLE " + PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE
+			+ " ADD CONSTRAINT " + PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE
+			+ "_PK PRIMARY KEY (event_id, user_id)";
+
+	String INVOLVEMENT_EVENT_FK = "ALTER TABLE " + PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE
+			+ " ADD CONSTRAINT " + PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE
+			+ "_EVENT_FK FOREIGN KEY (event_id) REFERENCES EVENT(event_id)";
+	String INVOLVEMENT_USER_FK = "ALTER TABLE " + PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE
+			+ " ADD CONSTRAINT " + PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE
+			+ "_USER_FK FOREIGN KEY (user_id) REFERENCES APP_USER(user_id)";
+
+	String INVOLVEMENT_USER_INVITED_BY_FK = "ALTER TABLE " + PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE
+			+ " ADD CONSTRAINT " + PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE
+			+ "_USER_INVITED_BYFK FOREIGN KEY (invited_by) REFERENCES APP_USER(user_id)";
+
+	String INVOLVEMENT_EXTERNAL_EVENT_FK = "ALTER TABLE " + PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE
+			+ " ADD CONSTRAINT " + PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE + "_"
+			+ PatchMultiInviteeMeeting.PATCHED_CREATED_EXTERNAL_EVENT_TABLE
+			+ "_FK FOREIGN KEY (external_event_id) REFERENCES "
+			+ PatchMultiInviteeMeeting.PATCHED_CREATED_EXTERNAL_EVENT_TABLE + "(external_id)";
+
+	String INVOLEVMENT_FILTER_PRIMARY_KEY = " AND event_id=:eventId AND user_id=:userId";
+	String INVOLEVMENT_FILTER_EVENT_ID = " AND event_id=:eventId";
+	String INVOLVEMENT_FILTER_USER_ID = " AND user_id=:currentUser";
+
+	String INVOLVEMENT_PAGE_SELECT = "SELECT event_id, user_id, role, "
+			+ PatchMultiInviteeMeeting.PATCHED_MOOVED_STATE_COLUMN + ", "
+			+ PatchMultiInviteeMeeting.PATCHED_MOOVED_REASON_COLUMN + ", external_event_id, invited_by FROM "
+			+ PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE + " WHERE 1=1";
+
+	String INVOLVEMENT_PAGE_DATA_SELECT_INTO = " INTO :{page.eventId}, :{page.userId}, :{page.role}, :{page.state}, :{page.Reason}, :{page.externalEventId}, :{page.invitedBy}";
+
+	String INVOLVEMENT_SELECT = "SELECT event_id, user_id, role, "
+			+ PatchMultiInviteeMeeting.PATCHED_MOOVED_STATE_COLUMN + ", "
+			+ PatchMultiInviteeMeeting.PATCHED_MOOVED_REASON_COLUMN + ",  external_event_id, invited_by" + " FROM "
+			+ PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE + " WHERE 1=1 "
+			+ INVOLEVMENT_FILTER_PRIMARY_KEY
+			+ " INTO :eventId, :userId, :role, :state, :reason, :externalEventId, :invitedBy";
+
+	String INVOLVEMENT_SELECT_ORGANISER_BY_EVENT = "SELECT APP_USER.* FROM APP_USER INNER JOIN "
+			+ PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE
+			+ " invo on APP_USER.user_id = invo.user_id WHERE 1=1 AND event_id=:eventId AND role = "
+			+ EventRoleCodeType.OrganizerCode.ID;
+
+	String INVOLVEMENT_CHECK_IF_GUEST = "SELECT invo.user_id FROM "
+			+ PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE
+			+ " WHERE 1=1 AND event_id=:eventId AND role = " + EventRoleCodeType.OrganizerCode.ID
+			+ " AND invo.user_id=:userId";
+
+	String INVOLEVMENT_INSERT = "INSERT INTO " + PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE
+			+ " (event_id, user_id, role, invited_by) VALUES (:eventId, :userId, :role, :invitedBy)";
+
+	String INVOLEVMENT_EVENT_UPDATE = "UPDATE " + PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE + " SET "
+			+ "event_id=:eventId, " + "user_id=:userId, role=:role, "
+			+ PatchMultiInviteeMeeting.PATCHED_MOOVED_STATE_COLUMN + "=:state, "
+			+ PatchMultiInviteeMeeting.PATCHED_MOOVED_REASON_COLUMN
+			+ "=:reason, external_event_id=:externalEventId, invited_by=:invitedBy WHERE 1=1"
+			+ INVOLEVMENT_FILTER_PRIMARY_KEY;
+
+	/**
+	 * Store external Even ID to allow sharing same calendar/event for multiple
+	 * users
+	 */
+	String EXTERNAL_EVENT_CREATE_TABLE = "CREATE TABLE " + PatchMultiInviteeMeeting.PATCHED_CREATED_EXTERNAL_EVENT_TABLE
+			+ " (external_id INTEGER NOT NULL CONSTRAINT EXTERNAL_EVENT_PK PRIMARY KEY,"
+			+ PatchMultiInviteeMeeting.PATCHED_CREATED_EXTERNAL_CALENDAR_ID_COLUMN + " VARCHAR(200), "
+			+ PatchMultiInviteeMeeting.PATCHED_CREATED_EXTERNAL_EVENT_ID_COLUMN
+			+ " VARCHAR(200), api_credential_id INTEGER)";
+
+	String EXTERNAL_EVENT_API_FK = "ALTER TABLE " + PatchMultiInviteeMeeting.PATCHED_CREATED_EXTERNAL_EVENT_TABLE
+			+ " ADD CONSTRAINT " + PatchMultiInviteeMeeting.PATCHED_CREATED_EXTERNAL_EVENT_TABLE
+			+ "_PAI_FK FOREIGN KEY (api_credential_id) REFERENCES OAUHTCREDENTIAL(api_credential_id)";
+
+	String EXTERNAL_EVENT_FILTER_EVENT_ID = " AND external_id=:externalId";
+
+	String EXTERNAL_EVENT_PAGE_SELECT = "SELECT external_id, "
+			+ PatchMultiInviteeMeeting.PATCHED_CREATED_EXTERNAL_CALENDAR_ID_COLUMN + ", "
+			+ PatchMultiInviteeMeeting.PATCHED_CREATED_EXTERNAL_EVENT_ID_COLUMN + ", api_credential_id FROM "
+			+ PatchMultiInviteeMeeting.PATCHED_CREATED_EXTERNAL_EVENT_TABLE + " WHERE 1=1";
+
+	String EXTERNAL_EVENT_PAGE_DATA_SELECT_INTO = " INTO :{page.ExternalId}, :{page.ExternalCalendarId}, :{page.ExternalEventId}, :{page.ApiCredentialId}";
+
+	String EXTERNAL_EVENT_SELECT = "SELECT external_id, "
+			+ PatchMultiInviteeMeeting.PATCHED_CREATED_EXTERNAL_CALENDAR_ID_COLUMN + ", "
+			+ PatchMultiInviteeMeeting.PATCHED_CREATED_EXTERNAL_EVENT_ID_COLUMN + ",  api_credential_id" + " FROM "
+			+ PatchMultiInviteeMeeting.PATCHED_CREATED_EXTERNAL_EVENT_TABLE + " WHERE 1=1 "
+			+ EXTERNAL_EVENT_FILTER_EVENT_ID
+			+ " INTO :externalId, :externalCalendarId, :externalEventId, :apiCredentialId";
+
+	String EXTERNAL_EVENT_INSERT = "INSERT INTO " + PatchMultiInviteeMeeting.PATCHED_CREATED_EXTERNAL_EVENT_TABLE
+			+ " (external_id) VALUES (:externalId)";
+
+	String EXTERNAL_EVENT_UPDATE = "UPDATE " + PatchMultiInviteeMeeting.PATCHED_CREATED_EXTERNAL_EVENT_TABLE + " SET "
+			+ PatchMultiInviteeMeeting.PATCHED_CREATED_EXTERNAL_CALENDAR_ID_COLUMN + "=:externalCalendarId, "
+			+ PatchMultiInviteeMeeting.PATCHED_CREATED_EXTERNAL_EVENT_ID_COLUMN
+			+ "=:externalEventId, api_credential_id=:apiCredentialId WHERE 1=1" + EXTERNAL_EVENT_FILTER_EVENT_ID;
+
+	/**
+	 * OAuth credential (External API)
 	 */
 	String OAUHTCREDENTIAL_CREATE_TABLE = "CREATE TABLE OAUHTCREDENTIAL (api_credential_id INTEGER NOT NULL CONSTRAINT OAUHTCREDENTIAL_PK PRIMARY KEY, user_id INTEGER, access_token VARCHAR(200), expiration_time_milliseconds BIGINT, refresh_token VARCHAR(200), provider INTEGER, repository_id VARCHAR(200), provider_data __blobType__)";
 

@@ -18,7 +18,9 @@ package org.zeroclick.comon.user;
 import java.time.Clock;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import org.eclipse.scout.rt.platform.ApplicationScoped;
 import org.eclipse.scout.rt.platform.BEANS;
@@ -26,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.comon.date.DateHelper;
 import org.zeroclick.configuration.shared.user.IUserService;
+import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
 
 /**
@@ -78,4 +81,31 @@ public class AppUserHelper {
 		final Long currentUser = acsHelper.getZeroClickUserIdOfCurrentSubject();
 		return currentUser;
 	}
+
+	public List<String> getCurrentUserEmails() {
+		final List<String> emails = new ArrayList<>();
+		final IUserService userService = BEANS.get(IUserService.class);
+		final UserFormData userDetails = userService.getCurrentUserDetails();
+
+		emails.add(userDetails.getEmail().getValue());
+
+		return emails;
+	}
+
+	public Boolean isMySelf(final Long userId) {
+		final Long currentUser = this.getCurrentUserId();
+		return currentUser.equals(userId);
+	}
+
+	public Boolean isMySelf(final String email) {
+		Boolean emailIsMine = Boolean.FALSE;
+		final List<String> currneUserEmails = this.getCurrentUserEmails();
+
+		if (null != email && null != currneUserEmails && currneUserEmails.size() > 0) {
+			emailIsMine = currneUserEmails.contains(email);
+		}
+
+		return emailIsMine;
+	}
+
 }

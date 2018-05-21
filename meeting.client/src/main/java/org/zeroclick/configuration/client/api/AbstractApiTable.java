@@ -26,13 +26,11 @@ import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.notification.INotificationListener;
 import org.eclipse.scout.rt.shared.services.common.code.ICodeType;
 import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
-import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.shared.api.ApiCreatedNotification;
 import org.zeroclick.configuration.shared.api.ApiDeletedNotification;
 import org.zeroclick.configuration.shared.provider.ProviderCodeType;
-import org.zeroclick.configuration.shared.user.UserLookupCall;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.DeleteApiPermission;
 import org.zeroclick.meeting.shared.calendar.IApiService;
@@ -40,6 +38,7 @@ import org.zeroclick.meeting.shared.calendar.ReadApiPermission;
 import org.zeroclick.meeting.shared.calendar.UpdateApiPermission;
 import org.zeroclick.ui.action.menu.AbstractDeleteMenu;
 import org.zeroclick.ui.action.menu.AbstractEditMenu;
+import org.zeroclick.ui.form.columns.userid.AbstractUserIdColumn;
 
 /**
  * @author djer
@@ -392,7 +391,7 @@ public abstract class AbstractApiTable extends AbstractTable {
 	}
 
 	@Order(9000)
-	public class UserIdColumn extends AbstractSmartColumn<Long> {
+	public class UserIdColumn extends AbstractUserIdColumn {
 		@Override
 		protected String getConfiguredHeaderText() {
 			return TEXTS.get("zc.api.user.email");
@@ -401,16 +400,6 @@ public abstract class AbstractApiTable extends AbstractTable {
 		@Override
 		protected boolean getConfiguredVisible() {
 			return Boolean.FALSE;
-		}
-
-		@Override
-		protected Class<? extends ILookupCall<Long>> getConfiguredLookupCall() {
-			return UserLookupCall.class;
-		}
-
-		@Override
-		protected int getConfiguredWidth() {
-			return 200;
 		}
 	}
 

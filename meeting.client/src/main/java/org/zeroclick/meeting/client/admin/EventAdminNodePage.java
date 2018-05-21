@@ -10,6 +10,8 @@ import org.zeroclick.configuration.client.slot.SlotAdminTablePage;
 import org.zeroclick.configuration.shared.slot.ReadSlotPermission;
 import org.zeroclick.meeting.client.calendar.CalendarConfigurationAdminTablePage;
 import org.zeroclick.meeting.client.event.EventAdminTablePage;
+import org.zeroclick.meeting.client.event.externalevent.ExternalEventTablePage;
+import org.zeroclick.meeting.client.event.involevment.InvolvementTablePage;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.ReadCalendarConfigurationPermission;
 import org.zeroclick.meeting.shared.event.ReadEventPermission;
@@ -66,6 +68,16 @@ public class EventAdminNodePage extends AbstractPageWithNodes {
 		calendarConfigurationTablePage.setVisibleGranted(iscalendarConfigAdmin);
 		calendarConfigurationTablePage.setLeaf(true);
 		pageList.add(calendarConfigurationTablePage);
+
+		final ExternalEventTablePage externalEventTablePage = new ExternalEventTablePage();
+		externalEventTablePage.setVisibleGranted(isEventAdmin);
+		externalEventTablePage.setLeaf(true);
+		pageList.add(externalEventTablePage);
+
+		final InvolvementTablePage involevmentTablePage = new InvolvementTablePage();
+		involevmentTablePage.setVisibleGranted(isEventAdmin);
+		involevmentTablePage.setLeaf(true);
+		pageList.add(involevmentTablePage);
 
 	}
 }

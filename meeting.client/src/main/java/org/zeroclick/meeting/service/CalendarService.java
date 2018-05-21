@@ -306,7 +306,7 @@ public class CalendarService {
 
 	public EventIdentification acceptCreatedEvent(final EventIdentification eventOrganizerIdentification,
 			final Long userId, final String attendeeEmail, final Long heldByUserId) throws IOException {
-		LOG.info(new StringBuilder().append("Accepting (Google) Event id (").append(eventOrganizerIdentification)
+		LOG.info(new StringBuilder().append("Accepting Event id (").append(eventOrganizerIdentification)
 				.append("), for :").append(userId).append(" with his email : ").append(attendeeEmail).toString());
 
 		Long eventCreatorUserId = userId;

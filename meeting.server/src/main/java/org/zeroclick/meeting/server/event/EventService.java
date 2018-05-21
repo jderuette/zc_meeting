@@ -27,6 +27,7 @@ import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper.SubscriptionHelperData;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.meeting.server.sql.SQLs;
+import org.zeroclick.meeting.shared.event.EventAskedTablePageData;
 import org.zeroclick.meeting.shared.event.EventCreatedNotification;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.EventModifiedNotification;
@@ -36,6 +37,10 @@ import org.zeroclick.meeting.shared.event.ReadEventPermission;
 import org.zeroclick.meeting.shared.event.RejectEventFormData;
 import org.zeroclick.meeting.shared.event.StateCodeType;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
+import org.zeroclick.meeting.shared.event.involevment.EventRoleCodeType;
+import org.zeroclick.meeting.shared.event.involevment.EventStateCodeType;
+import org.zeroclick.meeting.shared.event.involevment.IInvolvementService;
+import org.zeroclick.meeting.shared.event.involevment.InvolvementFormData;
 
 public class EventService extends AbstractCommonService implements IEventService {
 
@@ -46,7 +51,72 @@ public class EventService extends AbstractCommonService implements IEventService
 		return LOG;
 	}
 
-	private EventTablePageData getEvents(final SearchFilter filter, final String eventStatusCriteria,
+	private String createMeFilter(final Boolean invited, final Boolean asked, final Boolean displayAllForAdmin) {
+
+		final StringBuilder meFilter = new StringBuilder(64);
+		if (!displayAllForAdmin
+				|| ACCESS.getLevel(new ReadEventPermission((Long) null)) != ReadEventPermission.LEVEL_ALL) {
+			// if (invited) {
+			// meFilter.append(" AND (invo.user_id=:currentUser");
+			// if (asked) {
+			// meFilter.append(" OR invo.user_id=:currentUser");
+			// }
+			// meFilter.append(')');
+			// } else if (asked) {
+			// meFilter.append(" AND invo.user_id=:currentUser");
+			// }
+
+			meFilter.append(" AND invo.user_id=:currentUser");
+		}
+
+		return meFilter.toString();
+	}
+
+	private String createStateFilter(final Boolean invited, final Boolean asked, final Boolean displayAllForAdmin) {
+		final StringBuilder stateFilter = new StringBuilder();
+		String stateCode = "";
+
+		if (!displayAllForAdmin
+				|| ACCESS.getLevel(new ReadEventPermission((Long) null)) != ReadEventPermission.LEVEL_ALL) {
+			if (invited) {
+				stateCode = EventStateCodeType.AskedCode.ID;
+			} else if (asked) {
+				stateCode = EventStateCodeType.ProposedCode.ID;
+			}
+			stateFilter.append(" AND invo.state = '").append(stateCode).append('\'');
+		}
+
+		return stateFilter.toString();
+	}
+
+	private EventTablePageData getEvents(final SearchFilter filter, final String ownerFilter,
+			final String stateFilter) {
+		final EventTablePageData pageData = new EventTablePageData();
+
+		final Long currentConnectedUserId = super.userHelper.getCurrentUserId();
+
+		final String sql = SQLs.EVENT_PAGE_SELECT_ORGANIZED + ownerFilter + stateFilter
+				+ SQLs.EVENT_PAGE_DATA_SELECT_INTO_ORGANIZED;
+
+		// final String sql =
+		// SQLs.EVENT_BY_INVOLVEMENT_PAGE_SELECT.replace("__viewFilter__",
+		// ownerFilter + eventStatusCriteria) +
+		// SQLs.EVENT_PAGE_DATA_SELECT_INTO;
+
+		SQL.selectInto(sql, new NVPair("page", pageData), new NVPair("currentUser", currentConnectedUserId),
+				new NVPair("currentUserEmail", this.getCurrentUserEmail()));
+
+		// Event organizer
+		// final String sqlOrganiser =
+		// SQLs.INVOLVEMENT_SELECT_ORGANISER_BY_EVENT +
+		// SQLs.EVENT_PAGE_DATA_SELECT_INTO;
+		// SQL.selectInto(sqlOrganiser, new NVPair("page", pageData), new
+		// NVPair("eventId", pageData));
+
+		return pageData;
+	}
+
+	private EventTablePageData getEventsOld(final SearchFilter filter, final String eventStatusCriteria,
 			final Boolean displayAllForAdmin) {
 		final EventTablePageData pageData = new EventTablePageData();
 
@@ -58,8 +128,8 @@ public class EventService extends AbstractCommonService implements IEventService
 			currentConnectedUserId = super.userHelper.getCurrentUserId();
 		}
 
-		final String sql = SQLs.EVENT_PAGE_SELECT + ownerFilter + eventStatusCriteria
-				+ SQLs.EVENT_PAGE_DATA_SELECT_INTO;
+		final String sql = SQLs.EVENT_PAGE_SELECT_OLD + ownerFilter + eventStatusCriteria
+				+ SQLs.EVENT_PAGE_DATA_SELECT_INTO_OLD;
 
 		SQL.selectInto(sql, new NVPair("page", pageData), new NVPair("currentUser", currentConnectedUserId),
 				new NVPair("currentUserEmail", this.getCurrentUserEmail()));
@@ -69,24 +139,65 @@ public class EventService extends AbstractCommonService implements IEventService
 
 	@Override
 	public EventTablePageData getEventTableData(final SearchFilter filter) {
-		return this.getEvents(filter, " AND state = '" + StateCodeType.AskedCode.ID + "' AND guest_id=:currentUser",
-				Boolean.FALSE);
+		final Boolean invited = Boolean.TRUE;
+		final Boolean asked = Boolean.FALSE;
+		final Boolean admin = Boolean.FALSE;
+
+		final EventTablePageData pageData = new EventTablePageData();
+
+		final String meFilter = this.createMeFilter(invited, asked, admin);
+		final String stateFilter = this.createStateFilter(invited, asked, admin);
+
+		final Long currentConnectedUserId = super.userHelper.getCurrentUserId();
+		final String sql = SQLs.EVENT_PAGE_SELECT + meFilter + stateFilter + SQLs.EVENT_PAGE_DATA_SELECT_INTO;
+
+		SQL.selectInto(sql, new NVPair("page", pageData), new NVPair("currentUser", currentConnectedUserId));
+
+		return pageData;
 	}
 
 	@Override
-	public AbstractTablePageData getEventAskedTableData(final SearchFilter filter) {
-		return this.getEvents(filter, " AND state = '" + StateCodeType.AskedCode.ID + "' AND guest_id!=:currentUser",
-				Boolean.FALSE);
+	public EventAskedTablePageData getEventAskedTableData(final SearchFilter filter) {
+		final Boolean invited = Boolean.FALSE;
+		final Boolean asked = Boolean.TRUE;
+		final Boolean admin = Boolean.FALSE;
+		final String meFilter = this.createMeFilter(invited, asked, admin);
+		final String stateFilter = this.createStateFilter(invited, asked, admin);
+
+		final EventAskedTablePageData pageData = new EventAskedTablePageData();
+
+		final Long currentConnectedUserId = super.userHelper.getCurrentUserId();
+		final String sql = SQLs.EVENT_PAGE_SELECT + meFilter + stateFilter + SQLs.EVENT_PAGE_DATA_SELECT_INTO;
+
+		SQL.selectInto(sql, new NVPair("page", pageData), new NVPair("currentUser", currentConnectedUserId));
+
+		return pageData;
 	}
 
 	@Override
 	public AbstractTablePageData getEventProcessedTableData(final SearchFilter filter) {
-		return this.getEvents(filter, " AND state <> '" + StateCodeType.AskedCode.ID + "'", Boolean.FALSE);
+		final Boolean invited = Boolean.TRUE;
+		final Boolean asked = Boolean.TRUE;
+		final Boolean admin = Boolean.FALSE;
+		final String meFilter = this.createMeFilter(invited, asked, admin);
+		final String stateFilter = this.createStateFilter(invited, asked, admin);
+		return this.getEvents(filter, meFilter, stateFilter);
 	}
 
 	@Override
 	public AbstractTablePageData getEventAdminTableData(final SearchFilter filter) {
-		return this.getEvents(filter, "", Boolean.TRUE);
+		final Boolean invited = Boolean.TRUE;
+		final Boolean asked = Boolean.TRUE;
+		final Boolean admin = Boolean.TRUE;
+		final String meFilter = this.createMeFilter(invited, asked, admin);
+		final String stateFilter = this.createStateFilter(invited, asked, admin);
+		return this.getEvents(filter, meFilter, stateFilter);
+	}
+
+	@Override
+	public EventTablePageData getEventAdminTableDataOld(final SearchFilter filter) {
+		return this.getEventsOld(filter, " AND state = '" + StateCodeType.AskedCode.ID + "' AND guest_id=:currentUser",
+				Boolean.FALSE);
 	}
 
 	@Override
@@ -216,6 +327,7 @@ public class EventService extends AbstractCommonService implements IEventService
 	@Override
 	public EventFormData create(final EventFormData formData) {
 		final SubscriptionHelper subHelper = BEANS.get(SubscriptionHelper.class);
+		final IInvolvementService involevmentService = BEANS.get(IInvolvementService.class);
 
 		final SubscriptionHelperData subscriptionData = subHelper.canCreateEvent();
 		if (!subscriptionData.isAccessAllowed()) {
@@ -234,11 +346,29 @@ public class EventService extends AbstractCommonService implements IEventService
 		SQL.insert(SQLs.EVENT_INSERT, formData);
 		final EventFormData storedData = this.store(formData, Boolean.TRUE);
 
+		// Organizer Involvement
+		final InvolvementFormData involevmentFormData = new InvolvementFormData();
+		involevmentFormData.getEventId().setValue(storedData.getEventId());
+		involevmentFormData.getUserId().setValue(storedData.getOrganizer().getValue());
+		involevmentFormData.getRole().setValue(EventRoleCodeType.OrganizerCode.ID);
+		involevmentFormData.getState().setValue(EventStateCodeType.ProposedCode.ID);
+		involevmentFormData.getInvitedBy().setValue(storedData.getOrganizer().getValue());
+		involevmentService.create(involevmentFormData);
+
+		// Guest Involvement
+		final InvolvementFormData guestInvolevmentFormData = new InvolvementFormData();
+		guestInvolevmentFormData.getEventId().setValue(storedData.getEventId());
+		guestInvolevmentFormData.getUserId().setValue(storedData.getGuestId().getValue());
+		guestInvolevmentFormData.getRole().setValue(EventRoleCodeType.RequiredGuestCode.ID);
+		guestInvolevmentFormData.getState().setValue(EventStateCodeType.AskedCode.ID);
+		guestInvolevmentFormData.getInvitedBy().setValue(storedData.getOrganizer().getValue());
+		involevmentService.create(guestInvolevmentFormData);
+
 		final Set<String> notifiedUsers = this.buildNotifiedUsers(storedData);
 		BEANS.get(ClientNotificationRegistry.class).putForUsers(notifiedUsers,
 				new EventCreatedNotification(storedData));
 
-		return storedData;
+		return this.store(storedData, Boolean.TRUE);
 	}
 
 	private Set<String> buildNotifiedUsers(final EventFormData formData) {

@@ -7,9 +7,11 @@ import org.eclipse.scout.rt.client.ui.desktop.outline.pages.IPage;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.shared.TEXTS;
+import org.zeroclick.common.desktop.pages.FormPage;
 import org.zeroclick.comon.text.UserHelper;
 import org.zeroclick.meeting.client.admin.EventAdminNodePage;
 import org.zeroclick.meeting.client.event.EventAskedTablePage;
+import org.zeroclick.meeting.client.event.EventInvitedPageForm;
 import org.zeroclick.meeting.client.event.EventProcessedTablePage;
 import org.zeroclick.meeting.client.event.EventTablePage;
 import org.zeroclick.meeting.shared.Icons;
@@ -48,6 +50,11 @@ public class MeetingOutline extends AbstractOutline {
 
 		final EventAdminNodePage eventAdminNodePage = new EventAdminNodePage();
 		eventAdminNodePage.setVisibleGranted(isEventAdmin || isSlotAdmin || iscalendarConfigAdmin);
+
+		final FormPage eventInvited = new FormPage(EventInvitedPageForm.class);
+		eventInvited.setVisibleGranted(isEventUser);
+
+		pageList.add(new FormPage(EventInvitedPageForm.class));
 
 		pageList.add(eventTablePage);
 		pageList.add(eventAskedTablePage);

@@ -54,7 +54,6 @@ import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
 import org.zeroclick.configuration.shared.subscription.SubscriptionHelper.SubscriptionHelperData;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UserFormData;
-import org.zeroclick.configuration.shared.venue.VenueLookupCall;
 import org.zeroclick.meeting.client.NotificationHelper;
 import org.zeroclick.meeting.client.common.SlotHelper;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.CancelButton;
@@ -79,6 +78,7 @@ import org.zeroclick.meeting.client.event.EventForm.MainBox.PeriodeBox.SlotSeque
 import org.zeroclick.meeting.client.event.EventForm.MainBox.PeriodeBox.SlotSequenceBox.SlotField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.ReasonField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.RefusedByField;
+import org.zeroclick.meeting.client.event.EventForm.MainBox.RoleField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.SlotSequenceBox.ContentButton;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.SlotSequenceBox.SubjectField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.StartDateField;
@@ -90,6 +90,7 @@ import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.KnowEmailLookupCall;
 import org.zeroclick.meeting.shared.event.StateCodeType;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
+import org.zeroclick.meeting.shared.event.involevment.EventRoleCodeType;
 import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
 import org.zeroclick.ui.action.menu.AbstractAddMenu;
 import org.zeroclick.ui.form.fields.button.moreoptions.AbstractMoreOptionButton;
@@ -333,6 +334,10 @@ public class EventForm extends AbstractForm {
 
 	public RefusedByField getRefusedByField() {
 		return this.getFieldByClass(RefusedByField.class);
+	}
+
+	public RoleField getRoleField() {
+		return this.getFieldByClass(RoleField.class);
 	}
 
 	public OkButton getOkButton() {
@@ -1105,16 +1110,7 @@ public class EventForm extends AbstractForm {
 		}
 
 		@Order(9000)
-		public class VenueField extends AbstractProposalField<String> {
-			@Override
-			protected String getConfiguredLabel() {
-				return TEXTS.get("zc.meeting.venue");
-			}
-
-			@Override
-			protected Class<? extends ILookupCall<String>> getConfiguredLookupCall() {
-				return VenueLookupCall.class;
-			}
+		public class VenueField extends AbstractVenueField {
 		}
 
 		@Order(10000)
@@ -1132,6 +1128,24 @@ public class EventForm extends AbstractForm {
 			@Override
 			protected boolean getConfiguredVisible() {
 				return Boolean.FALSE;
+			}
+		}
+
+		@Order(10500)
+		public class RoleField extends AbstractSmartField<String> {
+			@Override
+			protected boolean getConfiguredVisible() {
+				return false;
+			}
+
+			@Override
+			protected String getConfiguredLabel() {
+				return TEXTS.get("zc.meeting.event.involevment.role");
+			}
+
+			@Override
+			protected Class<? extends ICodeType<?, String>> getConfiguredCodeType() {
+				return EventRoleCodeType.class;
 			}
 		}
 

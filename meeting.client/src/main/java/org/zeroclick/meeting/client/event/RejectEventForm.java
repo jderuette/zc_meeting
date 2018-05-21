@@ -42,6 +42,9 @@ import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.RejectEventFormData;
 import org.zeroclick.meeting.shared.event.StateCodeType;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
+import org.zeroclick.meeting.shared.event.involevment.EventStateCodeType;
+import org.zeroclick.meeting.shared.event.involevment.IInvolvementService;
+import org.zeroclick.meeting.shared.event.involevment.InvolvementFormData;
 
 @FormData(value = RejectEventFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class RejectEventForm extends AbstractForm {
@@ -428,6 +431,8 @@ public class RejectEventForm extends AbstractForm {
 				@Override
 				public void run() {
 					final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
+					final IInvolvementService involvementService = BEANS.get(IInvolvementService.class);
+					final IEventService service = BEANS.get(IEventService.class);
 
 					final RejectEventFormData formData = new RejectEventFormData();
 					RejectEventForm.this.exportFormData(formData);
@@ -435,7 +440,15 @@ public class RejectEventForm extends AbstractForm {
 					final CalendarService calendarService = BEANS.get(CalendarService.class);
 					calendarService.deleteEvent(RejectEventForm.this.getEventId());
 
-					final IEventService service = BEANS.get(IEventService.class);
+					// update user Involvement
+					InvolvementFormData involvementformData = new InvolvementFormData();
+					involvementformData.getEventId().setValue(RejectEventForm.this.eventId);
+					involvementformData.getUserId().setValue(appUserHelper.getCurrentUserId());
+					involvementformData = involvementService.load(involvementformData);
+
+					involvementformData.getState().setValue(EventStateCodeType.RefusedCode.ID);
+					involvementformData.getReason().setValue(RejectEventForm.this.getReasonField().getValue());
+					involvementformData = involvementService.store(involvementformData);
 
 					formData.setState(StateCodeType.RefusededCode.ID);
 					final EventFormData fullEventFormData = service.storeNewState(formData,

@@ -561,7 +561,7 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 
 		final CalendarConfigurationTablePageData pageData = this.getDataCacheByUser().get(userId);
 
-		if (pageData.getRowCount() > 0) {
+		if (null != pageData && pageData.getRowCount() > 0) {
 			for (final CalendarConfigurationTableRowData calendarConfig : pageData.getRows()) {
 				if (ACCESS.check(new ReadCalendarConfigurationPermission(calendarConfig.getOAuthCredentialId()))) {
 					if (calendarConfig.getProcess()) {

@@ -27,21 +27,16 @@ import org.eclipse.scout.rt.platform.util.CompareUtility;
 import org.eclipse.scout.rt.platform.util.concurrent.IRunnable;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
-import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
 import org.zeroclick.comon.text.TextsHelper;
-import org.zeroclick.configuration.client.user.ValidateCpsForm;
 import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
 import org.zeroclick.configuration.shared.duration.DurationCodeType;
-import org.zeroclick.configuration.shared.subscription.SubscriptionHelper;
-import org.zeroclick.configuration.shared.subscription.SubscriptionHelper.SubscriptionHelperData;
 import org.zeroclick.configuration.shared.user.IUserService;
+import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.meeting.client.NotificationHelper;
-import org.zeroclick.meeting.client.api.ApiHelper;
-import org.zeroclick.meeting.client.api.ApiHelperFactory;
 import org.zeroclick.meeting.client.common.SlotHelper;
 import org.zeroclick.meeting.client.event.EventTablePage.Table;
 import org.zeroclick.meeting.service.CalendarService;
@@ -53,14 +48,17 @@ import org.zeroclick.meeting.shared.calendar.CalendarConfigurationModifiedNotifi
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationCreatedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationModifiedNotification;
 import org.zeroclick.meeting.shared.calendar.IApiService;
-import org.zeroclick.meeting.shared.event.CreateEventPermission;
 import org.zeroclick.meeting.shared.event.EventCreatedNotification;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.EventModifiedNotification;
 import org.zeroclick.meeting.shared.event.EventTablePageData;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.StateCodeType;
-import org.zeroclick.ui.action.menu.AbstractNewMenu;
+import org.zeroclick.meeting.shared.event.externalevent.ExternalEventFormData;
+import org.zeroclick.meeting.shared.event.externalevent.IExternalEventService;
+import org.zeroclick.meeting.shared.event.involevment.EventStateCodeType;
+import org.zeroclick.meeting.shared.event.involevment.IInvolvementService;
+import org.zeroclick.meeting.shared.event.involevment.InvolvementFormData;
 import org.zeroclick.ui.action.menu.AbstractValidateMenu;
 
 @Data(EventTablePageData.class)
@@ -364,7 +362,8 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 		protected void changeDatesNext(final ITableRow row, final Boolean askedByUser) throws IOException {
 			final ZonedDateTime startDate;
-			final Long guestId = this.getGuestIdColumn().getValue(row.getRowIndex());
+
+			final Long guestId = this.getCurrentUserId();
 			final ZonedDateTime currentStartDate = EventTablePage.this.getDateHelper().getZonedValue(
 					EventTablePage.this.getAppUserHelper().getUserZoneId(guestId),
 					this.getStartDateColumn().getValue(row.getRowIndex()));
@@ -458,10 +457,14 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			final DurationCodeType durationCodes = BEANS.get(DurationCodeType.class);
 			final Integer duration = durationCodes.getCode(this.getDurationColumn().getValue(rowIndex)).getValue()
 					.intValue();
+
+			final IUserService userService = BEANS.get(IUserService.class);
+			final UserFormData userDetails = userService.getCurrentUserDetails();
+			final Long currentUserId = userDetails.getUserId().getValue();
+
 			final DateReturn newPossibleDate = this.tryChangeDatesNext(startDate, duration,
 					this.getSlotColumn().getValue(rowIndex), this.getOrganizerColumn().getValue(rowIndex),
-					this.getGuestIdColumn().getValue(rowIndex),
-					this.getMinimalStartDateColumn().getZonedValue(rowIndex),
+					currentUserId, this.getMinimalStartDateColumn().getZonedValue(rowIndex),
 					this.getMaximalStartDateColumn().getZonedValue(rowIndex),
 					this.getStartDateColumn().getZonedValue(rowIndex));
 
@@ -636,73 +639,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 		}
 
 		@Order(2000)
-		public class NewEventMenu extends AbstractNewMenu {
-			@Override
-			protected String getConfiguredText() {
-				return TEXTS.get("zc.meeting.addEvent");
-			}
-
-			@Override
-			protected void execInitAction() {
-				this.setVisibleGranted(
-						ACCESS.getLevel(new CreateEventPermission()) >= CreateEventPermission.LEVEL_SUB_FREE);
-			}
-
-			@Override
-			protected boolean getConfiguredEnabled() {
-				return Boolean.TRUE;
-			}
-
-			@Override
-			protected void execAction() {
-				final ApiHelper apiHelper = ApiHelperFactory.getCommonApiHelper();
-				if (!EventTablePage.this.isUserCalendarConfigured()) {
-					apiHelper.askToAddApi(Table.this.getCurrentUserId());
-				} else if (!EventTablePage.this.isUserAddCalendarConfigured()) {
-					// External calendar added, but no calendar chosen to add
-					// events
-					apiHelper.askToChooseCalendarToAddEvent(Table.this.getCurrentUserId());
-				}
-
-				if (!EventTablePage.this.isUserAddCalendarConfigured()) {
-					// User won't configure required Data
-					return; // earlyBreak
-				}
-
-				final SubscriptionHelper subHelper = BEANS.get(SubscriptionHelper.class);
-				final SubscriptionHelperData subscriptionData = subHelper.canCreateEvent();
-
-				if (subscriptionData.isAccessAllowed()) {
-					this.loadEventForm();
-				} else {
-					final int userDecision = MessageBoxes.createYesNo()
-							.withHeader(TEXTS.get("zc.subscription.notAllowed.title"))
-							.withBody(subscriptionData.getUserMessage())
-							.withYesButtonText(TEXTS.get("zc.subscription.notAllowed.yesButton"))
-							.withIconId(Icons.ExclamationMark).withSeverity(IStatus.WARNING).show();
-
-					if (userDecision == IMessageBox.YES_OPTION) {
-						final ValidateCpsForm validateCpsForm = new ValidateCpsForm();
-						validateCpsForm.getUserIdField().setValue(Table.this.getCurrentUserId());
-						validateCpsForm.setModal(Boolean.TRUE);
-						validateCpsForm.startNew();
-						validateCpsForm.waitFor();
-					}
-					// if user subscribe to subscription witch give him access
-					final SubscriptionHelperData subscriptionAfterData = subHelper.canCreateEvent();
-					if (subscriptionAfterData.isAccessAllowed()) {
-						this.loadEventForm();
-					}
-				}
-			}
-
-			private void loadEventForm() {
-				final EventForm form = new EventForm();
-				// form.setEnabledGranted(subscriptionData.isAccessAllowed());
-				form.setVisibleGranted(
-						ACCESS.getLevel(new CreateEventPermission()) >= CreateEventPermission.LEVEL_SUB_FREE);
-				form.startNew();
-			}
+		public class NewEventMenu extends AbstractCreatEventMenu {
 		}
 
 		@Order(2100)
@@ -750,7 +687,11 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				if (null != row) {
 					final Boolean isOrganizerCalendarConfigured = EventTablePage.this
 							.isOrganizerCalendarConfigured(row);
-					this.setVisible(Table.this.userCanAccept(row) && this.isWorkflowVisible(Table.this.getState(row))
+					this.setVisible(Table.this.userCanAccept(
+							row) /*
+									 * && this.isWorkflowVisible(Table.this.
+									 * getState(row))
+									 */
 							&& Table.this.isGuestCurrentUser(row));
 
 					final Boolean hasStartDate = null != Table.this.getStartDateColumn().getValue(row.getRowIndex());
@@ -789,6 +730,8 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			protected void execAction() {
 				final Boolean guestAutoAcceptEvent = Boolean.TRUE;
 				final IEventService eventService = BEANS.get(IEventService.class);
+				final IInvolvementService involvementService = BEANS.get(IInvolvementService.class);
+				final IExternalEventService externalEventService = BEANS.get(IExternalEventService.class);
 
 				final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
 				notificationHelper.addProcessingNotification("zc.meeting.notification.acceptingEvent");
@@ -799,8 +742,8 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				final ZonedDateTime end = Table.this.getEndDateColumn().getSelectedZonedValue();
 				Long eventHeldBy = Table.this.getOrganizerColumn().getSelectedValue();
 				final String eventHeldEmail = Table.this.getOrganizerEmailColumn().getSelectedValue();
-				Long eventGuestId = Table.this.getGuestIdColumn().getSelectedValue();
-				final String eventGuestEmail = Table.this.getEmailColumn().getSelectedValue();
+				Long eventGuestId = Table.this.getCurrentUserId();
+				final String eventGuestEmail = Table.this.getCurrentUserEmails().get(0);
 				final String subject = Table.this.getSubjectColumn().getSelectedValue();
 				final String venue = Table.this.getVenueColumn().getSelectedValue();
 				final String description = eventService.loadDescription(eventId);
@@ -813,7 +756,11 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 					final CalendarService calendarService = BEANS.get(CalendarService.class);
 
-					Table.this.getStateColumn().setValue(Table.this.getSelectedRow(), StateCodeType.AcceptedCode.ID);
+					final CalendarConfigurationFormData organizerCalendarToStoreEvent = calendarService
+							.getUserCreateEventCalendar(eventHeldBy);
+
+					// Table.this.getStateColumn().setValue(Table.this.getSelectedRow(),
+					// StateCodeType.AcceptedCode.ID);
 
 					if (null == eventHeldBy) {
 						eventHeldBy = userService.getUserIdByEmail(eventHeldEmail);
@@ -821,13 +768,35 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					// External event for holder
 					final EventIdentification externalOrganizerEventId = calendarService.createEvent(start, end,
 							eventHeldBy, eventGuestEmail, subject, venue, guestAutoAcceptEvent, description);
+					ExternalEventFormData orgaExternalEventformData = null;
 					if (null == externalOrganizerEventId) {
 						LOG.warn(new StringBuilder().append("Event not created for user : ").append(eventHeldBy)
 								.append(" and he is the organizer ! (subject : ").append(subject).append(")")
 								.toString());
 					} else {
-						Table.this.getExternalIdOrganizerColumn().setValue(Table.this.getSelectedRow(),
-								externalOrganizerEventId.getEventId());
+						// Table.this.getExternalIdOrganizerColumn().setValue(Table.this.getSelectedRow(),
+						// externalOrganizerEventId.getEventId());
+
+						// create ExternalId
+						orgaExternalEventformData = new ExternalEventFormData();
+						orgaExternalEventformData.getExternalEventId().setValue(externalOrganizerEventId.getEventId());
+						orgaExternalEventformData.getExternalCalendarId()
+								.setValue(externalOrganizerEventId.getCalendarId());
+						orgaExternalEventformData.getApiCredentialId()
+								.setValue(organizerCalendarToStoreEvent.getOAuthCredentialId().getValue());
+						orgaExternalEventformData = externalEventService.create(orgaExternalEventformData);
+
+						// update orga state
+						InvolvementFormData orgaInvolvementformData = new InvolvementFormData();
+						orgaInvolvementformData.getEventId().setValue(eventId);
+						orgaInvolvementformData.getUserId().setValue(eventHeldBy);
+						orgaInvolvementformData = involvementService.load(orgaInvolvementformData);
+
+						orgaInvolvementformData.getState().setValue(EventStateCodeType.AcceptedCode.ID);
+						orgaInvolvementformData.getExternalEventId()
+								.setValue(orgaExternalEventformData.getExternalId().getValue());
+						orgaInvolvementformData = involvementService.store(orgaInvolvementformData);
+
 					}
 
 					final String organizerEventExternalHtmlLink = calendarService
@@ -836,6 +805,9 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 					String guestEventExternalHtmlLink = organizerEventExternalHtmlLink;
 
 					Boolean isAttendeeCalendarToStoreEventConfigured = Boolean.FALSE;
+
+					final CalendarConfigurationFormData attendeeCalendarToStoreEvent = calendarService
+							.getUserCreateEventCalendar(eventGuestId);
 
 					if (!guestAutoAcceptEvent) {
 						// Only if required to process "accept" in a other
@@ -847,8 +819,29 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 						final EventIdentification externalGuestEvent = calendarService.acceptCreatedEvent(
 								externalOrganizerEventId, eventGuestId, eventGuestEmail, eventHeldBy);
 						if (null != externalGuestEvent) {
-							Table.this.getExternalIdRecipientColumn().setValue(Table.this.getSelectedRow(),
-									externalGuestEvent.getEventId());
+							// Table.this.getExternalIdRecipientColumn().setValue(Table.this.getSelectedRow(),
+							// externalGuestEvent.getEventId());
+
+							// create guest provide specificExternalId
+							ExternalEventFormData guestExternalEventformData = new ExternalEventFormData();
+							guestExternalEventformData.getExternalEventId().setValue(externalGuestEvent.getEventId());
+							guestExternalEventformData.getExternalCalendarId()
+									.setValue(externalGuestEvent.getCalendarId());
+							guestExternalEventformData.getApiCredentialId()
+									.setValue(attendeeCalendarToStoreEvent.getOAuthCredentialId().getValue());
+							guestExternalEventformData = externalEventService.create(guestExternalEventformData);
+
+							// update orga state
+							InvolvementFormData guestInvolvementformData = new InvolvementFormData();
+							guestInvolvementformData.getEventId().setValue(eventId);
+							guestInvolvementformData.getUserId().setValue(eventHeldBy);
+							guestInvolvementformData = involvementService.load(guestInvolvementformData);
+
+							guestInvolvementformData.getState().setValue(EventStateCodeType.AcceptedCode.ID);
+							guestInvolvementformData.getExternalEventId()
+									.setValue(guestExternalEventformData.getExternalId().getValue());
+							involvementService.store(guestInvolvementformData);
+
 							guestEventExternalHtmlLink = calendarService.getEventExternalLink(externalGuestEvent,
 									eventGuestId);
 						}
@@ -859,14 +852,9 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 						// and is autoAccepting events, we need to create a
 						// specific event (in his provider)
 
-						final CalendarConfigurationFormData organizerCalendarToStoreEvent = calendarService
-								.getUserCreateEventCalendar(eventHeldBy);
 						final ApiTableRowData organizerCalendarApi = apiService
 								.getApi(organizerCalendarToStoreEvent.getOAuthCredentialId().getValue());
 						final Long organizerProvider = organizerCalendarApi.getProvider();
-
-						final CalendarConfigurationFormData attendeeCalendarToStoreEvent = calendarService
-								.getUserCreateEventCalendar(eventGuestId);
 
 						if (null != attendeeCalendarToStoreEvent) {
 							isAttendeeCalendarToStoreEventConfigured = Boolean.TRUE;
@@ -875,15 +863,40 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 							final Long attendeeProvider = attendeeProviderCalendarApi.getProvider();
 
 							final boolean isSameProvider = organizerProvider.equals(attendeeProvider);
+							ExternalEventFormData guestExternalEventformData = null;
 							if (isSameProvider) {
 								externalAttendeeEventId = externalOrganizerEventId;
+								guestExternalEventformData = orgaExternalEventformData;
+
 							} else {
 								externalAttendeeEventId = calendarService.createEvent(start, end, eventGuestId,
 										eventHeldEmail, subject, venue, Boolean.TRUE, description);
+
+								// create guest provider specific ExternalId
+								guestExternalEventformData = new ExternalEventFormData();
+								guestExternalEventformData.getExternalEventId()
+										.setValue(externalAttendeeEventId.getEventId());
+								guestExternalEventformData.getExternalCalendarId()
+										.setValue(externalAttendeeEventId.getCalendarId());
+								guestExternalEventformData.getApiCredentialId()
+										.setValue(attendeeCalendarToStoreEvent.getOAuthCredentialId().getValue());
+								guestExternalEventformData = externalEventService.create(guestExternalEventformData);
 							}
 
-							Table.this.getExternalIdRecipientColumn().setValue(Table.this.getSelectedRow(),
-									externalAttendeeEventId.getEventId());
+							// Table.this.getExternalIdRecipientColumn().setValue(Table.this.getSelectedRow(),
+							// externalAttendeeEventId.getEventId());
+
+							// update guest state
+							InvolvementFormData guestInvolvementformData = new InvolvementFormData();
+							guestInvolvementformData.getEventId().setValue(eventId);
+							guestInvolvementformData.getUserId().setValue(eventGuestId);
+							guestInvolvementformData = involvementService.load(guestInvolvementformData);
+
+							guestInvolvementformData.getState().setValue(EventStateCodeType.AcceptedCode.ID);
+							guestInvolvementformData.getExternalEventId()
+									.setValue(guestExternalEventformData.getExternalId().getValue());
+							involvementService.store(guestInvolvementformData);
+
 						} else {
 							notificationHelper.addWarningNotification(
 									"zc.meeting.calendar.noAddEvent.cannotCreateEvent", eventHeldEmail);
@@ -972,7 +985,10 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				final ITableRow row = Table.this.getOwnerAsTableRow(newOwnerValue);
 				if (null != row) {
 					this.setVisible(Table.this.userCanChooseDate(row)
-							&& this.isWorkflowVisible(Table.this.getState(row)) && Table.this.isGuestCurrentUser(row));
+							&& /*
+								 * this.isWorkflowVisible(Table.this.getState(
+								 * row )) &&
+								 */ Table.this.isGuestCurrentUser(row));
 					// EventTablePage.this.isUserCalendarConfigured() &&
 					this.setEnabled(
 							Table.this.isUserTimeZoneValid() && EventTablePage.this.isOrganizerCalendarConfigured(row));
@@ -1032,7 +1048,10 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				final ITableRow row = Table.this.getOwnerAsTableRow(newOwnerValue);
 				if (null != row) {
 					this.setVisible(Table.this.userCanChooseDate(row)
-							&& this.isWorkflowVisible(Table.this.getState(row)) && Table.this.isGuestCurrentUser(row));
+							&& /*
+								 * this.isWorkflowVisible(Table.this.getState(
+								 * row )) &&
+								 */ Table.this.isGuestCurrentUser(row));
 					// EventTablePage.this.isUserCalendarConfigured() &&
 					this.setEnabled(
 							Table.this.isUserTimeZoneValid() && EventTablePage.this.isOrganizerCalendarConfigured(row));
@@ -1073,9 +1092,11 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				protected void execOwnerValueChanged(final Object newOwnerValue) {
 					final ITableRow row = Table.this.getOwnerAsTableRow(newOwnerValue);
 					if (null != row) {
-						this.setVisible(
-								Table.this.userCanChooseDate(row) && this.isWorkflowVisible(Table.this.getState(row))
-										&& Table.this.isGuestCurrentUser(row));
+						this.setVisible(Table.this.userCanChooseDate(row)
+								&& /*
+									 * this.isWorkflowVisible(Table.this.
+									 * getState(row)) &&
+									 */ Table.this.isGuestCurrentUser(row));
 						// EventTablePage.this.isUserCalendarConfigured() &&
 						this.setEnabled(Table.this.isUserTimeZoneValid()
 								&& EventTablePage.this.isOrganizerCalendarConfigured(row));
@@ -1086,7 +1107,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 				protected void execAction() {
 					try {
 						final ITableRow row = Table.this.getSelectedRow();
-						final Long guestId = Table.this.getGuestIdColumn().getValue(row.getRowIndex());
+						final Long guestId = Table.this.getCurrentUserId();
 						final ZonedDateTime currentStartDate = EventTablePage.this.getDateHelper().getZonedValue(
 								EventTablePage.this.getAppUserHelper().getUserZoneId(guestId),
 								Table.this.getStartDateColumn().getValue(row.getRowIndex()));
