@@ -140,6 +140,8 @@ public class EventMessageHelper {
 			description = new StringBuilder().append(separator).append(formData.getDescription().getValue())
 					.append(separator).toString();
 			values.add(description);// 14
+		} else {
+			values.add("");
 		}
 
 		return CollectionUtility.toArray(values, String.class);

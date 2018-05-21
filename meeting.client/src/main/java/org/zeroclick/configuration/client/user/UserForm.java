@@ -788,15 +788,15 @@ public class UserForm extends AbstractForm {
 		final UserFormData formData = new UserFormData();
 		UserForm.this.exportFormData(formData);
 
-		if (null == formData.getPassword().getValue()) {
-			LOG.warn("No Generated Plain Paswword during saving new User. Generating one");
+		if (null == formData.getPassword().getValue() || "".equals(formData.getPassword().getValue())) {
+			LOG.warn("No Generated Plain Pasword during saving new User. Generating one");
 			this.generateAndAddFormPassword(formData);
 		}
 
 		// should not happen
-		if (null == formData.getPassword().getValue()) {
-			LOG.error(
-					"No Generated Plain Paswword during saving new User even after a first new password generation. Generating one again");
+		if (null == formData.getPassword().getValue() || "".equals(formData.getPassword().getValue())) {
+			LOG.warn(
+					"No Generated Plain Pasword during saving new User even after a first new password generation. Generating one again");
 			this.generateAndAddFormPassword(formData);
 		}
 		final String hashedPassword = UserForm.this.hashPassword(formData.getPassword().getValue());
@@ -845,14 +845,21 @@ public class UserForm extends AbstractForm {
 	private void sendUserInviteEmail() {
 		final IUserService userService = BEANS.get(IUserService.class);
 
-		this.sendUserInviteEmail(this, userService.getCurrentUserDetails().getEmail().getValue(), null);
+		this.sendUserInviteEmail(this, userService.getCurrentUserDetails().getEmail().getValue(), null, null);
 	}
 
-	private void sendUserInviteEmail(final UserForm newUser, final String emailSender, final String meetinSubject) {
+	private void sendUserInviteEmail(final UserForm newUser, final String emailSender, final String meetinSubject,
+			final String meetingDescription) {
 		final IMailSender mailSender = BEANS.get(IMailSender.class);
 
 		String subject;
 		String messageBody;
+
+		final String newUserPassword = newUser.getPasswordField().getValue();
+
+		if (null == newUserPassword || "".equals(newUserPassword)) {
+			LOG.error("New User password is empty just before sending EMAIL !!! ");
+		}
 
 		if (this.isAutofilled()) {
 			// invite + meeting
@@ -860,14 +867,14 @@ public class UserForm extends AbstractForm {
 					emailSender);
 			messageBody = TextsHelper.get(newUser.getUserIdField().getValue(), "zc.meeting.email.invit.html",
 					emailSender, new ApplicationUrlProperty().getValue(), newUser.getEmailField().getValue(),
-					newUser.getPasswordField().getValue(), meetinSubject);
+					newUserPassword, meetinSubject, meetingDescription);
 		} else {
 			// Simple invite without meeting
 			subject = TextsHelper.get(newUser.getUserIdField().getValue(), "zc.user.email.invit.withoutMeeting.subject",
 					emailSender);
 			messageBody = TextsHelper.get(newUser.getUserIdField().getValue(),
 					"zc.user.email.invit.withoutMeeting.html", emailSender, new ApplicationUrlProperty().getValue(),
-					newUser.getEmailField().getValue(), newUser.getPasswordField().getValue());
+					newUser.getEmailField().getValue(), newUserPassword);
 		}
 		try {
 			mailSender.sendEmail(newUser.getEmailField().getValue(), subject, messageBody, Boolean.FALSE);
@@ -881,7 +888,8 @@ public class UserForm extends AbstractForm {
 		}
 	}
 
-	public UserForm autoFillInviteUser(final String email, final String emailSender, final String meetingSubject) {
+	public UserForm autoFillInviteUser(final String email, final String emailSender, final String meetingSubject,
+			final String meetingDescription) {
 		final IUserService userService = BEANS.get(IUserService.class);
 
 		LOG.info("Creating and invite a new User with email : " + email + " by : " + emailSender
@@ -894,7 +902,7 @@ public class UserForm extends AbstractForm {
 
 		this.createUser(email, Boolean.TRUE);
 		this.save();
-		this.sendUserInviteEmail(this, emailSender, meetingSubject);
+		this.sendUserInviteEmail(this, emailSender, meetingSubject, meetingDescription);
 
 		return this;
 	}
