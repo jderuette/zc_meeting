@@ -19,9 +19,9 @@ import org.eclipse.scout.rt.shared.services.common.jdbc.SearchFilter;
 import org.eclipse.scout.rt.shared.services.lookup.ILookupCall;
 import org.zeroclick.configuration.shared.user.UserLookupCall;
 import org.zeroclick.meeting.client.event.involevment.InvolvementTablePage.Table;
-import org.zeroclick.meeting.shared.event.StateCodeType;
+import org.zeroclick.meeting.shared.event.EventStateCodeType;
 import org.zeroclick.meeting.shared.event.involevment.EventRoleCodeType;
-import org.zeroclick.meeting.shared.event.involevment.EventStateCodeType;
+import org.zeroclick.meeting.shared.event.involevment.InvolvmentStateCodeType;
 import org.zeroclick.meeting.shared.event.involevment.IInvolvementService;
 import org.zeroclick.meeting.shared.event.involevment.InvolvementTablePageData;
 import org.zeroclick.ui.action.menu.AbstractEditMenu;
@@ -145,7 +145,7 @@ public class InvolvementTablePage extends AbstractPageWithTable<Table> {
 		@Order(4000)
 		public class StateColumn extends AbstractSmartColumn<String> {
 			// In User context, so texts are translated
-			final EventStateCodeType eventStateCodes = new EventStateCodeType();
+			final InvolvmentStateCodeType eventStateCodes = new InvolvmentStateCodeType();
 
 			@Override
 			protected String getConfiguredHeaderText() {
@@ -172,7 +172,7 @@ public class InvolvementTablePage extends AbstractPageWithTable<Table> {
 
 			@Override
 			protected Class<? extends ICodeType<Long, String>> getConfiguredCodeType() {
-				return StateCodeType.class;
+				return EventStateCodeType.class;
 			}
 		}
 

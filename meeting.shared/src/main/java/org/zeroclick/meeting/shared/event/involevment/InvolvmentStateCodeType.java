@@ -5,7 +5,7 @@ import org.eclipse.scout.rt.shared.services.common.code.AbstractCode;
 import org.eclipse.scout.rt.shared.services.common.code.AbstractCodeType;
 import org.zeroclick.meeting.shared.Icons;
 
-public class EventStateCodeType extends AbstractCodeType<Long, String> {
+public class InvolvmentStateCodeType extends AbstractCodeType<Long, String> {
 
 	private static final long serialVersionUID = 1L;
 	public static final Long ID = 4000L;

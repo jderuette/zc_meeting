@@ -27,8 +27,9 @@ import org.zeroclick.meeting.server.sql.migrate.data.PatchExtendsAccesToken;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchManageMicrosoftCalendars;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchMultiInviteeMeeting;
 import org.zeroclick.meeting.server.sql.migrate.data.PatchSlotTable;
-import org.zeroclick.meeting.shared.event.StateCodeType;
+import org.zeroclick.meeting.shared.event.EventStateCodeType;
 import org.zeroclick.meeting.shared.event.involevment.EventRoleCodeType;
+import org.zeroclick.meeting.shared.event.involevment.InvolvmentStateCodeType;
 
 @SuppressWarnings("PMD.LongVariable")
 public interface SQLs {
@@ -61,22 +62,26 @@ public interface SQLs {
 
 	String AND_LIKE_CAUSE = "AND LOWER(%s) LIKE LOWER(:%s || '%%') ";
 
-	String EVENT_PAGE_SELECT = "SELECT EVENT.event_id, duration, slot, subject, venue, "
+	String EVENT_PAGE_SELECT = "SELECT EVENT.event_id, duration, slot, subject, venue, event.state, "
 			+ PatchEventAddCreatedDate.PATCHED_COLUMN + ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MIN_DATE_COLUMN
-			+ ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MAX_DATE_COLUMN + " FROM EVENT INNER JOIN "
-			+ PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE
+			+ ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MAX_DATE_COLUMN
+			+ ", startDate, endDate FROM EVENT INNER JOIN " + PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE
 			+ " invo ON event.event_id=invo.event_id WHERE 1=1";
 
-	String EVENT_PAGE_DATA_SELECT_INTO = " INTO :{page.eventId}, :{page.duration}, :{page.slot}, :{page.subject}, :{page.venue}, :{page.createdDate}, :{page.minimalStartDate}, :{page.maximalStartDate}";
+	String EVENT_PAGE_DATA_SELECT_INTO = " INTO :{page.eventId}, :{page.duration}, :{page.slot}, :{page.subject}, :{page.venue}, :{page.state}, :{page.createdDate}, :{page.minimalStartDate}, :{page.maximalStartDate}, :{page.startDate}, :{page.endDate}";
 
-	String EVENT_PAGE_SELECT_INVITED = "SELECT EVENT.event_id, duration, slot, subject, venue, "
+	String EVENT_FILTER_INVOLVED_USER = " AND invo.user_id = :userId";
+
+	String EVENT_FILTER_STATE = " AND event.state = :eventState";
+
+	String EVENT_PAGE_SELECT_INVITED = "SELECT EVENT.event_id, duration, slot, subject, venue, event.state, "
 			+ PatchEventAddCreatedDate.PATCHED_COLUMN + ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MIN_DATE_COLUMN
 			+ ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MAX_DATE_COLUMN + " FROM EVENT INNER JOIN "
 			+ PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE
 			+ " invo ON (event.event_id=invo.event_id AND role= '" + EventRoleCodeType.RequiredGuestCode.ID
 			+ "') INNER JOIN APP_USER guestUser ON invo.user_id=guestUser.user_id WHERE 1=1";
 
-	String EVENT_PAGE_DATA_SELECT_INTO_ORGANIZED = " INTO :{page.eventId}, :{page.duration}, :{page.slot}, :{page.subject}, :{page.venue}, :{page.createdDate}, :{page.minimalStartDate}, :{page.maximalStartDate}";
+	String EVENT_PAGE_DATA_SELECT_INTO_INVITED = " INTO :{page.eventId}, :{page.duration}, :{page.slot}, :{page.subject}, :{page.venue}, :{page.state}, :{page.createdDate}, :{page.minimalStartDate}, :{page.maximalStartDate}";
 
 	String EVENT_PAGE_SELECT_ORGANIZED = "SELECT EVENT.event_id, duration, organizerUser.email as organizerEmail, organizerUser.user_id as organizer, slot, subject, venue, "
 			+ PatchEventAddCreatedDate.PATCHED_COLUMN + ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MIN_DATE_COLUMN
@@ -85,7 +90,7 @@ public interface SQLs {
 			+ " invo ON (event.event_id=invo.event_id AND role= '" + EventRoleCodeType.OrganizerCode.ID
 			+ "') INNER JOIN APP_USER organizerUser ON invo.user_id=organizerUser.user_id WHERE 1=1";
 
-	String EVENT_PAGE_DATA_SELECT_INTO_INVITED = " INTO :{page.eventId}, :{page.duration}, :{page.organizerEmail}, :{page.organizer}:, {page.slot}, :{page.subject}, :{page.venue}, :{page.createdDate}, :{page.minimalStartDate}, :{page.maximalStartDate}";
+	String EVENT_PAGE_DATA_SELECT_INTO_ORGANIZED = " INTO :{page.eventId}, :{page.duration}, :{page.organizerEmail}, :{page.organizer}:, {page.slot}, :{page.subject}, :{page.venue}, :{page.createdDate}, :{page.minimalStartDate}, :{page.maximalStartDate}";
 
 	String EVENT_BY_INVOLVEMENT_PAGE_SELECT = "SELECT * FROM"
 			+ " (SELECT event.event_id, organizerUser.user_id as organizer, organizerUser.email as organizer_email, "
@@ -151,8 +156,7 @@ public interface SQLs {
 			+ PatchAddEventMinAndMaxDate.PATCHED_ADDED_MAX_DATE_COLUMN + "=:maximalStartDate, "
 			+ PatchAddEventDescription.PATCHED_ADDED_DESCRIPTION_COLUMN + "=:descriptionData, "
 			+ PatchAddEventRefusedBy.PATCHED_ADDED_REFUSED_BY_COLUMN + "=:refusedBy WHERE 1=1 " + EVENT_FILTER_EVENT_ID;
-	String EVENT_UPDATE_STATE = "UPDATE EVENT SET state=:state, reason=:reason, "
-			+ PatchAddEventRefusedBy.PATCHED_ADDED_REFUSED_BY_COLUMN + "=:refusedBy WHERE 1=1 " + EVENT_FILTER_EVENT_ID;
+	String EVENT_UPDATE_STATE = "UPDATE EVENT SET state=:newState WHERE 1=1 " + EVENT_FILTER_EVENT_ID;
 
 	String EVENT_SELECT = "SELECT duration, slot, email, guest_id, state, '' as role, reason, subject, venue, startDate, endDate, externalIdRecipient, externalIdOrganizer, organizer, organizer_email, "
 			+ PatchEventAddCreatedDate.PATCHED_COLUMN + ", " + PatchAddEventMinAndMaxDate.PATCHED_ADDED_MIN_DATE_COLUMN
@@ -273,12 +277,21 @@ public interface SQLs {
 	String INVOLEVMENT_INSERT = "INSERT INTO " + PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE
 			+ " (event_id, user_id, role, invited_by) VALUES (:eventId, :userId, :role, :invitedBy)";
 
-	String INVOLEVMENT_EVENT_UPDATE = "UPDATE " + PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE + " SET "
+	String INVOLEVMENT_UPDATE = "UPDATE " + PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE + " SET "
 			+ "event_id=:eventId, " + "user_id=:userId, role=:role, "
 			+ PatchMultiInviteeMeeting.PATCHED_MOOVED_STATE_COLUMN + "=:state, "
 			+ PatchMultiInviteeMeeting.PATCHED_MOOVED_REASON_COLUMN
 			+ "=:reason, external_event_id=:externalEventId, invited_by=:invitedBy WHERE 1=1"
 			+ INVOLEVMENT_FILTER_PRIMARY_KEY;
+
+	String INVOLEVMENT_UPDATE_STATUS_ACCEPT = "UPDATE " + PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE
+			+ " SET " + PatchMultiInviteeMeeting.PATCHED_MOOVED_STATE_COLUMN + "='"
+			+ InvolvmentStateCodeType.AcceptedCode.ID + "' WHERE 1=1" + INVOLEVMENT_FILTER_PRIMARY_KEY;
+
+	String INVOLEVMENT_UPDATE_STATUS_REFUSE = "UPDATE " + PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE
+			+ " SET " + PatchMultiInviteeMeeting.PATCHED_MOOVED_STATE_COLUMN + "='"
+			+ InvolvmentStateCodeType.RefusedCode.ID + "', " + PatchMultiInviteeMeeting.PATCHED_MOOVED_REASON_COLUMN
+			+ "=:reason WHERE 1=1" + INVOLEVMENT_FILTER_PRIMARY_KEY;
 
 	/**
 	 * Store external Even ID to allow sharing same calendar/event for multiple
@@ -638,9 +651,9 @@ public interface SQLs {
 
 	String USER_PAGE_ADD_STATS_SELECT = ", nbOrganizedWaitingEvent, nbInvetedWaitingEvent";
 	String USER_PAGE_ADD_STATS = " left outer join (select organizer, count(event_id) as nbOrganizedWaitingEvent FROM EVENT WHERE state='"
-			+ StateCodeType.AskedCode.ID + "' GROUP BY organizer) as stat2 ON stat2.organizer=user_id"
+			+ EventStateCodeType.WaitingCode.ID + "' GROUP BY organizer) as stat2 ON stat2.organizer=user_id"
 			+ " left outer join (select guest_id, count(event_id) as nbInvetedWaitingEvent FROM EVENT WHERE state='"
-			+ StateCodeType.AskedCode.ID + "' GROUP BY guest_id) as stat3 ON stat3.guest_id=user_id";
+			+ EventStateCodeType.WaitingCode.ID + "' GROUP BY guest_id) as stat3 ON stat3.guest_id=user_id";
 	String USER_PAGE_ADD_STATS_INTO = ", :{page.NbOrganizedEventWaiting}, :{page.NbInvitedEventWaiting}";
 
 	String USER_STATS_NB_PROCESSED_EVENT = "select count(event_id) FROM EVENT WHERE organizer=:userId OR guest_id=:userId INTO :{nbProcessedEvent}";

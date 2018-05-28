@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
 import org.zeroclick.comon.text.TextsHelper;
-import org.zeroclick.comon.user.AppUserHelper;
 import org.zeroclick.meeting.client.ClientSession;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
 import org.zeroclick.meeting.client.NotificationHelper;
@@ -38,13 +37,11 @@ import org.zeroclick.meeting.client.event.RejectEventForm.MainBox.VenueField;
 import org.zeroclick.meeting.service.CalendarService;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.event.EventFormData;
+import org.zeroclick.meeting.shared.event.EventStateCodeType;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.RejectEventFormData;
-import org.zeroclick.meeting.shared.event.StateCodeType;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
-import org.zeroclick.meeting.shared.event.involevment.EventStateCodeType;
 import org.zeroclick.meeting.shared.event.involevment.IInvolvementService;
-import org.zeroclick.meeting.shared.event.involevment.InvolvementFormData;
 
 @FormData(value = RejectEventFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class RejectEventForm extends AbstractForm {
@@ -53,6 +50,8 @@ public class RejectEventForm extends AbstractForm {
 
 	private static final int ACTION_REJECT = 0;
 	private static final int ACTION_CANCEL = 1;
+
+	protected Long forUserId;
 
 	private Integer subAction;
 
@@ -66,6 +65,14 @@ public class RejectEventForm extends AbstractForm {
 	private ZonedDateTime end;
 
 	private Boolean askByHost;
+
+	public Long getForUserId() {
+		return this.forUserId;
+	}
+
+	public void setForUserId(final Long forUserId) {
+		this.forUserId = forUserId;
+	}
 
 	@FormData
 	public Long getEventId() {
@@ -430,9 +437,8 @@ public class RejectEventForm extends AbstractForm {
 			Jobs.schedule(new IRunnable() {
 				@Override
 				public void run() {
-					final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
 					final IInvolvementService involvementService = BEANS.get(IInvolvementService.class);
-					final IEventService service = BEANS.get(IEventService.class);
+					final IEventService eventService = BEANS.get(IEventService.class);
 
 					final RejectEventFormData formData = new RejectEventFormData();
 					RejectEventForm.this.exportFormData(formData);
@@ -441,20 +447,14 @@ public class RejectEventForm extends AbstractForm {
 					calendarService.deleteEvent(RejectEventForm.this.getEventId());
 
 					// update user Involvement
-					InvolvementFormData involvementformData = new InvolvementFormData();
-					involvementformData.getEventId().setValue(RejectEventForm.this.eventId);
-					involvementformData.getUserId().setValue(appUserHelper.getCurrentUserId());
-					involvementformData = involvementService.load(involvementformData);
+					involvementService.updateStatusRefused(RejectEventForm.this.eventId,
+							RejectEventForm.this.getForUserId(), RejectEventForm.this.getReasonField().getValue());
 
-					involvementformData.getState().setValue(EventStateCodeType.RefusedCode.ID);
-					involvementformData.getReason().setValue(RejectEventForm.this.getReasonField().getValue());
-					involvementformData = involvementService.store(involvementformData);
+					formData.setState(EventStateCodeType.CanceledCode.ID);
+					final EventFormData fullEventFormData = eventService
+							.storeNewState(RejectEventForm.this.getEventId(), EventStateCodeType.CanceledCode.ID);
 
-					formData.setState(StateCodeType.RefusededCode.ID);
-					final EventFormData fullEventFormData = service.storeNewState(formData,
-							appUserHelper.getCurrentUserId());
-
-					RejectEventForm.this.sendEmail(fullEventFormData);
+					// RejectEventForm.this.sendEmail(fullEventFormData);
 				}
 			}, Jobs.newInput().withName("Refusing event {}", RejectEventForm.this.getEventId())
 					.withRunContext(ClientRunContexts.copyCurrent()).withThreadName("Refusing event"));

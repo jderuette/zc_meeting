@@ -26,19 +26,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.scout.rt.client.ui.messagebox.IMessageBox;
+import org.eclipse.scout.rt.client.ui.messagebox.MessageBoxes;
 import org.eclipse.scout.rt.platform.ApplicationScoped;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.exception.VetoException;
+import org.eclipse.scout.rt.platform.status.IStatus;
+import org.eclipse.scout.rt.shared.TEXTS;
+import org.eclipse.scout.rt.shared.services.common.code.ICode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroclick.comon.date.DateHelper;
 import org.zeroclick.comon.user.AppUserHelper;
 import org.zeroclick.configuration.shared.api.ApiTablePageData;
 import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
+import org.zeroclick.configuration.shared.duration.DurationCodeType;
+import org.zeroclick.configuration.shared.slot.SlotCodeType;
 import org.zeroclick.meeting.client.GlobalConfig.ApplicationEnvProperty;
 import org.zeroclick.meeting.client.api.ApiHelper;
 import org.zeroclick.meeting.client.api.ApiHelperFactory;
 import org.zeroclick.meeting.client.common.DayDuration;
 import org.zeroclick.meeting.client.common.SlotHelper;
+import org.zeroclick.meeting.client.event.DateReturn;
+import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
@@ -174,9 +184,264 @@ public class CalendarService {
 				}
 			}
 		}
-
 		return recommendedNewDate;
+	}
 
+	public DateReturn searchNextDate(final Long eventId, final Long durationId, final Long slotId,
+			final Long organizerId, final Long currentUserId, final ZonedDateTime minimalStart,
+			final ZonedDateTime maximalStart, final ZonedDateTime newStartDate, final ZonedDateTime currentStartDate,
+			final Boolean askedByUser) {
+
+		final DurationCodeType durationCodes = BEANS.get(DurationCodeType.class);
+		final ICode<Long> duration = durationCodes.getCode(durationId);
+
+		final SlotCodeType slotCodes = BEANS.get(SlotCodeType.class);
+		final ICode<Long> slot = slotCodes.getCode(slotId);
+
+		return this.searchNextDate(eventId, duration, slot, organizerId, currentUserId, minimalStart, maximalStart,
+				newStartDate, currentStartDate, askedByUser);
+
+	}
+
+	public DateReturn searchNextDate(final Long eventId, final ICode<Long> duration, final ICode<Long> slot,
+			final Long organizerId, final Long currentUserId, final ZonedDateTime minimalStart,
+			final ZonedDateTime maximalStart, final ZonedDateTime newStartDate, final ZonedDateTime currentStartDate,
+			final Boolean askedByUser) {
+
+		final CallTrackerHelper callTrackerHelper = BEANS.get(CallTrackerHelper.class);
+		final DateHelper dateHelper = BEANS.get(DateHelper.class);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Changing Next date for Event ID : " + eventId + " with start Date : " + newStartDate);
+		}
+
+		final ZonedDateTime nextStartDate = this.addReactionTime(newStartDate);
+		DateReturn newPossibleDate;
+
+		newPossibleDate = this.tryChangeDatesNext(nextStartDate, duration, slot, organizerId, currentUserId,
+				minimalStart, maximalStart, currentStartDate);
+
+		while (!newPossibleDate.isCreated()) {
+			// check if the timeSlot available in Calendars
+			// if not, try with the new available start date (in
+			// calendars)
+			if (callTrackerHelper.getEventCallTracker().canIncrementNbCall(eventId)) {
+				if (newPossibleDate.isNoAvailableDate()) {
+					return newPossibleDate;// break new Date search
+				}
+				newPossibleDate = this.tryChangeDatesNext(newPossibleDate.getStart(), duration, slot, organizerId,
+						currentUserId, minimalStart, maximalStart, currentStartDate);
+			} else {
+				if (askedByUser) {
+					final int continueSearch = MessageBoxes.createYesNo()
+							.withHeader(TEXTS.get("zc.meeting.event.maxSearchReached.title"))
+							.withBody(TEXTS.get("zc.meeting.event.maxSearchReached.message",
+									dateHelper.format(newPossibleDate.getStart())))
+							.withYesButtonText(TEXTS.get("YesButton")).withIconId(Icons.ExclamationMark)
+							.withSeverity(IStatus.INFO).show();
+					if (continueSearch == IMessageBox.YES_OPTION) {
+						callTrackerHelper.getEventCallTracker().resetNbCall(eventId);
+					} else {
+						break; // stop search
+					}
+				} else {
+					break; // stop search without prompt, because not a user
+							// action
+				}
+			}
+		}
+		callTrackerHelper.getEventCallTracker().resetNbCall(eventId);
+
+		if (newPossibleDate.isNoAvailableDate()) {
+			// reached end of available date (after maximal)
+			// and the new proposed date is after the one currently
+			// displayed, so now over date are available
+
+			newPossibleDate.setMessageKey("zc.meeting.notification.NoAvailableNextDate");
+			newPossibleDate.setIcon(Icons.ExclamationMark);
+		} else {
+			if (newPossibleDate.isCreated()) {
+				if (newPossibleDate.isLoopInDates()) {
+					newPossibleDate.setMessageKey("zc.meeting.notification.newMeetingDateFoundFromBegin");
+				} else {
+					newPossibleDate.setMessageKey("zc.meeting.notification.newMeetingDateFound");
+				}
+				newPossibleDate.setIcon(null);
+			}
+		}
+
+		return newPossibleDate;
+
+	}
+
+	/**
+	 * Try to provide new valid start/end date for user (by updating cells in
+	 * the current selected row)
+	 *
+	 * @param startDate
+	 *            the minimum start date to search a new valid date
+	 * @return a new recommend date to perform a new search, null if a valid
+	 *         date is found
+	 * @throws IOException
+	 */
+	protected DateReturn tryChangeDatesNext(ZonedDateTime startDate, final ICode<Long> duration, final ICode<Long> slot,
+			final Long organizerUserId, final Long guestUserId, final ZonedDateTime minimalStartDate,
+			final ZonedDateTime maximalStartDate, final ZonedDateTime currentStartDate) {
+		LOG.info("Checking to create an event starting at " + startDate);
+
+		final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
+
+		Boolean loopInDates = Boolean.FALSE;
+		final int selectEventDuration = duration.getValue().intValue();
+		final Long selectSlotId = slot.getId().longValue();
+
+		if (null != minimalStartDate && startDate.isBefore(minimalStartDate)) {
+			LOG.info("startDate is before the mnimal : " + minimalStartDate);
+			startDate = minimalStartDate;
+		} else if (null != maximalStartDate && startDate.isAfter(maximalStartDate)) {
+			LOG.info("startDate is after the maximal : " + maximalStartDate + " Loop back to the minimal : "
+					+ minimalStartDate);
+			loopInDates = Boolean.TRUE;
+			if (null != minimalStartDate) {
+				startDate = minimalStartDate;
+			} else {
+				startDate = appUserHelper.getUserNow(guestUserId);
+			}
+		}
+
+		final ZonedDateTime nextEndDate = startDate.plus(Duration.ofMinutes(selectEventDuration));
+
+		// Localized Start and End for organizer
+		final ZonedDateTime organizerStartDate = this.atZone(startDate, organizerUserId);
+		final ZonedDateTime organizerEndDate = this.atZone(nextEndDate, organizerUserId);
+
+		DateReturn proposedDate = null;
+		// Check guest (current connected user) slot configuration
+		if (!SlotHelper.get().isInOneOfPeriods(selectSlotId, startDate, nextEndDate, guestUserId)) {
+			proposedDate = new DateReturn(
+					SlotHelper.get().getNextValidDateTime(selectSlotId, startDate, nextEndDate, guestUserId),
+					loopInDates);
+		}
+
+		if (null == proposedDate) {
+			// check Organizer Slot configuration
+			if (!SlotHelper.get().isInOneOfPeriods(selectSlotId, organizerStartDate, organizerEndDate,
+					organizerUserId)) {
+				proposedDate = new DateReturn(this.atZone(SlotHelper.get().getNextValidDateTime(selectSlotId,
+						organizerStartDate, organizerEndDate, organizerUserId), guestUserId), loopInDates);
+			}
+		}
+
+		final CalendarService calendarService = BEANS.get(CalendarService.class);
+
+		if (null == proposedDate) {
+			// check guest (current connected user) calendars
+			final ZoneId userZoneId = appUserHelper.getUserZoneId(guestUserId);
+			final ZonedDateTime calendareRecommendedDate = calendarService.canCreateEvent(startDate, nextEndDate,
+					guestUserId, userZoneId);
+
+			// this.tryCreateEvent(startDate, nextEndDate,
+			// Duration.ofMinutes(selectEventDuration), guestUserId);
+			if (calendareRecommendedDate != null) {
+				return new DateReturn(this.atZone(this.addReactionTime(calendareRecommendedDate), guestUserId),
+						loopInDates);
+			}
+		}
+
+		if (null == proposedDate) {
+			// Check organizer calendars
+			final ZoneId userZoneId = appUserHelper.getUserZoneId(organizerUserId);
+
+			final ZonedDateTime organizerCalendareRecommendedDate = calendarService.canCreateEvent(startDate,
+					nextEndDate, organizerUserId, userZoneId);
+
+			// this.tryCreateEvent(organizerStartDate,
+			// organizerEndDate, Duration.ofMinutes(selectEventDuration),
+			// organizerUserId);
+			if (organizerCalendareRecommendedDate != null) {
+				return new DateReturn(this.addReactionTime(this.atZone(organizerCalendareRecommendedDate, guestUserId)),
+						loopInDates);
+			}
+		}
+
+		if (null != proposedDate && loopInDates
+				&& (null == currentStartDate || proposedDate.getStart().isAfter(currentStartDate))) {
+			// Loop and proposed date is after the current, so out of range,
+			// and no available date)
+			proposedDate.setNoAvailableDate(Boolean.TRUE);
+			proposedDate.setStart(currentStartDate);
+		} else if (null == proposedDate) {
+			proposedDate = new DateReturn(startDate, nextEndDate, loopInDates);
+		}
+
+		return proposedDate;
+	}
+
+	private ZonedDateTime atZone(final ZonedDateTime date, final Long userId) {
+		final DateHelper dateHelper = BEANS.get(DateHelper.class);
+		final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
+		return dateHelper.atZone(date, appUserHelper.getUserZoneId(userId));
+	}
+
+	private ZonedDateTime addReactionTime(final ZonedDateTime date) {
+		// TODO Djer13 add in (user ?) configuration
+		final Integer minReactionDelay = 10;
+		return this.addReactionTime(date, minReactionDelay);
+	}
+
+	/**
+	 * Add xx mins if the date provided is too close. Always round to next
+	 * Quarter (even if date is far enough)
+	 *
+	 * @param date
+	 * @param reactionDelayMin
+	 * @return
+	 */
+	private ZonedDateTime addReactionTime(final ZonedDateTime date, final Integer reactionDelayMin) {
+		ZonedDateTime minimalStart = ZonedDateTime.now(date.getZone()).plus(Duration.ofMinutes(reactionDelayMin));
+		minimalStart = this.roundToNextHourQuarter(minimalStart);
+		if (date.isBefore(minimalStart)) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(date + " is too close with reactionTime of " + reactionDelayMin + " mins. Using : "
+						+ minimalStart);
+			}
+			// startDate is too close
+			return minimalStart;
+		} else {
+			return this.roundToNextHourQuarter(date);
+		}
+	}
+
+	private Integer roundToNextHourQuarter(final Integer minutes) {
+		Integer newMins = minutes;
+		if (minutes % 15 != 0) {
+			final Integer nbQuarter = minutes / 15;
+			newMins = 15 * (nbQuarter + 1);
+			if (newMins >= 60) {
+				newMins = 0;
+			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(minutes + " rounded to (next quarter) : " + newMins);
+		}
+		return newMins;
+	}
+
+	private ZonedDateTime roundToNextHourQuarter(final ZonedDateTime date) {
+		final Integer currentMins = date.getMinute();
+		final Integer newMins = this.roundToNextHourQuarter(currentMins);
+		ZonedDateTime roundedDate = date;
+		if (currentMins == newMins) {
+			roundedDate = date;
+		} else {
+			if (newMins == 0) {
+				// add oneHour
+				roundedDate = date.plusHours(1);
+			}
+			roundedDate = roundedDate.withMinute(newMins).withSecond(0).withNano(0);
+		}
+
+		return roundedDate;
 	}
 
 	public void deleteEvent(final Long eventId) {

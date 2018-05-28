@@ -25,14 +25,16 @@ import org.zeroclick.meeting.server.sql.SQLs;
 import org.zeroclick.meeting.server.sql.migrate.AbstractDataPatcher;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
+import org.zeroclick.meeting.shared.event.EventStateCodeType;
 import org.zeroclick.meeting.shared.event.EventTablePageData.EventTableRowData;
 import org.zeroclick.meeting.shared.event.IEventService;
+import org.zeroclick.meeting.shared.event.RejectEventFormData;
 import org.zeroclick.meeting.shared.event.externalevent.ExternalEventFormData;
 import org.zeroclick.meeting.shared.event.externalevent.IExternalEventService;
 import org.zeroclick.meeting.shared.event.involevment.EventRoleCodeType;
-import org.zeroclick.meeting.shared.event.involevment.EventStateCodeType;
 import org.zeroclick.meeting.shared.event.involevment.IInvolvementService;
 import org.zeroclick.meeting.shared.event.involevment.InvolvementFormData;
+import org.zeroclick.meeting.shared.event.involevment.InvolvmentStateCodeType;
 
 import com.github.zafarkhaja.semver.Version;
 
@@ -137,6 +139,8 @@ public class PatchMultiInviteeMeeting extends AbstractDataPatcher {
 
 				final EventTableRowData event = (EventTableRowData) rawEvent;
 
+				String newEventState = null;
+
 				final Long eventId = event.getEventId();
 				LOG.info("Allow multiple invetee for event's migrating event : " + eventId);
 
@@ -176,7 +180,7 @@ public class PatchMultiInviteeMeeting extends AbstractDataPatcher {
 				}
 
 				this.createInvolvment(eventId, orgaUserId, EventRoleCodeType.OrganizerCode.ID,
-						EventStateCodeType.ProposedCode.ID, null, orgaExternalId, orgaExternalId);
+						InvolvmentStateCodeType.ProposedCode.ID, null, orgaExternalId, orgaExternalId);
 
 				// -- extract guest_id, event_id, state, reason ==> create
 				// Involvement Row with {inveteeExternalIdData}
@@ -190,6 +194,28 @@ public class PatchMultiInviteeMeeting extends AbstractDataPatcher {
 
 				this.createInvolvment(eventId, guestUserId, EventRoleCodeType.RequiredGuestCode.ID, state, reason,
 						guestExternalId, orgaExternalId);
+
+				// update the EVENT state based on new Values (distinct from
+				// Involvement state)
+				final String currentEventState = event.getState();
+				if (null == currentEventState) {
+					newEventState = EventStateCodeType.WaitingCode.ID;
+				} else {
+					if ("ACCEPTED".equals(currentEventState)) {
+						newEventState = EventStateCodeType.PlannedCode.ID;
+					} else if ("REFUSED".equals(currentEventState)) {
+						newEventState = EventStateCodeType.CanceledCode.ID;
+					} else {
+						// ASKED or any other values
+						newEventState = EventStateCodeType.WaitingCode.ID;
+					}
+				}
+
+				final RejectEventFormData formData = new RejectEventFormData();
+				formData.setEventId(event.getEventId());
+				formData.setState(newEventState);
+				formData.getReason().setValue(reason);
+				eventService.storeNewState(formData, event.getOrganizer());
 			}
 		}
 	}

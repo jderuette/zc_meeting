@@ -19,7 +19,7 @@ import org.zeroclick.meeting.shared.event.EventCreatedNotification;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.EventModifiedNotification;
 import org.zeroclick.meeting.shared.event.IEventService;
-import org.zeroclick.meeting.shared.event.StateCodeType;
+import org.zeroclick.meeting.shared.event.EventStateCodeType;
 
 @Data(EventAskedTablePageData.class)
 public class EventAskedTablePage extends EventTablePage {
@@ -57,14 +57,14 @@ public class EventAskedTablePage extends EventTablePage {
 	protected Boolean canHandle(final EventCreatedNotification notification) {
 		final EventFormData formData = notification.getFormData();
 		return super.getEventMessageHelper().isHeldByCurrentUser(formData)
-				&& CompareUtility.equals(StateCodeType.AskedCode.ID, formData.getState().getValue());
+				&& CompareUtility.equals(EventStateCodeType.WaitingCode.ID, formData.getState().getValue());
 	}
 
 	@Override
 	protected Boolean canHandle(final EventModifiedNotification notification) {
 		final EventFormData formData = notification.getFormData();
 		return super.getEventMessageHelper().isHeldByCurrentUser(formData)
-				&& CompareUtility.equals(StateCodeType.AskedCode.ID, formData.getState().getValue());
+				&& CompareUtility.equals(EventStateCodeType.WaitingCode.ID, formData.getState().getValue());
 	}
 
 	@Override
@@ -102,7 +102,7 @@ public class EventAskedTablePage extends EventTablePage {
 			final ITableRow modifiedRow) {
 		final String newState = formData.getState().getValue();
 
-		if (CompareUtility.equals(StateCodeType.AskedCode.ID, newState)) {
+		if (CompareUtility.equals(EventStateCodeType.WaitingCode.ID, newState)) {
 			this.getTable().refreshAutoFillDate(modifiedRow);
 		}
 	}

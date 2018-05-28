@@ -25,7 +25,7 @@ import org.zeroclick.meeting.client.event.involevment.InvolvementForm.MainBox.Ro
 import org.zeroclick.meeting.client.event.involevment.InvolvementForm.MainBox.StateField;
 import org.zeroclick.meeting.client.event.involevment.InvolvementForm.MainBox.UserIdField;
 import org.zeroclick.meeting.shared.event.involevment.EventRoleCodeType;
-import org.zeroclick.meeting.shared.event.involevment.EventStateCodeType;
+import org.zeroclick.meeting.shared.event.involevment.InvolvmentStateCodeType;
 import org.zeroclick.meeting.shared.event.involevment.IInvolvementService;
 import org.zeroclick.meeting.shared.event.involevment.InvolvementFormData;
 
@@ -147,7 +147,7 @@ public class InvolvementForm extends AbstractForm {
 
 			@Override
 			protected Class<? extends ICodeType<?, String>> getConfiguredCodeType() {
-				return EventStateCodeType.class;
+				return InvolvmentStateCodeType.class;
 			}
 		}
 

@@ -2,7 +2,6 @@ package org.zeroclick.meeting.client.event;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.Set;
@@ -16,12 +15,9 @@ import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
 import org.eclipse.scout.rt.client.ui.action.menu.TableMenuType;
 import org.eclipse.scout.rt.client.ui.basic.cell.Cell;
 import org.eclipse.scout.rt.client.ui.basic.table.ITableRow;
-import org.eclipse.scout.rt.client.ui.messagebox.IMessageBox;
-import org.eclipse.scout.rt.client.ui.messagebox.MessageBoxes;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.exception.VetoException;
-import org.eclipse.scout.rt.platform.status.IStatus;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.platform.util.CompareUtility;
 import org.eclipse.scout.rt.platform.util.concurrent.IRunnable;
@@ -33,11 +29,9 @@ import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
 import org.zeroclick.comon.text.TextsHelper;
 import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
-import org.zeroclick.configuration.shared.duration.DurationCodeType;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.meeting.client.NotificationHelper;
-import org.zeroclick.meeting.client.common.SlotHelper;
 import org.zeroclick.meeting.client.event.EventTablePage.Table;
 import org.zeroclick.meeting.service.CalendarService;
 import org.zeroclick.meeting.service.CalendarService.EventIdentification;
@@ -51,14 +45,14 @@ import org.zeroclick.meeting.shared.calendar.IApiService;
 import org.zeroclick.meeting.shared.event.EventCreatedNotification;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.EventModifiedNotification;
+import org.zeroclick.meeting.shared.event.EventStateCodeType;
 import org.zeroclick.meeting.shared.event.EventTablePageData;
 import org.zeroclick.meeting.shared.event.IEventService;
-import org.zeroclick.meeting.shared.event.StateCodeType;
 import org.zeroclick.meeting.shared.event.externalevent.ExternalEventFormData;
 import org.zeroclick.meeting.shared.event.externalevent.IExternalEventService;
-import org.zeroclick.meeting.shared.event.involevment.EventStateCodeType;
 import org.zeroclick.meeting.shared.event.involevment.IInvolvementService;
 import org.zeroclick.meeting.shared.event.involevment.InvolvementFormData;
+import org.zeroclick.meeting.shared.event.involevment.InvolvmentStateCodeType;
 import org.zeroclick.ui.action.menu.AbstractValidateMenu;
 
 @Data(EventTablePageData.class)
@@ -128,14 +122,14 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 	protected Boolean canHandle(final EventCreatedNotification notification) {
 		final EventFormData formData = notification.getFormData();
 		return !this.getEventMessageHelper().isHeldByCurrentUser(formData)
-				&& CompareUtility.equals(StateCodeType.AskedCode.ID, formData.getState().getValue());
+				&& CompareUtility.equals(EventStateCodeType.WaitingCode.ID, formData.getState().getValue());
 	}
 
 	@Override
 	protected Boolean canHandle(final EventModifiedNotification notification) {
 		final EventFormData formData = notification.getFormData();
 		return !this.getEventMessageHelper().isHeldByCurrentUser(formData)
-				&& CompareUtility.equals(StateCodeType.AskedCode.ID, formData.getState().getValue());
+				&& CompareUtility.equals(EventStateCodeType.WaitingCode.ID, formData.getState().getValue());
 	}
 
 	@Override
@@ -273,93 +267,6 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 			this.changeDatesNext(Table.this.getSelectedRow(), Boolean.TRUE);
 		}
 
-		class DateReturn {
-			private ZonedDateTime start;
-			private final ZonedDateTime end;
-			private final Boolean created;
-			private final Boolean loopInDates;
-			private Boolean noAvailableDate;
-
-			public DateReturn(final ZonedDateTime recommandedStart) {
-				this.start = recommandedStart;
-				this.end = null;
-				this.created = Boolean.FALSE;
-				this.loopInDates = Boolean.FALSE;
-				this.noAvailableDate = Boolean.FALSE;
-			}
-
-			public DateReturn(final ZonedDateTime recommandedStart, final Boolean loopInDates) {
-				this.start = recommandedStart;
-				this.end = null;
-				this.created = Boolean.FALSE;
-				this.loopInDates = loopInDates;
-				this.noAvailableDate = Boolean.FALSE;
-			}
-
-			public DateReturn(final ZonedDateTime recommandedStart, final Boolean loopInDates,
-					final Boolean noAvailableDate) {
-				this.start = recommandedStart;
-				this.end = null;
-				this.created = Boolean.FALSE;
-				this.loopInDates = loopInDates;
-				this.noAvailableDate = noAvailableDate;
-			}
-
-			public DateReturn(final ZonedDateTime start, final ZonedDateTime calculatedEndDate) {
-				this.start = start;
-				this.end = calculatedEndDate;
-				this.created = Boolean.TRUE;
-				this.loopInDates = Boolean.FALSE;
-				this.noAvailableDate = Boolean.FALSE;
-			}
-
-			public DateReturn(final ZonedDateTime start, final ZonedDateTime calculatedEndDate,
-					final Boolean loopInDates) {
-				this.start = start;
-				this.end = calculatedEndDate;
-				this.created = Boolean.TRUE;
-				this.loopInDates = loopInDates;
-				this.noAvailableDate = Boolean.FALSE;
-			}
-
-			public DateReturn(final ZonedDateTime start, final ZonedDateTime calculatedEndDate,
-					final Boolean loopInDates, final Boolean noAvailableDate) {
-				this.start = start;
-				this.end = calculatedEndDate;
-				this.created = Boolean.TRUE;
-				this.loopInDates = loopInDates;
-				this.noAvailableDate = noAvailableDate;
-			}
-
-			public ZonedDateTime getStart() {
-				return this.start;
-			}
-
-			public void setStart(final ZonedDateTime start) {
-				this.start = start;
-			}
-
-			public ZonedDateTime getEnd() {
-				return this.end;
-			}
-
-			public Boolean isCreated() {
-				return this.created;
-			}
-
-			public Boolean isLoopInDates() {
-				return this.loopInDates;
-			}
-
-			public Boolean isNoAvailableDate() {
-				return this.noAvailableDate;
-			}
-
-			public void setNoAvailableDate(final Boolean noAvailableDate) {
-				this.noAvailableDate = noAvailableDate;
-			}
-		}
-
 		protected void changeDatesNext(final ITableRow row, final Boolean askedByUser) throws IOException {
 			final ZonedDateTime startDate;
 
@@ -380,262 +287,47 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 		protected void changeDatesNext(final ITableRow row, final ZonedDateTime newStartDate, final Boolean askedByUser)
 				throws IOException {
-			final Long eventId = this.getEventIdColumn().getValue(row.getRowIndex());
-			Boolean hasLooped = Boolean.FALSE;
-
 			final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Changing Next date for Event ID : " + eventId + " with start Date : " + newStartDate);
-			}
+			final CalendarService calendarService = BEANS.get(CalendarService.class);
 
-			final ZonedDateTime nextStartDate = this.addReactionTime(newStartDate);
-			DateReturn newPossibleDate;
+			final int rowIndex = row.getRowIndex();
 
-			newPossibleDate = this.tryChangeDatesNext(nextStartDate, row);
+			final Long eventId = this.getEventIdColumn().getValue(rowIndex);
 
-			while (!newPossibleDate.isCreated()) {
-				// check if the timeSlot available in Calendars
-				// if not, try with the new available start date (in
-				// calendars)
-				if (EventTablePage.this.callTracker.canIncrementNbCall(eventId)) {
-					if (newPossibleDate.isNoAvailableDate()) {
-						// reached end of available date (after maximal)
-						// and the new proposed date is after the one currently
-						// displayed, so now over date are available
-
-						notificationHelper.addErrorNotification("zc.meeting.notification.NoAvailableNextDate");
-						row.setIconId(Icons.ExclamationMark);
-						return;// break new Date search
-					}
-					newPossibleDate = this.tryChangeDatesNext(newPossibleDate.getStart(), row);
-					if (!hasLooped && newPossibleDate.isLoopInDates()) {
-						hasLooped = Boolean.TRUE;
-					}
-				} else {
-					if (askedByUser) {
-						final int continueSearch = MessageBoxes.createYesNo()
-								.withHeader(TEXTS.get("zc.meeting.event.maxSearchReached.title"))
-								.withBody(TEXTS.get("zc.meeting.event.maxSearchReached.message",
-										EventTablePage.this.getDateHelper().format(newPossibleDate.getStart())))
-								.withYesButtonText(TEXTS.get("YesButton")).withIconId(Icons.ExclamationMark)
-								.withSeverity(IStatus.INFO).show();
-						if (continueSearch == IMessageBox.YES_OPTION) {
-							EventTablePage.this.callTracker.resetNbCall(eventId);
-						} else {
-							break; // stop search
-						}
-					} else {
-						// throw new
-						// VetoException(TEXTS.get("zc.meeting.googleTooManyCall"));
-						break; // stop search without prompt, because not a user
-								// action
-					}
-				}
-			}
-			EventTablePage.this.callTracker.resetNbCall(eventId);
-
-			if (newPossibleDate.isCreated()) {
-				// update start and end date
-				row.setCellValue(this.getStartDateColumn().getColumnIndex(),
-						EventTablePage.this.getDateHelper().toDate(newPossibleDate.getStart()));
-				this.getStartDateColumn().updateDisplayTexts(CollectionUtility.arrayList(row));
-				row.setCellValue(this.getEndDateColumn().getColumnIndex(),
-						EventTablePage.this.getDateHelper().toDate(newPossibleDate.getEnd()));
-				this.getEndDateColumn().updateDisplayTexts(CollectionUtility.arrayList(row));
-
-				if (hasLooped) {
-					notificationHelper.addWarningNotification("zc.meeting.notification.newMeetingDateFoundFromBegin");
-				} else {
-					notificationHelper.addProccessedNotification("zc.meeting.notification.newMeetingDateFound");
-				}
-				row.setIconId(null);
-			}
-		}
-
-		private DateReturn tryChangeDatesNext(final ZonedDateTime startDate, final ITableRow row) throws IOException {
-			final Integer rowIndex = row.getRowIndex();
-			final DurationCodeType durationCodes = BEANS.get(DurationCodeType.class);
-			final Integer duration = durationCodes.getCode(this.getDurationColumn().getValue(rowIndex)).getValue()
-					.intValue();
+			final Long durationId = this.getDurationColumn().getValue(rowIndex);
+			final Long slotId = this.getSlotColumn().getValue(rowIndex);
+			final Long organizerId = this.getOrganizerColumn().getValue(rowIndex);
 
 			final IUserService userService = BEANS.get(IUserService.class);
 			final UserFormData userDetails = userService.getCurrentUserDetails();
 			final Long currentUserId = userDetails.getUserId().getValue();
 
-			final DateReturn newPossibleDate = this.tryChangeDatesNext(startDate, duration,
-					this.getSlotColumn().getValue(rowIndex), this.getOrganizerColumn().getValue(rowIndex),
-					currentUserId, this.getMinimalStartDateColumn().getZonedValue(rowIndex),
-					this.getMaximalStartDateColumn().getZonedValue(rowIndex),
-					this.getStartDateColumn().getZonedValue(rowIndex));
+			final ZonedDateTime minimalStart = this.getMinimalStartDateColumn().getZonedValue(rowIndex);
+			final ZonedDateTime maximalStart = this.getMaximalStartDateColumn().getZonedValue(rowIndex);
 
-			return newPossibleDate;
-		}
+			final ZonedDateTime currentStartDate = this.getStartDateColumn().getZonedValue(rowIndex);
 
-		private Integer getReactionDelayMin() {
-			// TODO Djer13 allow configuration of reactTimeDuration
-			final Integer reactionDelayMin = 10;
-			return reactionDelayMin;
-		}
+			final DateReturn newPossibleDate = calendarService.searchNextDate(eventId, durationId, slotId, organizerId,
+					currentUserId, minimalStart, maximalStart, newStartDate, currentStartDate, askedByUser);
 
-		protected ZonedDateTime addReactionTime(final ZonedDateTime date) {
-			return this.addReactionTime(date, this.getReactionDelayMin());
-		}
-
-		/**
-		 * Add xx mins if the date provided is too close. Always round to next
-		 * Quarter (even if date is far enough)
-		 *
-		 * @param date
-		 * @param reactionDelayMin
-		 * @return
-		 */
-		private ZonedDateTime addReactionTime(final ZonedDateTime date, final Integer reactionDelayMin) {
-			ZonedDateTime minimalStart = ZonedDateTime.now(date.getZone()).plus(Duration.ofMinutes(reactionDelayMin));
-			minimalStart = this.roundToNextHourQuarter(minimalStart);
-			if (date.isBefore(minimalStart)) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug(date + " is too close with reactionTime of " + reactionDelayMin + " mins. Using : "
-							+ minimalStart);
-				}
-				// startDate is too close
-				return minimalStart;
+			if (newPossibleDate.isNoAvailableDate()) {
+				return;// break new Date search
 			} else {
-				return this.roundToNextHourQuarter(date);
-			}
-		}
-
-		private Integer roundToNextHourQuarter(final Integer minutes) {
-			Integer newMins = minutes;
-			if (minutes % 15 != 0) {
-				final Integer nbQuarter = minutes / 15;
-				newMins = 15 * (nbQuarter + 1);
-				if (newMins >= 60) {
-					newMins = 0;
-				}
-			}
-			if (LOG.isDebugEnabled()) {
-				LOG.debug(minutes + " rounded to (next quarter) : " + newMins);
-			}
-			return newMins;
-		}
-
-		private ZonedDateTime roundToNextHourQuarter(final ZonedDateTime date) {
-			final Integer currentMins = date.getMinute();
-			final Integer newMins = this.roundToNextHourQuarter(currentMins);
-			ZonedDateTime roundedDate = date;
-			if (currentMins == newMins) {
-				roundedDate = date;
-			} else {
-				if (newMins == 0) {
-					// add oneHour
-					roundedDate = date.plusHours(1);
-				}
-				roundedDate = roundedDate.withMinute(newMins).withSecond(0).withNano(0);
-			}
-
-			return roundedDate;
-		}
-
-		/**
-		 * Try to provide new valid start/end date for user (by updating cells
-		 * in the current selected row)
-		 *
-		 * @param startDate
-		 *            the minimum start date to search a new valid date
-		 * @return a new recommend date to perform a new search, null if a valid
-		 *         date is found
-		 * @throws IOException
-		 */
-		protected DateReturn tryChangeDatesNext(ZonedDateTime startDate, final Integer selectEventDuration,
-				final Long selectSlotId, final Long organizerUserId, final Long guestUserId,
-				final ZonedDateTime minimalStartDate, final ZonedDateTime maximalStartDate,
-				final ZonedDateTime currentStartDate) throws IOException {
-			LOG.info("Checking to create an event starting at " + startDate);
-
-			Boolean loopInDates = Boolean.FALSE;
-
-			if (null != minimalStartDate && startDate.isBefore(minimalStartDate)) {
-				LOG.info("startDate is before the mnimal : " + minimalStartDate);
-				startDate = minimalStartDate;
-			} else if (null != maximalStartDate && startDate.isAfter(maximalStartDate)) {
-				LOG.info("startDate is after the maximal : " + maximalStartDate + " Loop back to the minimal : "
-						+ minimalStartDate);
-				loopInDates = Boolean.TRUE;
-				startDate = minimalStartDate;
-			}
-
-			final ZonedDateTime nextEndDate = startDate.plus(Duration.ofMinutes(selectEventDuration));
-
-			// Localized Start and End for organizer
-			final ZonedDateTime organizerStartDate = this.atZone(startDate, organizerUserId);
-			final ZonedDateTime organizerEndDate = this.atZone(nextEndDate, organizerUserId);
-
-			DateReturn proposedDate = null;
-			// Check guest (current connected user) slot configuration
-			if (!SlotHelper.get().isInOneOfPeriods(selectSlotId, startDate, nextEndDate, guestUserId)) {
-				proposedDate = new DateReturn(
-						SlotHelper.get().getNextValidDateTime(selectSlotId, startDate, nextEndDate, guestUserId),
-						loopInDates);
-			}
-
-			if (null == proposedDate) {
-				// check Organizer Slot configuration
-				if (!SlotHelper.get().isInOneOfPeriods(selectSlotId, organizerStartDate, organizerEndDate,
-						organizerUserId)) {
-					proposedDate = new DateReturn(this.atZone(SlotHelper.get().getNextValidDateTime(selectSlotId,
-							organizerStartDate, organizerEndDate, organizerUserId), guestUserId), loopInDates);
+				if (newPossibleDate.isCreated()) {
+					// update start and end date
+					row.setCellValue(this.getStartDateColumn().getColumnIndex(),
+							EventTablePage.this.getDateHelper().toDate(newPossibleDate.getStart()));
+					this.getStartDateColumn().updateDisplayTexts(CollectionUtility.arrayList(row));
+					row.setCellValue(this.getEndDateColumn().getColumnIndex(),
+							EventTablePage.this.getDateHelper().toDate(newPossibleDate.getEnd()));
+					this.getEndDateColumn().updateDisplayTexts(CollectionUtility.arrayList(row));
 				}
 			}
 
-			final CalendarService calendarService = BEANS.get(CalendarService.class);
-
-			if (null == proposedDate) {
-				// check guest (current connected user) calendars
-				final ZoneId userZoneId = EventTablePage.this.getAppUserHelper().getUserZoneId(guestUserId);
-				final ZonedDateTime calendareRecommendedDate = calendarService.canCreateEvent(startDate, nextEndDate,
-						guestUserId, userZoneId);
-
-				// this.tryCreateEvent(startDate, nextEndDate,
-				// Duration.ofMinutes(selectEventDuration), guestUserId);
-				if (calendareRecommendedDate != null) {
-					return new DateReturn(this.atZone(this.addReactionTime(calendareRecommendedDate), guestUserId),
-							loopInDates);
-				}
+			row.setIconId(newPossibleDate.getIcon());
+			if (null != newPossibleDate.getMessageKey()) {
+				notificationHelper.addProccessedNotification(newPossibleDate.getMessageKey());
 			}
-
-			if (null == proposedDate) {
-				// Check organizer calendars
-				final ZoneId userZoneId = EventTablePage.this.getAppUserHelper().getUserZoneId(organizerUserId);
-
-				final ZonedDateTime organizerCalendareRecommendedDate = calendarService.canCreateEvent(startDate,
-						nextEndDate, organizerUserId, userZoneId);
-
-				// this.tryCreateEvent(organizerStartDate,
-				// organizerEndDate, Duration.ofMinutes(selectEventDuration),
-				// organizerUserId);
-				if (organizerCalendareRecommendedDate != null) {
-					return new DateReturn(
-							this.addReactionTime(this.atZone(organizerCalendareRecommendedDate, guestUserId)),
-							loopInDates);
-				}
-			}
-
-			if (null != proposedDate && loopInDates
-					&& (null == currentStartDate || proposedDate.getStart().isAfter(currentStartDate))) {
-				// Loop and proposed date is after the current, so out of range,
-				// and no available date)
-				proposedDate.setNoAvailableDate(Boolean.TRUE);
-				proposedDate.setStart(currentStartDate);
-			} else if (null == proposedDate) {
-				proposedDate = new DateReturn(startDate, nextEndDate, loopInDates);
-			}
-
-			return proposedDate;
-		}
-
-		private ZonedDateTime atZone(final ZonedDateTime date, final Long userId) {
-			return EventTablePage.this.getDateHelper().atZone(date,
-					EventTablePage.this.getAppUserHelper().getUserZoneId(userId));
 		}
 
 		@Order(2000)
@@ -674,7 +366,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			private Boolean isWorkflowVisible(final String currentState) {
 				Boolean isVisible = Boolean.FALSE;
-				if (CompareUtility.equals(StateCodeType.AskedCode.ID, currentState)) {
+				if (CompareUtility.equals(EventStateCodeType.WaitingCode.ID, currentState)) {
 					isVisible = Boolean.TRUE;
 				}
 				return isVisible;
@@ -760,7 +452,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 							.getUserCreateEventCalendar(eventHeldBy);
 
 					// Table.this.getStateColumn().setValue(Table.this.getSelectedRow(),
-					// StateCodeType.AcceptedCode.ID);
+					// EventStateCodeType.PlannedCode.ID);
 
 					if (null == eventHeldBy) {
 						eventHeldBy = userService.getUserIdByEmail(eventHeldEmail);
@@ -792,7 +484,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 						orgaInvolvementformData.getUserId().setValue(eventHeldBy);
 						orgaInvolvementformData = involvementService.load(orgaInvolvementformData);
 
-						orgaInvolvementformData.getState().setValue(EventStateCodeType.AcceptedCode.ID);
+						orgaInvolvementformData.getState().setValue(InvolvmentStateCodeType.AcceptedCode.ID);
 						orgaInvolvementformData.getExternalEventId()
 								.setValue(orgaExternalEventformData.getExternalId().getValue());
 						orgaInvolvementformData = involvementService.store(orgaInvolvementformData);
@@ -837,7 +529,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 							guestInvolvementformData.getUserId().setValue(eventHeldBy);
 							guestInvolvementformData = involvementService.load(guestInvolvementformData);
 
-							guestInvolvementformData.getState().setValue(EventStateCodeType.AcceptedCode.ID);
+							guestInvolvementformData.getState().setValue(InvolvmentStateCodeType.AcceptedCode.ID);
 							guestInvolvementformData.getExternalEventId()
 									.setValue(guestExternalEventformData.getExternalId().getValue());
 							involvementService.store(guestInvolvementformData);
@@ -892,7 +584,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 							guestInvolvementformData.getUserId().setValue(eventGuestId);
 							guestInvolvementformData = involvementService.load(guestInvolvementformData);
 
-							guestInvolvementformData.getState().setValue(EventStateCodeType.AcceptedCode.ID);
+							guestInvolvementformData.getState().setValue(InvolvmentStateCodeType.AcceptedCode.ID);
 							guestInvolvementformData.getExternalEventId()
 									.setValue(guestExternalEventformData.getExternalId().getValue());
 							involvementService.store(guestInvolvementformData);
@@ -974,7 +666,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			private Boolean isWorkflowVisible(final String currentState) {
 				Boolean isVisible = Boolean.FALSE;
-				if (CompareUtility.equals(StateCodeType.AskedCode.ID, currentState)) {
+				if (CompareUtility.equals(EventStateCodeType.WaitingCode.ID, currentState)) {
 					isVisible = Boolean.TRUE;
 				}
 				return isVisible;
@@ -1037,7 +729,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			private Boolean isWorkflowVisible(final String currentState) {
 				Boolean isVisible = Boolean.FALSE;
-				if (CompareUtility.equals(StateCodeType.AskedCode.ID, currentState)) {
+				if (CompareUtility.equals(EventStateCodeType.WaitingCode.ID, currentState)) {
 					isVisible = Boolean.TRUE;
 				}
 				return isVisible;
@@ -1082,7 +774,7 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 				private Boolean isWorkflowVisible(final String currentState) {
 					Boolean isVisible = Boolean.FALSE;
-					if (CompareUtility.equals(StateCodeType.AskedCode.ID, currentState)) {
+					if (CompareUtility.equals(EventStateCodeType.WaitingCode.ID, currentState)) {
 						isVisible = Boolean.TRUE;
 					}
 					return isVisible;

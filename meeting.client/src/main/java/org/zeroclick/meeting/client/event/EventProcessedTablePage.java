@@ -11,7 +11,7 @@ import org.zeroclick.meeting.shared.event.EventCreatedNotification;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.EventModifiedNotification;
 import org.zeroclick.meeting.shared.event.IEventService;
-import org.zeroclick.meeting.shared.event.StateCodeType;
+import org.zeroclick.meeting.shared.event.EventStateCodeType;
 import org.zeroclick.meeting.shared.eventb.EventsTablePageData;
 
 @Data(EventsTablePageData.class)
@@ -40,8 +40,8 @@ public class EventProcessedTablePage extends AbstractEventsTablePage<Table> {
 	@Override
 	protected Boolean canHandle(final EventModifiedNotification notification) {
 		final EventFormData formData = notification.getFormData();
-		return CompareUtility.isOneOf(formData.getState().getValue(), StateCodeType.AcceptedCode.ID,
-				StateCodeType.RefusededCode.ID);
+		return CompareUtility.isOneOf(formData.getState().getValue(), EventStateCodeType.PlannedCode.ID,
+				EventStateCodeType.CanceledCode.ID);
 	}
 
 	public class Table extends AbstractEventsTablePage<Table>.Table {

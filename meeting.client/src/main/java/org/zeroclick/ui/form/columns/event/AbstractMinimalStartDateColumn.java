@@ -30,12 +30,12 @@ public abstract class AbstractMinimalStartDateColumn extends AbstractZonedDateCo
 
 	@Override
 	protected boolean getConfiguredVisible() {
-		return Boolean.FALSE;
+		return false;
 	}
 
 	@Override
 	protected boolean getConfiguredHasTime() {
-		return Boolean.TRUE;
+		return true;
 	}
 
 	@Override

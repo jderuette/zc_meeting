@@ -8,7 +8,7 @@ import org.zeroclick.meeting.shared.Icons;
 
 @IgnoreBean
 @SuppressWarnings("PMD.ShortVariable")
-public class StateCodeType extends AbstractCodeType<Long, String> {
+public class EventStateCodeType extends AbstractCodeType<Long, String> {
 
 	private static final long serialVersionUID = 1L;
 	public static final long ID = 10000L;
@@ -20,18 +20,18 @@ public class StateCodeType extends AbstractCodeType<Long, String> {
 
 	@Override
 	protected String getConfiguredText() {
-		return TEXTS.get("zc.meeting.state");
+		return TEXTS.get("zc.meeting.event.state");
 	}
 
-	public class AskedCode extends AbstractCode<String> {
+	public class WaitingCode extends AbstractCode<String> {
 
 		/** serialVersionUID */
 		private static final long serialVersionUID = 7182523415617846648L;
-		public static final String ID = "ASKED";
+		public static final String ID = "WAITING";
 
 		@Override
 		protected java.lang.String getConfiguredText() {
-			return TEXTS.get("zc.meeting.state.asked");
+			return TEXTS.get("zc.meeting.event.state.waiting");
 		}
 
 		@Override
@@ -45,15 +45,15 @@ public class StateCodeType extends AbstractCodeType<Long, String> {
 		}
 	}
 
-	public class AcceptedCode extends AbstractCode<String> {
+	public class PlannedCode extends AbstractCode<String> {
 
 		/** serialVersionUID */
 		private static final long serialVersionUID = -3203867626399103671L;
-		public static final String ID = "ACCEPTED";
+		public static final String ID = "PLANNED";
 
 		@Override
 		protected java.lang.String getConfiguredText() {
-			return TEXTS.get("zc.meeting.state.accepted");
+			return TEXTS.get("zc.meeting.event.state.planned");
 		}
 
 		@Override
@@ -72,11 +72,11 @@ public class StateCodeType extends AbstractCodeType<Long, String> {
 		}
 	}
 
-	public class RefusededCode extends AbstractCode<String> {
+	public class CanceledCode extends AbstractCode<String> {
 
 		/** serialVersionUID */
 		private static final long serialVersionUID = -1974787711008790961L;
-		public static final String ID = "REFUSED";
+		public static final String ID = "CANCELED";
 
 		@Override
 		protected java.lang.String getConfiguredText() {

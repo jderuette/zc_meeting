@@ -86,14 +86,16 @@ import org.zeroclick.meeting.client.event.EventForm.MainBox.StateField;
 import org.zeroclick.meeting.client.event.EventForm.MainBox.VenueField;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.event.EventFormData;
+import org.zeroclick.meeting.shared.event.EventStateCodeType;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.KnowEmailLookupCall;
-import org.zeroclick.meeting.shared.event.StateCodeType;
 import org.zeroclick.meeting.shared.event.UpdateEventPermission;
 import org.zeroclick.meeting.shared.event.involevment.EventRoleCodeType;
 import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
 import org.zeroclick.ui.action.menu.AbstractAddMenu;
 import org.zeroclick.ui.form.fields.button.moreoptions.AbstractMoreOptionButton;
+import org.zeroclick.ui.form.fields.event.AbstractMaximalStartDateField;
+import org.zeroclick.ui.form.fields.event.AbstractMinimalStartDateField;
 
 @FormData(value = EventFormData.class, sdkCommand = FormData.SdkCommand.CREATE)
 public class EventForm extends AbstractForm {
@@ -946,21 +948,15 @@ public class EventForm extends AbstractForm {
 													DurationCodeType.getText(durationinMinutes)),
 											Icons.ExclamationMark, IFieldStatus.ERROR));
 						}
-
 					}
 				}
 			}
 
 			@Order(3000)
-			public class MinimalStartDateField extends AbstractDateField {
+			public class MinimalStartDateField extends AbstractMinimalStartDateField {
 				@Override
-				protected String getConfiguredLabel() {
-					return TEXTS.get("zc.meeting.minimalStartDate");
-				}
-
-				@Override
-				protected boolean getConfiguredHasTime() {
-					return Boolean.TRUE;
+				protected AbstractMaximalStartDateField getConfiguredMaximalStartDateField() {
+					return EventForm.this.getMaximalStartDateField();
 				}
 
 				@Override
@@ -969,83 +965,30 @@ public class EventForm extends AbstractForm {
 				}
 
 				@Override
-				protected Date getConfiguredAutoDate() {
-					final Date now = new Date();
-					now.setHours(0);
-					now.setMinutes(0);
-					now.setSeconds(0);
-					return now;
-				}
-
-				protected void validateCurrentValue() {
-					this.validateValue(this.getValue());
-				}
-
-				private void validateValue(final Date rawValue) {
-					if (null != rawValue && null != EventForm.this.getMaximalStartDateField().getValue()
-							&& rawValue.after(EventForm.this.getMaximalStartDateField().getValue())) {
-						throw new VetoException(TEXTS.get("zc.meeting.minimalStartDate.afterMaximalDate"));
+				protected void validateWithOtherFields(final Date rawValue) {
+					if (null != this.getMaximalStartDateField()) {
+						PeriodeBox.this.checkAvailableDaysInSlot(rawValue, this.getMaximalStartDateField().getValue());
 					}
-					this.clearErrorStatus();
-				}
-
-				@Override
-				protected Date execValidateValue(final Date rawValue) {
-					this.validateValue(rawValue);
-					PeriodeBox.this.checkAvailableDaysInSlot(rawValue,
-							EventForm.this.getMaximalStartDateField().getValue());
-					EventForm.this.getMaximalStartDateField().validateCurrentValue();
-					return super.execValidateValue(rawValue);
 				}
 			}
 
 			@Order(4000)
-			public class MaximalStartDateField extends AbstractDateField {
-
+			public class MaximalStartDateField extends AbstractMaximalStartDateField {
 				@Override
-				protected String getConfiguredLabel() {
-					return TEXTS.get("zc.meeting.maximalStartDate");
-				}
-
-				@Override
-				protected boolean getConfiguredHasTime() {
-					return Boolean.TRUE;
-				}
-
-				@Override
-				protected Date getConfiguredAutoDate() {
-					final Date now = new Date();
-					now.setHours(23);
-					now.setMinutes(59);
-					now.setSeconds(59);
-					return now;
-				}
-
-				protected void validateCurrentValue() {
-					this.validateValue(this.getValue());
-				}
-
-				private void validateValue(final Date rawValue) {
-					if (null != rawValue && null != EventForm.this.getMinimalStartDateField().getValue()
-							&& rawValue.before(EventForm.this.getMinimalStartDateField().getValue())) {
-						throw new VetoException(TEXTS.get("zc.meeting.maximalStartDate.afterMinimalDate"));
-					}
-					this.clearErrorStatus();
-				}
-
-				@Override
-				protected Date execValidateValue(final Date rawValue) {
-
-					this.validateValue(rawValue);
-					PeriodeBox.this.checkAvailableDaysInSlot(EventForm.this.getMinimalStartDateField().getValue(),
-							rawValue);
-					EventForm.this.getMinimalStartDateField().validateCurrentValue();
-					return super.execValidateValue(rawValue);
+				protected AbstractMinimalStartDateField getConfiguredMinimalStartDateField() {
+					return EventForm.this.getMinimalStartDateField();
 				}
 
 				@Override
 				protected boolean getConfiguredVisible() {
 					return Boolean.FALSE;
+				}
+
+				@Override
+				protected void validateWithOtherFields(final Date rawValue) {
+					if (null != this.getMinimalStartDateField()) {
+						PeriodeBox.this.checkAvailableDaysInSlot(this.getMinimalStartDateField().getValue(), rawValue);
+					}
 				}
 			}
 
@@ -1122,7 +1065,7 @@ public class EventForm extends AbstractForm {
 
 			@Override
 			protected Class<? extends ICodeType<Long, String>> getConfiguredCodeType() {
-				return StateCodeType.class;
+				return EventStateCodeType.class;
 			}
 
 			@Override
@@ -1353,6 +1296,7 @@ public class EventForm extends AbstractForm {
 					final String meetingSubject = formData.getSubject().getValue();
 					final String venue = formData.getVenue().getValue();
 
+					formData.getState().setValue(EventStateCodeType.WaitingCode.ID);
 					formData.getGuestId().setValue(eventGuest);
 
 					// required *before* save (for sending email)
@@ -1453,7 +1397,7 @@ public class EventForm extends AbstractForm {
 			final IEventService service = BEANS.get(IEventService.class);
 			final EventFormData formData = new EventFormData();
 			EventForm.this.exportFormData(formData);
-			formData.getState().setValue(StateCodeType.AcceptedCode.ID);
+			formData.getState().setValue(EventStateCodeType.PlannedCode.ID);
 			service.store(formData);
 		}
 	}

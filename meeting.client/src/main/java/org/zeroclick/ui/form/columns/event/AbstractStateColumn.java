@@ -21,7 +21,7 @@ import org.eclipse.scout.rt.client.ui.basic.table.columns.AbstractSmartColumn;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.eclipse.scout.rt.shared.services.common.code.ICode;
 import org.eclipse.scout.rt.shared.services.common.code.ICodeType;
-import org.zeroclick.meeting.shared.event.StateCodeType;
+import org.zeroclick.meeting.shared.event.EventStateCodeType;
 
 /**
  * @author djer
@@ -29,11 +29,11 @@ import org.zeroclick.meeting.shared.event.StateCodeType;
  */
 public abstract class AbstractStateColumn extends AbstractSmartColumn<String> {
 	// In User context, so texts are translated
-	final StateCodeType eventStateCodes = new StateCodeType();
+	final EventStateCodeType eventStateCodes = new EventStateCodeType();
 
 	@Override
 	protected String getConfiguredHeaderText() {
-		return TEXTS.get("zc.meeting.state");
+		return TEXTS.get("zc.meeting.event.state");
 	}
 
 	@Override
@@ -56,15 +56,17 @@ public abstract class AbstractStateColumn extends AbstractSmartColumn<String> {
 			final String stateColumnValue = (String) stateValue;
 
 			final ICode<String> currentStateCode = this.eventStateCodes.getCode(stateColumnValue);
-			cell.setIconId(currentStateCode.getIconId());
-			cell.setBackgroundColor(currentStateCode.getBackgroundColor());
-			cell.setForegroundColor(currentStateCode.getForegroundColor());
-			cell.setText(currentStateCode.getText());
+			if (null != currentStateCode) {
+				cell.setIconId(currentStateCode.getIconId());
+				cell.setBackgroundColor(currentStateCode.getBackgroundColor());
+				cell.setForegroundColor(currentStateCode.getForegroundColor());
+				cell.setText(currentStateCode.getText());
+			}
 		}
 	}
 
 	@Override
 	protected Class<? extends ICodeType<Long, String>> getConfiguredCodeType() {
-		return StateCodeType.class;
+		return EventStateCodeType.class;
 	}
 }

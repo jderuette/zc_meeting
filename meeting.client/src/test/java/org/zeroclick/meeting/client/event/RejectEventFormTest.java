@@ -30,7 +30,7 @@ import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.RejectEventFormData;
-import org.zeroclick.meeting.shared.event.StateCodeType;
+import org.zeroclick.meeting.shared.event.EventStateCodeType;
 
 @RunWithSubject("anonymous")
 @RunWith(ClientTestRunner.class)
@@ -64,9 +64,9 @@ public class RejectEventFormTest {
 		accepetedEventAnswer.setEventId(1L);
 		accepetedEventAnswer.setExternalIdOrganizer("AGoogleCalEventId");
 		accepetedEventAnswer.setExternalIdRecipient("AGoogleCalEventId");
-		accepetedEventAnswer.setPreviousState(StateCodeType.AskedCode.ID);
+		accepetedEventAnswer.setPreviousState(EventStateCodeType.WaitingCode.ID);
 
-		accepetedEventAnswer.getState().setValue(StateCodeType.AcceptedCode.ID);
+		accepetedEventAnswer.getState().setValue(EventStateCodeType.PlannedCode.ID);
 		accepetedEventAnswer.getCreatedDate().setValue(acceptEventCreatedDate);
 		accepetedEventAnswer.getDuration().setValue(DurationCodeType.OneHourCode.ID);
 		accepetedEventAnswer.getOrganizer().setValue(1L);

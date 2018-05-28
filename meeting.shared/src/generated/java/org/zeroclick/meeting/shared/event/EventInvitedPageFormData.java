@@ -27,6 +27,14 @@ public class EventInvitedPageFormData extends AbstractFormData {
 		return getFieldByClass(Description.class);
 	}
 
+	public MaximalStartDate getMaximalStartDate() {
+		return getFieldByClass(MaximalStartDate.class);
+	}
+
+	public MinimalStartDate getMinimalStartDate() {
+		return getFieldByClass(MinimalStartDate.class);
+	}
+
 	public Participants getParticipants() {
 		return getFieldByClass(Participants.class);
 	}
@@ -78,8 +86,10 @@ public class EventInvitedPageFormData extends AbstractFormData {
 			public static final String slot = "slot";
 			public static final String duration = "duration";
 			public static final String venue = "venue";
-			public static final String minimalStart = "minimalStart";
-			public static final String maximalStart = "maximalStart";
+			public static final String startDate = "startDate";
+			public static final String endDate = "endDate";
+			public static final String minimalStartDate = "minimalStartDate";
+			public static final String maximalStartDate = "maximalStartDate";
 			public static final String state = "state";
 			private Long m_eventId;
 			private Date m_createdDate;
@@ -87,8 +97,10 @@ public class EventInvitedPageFormData extends AbstractFormData {
 			private Long m_slot;
 			private Long m_duration;
 			private String m_venue;
-			private Date m_minimalStart;
-			private Date m_maximalStart;
+			private Date m_startDate;
+			private Date m_endDate;
+			private Date m_minimalStartDate;
+			private Date m_maximalStartDate;
 			private String m_state;
 
 			public Long getEventId() {
@@ -139,20 +151,36 @@ public class EventInvitedPageFormData extends AbstractFormData {
 				m_venue = newVenue;
 			}
 
-			public Date getMinimalStart() {
-				return m_minimalStart;
+			public Date getStartDate() {
+				return m_startDate;
 			}
 
-			public void setMinimalStart(Date newMinimalStart) {
-				m_minimalStart = newMinimalStart;
+			public void setStartDate(Date newStartDate) {
+				m_startDate = newStartDate;
 			}
 
-			public Date getMaximalStart() {
-				return m_maximalStart;
+			public Date getEndDate() {
+				return m_endDate;
 			}
 
-			public void setMaximalStart(Date newMaximalStart) {
-				m_maximalStart = newMaximalStart;
+			public void setEndDate(Date newEndDate) {
+				m_endDate = newEndDate;
+			}
+
+			public Date getMinimalStartDate() {
+				return m_minimalStartDate;
+			}
+
+			public void setMinimalStartDate(Date newMinimalStartDate) {
+				m_minimalStartDate = newMinimalStartDate;
+			}
+
+			public Date getMaximalStartDate() {
+				return m_maximalStartDate;
+			}
+
+			public void setMaximalStartDate(Date newMaximalStartDate) {
+				m_maximalStartDate = newMaximalStartDate;
 			}
 
 			public String getState() {
@@ -166,6 +194,16 @@ public class EventInvitedPageFormData extends AbstractFormData {
 	}
 
 	public static class Description extends AbstractValueFieldData<String> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class MaximalStartDate extends AbstractValueFieldData<Date> {
+
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class MinimalStartDate extends AbstractValueFieldData<Date> {
 
 		private static final long serialVersionUID = 1L;
 	}
@@ -216,13 +254,13 @@ public class EventInvitedPageFormData extends AbstractFormData {
 			public static final String state = "state";
 			public static final String invitedBy = "invitedBy";
 			public static final String reason = "reason";
-			public static final String externaleEventId = "externaleEventId";
+			public static final String externalEventId = "externalEventId";
 			private Long m_userId;
 			private String m_role;
 			private String m_state;
 			private Long m_invitedBy;
 			private String m_reason;
-			private String m_externaleEventId;
+			private String m_externalEventId;
 
 			public Long getUserId() {
 				return m_userId;
@@ -264,12 +302,12 @@ public class EventInvitedPageFormData extends AbstractFormData {
 				m_reason = newReason;
 			}
 
-			public String getExternaleEventId() {
-				return m_externaleEventId;
+			public String getExternalEventId() {
+				return m_externalEventId;
 			}
 
-			public void setExternaleEventId(String newExternaleEventId) {
-				m_externaleEventId = newExternaleEventId;
+			public void setExternalEventId(String newExternalEventId) {
+				m_externalEventId = newExternalEventId;
 			}
 		}
 	}

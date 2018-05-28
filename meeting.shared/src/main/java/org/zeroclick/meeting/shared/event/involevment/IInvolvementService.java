@@ -18,4 +18,8 @@ public interface IInvolvementService extends IService {
 	InvolvementFormData store(InvolvementFormData formData);
 
 	Boolean isGuest(Long userId);
+
+	void updateStatusAccepted(Long eventId, Long userId);
+
+	void updateStatusRefused(Long eventId, Long userId, String reason);
 }

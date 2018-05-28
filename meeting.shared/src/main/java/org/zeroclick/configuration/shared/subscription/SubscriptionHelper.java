@@ -32,7 +32,7 @@ import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.meeting.shared.event.CreateEventPermission;
 import org.zeroclick.meeting.shared.event.IEventService;
-import org.zeroclick.meeting.shared.event.StateCodeType;
+import org.zeroclick.meeting.shared.event.EventStateCodeType;
 import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
 
 /**
@@ -69,7 +69,7 @@ public class SubscriptionHelper {
 		final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
 		Integer requiredLevel = LEVEL_SUB_FREE;
 		int nbEventWaiting = 0;
-		final Map<Long, Integer> nbEventPendingByUsers = eventService.getNbEventsByUser(StateCodeType.AskedCode.ID,
+		final Map<Long, Integer> nbEventPendingByUsers = eventService.getNbEventsByUser(EventStateCodeType.WaitingCode.ID,
 				Boolean.TRUE);
 		if (null != nbEventPendingByUsers && nbEventPendingByUsers.size() > 0) {
 			final Iterator<Integer> itNbEvents = nbEventPendingByUsers.values().iterator();

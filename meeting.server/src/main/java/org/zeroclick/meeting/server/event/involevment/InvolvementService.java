@@ -104,8 +104,23 @@ public class InvolvementService extends AbstractCommonService implements IInvolv
 	public InvolvementFormData store(final InvolvementFormData formData) {
 		super.checkPermission(new UpdateEventPermission(formData.getEventId().getValue()));
 
-		SQL.update(SQLs.INVOLEVMENT_EVENT_UPDATE, formData);
+		SQL.update(SQLs.INVOLEVMENT_UPDATE, formData);
 		return formData;
+	}
+
+	@Override
+	public void updateStatusAccepted(final Long eventId, final Long userId) {
+		super.checkPermission(new UpdateEventPermission(eventId));
+		SQL.update(SQLs.INVOLEVMENT_UPDATE_STATUS_ACCEPT, new NVPair("eventId", eventId), new NVPair("userId", userId));
+
+	}
+
+	@Override
+	public void updateStatusRefused(final Long eventId, final Long userId, final String reason) {
+		super.checkPermission(new UpdateEventPermission(eventId));
+		SQL.update(SQLs.INVOLEVMENT_UPDATE_STATUS_REFUSE, new NVPair("eventId", eventId), new NVPair("userId", userId),
+				new NVPair("reason", reason));
+
 	}
 
 	@Override
