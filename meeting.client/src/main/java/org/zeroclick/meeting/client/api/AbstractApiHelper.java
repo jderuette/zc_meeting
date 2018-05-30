@@ -79,6 +79,8 @@ public abstract class AbstractApiHelper<E, F> implements ApiHelper {
 
 	public abstract String getAuthorisationLink();
 
+	public abstract String convertInvolvmentState(String zeroClickStateId);
+
 	@SuppressWarnings("PMD.EmptyCatchBlock")
 	public Boolean isCalendarConfigured(final Long userId) {
 		final ICalendarConfigurationService calendarConfigurationService = BEANS

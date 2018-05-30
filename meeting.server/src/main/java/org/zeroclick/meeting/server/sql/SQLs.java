@@ -249,6 +249,8 @@ public interface SQLs {
 	String INVOLEVMENT_FILTER_PRIMARY_KEY = " AND event_id=:eventId AND user_id=:userId";
 	String INVOLEVMENT_FILTER_EVENT_ID = " AND event_id=:eventId";
 	String INVOLVEMENT_FILTER_USER_ID = " AND user_id=:currentUser";
+	String INVOLEVMENT_FILTER_ORGANIZER = " AND role='" + EventRoleCodeType.OrganizerCode.ID + "'";
+	String INVOLEVMENT_FILTER_PARTICIPANT = " AND role!='" + EventRoleCodeType.OrganizerCode.ID + "'";
 
 	String INVOLVEMENT_PAGE_SELECT = "SELECT event_id, user_id, role, "
 			+ PatchMultiInviteeMeeting.PATCHED_MOOVED_STATE_COLUMN + ", "
@@ -260,9 +262,9 @@ public interface SQLs {
 	String INVOLVEMENT_SELECT = "SELECT event_id, user_id, role, "
 			+ PatchMultiInviteeMeeting.PATCHED_MOOVED_STATE_COLUMN + ", "
 			+ PatchMultiInviteeMeeting.PATCHED_MOOVED_REASON_COLUMN + ",  external_event_id, invited_by" + " FROM "
-			+ PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE + " WHERE 1=1 "
-			+ INVOLEVMENT_FILTER_PRIMARY_KEY
-			+ " INTO :eventId, :userId, :role, :state, :reason, :externalEventId, :invitedBy";
+			+ PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE + " WHERE 1=1 ";
+
+	String INVOLVEMENT_SELECT_INTO = " INTO :eventId, :userId, :role, :state, :reason, :externalEventId, :invitedBy";
 
 	String INVOLVEMENT_SELECT_ORGANISER_BY_EVENT = "SELECT APP_USER.* FROM APP_USER INNER JOIN "
 			+ PatchMultiInviteeMeeting.PATCHED_CREATED_INVOLVEMENT_TABLE

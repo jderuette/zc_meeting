@@ -22,4 +22,8 @@ public interface IInvolvementService extends IService {
 	void updateStatusAccepted(Long eventId, Long userId);
 
 	void updateStatusRefused(Long eventId, Long userId, String reason);
+
+	InvolvementFormData getOrganizer(Long eventId);
+
+	InvolvementTablePageData getParticipants(Long eventId);
 }

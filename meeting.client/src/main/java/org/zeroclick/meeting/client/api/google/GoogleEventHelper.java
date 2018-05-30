@@ -16,6 +16,7 @@ limitations under the License.
 package org.zeroclick.meeting.client.api.google;
 
 import java.io.IOException;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Date;
@@ -183,12 +184,12 @@ public class GoogleEventHelper extends AbstractEventHelper<Event, EventDateTime>
 	public Event getEvent(final EventIdentification eventIdentification, final Calendar googleCalendarService) {
 		Event event = null;
 		try {
-			event = googleCalendarService.events()
-					.get(eventIdentification.getCalendarId(), eventIdentification.getEventId()).execute();
+			event = googleCalendarService.events().get(eventIdentification.getCalendarData().getExternalId().getValue(),
+					eventIdentification.getEventId()).execute();
 		} catch (final IOException ioe) {
-			LOG.warn(
-					new StringBuilder().append("Cannot load (Google) event : ").append(eventIdentification.getEventId())
-							.append(" in calendar : ").append(eventIdentification.getCalendarId()).toString());
+			LOG.warn(new StringBuilder().append("Cannot load (Google) event : ")
+					.append(eventIdentification.getEventId()).append(" in calendar : ")
+					.append(eventIdentification.getCalendarData().getExternalId()).toString());
 		}
 		return event;
 	}
@@ -274,7 +275,7 @@ public class GoogleEventHelper extends AbstractEventHelper<Event, EventDateTime>
 		final Calendar gCalendarService = eventCalendarService.getCalendar();
 
 		try {
-			gCalendarService.events().update(eventOrganizerIdentification.getCalendarId(),
+			gCalendarService.events().update(eventOrganizerIdentification.getCalendarData().getExternalId().getValue(),
 					eventOrganizerIdentification.getEventId(), organizerEvent).execute();
 		} catch (final GoogleJsonResponseException gjre) {
 			if (gjre.getStatusCode() == 404) {
@@ -289,8 +290,10 @@ public class GoogleEventHelper extends AbstractEventHelper<Event, EventDateTime>
 					LOG.error("Error while waiting to re-try updating event " + eventOrganizerIdentification, ie);
 				}
 				try {
-					gCalendarService.events().update(eventOrganizerIdentification.getCalendarId(),
-							eventOrganizerIdentification.getEventId(), organizerEvent).execute();
+					gCalendarService.events()
+							.update(eventOrganizerIdentification.getCalendarData().getExternalId().getValue(),
+									eventOrganizerIdentification.getEventId(), organizerEvent)
+							.execute();
 					eventUpdated = Boolean.TRUE;
 				} catch (final GoogleJsonResponseException gjre2) {
 					LOG.error(new StringBuilder().append("(Google) exception while accepting recently created event : ")
@@ -319,13 +322,27 @@ public class GoogleEventHelper extends AbstractEventHelper<Event, EventDateTime>
 		return this.toEventDateTime(date, date.getOffset());
 	}
 
+	@Override
+	protected EventDateTime toProviderDateTime(final Date date) {
+		return this.toEventDateTime(date);
+	}
+
 	public EventDateTime toEventDateTime(final ZonedDateTime dateTime, final ZoneOffset zoneOffset) {
+		final DateTime date = this.toDateTime(dateTime);
+		return new EventDateTime().setDateTime(date);
+	}
+
+	public EventDateTime toEventDateTime(final Date dateTime) {
 		final DateTime date = this.toDateTime(dateTime);
 		return new EventDateTime().setDateTime(date);
 	}
 
 	public DateTime toDateTime(final ZonedDateTime dateTime) {
 		return new DateTime(Date.from(dateTime.toInstant()), TimeZone.getTimeZone(dateTime.getZone()));
+	}
+
+	public DateTime toDateTime(final Date dateTime) {
+		return new DateTime(Date.from(dateTime.toInstant()), TimeZone.getTimeZone(ZoneId.of("UTC").normalized()));
 	}
 
 }

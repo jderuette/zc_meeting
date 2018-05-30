@@ -16,10 +16,10 @@ limitations under the License.
 package org.zeroclick.meeting.client.api.microsoft;
 
 import java.io.IOException;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +29,7 @@ import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.config.AbstractStringConfigProperty;
 import org.eclipse.scout.rt.platform.config.CONFIG;
 import org.eclipse.scout.rt.platform.exception.VetoException;
+import org.eclipse.scout.rt.platform.util.StringUtility;
 import org.eclipse.scout.rt.platform.util.UriBuilder;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
@@ -49,6 +50,7 @@ import org.zeroclick.meeting.client.api.microsoft.data.ItemBody;
 import org.zeroclick.meeting.client.api.microsoft.data.Location;
 import org.zeroclick.meeting.client.api.microsoft.data.MicrosoftUser;
 import org.zeroclick.meeting.client.api.microsoft.data.PagedResult;
+import org.zeroclick.meeting.client.api.microsoft.data.Recipient;
 import org.zeroclick.meeting.client.api.microsoft.data.ResponseStatus;
 import org.zeroclick.meeting.client.api.microsoft.data.TokenResponse;
 import org.zeroclick.meeting.client.api.microsoft.service.CalendarService;
@@ -57,11 +59,13 @@ import org.zeroclick.meeting.client.api.microsoft.service.OutlookService;
 import org.zeroclick.meeting.client.api.microsoft.service.TokenService;
 import org.zeroclick.meeting.client.common.UserAccessRequiredException;
 import org.zeroclick.meeting.service.CalendarService.EventIdentification;
+import org.zeroclick.meeting.service.ParticipantWithStatus;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationTablePageData.CalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.IApiService;
+import org.zeroclick.meeting.shared.event.involevment.InvolvmentStateCodeType;
 
 import com.google.api.client.util.IOUtils;
 
@@ -427,8 +431,8 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 	}
 
 	@Override
-	public String createEvent(final ZonedDateTime startDate, final ZonedDateTime endDate, final String subject,
-			final Long forUserId, final String location, final String withEmail, final Boolean guestAutoAcceptMeeting,
+	public String createEvent(final Date startDate, final Date endDate, final String subject, final Long forUserId,
+			final String organizerEmail, final String location, final Collection<ParticipantWithStatus> participants,
 			final String envDisplay, final CalendarConfigurationFormData calendarToStoreEvent,
 			final String description) {
 
@@ -437,6 +441,12 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 		newEvent.setStart(this.toProviderDateTime(startDate));
 		newEvent.setEnd(this.toProviderDateTime(endDate));
 		newEvent.setSubject(envDisplay + " " + subject + TextsHelper.get(forUserId, "zc.common.email.subject.suffix"));
+
+		final Recipient organizer = new Recipient();
+		final EmailAddress organizerEmailAddress = new EmailAddress();
+		organizerEmailAddress.setAddress(organizerEmail);
+		organizer.setEmailAddress(organizerEmailAddress);
+		newEvent.setOrganizer(organizer);
 
 		final Location microsoftLocation = new Location();
 		final String locationText = TextsHelper.get(forUserId, location);
@@ -452,21 +462,12 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 
 		final Collection<Attendee> attendees = new ArrayList<>();
 
-		final Attendee atendee = new Attendee();
-		final EmailAddress attendeeEmailAdress = new EmailAddress();
-		attendeeEmailAdress.setAddress(withEmail);
-
-		atendee.setEmailAddress(attendeeEmailAdress);
-
-		final ResponseStatus status = new ResponseStatus();
-		if (guestAutoAcceptMeeting) {
-			status.setResponse("Accepted");
-		} else {
-			status.setResponse("None");
+		if (participants.size() > 0) {
+			for (final ParticipantWithStatus participant : participants) {
+				attendees.add(this.createAttendee(participant.getEmail(), participant.getState()));
+			}
 		}
-		atendee.setStatus(status);
 
-		attendees.add(atendee);
 		newEvent.setAttendees(attendees);
 
 		newEvent.setCategories(new ArrayList<>());
@@ -478,7 +479,35 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 		return null == event ? null : event.getId();
 	}
 
-	private DateTimeTimeZone toProviderDateTime(final ZonedDateTime startDate) {
+	private Attendee createAttendee(final String email, final String zeroClickStateId) {
+		final Attendee attendee = new Attendee();
+		final EmailAddress attendeeEmailAdress = new EmailAddress();
+		final ResponseStatus status = new ResponseStatus();
+
+		attendeeEmailAdress.setAddress(email);
+		attendee.setEmailAddress(attendeeEmailAdress);
+
+		status.setResponse(this.convertInvolvmentState(zeroClickStateId));
+		attendee.setStatus(status);
+
+		return attendee;
+	}
+
+	@Override
+	public String convertInvolvmentState(final String zeroClickStateId) {
+		String microsoftParticipantState = "NotResponded";
+		if (!StringUtility.isNullOrEmpty(zeroClickStateId)) {
+			if (InvolvmentStateCodeType.AcceptedCode.ID.equals(zeroClickStateId)) {
+				microsoftParticipantState = "Accepted";
+			} else if (InvolvmentStateCodeType.RefusedCode.ID.equals(zeroClickStateId)) {
+				microsoftParticipantState = "Declined";
+			}
+		}
+
+		return microsoftParticipantState;
+	}
+
+	private DateTimeTimeZone toProviderDateTime(final Date startDate) {
 		return this.getEventHelper().toProviderDateTime(startDate);
 	}
 

@@ -28,31 +28,22 @@ import org.slf4j.LoggerFactory;
 import org.zeroclick.common.email.IMailSender;
 import org.zeroclick.common.email.MailException;
 import org.zeroclick.comon.text.TextsHelper;
-import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
 import org.zeroclick.configuration.shared.user.IUserService;
 import org.zeroclick.configuration.shared.user.UserFormData;
 import org.zeroclick.meeting.client.NotificationHelper;
 import org.zeroclick.meeting.client.event.EventTablePage.Table;
 import org.zeroclick.meeting.service.CalendarService;
-import org.zeroclick.meeting.service.CalendarService.EventIdentification;
 import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationCreatedNotification;
-import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationModifiedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationCreatedNotification;
 import org.zeroclick.meeting.shared.calendar.CalendarsConfigurationModifiedNotification;
-import org.zeroclick.meeting.shared.calendar.IApiService;
 import org.zeroclick.meeting.shared.event.EventCreatedNotification;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.EventModifiedNotification;
 import org.zeroclick.meeting.shared.event.EventStateCodeType;
 import org.zeroclick.meeting.shared.event.EventTablePageData;
 import org.zeroclick.meeting.shared.event.IEventService;
-import org.zeroclick.meeting.shared.event.externalevent.ExternalEventFormData;
-import org.zeroclick.meeting.shared.event.externalevent.IExternalEventService;
-import org.zeroclick.meeting.shared.event.involevment.IInvolvementService;
-import org.zeroclick.meeting.shared.event.involevment.InvolvementFormData;
-import org.zeroclick.meeting.shared.event.involevment.InvolvmentStateCodeType;
 import org.zeroclick.ui.action.menu.AbstractValidateMenu;
 
 @Data(EventTablePageData.class)
@@ -420,199 +411,233 @@ public class EventTablePage extends AbstractEventsTablePage<Table> {
 
 			@Override
 			protected void execAction() {
-				final Boolean guestAutoAcceptEvent = Boolean.TRUE;
-				final IEventService eventService = BEANS.get(IEventService.class);
-				final IInvolvementService involvementService = BEANS.get(IInvolvementService.class);
-				final IExternalEventService externalEventService = BEANS.get(IExternalEventService.class);
-
-				final NotificationHelper notificationHelper = BEANS.get(NotificationHelper.class);
-				notificationHelper.addProcessingNotification("zc.meeting.notification.acceptingEvent");
-
-				final Long eventId = Table.this.getEventIdColumn().getSelectedValue();
-				final IUserService userService = BEANS.get(IUserService.class);
-				final ZonedDateTime start = Table.this.getStartDateColumn().getSelectedZonedValue();
-				final ZonedDateTime end = Table.this.getEndDateColumn().getSelectedZonedValue();
-				Long eventHeldBy = Table.this.getOrganizerColumn().getSelectedValue();
-				final String eventHeldEmail = Table.this.getOrganizerEmailColumn().getSelectedValue();
-				Long eventGuestId = Table.this.getCurrentUserId();
-				final String eventGuestEmail = Table.this.getCurrentUserEmails().get(0);
-				final String subject = Table.this.getSubjectColumn().getSelectedValue();
-				final String venue = Table.this.getVenueColumn().getSelectedValue();
-				final String description = eventService.loadDescription(eventId);
-
-				try {
-					if (null == start || null == end) {
-						Table.this.changeDatesNext();
-						throw new VetoException(TEXTS.get("zc.meeting.chooseDateFirst"));
-					}
-
-					final CalendarService calendarService = BEANS.get(CalendarService.class);
-
-					final CalendarConfigurationFormData organizerCalendarToStoreEvent = calendarService
-							.getUserCreateEventCalendar(eventHeldBy);
-
-					// Table.this.getStateColumn().setValue(Table.this.getSelectedRow(),
-					// EventStateCodeType.PlannedCode.ID);
-
-					if (null == eventHeldBy) {
-						eventHeldBy = userService.getUserIdByEmail(eventHeldEmail);
-					}
-					// External event for holder
-					final EventIdentification externalOrganizerEventId = calendarService.createEvent(start, end,
-							eventHeldBy, eventGuestEmail, subject, venue, guestAutoAcceptEvent, description);
-					ExternalEventFormData orgaExternalEventformData = null;
-					if (null == externalOrganizerEventId) {
-						LOG.warn(new StringBuilder().append("Event not created for user : ").append(eventHeldBy)
-								.append(" and he is the organizer ! (subject : ").append(subject).append(")")
-								.toString());
-					} else {
-						// Table.this.getExternalIdOrganizerColumn().setValue(Table.this.getSelectedRow(),
-						// externalOrganizerEventId.getEventId());
-
-						// create ExternalId
-						orgaExternalEventformData = new ExternalEventFormData();
-						orgaExternalEventformData.getExternalEventId().setValue(externalOrganizerEventId.getEventId());
-						orgaExternalEventformData.getExternalCalendarId()
-								.setValue(externalOrganizerEventId.getCalendarId());
-						orgaExternalEventformData.getApiCredentialId()
-								.setValue(organizerCalendarToStoreEvent.getOAuthCredentialId().getValue());
-						orgaExternalEventformData = externalEventService.create(orgaExternalEventformData);
-
-						// update orga state
-						InvolvementFormData orgaInvolvementformData = new InvolvementFormData();
-						orgaInvolvementformData.getEventId().setValue(eventId);
-						orgaInvolvementformData.getUserId().setValue(eventHeldBy);
-						orgaInvolvementformData = involvementService.load(orgaInvolvementformData);
-
-						orgaInvolvementformData.getState().setValue(InvolvmentStateCodeType.AcceptedCode.ID);
-						orgaInvolvementformData.getExternalEventId()
-								.setValue(orgaExternalEventformData.getExternalId().getValue());
-						orgaInvolvementformData = involvementService.store(orgaInvolvementformData);
-
-					}
-
-					final String organizerEventExternalHtmlLink = calendarService
-							.getEventExternalLink(externalOrganizerEventId, eventHeldBy);
-
-					String guestEventExternalHtmlLink = organizerEventExternalHtmlLink;
-
-					Boolean isAttendeeCalendarToStoreEventConfigured = Boolean.FALSE;
-
-					final CalendarConfigurationFormData attendeeCalendarToStoreEvent = calendarService
-							.getUserCreateEventCalendar(eventGuestId);
-
-					if (!guestAutoAcceptEvent) {
-						// Only if required to process "accept" in a other
-						// request
-						if (null == eventGuestId) {
-							eventGuestId = userService.getUserIdByEmail(eventGuestEmail);
-						}
-
-						final EventIdentification externalGuestEvent = calendarService.acceptCreatedEvent(
-								externalOrganizerEventId, eventGuestId, eventGuestEmail, eventHeldBy);
-						if (null != externalGuestEvent) {
-							// Table.this.getExternalIdRecipientColumn().setValue(Table.this.getSelectedRow(),
-							// externalGuestEvent.getEventId());
-
-							// create guest provide specificExternalId
-							ExternalEventFormData guestExternalEventformData = new ExternalEventFormData();
-							guestExternalEventformData.getExternalEventId().setValue(externalGuestEvent.getEventId());
-							guestExternalEventformData.getExternalCalendarId()
-									.setValue(externalGuestEvent.getCalendarId());
-							guestExternalEventformData.getApiCredentialId()
-									.setValue(attendeeCalendarToStoreEvent.getOAuthCredentialId().getValue());
-							guestExternalEventformData = externalEventService.create(guestExternalEventformData);
-
-							// update orga state
-							InvolvementFormData guestInvolvementformData = new InvolvementFormData();
-							guestInvolvementformData.getEventId().setValue(eventId);
-							guestInvolvementformData.getUserId().setValue(eventHeldBy);
-							guestInvolvementformData = involvementService.load(guestInvolvementformData);
-
-							guestInvolvementformData.getState().setValue(InvolvmentStateCodeType.AcceptedCode.ID);
-							guestInvolvementformData.getExternalEventId()
-									.setValue(guestExternalEventformData.getExternalId().getValue());
-							involvementService.store(guestInvolvementformData);
-
-							guestEventExternalHtmlLink = calendarService.getEventExternalLink(externalGuestEvent,
-									eventGuestId);
-						}
-					} else {
-						EventIdentification externalAttendeeEventId;
-						final IApiService apiService = BEANS.get(IApiService.class);
-						// if guest use a different provider as the organizer,
-						// and is autoAccepting events, we need to create a
-						// specific event (in his provider)
-
-						final ApiTableRowData organizerCalendarApi = apiService
-								.getApi(organizerCalendarToStoreEvent.getOAuthCredentialId().getValue());
-						final Long organizerProvider = organizerCalendarApi.getProvider();
-
-						if (null != attendeeCalendarToStoreEvent) {
-							isAttendeeCalendarToStoreEventConfigured = Boolean.TRUE;
-							final ApiTableRowData attendeeProviderCalendarApi = apiService
-									.getApi(attendeeCalendarToStoreEvent.getOAuthCredentialId().getValue());
-							final Long attendeeProvider = attendeeProviderCalendarApi.getProvider();
-
-							final boolean isSameProvider = organizerProvider.equals(attendeeProvider);
-							ExternalEventFormData guestExternalEventformData = null;
-							if (isSameProvider) {
-								externalAttendeeEventId = externalOrganizerEventId;
-								guestExternalEventformData = orgaExternalEventformData;
-
-							} else {
-								externalAttendeeEventId = calendarService.createEvent(start, end, eventGuestId,
-										eventHeldEmail, subject, venue, Boolean.TRUE, description);
-
-								// create guest provider specific ExternalId
-								guestExternalEventformData = new ExternalEventFormData();
-								guestExternalEventformData.getExternalEventId()
-										.setValue(externalAttendeeEventId.getEventId());
-								guestExternalEventformData.getExternalCalendarId()
-										.setValue(externalAttendeeEventId.getCalendarId());
-								guestExternalEventformData.getApiCredentialId()
-										.setValue(attendeeCalendarToStoreEvent.getOAuthCredentialId().getValue());
-								guestExternalEventformData = externalEventService.create(guestExternalEventformData);
-							}
-
-							// Table.this.getExternalIdRecipientColumn().setValue(Table.this.getSelectedRow(),
-							// externalAttendeeEventId.getEventId());
-
-							// update guest state
-							InvolvementFormData guestInvolvementformData = new InvolvementFormData();
-							guestInvolvementformData.getEventId().setValue(eventId);
-							guestInvolvementformData.getUserId().setValue(eventGuestId);
-							guestInvolvementformData = involvementService.load(guestInvolvementformData);
-
-							guestInvolvementformData.getState().setValue(InvolvmentStateCodeType.AcceptedCode.ID);
-							guestInvolvementformData.getExternalEventId()
-									.setValue(guestExternalEventformData.getExternalId().getValue());
-							involvementService.store(guestInvolvementformData);
-
-						} else {
-							notificationHelper.addWarningNotification(
-									"zc.meeting.calendar.noAddEvent.cannotCreateEvent", eventHeldEmail);
-						}
-					}
-
-					// Save at the end to save external IDs !
-					// /!\ after save guest may not be able to check the
-					// organizer API (no more waiting meeting with organizer)
-					// ==> Do all API related stuff BEFORE saving Event
-					final EventFormData formData = Table.this.saveEventCurrentRow();
-
-					this.sendConfirmationEmail(formData, organizerEventExternalHtmlLink, eventHeldEmail, eventHeldBy,
-							eventGuestEmail, Boolean.TRUE);
-					this.sendConfirmationEmail(formData, guestEventExternalHtmlLink, eventGuestEmail, eventGuestId,
-							eventHeldEmail, isAttendeeCalendarToStoreEventConfigured);
-
-					Table.this.resetInvalidatesEvent(start, end);
-					Table.this.autoFillDates();
-
-				} catch (final IOException e) {
-					LOG.error("Error while getting (Google) calendar details", e);
-					throw new VetoException("Canno't get calendar details, re-try later", e);
-				}
+				/*
+				 * final Boolean guestAutoAcceptEvent = Boolean.TRUE; final
+				 * IEventService eventService = BEANS.get(IEventService.class);
+				 * final IInvolvementService involvementService =
+				 * BEANS.get(IInvolvementService.class); final
+				 * IExternalEventService externalEventService =
+				 * BEANS.get(IExternalEventService.class);
+				 * 
+				 * final NotificationHelper notificationHelper =
+				 * BEANS.get(NotificationHelper.class);
+				 * notificationHelper.addProcessingNotification(
+				 * "zc.meeting.notification.acceptingEvent");
+				 * 
+				 * final Long eventId =
+				 * Table.this.getEventIdColumn().getSelectedValue(); final
+				 * IUserService userService = BEANS.get(IUserService.class);
+				 * final ZonedDateTime start =
+				 * Table.this.getStartDateColumn().getSelectedZonedValue();
+				 * final ZonedDateTime end =
+				 * Table.this.getEndDateColumn().getSelectedZonedValue(); Long
+				 * eventHeldBy =
+				 * Table.this.getOrganizerColumn().getSelectedValue(); final
+				 * String eventHeldEmail =
+				 * Table.this.getOrganizerEmailColumn().getSelectedValue(); Long
+				 * eventGuestId = Table.this.getCurrentUserId(); final String
+				 * eventGuestEmail = Table.this.getCurrentUserEmails().get(0);
+				 * final String subject =
+				 * Table.this.getSubjectColumn().getSelectedValue(); final
+				 * String venue =
+				 * Table.this.getVenueColumn().getSelectedValue(); final String
+				 * description = eventService.loadDescription(eventId);
+				 * 
+				 * try { if (null == start || null == end) {
+				 * Table.this.changeDatesNext(); throw new
+				 * VetoException(TEXTS.get("zc.meeting.chooseDateFirst")); }
+				 * 
+				 * final CalendarService calendarService =
+				 * BEANS.get(CalendarService.class);
+				 * 
+				 * final CalendarConfigurationFormData
+				 * organizerCalendarToStoreEvent = calendarService
+				 * .getUserCreateEventCalendar(eventHeldBy);
+				 * 
+				 * // Table.this.getStateColumn().setValue(Table.this.
+				 * getSelectedRow(), // EventStateCodeType.PlannedCode.ID);
+				 * 
+				 * if (null == eventHeldBy) { eventHeldBy =
+				 * userService.getUserIdByEmail(eventHeldEmail); } // External
+				 * event for holder final EventIdentification
+				 * externalOrganizerEventId = calendarService.createEvent(start,
+				 * end, eventHeldBy, eventGuestEmail, subject, venue,
+				 * guestAutoAcceptEvent, description); ExternalEventFormData
+				 * orgaExternalEventformData = null; if (null ==
+				 * externalOrganizerEventId) { LOG.warn(new
+				 * StringBuilder().append("Event not created for user : ").
+				 * append(eventHeldBy)
+				 * .append(" and he is the organizer ! (subject : ").append(
+				 * subject).append(")") .toString()); } else { //
+				 * Table.this.getExternalIdOrganizerColumn().setValue(Table.this
+				 * .getSelectedRow(), // externalOrganizerEventId.getEventId());
+				 * 
+				 * // create ExternalId orgaExternalEventformData = new
+				 * ExternalEventFormData();
+				 * orgaExternalEventformData.getExternalEventId().setValue(
+				 * externalOrganizerEventId.getEventId());
+				 * orgaExternalEventformData.getExternalCalendarId()
+				 * .setValue(externalOrganizerEventId.getCalendarData().
+				 * getExternalId().getValue());
+				 * orgaExternalEventformData.getApiCredentialId()
+				 * .setValue(organizerCalendarToStoreEvent.getOAuthCredentialId(
+				 * ).getValue()); orgaExternalEventformData =
+				 * externalEventService.create(orgaExternalEventformData);
+				 * 
+				 * // update orga state InvolvementFormData
+				 * orgaInvolvementformData = new InvolvementFormData();
+				 * orgaInvolvementformData.getEventId().setValue(eventId);
+				 * orgaInvolvementformData.getUserId().setValue(eventHeldBy);
+				 * orgaInvolvementformData =
+				 * involvementService.load(orgaInvolvementformData);
+				 * 
+				 * orgaInvolvementformData.getState().setValue(
+				 * InvolvmentStateCodeType.AcceptedCode.ID);
+				 * orgaInvolvementformData.getExternalEventId()
+				 * .setValue(orgaExternalEventformData.getExternalId().getValue(
+				 * )); orgaInvolvementformData =
+				 * involvementService.store(orgaInvolvementformData);
+				 * 
+				 * }
+				 * 
+				 * final String organizerEventExternalHtmlLink = calendarService
+				 * .getEventExternalLink(externalOrganizerEventId, eventHeldBy);
+				 * 
+				 * String guestEventExternalHtmlLink =
+				 * organizerEventExternalHtmlLink;
+				 * 
+				 * Boolean isAttendeeCalendarToStoreEventConfigured =
+				 * Boolean.FALSE;
+				 * 
+				 * final CalendarConfigurationFormData
+				 * attendeeCalendarToStoreEvent = calendarService
+				 * .getUserCreateEventCalendar(eventGuestId);
+				 * 
+				 * if (!guestAutoAcceptEvent) { // Only if required to process
+				 * "accept" in a other // request if (null == eventGuestId) {
+				 * eventGuestId = userService.getUserIdByEmail(eventGuestEmail);
+				 * }
+				 * 
+				 * final EventIdentification externalGuestEvent =
+				 * calendarService.acceptCreatedEvent( externalOrganizerEventId,
+				 * eventGuestId, eventGuestEmail, eventHeldBy); if (null !=
+				 * externalGuestEvent) { //
+				 * Table.this.getExternalIdRecipientColumn().setValue(Table.this
+				 * .getSelectedRow(), // externalGuestEvent.getEventId());
+				 * 
+				 * // create guest provide specificExternalId
+				 * ExternalEventFormData guestExternalEventformData = new
+				 * ExternalEventFormData();
+				 * guestExternalEventformData.getExternalEventId().setValue(
+				 * externalGuestEvent.getEventId());
+				 * guestExternalEventformData.getExternalCalendarId()
+				 * .setValue(externalGuestEvent.getCalendarData().getExternalId(
+				 * ).getValue());
+				 * guestExternalEventformData.getApiCredentialId()
+				 * .setValue(attendeeCalendarToStoreEvent.getOAuthCredentialId()
+				 * .getValue()); guestExternalEventformData =
+				 * externalEventService.create(guestExternalEventformData);
+				 * 
+				 * // update orga state InvolvementFormData
+				 * guestInvolvementformData = new InvolvementFormData();
+				 * guestInvolvementformData.getEventId().setValue(eventId);
+				 * guestInvolvementformData.getUserId().setValue(eventHeldBy);
+				 * guestInvolvementformData =
+				 * involvementService.load(guestInvolvementformData);
+				 * 
+				 * guestInvolvementformData.getState().setValue(
+				 * InvolvmentStateCodeType.AcceptedCode.ID);
+				 * guestInvolvementformData.getExternalEventId()
+				 * .setValue(guestExternalEventformData.getExternalId().getValue
+				 * ()); involvementService.store(guestInvolvementformData);
+				 * 
+				 * guestEventExternalHtmlLink =
+				 * calendarService.getEventExternalLink(externalGuestEvent,
+				 * eventGuestId); } } else { EventIdentification
+				 * externalAttendeeEventId; final IApiService apiService =
+				 * BEANS.get(IApiService.class); // if guest use a different
+				 * provider as the organizer, // and is autoAccepting events, we
+				 * need to create a // specific event (in his provider)
+				 * 
+				 * final ApiTableRowData organizerCalendarApi = apiService
+				 * .getApi(organizerCalendarToStoreEvent.getOAuthCredentialId().
+				 * getValue()); final Long organizerProvider =
+				 * organizerCalendarApi.getProvider();
+				 * 
+				 * if (null != attendeeCalendarToStoreEvent) {
+				 * isAttendeeCalendarToStoreEventConfigured = Boolean.TRUE;
+				 * final ApiTableRowData attendeeProviderCalendarApi =
+				 * apiService
+				 * .getApi(attendeeCalendarToStoreEvent.getOAuthCredentialId().
+				 * getValue()); final Long attendeeProvider =
+				 * attendeeProviderCalendarApi.getProvider();
+				 * 
+				 * final boolean isSameProvider =
+				 * organizerProvider.equals(attendeeProvider);
+				 * ExternalEventFormData guestExternalEventformData = null; if
+				 * (isSameProvider) { externalAttendeeEventId =
+				 * externalOrganizerEventId; guestExternalEventformData =
+				 * orgaExternalEventformData;
+				 * 
+				 * } else { externalAttendeeEventId =
+				 * calendarService.createEvent(start, end, eventGuestId,
+				 * eventHeldEmail, subject, venue, Boolean.TRUE, description);
+				 * 
+				 * // create guest provider specific ExternalId
+				 * guestExternalEventformData = new ExternalEventFormData();
+				 * guestExternalEventformData.getExternalEventId()
+				 * .setValue(externalAttendeeEventId.getEventId());
+				 * guestExternalEventformData.getExternalCalendarId()
+				 * .setValue(externalAttendeeEventId.getCalendarData().
+				 * getExternalId().getValue());
+				 * guestExternalEventformData.getApiCredentialId()
+				 * .setValue(attendeeCalendarToStoreEvent.getOAuthCredentialId()
+				 * .getValue()); guestExternalEventformData =
+				 * externalEventService.create(guestExternalEventformData); }
+				 * 
+				 * //
+				 * Table.this.getExternalIdRecipientColumn().setValue(Table.this
+				 * .getSelectedRow(), // externalAttendeeEventId.getEventId());
+				 * 
+				 * // update guest state InvolvementFormData
+				 * guestInvolvementformData = new InvolvementFormData();
+				 * guestInvolvementformData.getEventId().setValue(eventId);
+				 * guestInvolvementformData.getUserId().setValue(eventGuestId);
+				 * guestInvolvementformData =
+				 * involvementService.load(guestInvolvementformData);
+				 * 
+				 * guestInvolvementformData.getState().setValue(
+				 * InvolvmentStateCodeType.AcceptedCode.ID);
+				 * guestInvolvementformData.getExternalEventId()
+				 * .setValue(guestExternalEventformData.getExternalId().getValue
+				 * ()); involvementService.store(guestInvolvementformData);
+				 * 
+				 * } else { notificationHelper.addWarningNotification(
+				 * "zc.meeting.calendar.noAddEvent.cannotCreateEvent",
+				 * eventHeldEmail); } }
+				 * 
+				 * // Save at the end to save external IDs ! // /!\ after save
+				 * guest may not be able to check the // organizer API (no more
+				 * waiting meeting with organizer) // ==> Do all API related
+				 * stuff BEFORE saving Event final EventFormData formData =
+				 * Table.this.saveEventCurrentRow();
+				 * 
+				 * this.sendConfirmationEmail(formData,
+				 * organizerEventExternalHtmlLink, eventHeldEmail, eventHeldBy,
+				 * eventGuestEmail, Boolean.TRUE);
+				 * this.sendConfirmationEmail(formData,
+				 * guestEventExternalHtmlLink, eventGuestEmail, eventGuestId,
+				 * eventHeldEmail, isAttendeeCalendarToStoreEventConfigured);
+				 * 
+				 * Table.this.resetInvalidatesEvent(start, end);
+				 * Table.this.autoFillDates();
+				 * 
+				 * } catch (final IOException e) {
+				 * LOG.error("Error while getting (Google) calendar details",
+				 * e); throw new
+				 * VetoException("Canno't get calendar details, re-try later",
+				 * e); }
+				 */
 			}
 
 			private void sendConfirmationEmail(final EventFormData formData, final String eventHtmlLink,

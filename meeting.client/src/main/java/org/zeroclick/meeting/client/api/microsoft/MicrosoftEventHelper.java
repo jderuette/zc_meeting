@@ -16,9 +16,11 @@ limitations under the License.
 package org.zeroclick.meeting.client.api.microsoft;
 
 import java.io.IOException;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 import org.eclipse.scout.rt.platform.BEANS;
@@ -244,6 +246,14 @@ public class MicrosoftEventHelper extends AbstractEventHelper<Event, DateTimeTim
 		final DateHelper dateHelper = BEANS.get(DateHelper.class);
 		providerDate.setDateTime(dateHelper.toUserDate(date));
 		providerDate.setTimeZone(date.getZone().getId());
+		return providerDate;
+	}
+
+	@Override
+	protected DateTimeTimeZone toProviderDateTime(final Date date) {
+		final DateTimeTimeZone providerDate = new DateTimeTimeZone();
+		providerDate.setDateTime(date);
+		providerDate.setTimeZone(ZoneId.of("UTC").normalized().getId());
 		return providerDate;
 	}
 

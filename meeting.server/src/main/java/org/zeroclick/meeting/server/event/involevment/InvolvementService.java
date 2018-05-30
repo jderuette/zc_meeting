@@ -96,7 +96,8 @@ public class InvolvementService extends AbstractCommonService implements IInvolv
 
 	@Override
 	public InvolvementFormData load(final InvolvementFormData formData) {
-		SQL.selectInto(SQLs.INVOLVEMENT_SELECT, formData);
+		SQL.selectInto(SQLs.INVOLVEMENT_SELECT + SQLs.INVOLEVMENT_FILTER_PRIMARY_KEY + SQLs.INVOLVEMENT_SELECT_INTO,
+				formData);
 		return formData;
 	}
 
@@ -113,6 +114,25 @@ public class InvolvementService extends AbstractCommonService implements IInvolv
 		super.checkPermission(new UpdateEventPermission(eventId));
 		SQL.update(SQLs.INVOLEVMENT_UPDATE_STATUS_ACCEPT, new NVPair("eventId", eventId), new NVPair("userId", userId));
 
+	}
+
+	@Override
+	public InvolvementFormData getOrganizer(final Long eventId) {
+		final InvolvementFormData formData = new InvolvementFormData();
+		formData.getEventId().setValue(eventId);
+		SQL.selectInto(SQLs.INVOLVEMENT_SELECT + SQLs.INVOLEVMENT_FILTER_EVENT_ID + SQLs.INVOLEVMENT_FILTER_ORGANIZER
+				+ SQLs.INVOLVEMENT_SELECT_INTO, formData);
+		return formData;
+	}
+
+	@Override
+	public InvolvementTablePageData getParticipants(final Long eventId) {
+		final InvolvementTablePageData formData = new InvolvementTablePageData();
+		SQL.selectInto(
+				SQLs.INVOLVEMENT_PAGE_SELECT + SQLs.INVOLEVMENT_FILTER_EVENT_ID + SQLs.INVOLEVMENT_FILTER_PARTICIPANT
+						+ SQLs.INVOLVEMENT_PAGE_DATA_SELECT_INTO,
+				new NVPair("page", formData), new NVPair("eventId", eventId));
+		return formData;
 	}
 
 	@Override

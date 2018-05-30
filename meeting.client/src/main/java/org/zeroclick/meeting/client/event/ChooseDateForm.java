@@ -28,9 +28,7 @@ import org.zeroclick.meeting.client.event.ChooseDateForm.MainBox.ParticpationInf
 import org.zeroclick.meeting.client.event.ChooseDateForm.MainBox.ParticpationInfoBox.ProposedEventDateBox.ProposedSequenceBox.ProposedStartEventField;
 import org.zeroclick.meeting.service.CalendarService;
 import org.zeroclick.meeting.shared.event.EventFormData;
-import org.zeroclick.meeting.shared.event.EventStateCodeType;
 import org.zeroclick.meeting.shared.event.IEventService;
-import org.zeroclick.meeting.shared.event.involevment.IInvolvementService;
 import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
 import org.zeroclick.ui.form.fields.datefield.AbstractZonedDateField;
 
@@ -500,25 +498,15 @@ public class ChooseDateForm extends AbstractForm {
 
 		@Override
 		protected void execStore() {
-			final IEventService eventService = BEANS.get(IEventService.class);
-			final IInvolvementService involvementService = BEANS.get(IInvolvementService.class);
+			final EventWorkflow eventWorkflow = BEANS.get(EventWorkflow.class);
 
-			final EventFormData form = new EventFormData();
-			ChooseDateForm.this.exportFormData(form);
+			ChooseDateForm.this.eventData.getStartDate()
+					.setValue(ChooseDateForm.this.getProposedStartEventField().getValue());
+			ChooseDateForm.this.eventData.getEndDate()
+					.setValue(ChooseDateForm.this.getProposedEndEventDateField().getValue());
 
 			// save new date
-			eventService.store(form);
-
-			// update user involvement status
-			involvementService.updateStatusAccepted(ChooseDateForm.this.eventData.getEventId(),
-					ChooseDateForm.this.getForUserId());
-
-			// Update Event global State
-			final EventFormData fullEventFormData = eventService
-					.storeNewState(ChooseDateForm.this.eventData.getEventId(), EventStateCodeType.PlannedCode.ID);
-
-			// sendEmail(fullEventFormData);
-
+			eventWorkflow.acceptEvent(ChooseDateForm.this.eventData, ChooseDateForm.this.getForUserId());
 		}
 	}
 }

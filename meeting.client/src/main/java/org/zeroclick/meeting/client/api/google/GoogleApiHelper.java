@@ -22,7 +22,6 @@ import java.nio.file.Files;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -41,6 +40,7 @@ import org.eclipse.scout.rt.platform.config.AbstractStringConfigProperty;
 import org.eclipse.scout.rt.platform.config.CONFIG;
 import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.platform.util.CollectionUtility;
+import org.eclipse.scout.rt.platform.util.StringUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,11 +53,13 @@ import org.zeroclick.meeting.client.api.ApiCalendar;
 import org.zeroclick.meeting.client.api.ApiCredential;
 import org.zeroclick.meeting.client.common.UserAccessRequiredException;
 import org.zeroclick.meeting.service.CalendarService.EventIdentification;
+import org.zeroclick.meeting.service.ParticipantWithStatus;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationTablePageData.CalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.IApiService;
 import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
+import org.zeroclick.meeting.shared.event.involevment.InvolvmentStateCodeType;
 
 import com.google.api.client.auth.oauth2.AuthorizationCodeFlow;
 import com.google.api.client.auth.oauth2.AuthorizationCodeRequestUrl;
@@ -75,6 +77,7 @@ import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.services.calendar.model.CalendarList;
 import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.api.services.calendar.model.Event;
+import com.google.api.services.calendar.model.Event.Organizer;
 import com.google.api.services.calendar.model.EventAttendee;
 import com.google.api.services.calendar.model.EventDateTime;
 import com.google.api.services.people.v1.PeopleService;
@@ -321,7 +324,11 @@ public class GoogleApiHelper extends AbstractApiHelper<Credential, Calendar> {
 	}
 
 	public EventDateTime toEventDateTime(final ZonedDateTime dateTime) {
-		return this.getEventHelper().toEventDateTime(dateTime, dateTime.getOffset());
+		return this.getEventHelper().toProviderDateTime(dateTime);
+	}
+
+	public EventDateTime toEventDateTime(final Date dateTime) {
+		return this.getEventHelper().toProviderDateTime(dateTime);
 	}
 
 	public ZonedDateTime toZonedDateTime(final Date date, final ZoneId userZoneId) {
@@ -572,8 +579,8 @@ public class GoogleApiHelper extends AbstractApiHelper<Credential, Calendar> {
 	}
 
 	@Override
-	public String createEvent(final ZonedDateTime startDate, final ZonedDateTime endDate, final String subject,
-			final Long forUserId, final String location, final String withEmail, final Boolean guestAutoAcceptMeeting,
+	public String createEvent(final Date startDate, final Date endDate, final String subject, final Long forUserId,
+			final String organizerEmail, final String location, final Collection<ParticipantWithStatus> participants,
 			final String envDisplay, final CalendarConfigurationFormData calendarToStoreEvent,
 			final String description) {
 		final Event newEvent = new Event();
@@ -581,20 +588,43 @@ public class GoogleApiHelper extends AbstractApiHelper<Credential, Calendar> {
 		newEvent.setEnd(this.toEventDateTime(endDate));
 		newEvent.setSummary(envDisplay + " " + subject + TextsHelper.get(forUserId, "zc.common.email.subject.suffix"));
 		newEvent.setLocation(TextsHelper.get(forUserId, location));
-		newEvent.setDescription(subject);
 		newEvent.setDescription(description);
 
-		final EventAttendee attendeeEmail = new EventAttendee().setEmail(withEmail);
-		if (guestAutoAcceptMeeting) {
-			attendeeEmail.setResponseStatus("accepted");
+		final Organizer organizer = new Organizer();
+		organizer.setEmail(organizerEmail);
+		newEvent.setOrganizer(organizer);
+
+		final List<EventAttendee> attendees = new ArrayList<>();
+
+		if (participants.size() > 0) {
+			for (final ParticipantWithStatus participant : participants) {
+				final EventAttendee attendeeEmail = new EventAttendee();
+				attendeeEmail.setEmail(participant.getEmail());
+				attendeeEmail.setResponseStatus(this.convertInvolvmentState(participant.getState()));
+				// attendeeEmail.setResponseStatus("accepted");
+				attendees.add(attendeeEmail);
+			}
 		}
 
-		final EventAttendee[] attendees = new EventAttendee[] { attendeeEmail };
-		newEvent.setAttendees(Arrays.asList(attendees));
+		newEvent.setAttendees(attendees);
 
 		final Event event = this.getEventHelper().create(newEvent, calendarToStoreEvent);
 
 		return null == event ? null : event.getId();
+	}
+
+	@Override
+	public String convertInvolvmentState(final String zeroClickStateId) {
+		String googleParticipantState = "needsAction";
+		if (!StringUtility.isNullOrEmpty(zeroClickStateId)) {
+			if (InvolvmentStateCodeType.AcceptedCode.ID.equals(zeroClickStateId)) {
+				googleParticipantState = "accepted";
+			} else if (InvolvmentStateCodeType.RefusedCode.ID.equals(zeroClickStateId)) {
+				googleParticipantState = "declined";
+			}
+		}
+
+		return googleParticipantState;
 	}
 
 	@Override

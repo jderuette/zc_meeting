@@ -514,15 +514,15 @@ public class ApiService extends AbstractCommonService implements IApiService {
 				if (null != cachedApi.getAccountEmail() && cachedApi.getAccountEmail().equals(accountsEmail)) {
 					if (cachedApi.getProvider().equals(providerId)) {
 						matchingApi = cachedApi;
+						break;
 					} else {
 						if (LOG.isDebugEnabled()) {
 							LOG.debug(new StringBuilder().append("Api found with accountsEmail : ")
-									.append(accountsEmail).append(" but now with correct provider found : ")
+									.append(accountsEmail).append(" but not with correct provider found : ")
 									.append(cachedApi.getProvider()).append(" searched : ").append(providerId)
 									.toString());
 						}
 					}
-					break;
 				}
 			}
 		}

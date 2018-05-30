@@ -52,6 +52,8 @@ public interface IUserService extends IService {
 
 	String getUserLanguage(Long guestId);
 
+	String getUserEmail(Long userId);
+
 	Set<Long> getAllUserId();
 
 	/**

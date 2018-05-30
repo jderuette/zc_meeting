@@ -532,6 +532,10 @@ public class CalendarConfigurationService extends AbstractCommonService implemen
 	}
 
 	protected Long getCalendarIdToStoreEvents(final Long userId) {
+		if (null == userId) {
+			LOG.error("Cannot get Calendar Configuration NULL userId");
+			throw new VetoException("Error : cannot create external Event");
+		}
 		Long calendarConfigId = null;
 		final CalendarConfigurationTablePageData pageData = this.getDataCacheByUser().get(userId);
 

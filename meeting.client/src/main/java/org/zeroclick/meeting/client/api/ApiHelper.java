@@ -17,12 +17,15 @@ package org.zeroclick.meeting.client.api;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 
 import org.eclipse.scout.rt.platform.ApplicationScoped;
 import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
 import org.zeroclick.meeting.service.CalendarAviability;
 import org.zeroclick.meeting.service.CalendarService.EventIdentification;
+import org.zeroclick.meeting.service.ParticipantWithStatus;
 import org.zeroclick.meeting.shared.calendar.AbstractCalendarConfigurationTablePageData.AbstractCalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
 
@@ -57,8 +60,8 @@ public interface ApiHelper {
 
 	public Boolean delete(final String calendarId, final String eventId, final Long apiCredentialId);
 
-	public String createEvent(ZonedDateTime startDate, ZonedDateTime endDate, String subject, Long forUserId,
-			String location, String withEmail, Boolean guestAutoAcceptMeeting, String envDisplay,
+	public String createEvent(Date startDate, Date endDate, String subject, Long forUserId, String organizerEmail,
+			String location, Collection<ParticipantWithStatus> participants, String envDisplay,
 			CalendarConfigurationFormData calendarToStoreEvent, String description);
 
 	public String getEventHtmlLink(EventIdentification eventIdentification, Long apiCredentialId);

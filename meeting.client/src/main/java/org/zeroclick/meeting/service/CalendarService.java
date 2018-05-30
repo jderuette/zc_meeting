@@ -20,6 +20,8 @@ import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -58,6 +60,7 @@ import org.zeroclick.meeting.shared.calendar.IApiService;
 import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.IEventService;
+import org.zeroclick.meeting.shared.event.externalevent.ExternalEventFormData;
 import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
 
 import com.google.api.services.calendar.model.Event;
@@ -538,9 +541,14 @@ public class CalendarService {
 		return calendarToStoreEvent;
 	}
 
-	public EventIdentification createEvent(final ZonedDateTime startDate, final ZonedDateTime endDate,
-			final Long forUserId, final String withEmail, final String subject, final String location,
-			final Boolean guestAutoAcceptMeeting, final String description) throws IOException {
+	public EventIdentification createEvent(final Date startDate, final Date endDate, final Long forUserId,
+			final String organizerEmail, final Collection<ParticipantWithStatus> participants, final String subject,
+			final String location, final String description) throws IOException {
+		if (null == forUserId) {
+			LOG.error("Error while creating external event for a NULL userId as Holder");
+			throw new VetoException("Technical Error while creating external Event");
+		}
+
 		final CalendarConfigurationFormData calendarToStoreEvent = this.getUserCreateEventCalendar(forUserId);
 		final ApiTableRowData eventCreatorApi = this.getCalendarApi(calendarToStoreEvent);
 
@@ -550,16 +558,15 @@ public class CalendarService {
 			LOG.debug(new StringBuilder().append("Creating Event : '").append(subject).append("' fom : ")
 					.append(startDate).append(" to ").append(endDate).append(", for :").append(forUserId)
 					.append(", in Calendar : ").append(calendarToStoreEvent.getExternalId().getValue())
-					.append(" (attendee :").append(withEmail).append(", autoAccept? ").append(guestAutoAcceptMeeting)
-					.append(")").toString());
+					.append(" (attendee :").append(participants).append(", autoAccept? ").append(")").toString());
 		}
 
 		final String envDisplay = new ApplicationEnvProperty().displayAsText();
 
-		final String createdEventId = apiHelper.createEvent(startDate, endDate, subject, forUserId, location, withEmail,
-				guestAutoAcceptMeeting, envDisplay, calendarToStoreEvent, description);
+		final String createdEventId = apiHelper.createEvent(startDate, endDate, subject, forUserId, organizerEmail,
+				location, participants, envDisplay, calendarToStoreEvent, description);
 
-		return new EventIdentification(createdEventId, calendarToStoreEvent.getExternalId().getValue());
+		return new EventIdentification(createdEventId, calendarToStoreEvent);
 	}
 
 	// public EventIdentification acceptCreatedEvent(final EventIdentification
@@ -593,11 +600,15 @@ public class CalendarService {
 	}
 
 	protected ApiTableRowData getApi(final EventIdentification eventIdentification, final Long eventHeldBy) {
-		final ICalendarConfigurationService calendarConfigService = BEANS.get(ICalendarConfigurationService.class);
+		// final ICalendarConfigurationService calendarConfigService =
+		// BEANS.get(ICalendarConfigurationService.class);
 		final IApiService apiService = BEANS.get(IApiService.class);
 
-		final Long calendarLinkedApiId = calendarConfigService.getCalendarApiId(eventIdentification.getCalendarId(),
-				eventHeldBy);
+		// final Long calendarLinkedApiId =
+		// calendarConfigService.getCalendarApiId(eventIdentification.getCalendarId(),
+		// eventHeldBy);
+		final Long calendarLinkedApiId = eventIdentification.getCalendarData().getOAuthCredentialId().getValue();
+
 		final ApiTableRowData apiData = apiService.getApi(calendarLinkedApiId);
 
 		return apiData;
@@ -684,19 +695,20 @@ public class CalendarService {
 
 	public class EventIdentification {
 		private final String eventId;
-		private final String calendarId;
+		private final CalendarConfigurationFormData calendarData;
+		private ExternalEventFormData externalEventData;
 
-		public EventIdentification(final String eventId, final String calendarId) {
+		public EventIdentification(final String eventId, final CalendarConfigurationFormData calendarData) {
 			super();
 			this.eventId = eventId;
-			this.calendarId = calendarId;
+			this.calendarData = calendarData;
 		}
 
 		@Override
 		public String toString() {
 			final StringBuilder builder = new StringBuilder(128);
 			builder.append("EventIdentification [eventId=").append(this.eventId).append(", calendarId=")
-					.append(this.calendarId).append("]");
+					.append(this.getCalendarData().getCalendarConfigurationId().getValue()).append("]");
 			return builder.toString();
 		}
 
@@ -704,8 +716,17 @@ public class CalendarService {
 			return this.eventId;
 		}
 
-		public String getCalendarId() {
-			return this.calendarId;
+		public CalendarConfigurationFormData getCalendarData() {
+			return this.calendarData;
+		}
+
+		public ExternalEventFormData getExternalEventData() {
+			return this.externalEventData;
+		}
+
+		public void setExternalEventData(final ExternalEventFormData externalEventData) {
+			this.externalEventData = externalEventData;
 		}
 	}
+
 }

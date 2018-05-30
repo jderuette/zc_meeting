@@ -45,7 +45,7 @@ import com.github.zafarkhaja.semver.Version;
 public class PatchMultiInviteeMeeting extends AbstractDataPatcher {
 
 	public static final String PATCHED_TABLE = "EVENT";
-	public static final String PATCHED_CREATED_INVOLVEMENT_TABLE = "INVOLEVMENT";
+	public static final String PATCHED_CREATED_INVOLVEMENT_TABLE = "INVOLVEMENT";
 	public static final String PATCHED_CREATED_EXTERNAL_EVENT_TABLE = "EXTERNAL_EVENT";
 
 	public static final String PATCHED_MOOVED_STATE_COLUMN = "state";

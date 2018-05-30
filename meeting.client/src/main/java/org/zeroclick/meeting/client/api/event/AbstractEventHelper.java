@@ -19,6 +19,7 @@ import java.time.DayOfWeek;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -353,5 +354,8 @@ public abstract class AbstractEventHelper<T, D> implements EventHelper {
 
 	protected abstract D toProviderDateTime(ZonedDateTime date);
 
+	protected abstract D toProviderDateTime(Date date);
+
 	public abstract T create(T newEvent, CalendarConfigurationFormData calendarToStoreEvent);
+
 }

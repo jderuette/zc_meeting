@@ -725,13 +725,23 @@ public class UserService extends AbstractCommonService implements IUserService {
 	@Override
 	public String getUserLanguage(final Long userId) {
 		// No permission check to allow organizer get language of guest (for
-		// email)
+		// emails)
 		UserFormData formData = new UserFormData();
 		formData.getUserId().setValue(userId);
 
 		formData = this.load(formData, Boolean.FALSE);
 
 		return formData.getLanguage().getValue();
+	}
+
+	@Override
+	public String getUserEmail(final Long userId) {
+		UserFormData formData = new UserFormData();
+		formData.getUserId().setValue(userId);
+
+		formData = this.load(formData, Boolean.TRUE);
+
+		return formData.getEmail().getValue();
 	}
 
 	@Override
@@ -908,4 +918,5 @@ public class UserService extends AbstractCommonService implements IUserService {
 			}
 		}
 	}
+
 }
