@@ -550,35 +550,22 @@ public class EventService extends AbstractCommonService implements IEventService
 
 	@Override
 	public boolean isOwn(final Long eventId) {
-		Boolean isOwn = Boolean.FALSE;
+		final IInvolvementService involvementService = BEANS.get(IInvolvementService.class);
 		final Long currentUserId = super.userHelper.getCurrentUserId();
 
-		final Long eventOwner = this.getOwner(eventId);
+		final Boolean isOrganizer = involvementService.isOrganizer(eventId, currentUserId);
 
-		if (null == eventOwner) {
-			LOG.error(
-					new StringBuffer().append("Event ").append(eventId).append(" as NO owner (organizer)").toString());
-			isOwn = Boolean.FALSE;
-		} else if (eventOwner.equals(currentUserId)) {
-			isOwn = Boolean.TRUE;
-		}
-
-		return isOwn;
+		return isOrganizer;
 	}
 
 	@Override
 	public boolean isRecipient(final Long eventId) {
-		Boolean isRecipient = Boolean.FALSE;
-		final String eventRecipient = this.getRecipient(eventId);
-		if (null == eventRecipient || "".equals(eventRecipient)) {
-			LOG.error(
-					new StringBuffer().append("Event ").append(eventId).append(" as NO recipient (email)").toString());
-			isRecipient = Boolean.FALSE;
-		} else if (eventRecipient.equalsIgnoreCase(this.getCurrentUserEmail())) {
-			isRecipient = Boolean.TRUE;
-		}
-		return isRecipient;
+		final IInvolvementService involvementService = BEANS.get(IInvolvementService.class);
+		final Long currentUserId = super.userHelper.getCurrentUserId();
 
+		final Boolean isParticipant = involvementService.isParticipant(eventId, currentUserId);
+
+		return isParticipant;
 	}
 
 	/**

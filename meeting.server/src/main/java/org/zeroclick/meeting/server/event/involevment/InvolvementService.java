@@ -155,4 +155,18 @@ public class InvolvementService extends AbstractCommonService implements IInvolv
 
 		return isGuest;
 	}
+
+	@Override
+	public Boolean isOrganizer(final Long eventId, final Long userId) {
+		return this.hasRow(
+				SQLs.INVOLVEMENT_SELECT + SQLs.INVOLEVMENT_FILTER_PRIMARY_KEY + SQLs.INVOLEVMENT_FILTER_ORGANIZER,
+				new NVPair("eventId", eventId), new NVPair("userId", userId));
+	}
+
+	@Override
+	public Boolean isParticipant(final Long eventId, final Long userId) {
+		return this.hasRow(
+				SQLs.INVOLVEMENT_SELECT + SQLs.INVOLEVMENT_FILTER_PRIMARY_KEY + SQLs.INVOLEVMENT_FILTER_PARTICIPANT,
+				new NVPair("eventId", eventId), new NVPair("userId", userId));
+	}
 }

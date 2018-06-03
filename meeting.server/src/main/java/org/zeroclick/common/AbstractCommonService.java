@@ -99,6 +99,17 @@ public abstract class AbstractCommonService {
 		return notifiedUsers;
 	}
 
+	protected Boolean hasRow(final String sql, final Object... bindBases) {
+		Boolean hasRow = Boolean.FALSE;
+		final Object[][] data = SQL.select(sql, bindBases);
+
+		if (null != data && data.length > 0) {
+			hasRow = Boolean.TRUE;
+		}
+
+		return hasRow;
+	}
+
 	/**
 	 * Get all UserId having a pending event with current connected user
 	 *

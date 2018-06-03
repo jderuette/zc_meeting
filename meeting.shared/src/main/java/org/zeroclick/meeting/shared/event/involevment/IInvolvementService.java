@@ -26,4 +26,8 @@ public interface IInvolvementService extends IService {
 	InvolvementFormData getOrganizer(Long eventId);
 
 	InvolvementTablePageData getParticipants(Long eventId);
+
+	Boolean isOrganizer(Long eventId, Long userId);
+
+	Boolean isParticipant(Long eventId, Long userId);
 }
