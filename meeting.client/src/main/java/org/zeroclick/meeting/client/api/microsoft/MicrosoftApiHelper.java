@@ -38,6 +38,7 @@ import org.zeroclick.comon.text.TextsHelper;
 import org.zeroclick.configuration.shared.api.ApiTablePageData;
 import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
 import org.zeroclick.configuration.shared.provider.ProviderCodeType;
+import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
 import org.zeroclick.meeting.client.api.AbstractApiHelper;
 import org.zeroclick.meeting.client.api.ApiCalendar;
 import org.zeroclick.meeting.client.api.ApiCredential;
@@ -62,6 +63,7 @@ import org.zeroclick.meeting.shared.calendar.ApiFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
 import org.zeroclick.meeting.shared.calendar.CalendarConfigurationTablePageData.CalendarConfigurationTableRowData;
 import org.zeroclick.meeting.shared.calendar.IApiService;
+import org.zeroclick.rt.plateform.config.AbstractUrlConfigProperty;
 
 import com.google.api.client.util.IOUtils;
 
@@ -141,11 +143,13 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 	private void loadConfig() {
 		this.appId = CONFIG.getPropertyValue(MicrosoftClientIdProperty.class);
 		this.appPassword = CONFIG.getPropertyValue(MicrosoftClientSecretProperty.class);
-		this.redirectUrl = buildRedirectUri(CONFIG.getPropertyValue(MicrosoftCallbackUrlProperty.class));
+		this.redirectUrl = getRedirectUri();
 	}
 
 	public static String getRedirectUri() {
-		return buildRedirectUri(CONFIG.getPropertyValue(MicrosoftCallbackUrlProperty.class));
+		return BEANS.get(MicrosoftCallbackUrlProperty.class).getAbsoluteURI();
+		// return
+		// CONFIG.getPropertyValue(MicrosoftCallbackUrlProperty.class).get;
 	}
 
 	@Override
@@ -652,7 +656,7 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 		}
 	}
 
-	public static class MicrosoftCallbackUrlProperty extends AbstractStringConfigProperty {
+	public static class MicrosoftCallbackUrlProperty extends AbstractUrlConfigProperty {
 
 		@Override
 		protected String getDefaultValue() {
@@ -662,6 +666,11 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 		@Override
 		public String getKey() {
 			return "contacts.api.microsoft.callback.url";
+		}
+
+		@Override
+		protected String getDefautlBaseUrl() {
+			return CONFIG.getPropertyValue(ApplicationUrlProperty.class);
 		}
 	}
 }
