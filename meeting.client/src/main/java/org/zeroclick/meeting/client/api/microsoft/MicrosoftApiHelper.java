@@ -171,7 +171,11 @@ public class MicrosoftApiHelper extends AbstractApiHelper<String, CalendarServic
 		urlBuilder.parameter("nonce", nonce.toString());
 		urlBuilder.parameter("response_mode", "form_post");
 
-		return urlBuilder.createURI().toString();
+		final String uri = urlBuilder.createURI().toString();
+
+		LOG.info("User will be redirected to : " + uri);
+
+		return uri;
 	}
 
 	public TokenResponse getTokenFromAuthCode(final String authCode, final String tenantId) {
