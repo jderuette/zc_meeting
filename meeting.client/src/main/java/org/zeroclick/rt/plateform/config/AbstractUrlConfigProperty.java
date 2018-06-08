@@ -16,6 +16,8 @@ limitations under the License.
 package org.zeroclick.rt.plateform.config;
 
 import org.eclipse.scout.rt.platform.config.AbstractStringConfigProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.api.client.http.GenericUrl;
 
@@ -27,6 +29,8 @@ import com.google.api.client.http.GenericUrl;
  *
  */
 public abstract class AbstractUrlConfigProperty extends AbstractStringConfigProperty {
+
+	private static final Logger LOG = LoggerFactory.getLogger(AbstractUrlConfigProperty.class);
 
 	/**
 	 * The base URL to build the FULL url, can be
@@ -42,13 +46,20 @@ public abstract class AbstractUrlConfigProperty extends AbstractStringConfigProp
 
 		if (null != parsedValue) {
 			if ('/' == parsedValue.charAt(0)) {
-				final GenericUrl url = new GenericUrl(this.getDefautlBaseUrl());
+				final String baseUrl = this.getDefautlBaseUrl();
+				LOG.info(new StringBuilder().append("Building URI for key : ").append(this.getKey())
+						.append(" with Base URL : ").append(baseUrl).append(" and path : ").append(parsedValue)
+						.toString());
+				final GenericUrl url = new GenericUrl(baseUrl);
 				url.setRawPath(parsedValue);
 				urlString = url.build();
 			} else {
 				urlString = parsedValue;
 			}
 		}
+
+		LOG.info(new StringBuilder().append("Absolute URI built for key : ").append(this.getKey())
+				.append(" with value : ").append(urlString).toString());
 		return urlString;
 	}
 
