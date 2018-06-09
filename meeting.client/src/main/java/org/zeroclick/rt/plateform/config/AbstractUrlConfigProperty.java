@@ -25,7 +25,9 @@ import com.google.api.client.http.GenericUrl;
  * @author djer
  *
  *         Manage URL config, can be relative "/myPath/myRessource", or full
- *         "http://myDNS/MyPath" or "https://myDNS/MyPath"
+ *         "url-http://myDNS/MyPath" or "url-https://myDNS/MyPath"<br/>
+ *         <b>the prefix url- is required</b> to avoid
+ *         PropertiesHelper.resolve:323 to remove the DNS part
  *
  */
 public abstract class AbstractUrlConfigProperty extends AbstractStringConfigProperty {
@@ -54,7 +56,8 @@ public abstract class AbstractUrlConfigProperty extends AbstractStringConfigProp
 				url.setRawPath(parsedValue);
 				urlString = url.build();
 			} else {
-				urlString = parsedValue;
+				// remove the "url-" part
+				urlString = parsedValue.substring(4);
 			}
 		}
 
