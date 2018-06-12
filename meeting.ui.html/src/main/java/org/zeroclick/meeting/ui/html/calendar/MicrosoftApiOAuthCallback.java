@@ -24,7 +24,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.eclipse.scout.rt.platform.BEANS;
-import org.eclipse.scout.rt.platform.config.CONFIG;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.configuration.shared.provider.ProviderCodeType;
@@ -54,7 +53,7 @@ public class MicrosoftApiOAuthCallback extends AbstractApiServletRequestHandler 
 	private final String registeredPath;
 
 	public MicrosoftApiOAuthCallback() {
-		this.registeredPath = CONFIG.getPropertyValue(MicrosoftCallbackUrlProperty.class);
+		this.registeredPath = BEANS.get(MicrosoftCallbackUrlProperty.class).getRelativeUri();
 	}
 
 	@Override

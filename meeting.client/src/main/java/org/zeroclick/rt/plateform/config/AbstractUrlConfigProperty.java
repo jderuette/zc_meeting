@@ -34,6 +34,8 @@ public abstract class AbstractUrlConfigProperty extends AbstractStringConfigProp
 
 	private static final Logger LOG = LoggerFactory.getLogger(AbstractUrlConfigProperty.class);
 
+	private static final String FULL_URL_PREFIX = "url-";
+
 	/**
 	 * The base URL to build the FULL url, can be
 	 * CONFIG.getPropertyValue(ApplicationUrlProperty.class);
@@ -57,13 +59,41 @@ public abstract class AbstractUrlConfigProperty extends AbstractStringConfigProp
 				urlString = url.build();
 			} else {
 				// remove the "url-" part
-				urlString = parsedValue.substring(4);
+				urlString = parsedValue.substring(FULL_URL_PREFIX.length());
 			}
 		}
 
 		LOG.info(new StringBuilder().append("Absolute URI built for key : ").append(this.getKey())
 				.append(" with value : ").append(urlString).toString());
 		return urlString;
+	}
+
+	/**
+	 *
+	 * @return a relative URI, required to register a servlet, without the
+	 *         protocol and DNS part
+	 */
+	public String getRelativeUri() {
+		String relativeUrlString = null;
+		final String parsedValue = this.getValue();
+
+		if (null != parsedValue) {
+			if (parsedValue.startsWith(FULL_URL_PREFIX)) {
+				// remove the "url-"
+				final String urlString = parsedValue.substring(4);
+
+				// remove protocol, DNS part and eventual query parameters
+				final GenericUrl url = new GenericUrl(urlString);
+				relativeUrlString = url.getRawPath();
+
+			} else {
+				relativeUrlString = parsedValue;
+			}
+		}
+
+		LOG.info(new StringBuilder().append("Relative URI built for key : ").append(this.getKey())
+				.append(" with value : ").append(relativeUrlString).toString());
+		return relativeUrlString;
 	}
 
 }

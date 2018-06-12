@@ -14,5 +14,5 @@
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="org.eclipse.scout.dev.jetty.JettyServer"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="meeting.ui.html.app.dev"/>
 <stringAttribute key="org.eclipse.jdt.launching.SOURCE_PATH_PROVIDER" value="org.eclipse.m2e.launchconfig.sourcepathProvider"/>
-<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Dscout.jetty.port=8082&#13;&#10;-Djandex.rebuild=true&#10;-Duser.timezone=UTC&#10;-DZEROCLICK_AUTH_PRIVATE_KEY=MD4CAQAwEAYHKoZIzj0CAQYFK4EEAAoEJzAlAgEBBCDb6wnbjkR62p3azZOdS6aCaZNeKCedE4IqaT3plmtjRg==&#10;-DZEROCLICK_MAIL_BCC=jeremie.deruette@gmail.com"/>
+<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Dscout.jetty.port=8082&#13;&#10;-Djandex.rebuild=true&#10;-Duser.timezone=UTC&#10;-DZEROCLICK_AUTH_PRIVATE_KEY=MD4CAQAwEAYHKoZIzj0CAQYFK4EEAAoEJzAlAgEBBCDb6wnbjkR62p3azZOdS6aCaZNeKCedE4IqaT3plmtjRg==&#10;-DZEROCLICK_MAIL_BCC=jeremie.deruette@gmail.com&#10;-DZEROCLICK_API_MICROSOFT_CALLBACK_URL=url-http://localhost:8082/api/microsoft/oauth2callback"/>
 </launchConfiguration>
