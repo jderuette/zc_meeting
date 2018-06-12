@@ -8,7 +8,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.scout.rt.platform.BEANS;
-import org.eclipse.scout.rt.platform.config.CONFIG;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +44,7 @@ public class GoogleApiServletCallback extends AbstractApiServletRequestHandler {
 	private final String registeredPath;
 
 	public GoogleApiServletCallback() {
-		this.registeredPath = CONFIG.getPropertyValue(GoogleCallbackUrlProperty.class);
+		this.registeredPath = BEANS.get(GoogleCallbackUrlProperty.class).getRelativeUri();
 	}
 
 	@Override

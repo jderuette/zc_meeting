@@ -48,6 +48,7 @@ import org.zeroclick.comon.text.TextsHelper;
 import org.zeroclick.configuration.shared.api.ApiTablePageData;
 import org.zeroclick.configuration.shared.api.ApiTablePageData.ApiTableRowData;
 import org.zeroclick.configuration.shared.provider.ProviderCodeType;
+import org.zeroclick.meeting.client.GlobalConfig.ApplicationUrlProperty;
 import org.zeroclick.meeting.client.api.AbstractApiHelper;
 import org.zeroclick.meeting.client.api.ApiCalendar;
 import org.zeroclick.meeting.client.api.ApiCredential;
@@ -60,6 +61,7 @@ import org.zeroclick.meeting.shared.calendar.CalendarConfigurationTablePageData.
 import org.zeroclick.meeting.shared.calendar.IApiService;
 import org.zeroclick.meeting.shared.calendar.ICalendarConfigurationService;
 import org.zeroclick.meeting.shared.event.involevment.InvolvmentStateCodeType;
+import org.zeroclick.rt.plateform.config.AbstractUrlConfigProperty;
 
 import com.google.api.client.auth.oauth2.AuthorizationCodeFlow;
 import com.google.api.client.auth.oauth2.AuthorizationCodeRequestUrl;
@@ -155,7 +157,8 @@ public class GoogleApiHelper extends AbstractApiHelper<Credential, Calendar> {
 	}
 
 	public static String getRedirectUri() {
-		return buildRedirectUri(CONFIG.getPropertyValue(GoogleCallbackUrlProperty.class));
+		return BEANS.get(GoogleCallbackUrlProperty.class).getAbsoluteURI();
+		// return CONFIG.getPropertyValue(GoogleCallbackUrlProperty.class);
 	}
 
 	/** Lock on the flow and credential. */
@@ -708,7 +711,7 @@ public class GoogleApiHelper extends AbstractApiHelper<Credential, Calendar> {
 	/**
 	 * Callback used by Google API flow to handle user authentification response
 	 */
-	public static class GoogleCallbackUrlProperty extends AbstractStringConfigProperty {
+	public static class GoogleCallbackUrlProperty extends AbstractUrlConfigProperty {
 
 		@Override
 		protected String getDefaultValue() {
@@ -718,6 +721,11 @@ public class GoogleApiHelper extends AbstractApiHelper<Credential, Calendar> {
 		@Override
 		public String getKey() {
 			return "contacts.api.google.callback.url";
+		}
+
+		@Override
+		protected String getDefautlBaseUrl() {
+			return CONFIG.getPropertyValue(ApplicationUrlProperty.class);
 		}
 	}
 
