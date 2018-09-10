@@ -15,6 +15,8 @@ public interface IInvolvementService extends IService {
 
 	InvolvementFormData load(InvolvementFormData formData);
 
+	InvolvementFormData load(Long userId, Long eventId);
+
 	InvolvementFormData store(InvolvementFormData formData);
 
 	Boolean isGuest(Long userId);
@@ -30,4 +32,5 @@ public interface IInvolvementService extends IService {
 	Boolean isOrganizer(Long eventId, Long userId);
 
 	Boolean isParticipant(Long eventId, Long userId);
+
 }

@@ -2,8 +2,12 @@ package org.zeroclick.meeting.client.event;
 
 import java.time.Duration;
 import java.time.ZonedDateTime;
+import java.util.Set;
 
+import org.eclipse.scout.rt.client.ui.action.keystroke.IKeyStroke;
 import org.eclipse.scout.rt.client.ui.action.menu.AbstractMenu;
+import org.eclipse.scout.rt.client.ui.action.menu.IMenuType;
+import org.eclipse.scout.rt.client.ui.action.menu.TableMenuType;
 import org.eclipse.scout.rt.client.ui.form.AbstractForm;
 import org.eclipse.scout.rt.client.ui.form.AbstractFormHandler;
 import org.eclipse.scout.rt.client.ui.form.fields.button.AbstractCancelButton;
@@ -15,6 +19,7 @@ import org.eclipse.scout.rt.client.ui.form.fields.stringfield.AbstractStringFiel
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.Order;
 import org.eclipse.scout.rt.platform.exception.VetoException;
+import org.eclipse.scout.rt.platform.util.CollectionUtility;
 import org.eclipse.scout.rt.platform.util.TriState;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.zeroclick.comon.date.DateHelper;
@@ -27,6 +32,7 @@ import org.zeroclick.meeting.client.event.ChooseDateForm.MainBox.ParticpationInf
 import org.zeroclick.meeting.client.event.ChooseDateForm.MainBox.ParticpationInfoBox.ProposedEventDateBox.ProposedSequenceBox.ProposedEndEventDateField;
 import org.zeroclick.meeting.client.event.ChooseDateForm.MainBox.ParticpationInfoBox.ProposedEventDateBox.ProposedSequenceBox.ProposedStartEventField;
 import org.zeroclick.meeting.service.CalendarService;
+import org.zeroclick.meeting.shared.Icons;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
@@ -248,6 +254,64 @@ public class ChooseDateForm extends AbstractForm {
 					return 1;
 				}
 
+				protected void searchNext(final ZonedDateTime currentStartDate) {
+					final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
+
+					Long currentUserId;
+
+					if (null == ChooseDateForm.this.getForUserId()) {
+						final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
+						currentUserId = acsHelper.getZeroClickUserIdOfCurrentSubject();
+					} else {
+						currentUserId = ChooseDateForm.this.getForUserId();
+					}
+
+					final ZonedDateTime newStartDate;
+
+					if (null != currentStartDate) {
+						newStartDate = currentStartDate.plus(Duration.ofMinutes(45));
+					} else {
+						newStartDate = appUserHelper.getUserNow(currentUserId);
+					}
+
+					if (null == ChooseDateForm.this.eventData) {
+						throw new VetoException("Event Id required to Choose a date");
+					}
+
+					final CalendarService calendarService = BEANS.get(CalendarService.class);
+					final DateHelper dateHelper = BEANS.get(DateHelper.class);
+
+					final DateReturn newPossibleDate = calendarService.searchNextDate(
+							ChooseDateForm.this.eventData.getEventId(),
+							ChooseDateForm.this.eventData.getDuration().getValue(),
+							ChooseDateForm.this.eventData.getSlot().getValue(),
+							ChooseDateForm.this.eventData.getOrganizer().getValue(), currentUserId,
+							dateHelper.getZonedValue(appUserHelper.getCurrentUserTimeZone(),
+									ChooseDateForm.this.eventData.getMinimalStartDate().getValue()),
+							dateHelper.getZonedValue(appUserHelper.getCurrentUserTimeZone(),
+									ChooseDateForm.this.eventData.getMaximalStartDate().getValue()),
+							newStartDate, currentStartDate, Boolean.TRUE);
+
+					if (newPossibleDate.isNoAvailableDate()) {
+						return;// break new Date search
+					} else {
+						if (newPossibleDate.isCreated()) {
+							// update start and end date
+							ChooseDateForm.this.getProposedStartEventField().setValue(newPossibleDate.getStart());
+							ChooseDateForm.this.getProposedEndEventDateField().setValue(newPossibleDate.getEnd());
+
+							if (null != newPossibleDate.getMessageKey()) {
+								ChooseDateForm.this.getMessageField()
+										.setValue(TEXTS.get(newPossibleDate.getMessageKey()));
+								ChooseDateForm.this.getMessageField().setVisible(true);
+							} else {
+								ChooseDateForm.this.getMessageField().setValue(null);
+								ChooseDateForm.this.getMessageField().setVisible(false);
+							}
+						}
+					}
+				}
+
 				@Order(1000)
 				public class NextMenu extends AbstractMenu {
 					@Override
@@ -256,63 +320,66 @@ public class ChooseDateForm extends AbstractForm {
 					}
 
 					@Override
+					protected String getConfiguredIconId() {
+						return Icons.LongArrowRight;
+					}
+
+					@Override
 					protected void execAction() {
-						final CalendarService calendarService = BEANS.get(CalendarService.class);
-						final DateHelper dateHelper = BEANS.get(DateHelper.class);
-						final AppUserHelper appUserHelper = BEANS.get(AppUserHelper.class);
-
-						Long currentUserId;
-
-						if (null == ChooseDateForm.this.getForUserId()) {
-							final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
-							currentUserId = acsHelper.getZeroClickUserIdOfCurrentSubject();
-						} else {
-							currentUserId = ChooseDateForm.this.getForUserId();
-						}
-
-						final ZonedDateTime newStartDate;
-
 						final ZonedDateTime currentStartDate = ChooseDateForm.this.getProposedStartEventField()
 								.getZonedValue();
+						ProposedEventDateBox.this.searchNext(currentStartDate);
+					}
 
-						if (null != currentStartDate) {
-							newStartDate = currentStartDate.plus(Duration.ofMinutes(45));
-						} else {
-							newStartDate = appUserHelper.getUserNow(currentUserId);
+				}
+
+				@Order(4000)
+				public class NextChooserMenu extends AbstractMenu {
+					@Override
+					protected String getConfiguredText() {
+						return TEXTS.get("zc.meeting.nextChooser");
+					}
+
+					@Override
+					protected String getConfiguredIconId() {
+						return Icons.Calendar;
+					}
+
+					@Override
+					protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+						return CollectionUtility.hashSet(TableMenuType.SingleSelection);
+					}
+
+					@Override
+					protected void execAction() {
+						throw new VetoException("Top level Menu : Not implemented (Yet)");
+					}
+
+					@Order(1000)
+					public class NextDayMenu extends AbstractMenu {
+						@Override
+						protected String getConfiguredText() {
+							return TEXTS.get("zc.meeting.nextDay");
 						}
 
-						if (null == ChooseDateForm.this.eventData) {
-							throw new VetoException("Event Id required to Choose a date");
+						@Override
+						protected Set<? extends IMenuType> getConfiguredMenuTypes() {
+							return CollectionUtility.hashSet(TableMenuType.SingleSelection);
 						}
 
-						final DateReturn newPossibleDate = calendarService.searchNextDate(
-								ChooseDateForm.this.eventData.getEventId(),
-								ChooseDateForm.this.eventData.getDuration().getValue(),
-								ChooseDateForm.this.eventData.getSlot().getValue(),
-								ChooseDateForm.this.eventData.getOrganizer().getValue(), currentUserId,
-								dateHelper.getZonedValue(appUserHelper.getCurrentUserTimeZone(),
-										ChooseDateForm.this.eventData.getMinimalStartDate().getValue()),
-								dateHelper.getZonedValue(appUserHelper.getCurrentUserTimeZone(),
-										ChooseDateForm.this.eventData.getMaximalStartDate().getValue()),
-								newStartDate, currentStartDate, Boolean.TRUE);
+						@Override
+						protected void execAction() {
+							final ZonedDateTime currentStartDate = ChooseDateForm.this.getProposedStartEventField()
+									.getZonedValue();
+							final ZonedDateTime newStartDate = currentStartDate.plusDays(1).withHour(0).withMinute(0)
+									.withSecond(0).withNano(0);
 
-						if (newPossibleDate.isNoAvailableDate()) {
-							return;// break new Date search
-						} else {
-							if (newPossibleDate.isCreated()) {
-								// update start and end date
-								ChooseDateForm.this.getProposedStartEventField().setValue(newPossibleDate.getStart());
-								ChooseDateForm.this.getProposedEndEventDateField().setValue(newPossibleDate.getEnd());
+							ProposedEventDateBox.this.searchNext(newStartDate);
+						}
 
-								if (null != newPossibleDate.getMessageKey()) {
-									ChooseDateForm.this.getMessageField()
-											.setValue(TEXTS.get(newPossibleDate.getMessageKey()));
-									ChooseDateForm.this.getMessageField().setVisible(true);
-								} else {
-									ChooseDateForm.this.getMessageField().setValue(null);
-									ChooseDateForm.this.getMessageField().setVisible(false);
-								}
-							}
+						@Override
+						protected String getConfiguredKeyStroke() {
+							return combineKeyStrokes(IKeyStroke.SHIFT, IKeyStroke.CONTROL, IKeyStroke.RIGHT);
 						}
 					}
 				}
@@ -494,6 +561,7 @@ public class ChooseDateForm extends AbstractForm {
 		protected void execLoad() {
 			final IEventService eventService = BEANS.get(IEventService.class);
 			ChooseDateForm.this.eventData = eventService.load(ChooseDateForm.this.getEventIdField().getValue());
+			ChooseDateForm.this.getEventSubjectField().setValue(ChooseDateForm.this.eventData.getSubject().getValue());
 		}
 
 		@Override

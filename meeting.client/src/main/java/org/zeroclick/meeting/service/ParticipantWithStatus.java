@@ -15,6 +15,7 @@ limitations under the License.
  */
 package org.zeroclick.meeting.service;
 
+import org.zeroclick.meeting.shared.event.involevment.InvolvementFormData;
 import org.zeroclick.meeting.shared.event.involevment.InvolvementTablePageData.InvolvementTableRowData;
 
 /**
@@ -43,6 +44,18 @@ public class ParticipantWithStatus {
 		this.email = email;
 	}
 
+	private InvolvementTableRowData toInvolvementRowData(final InvolvementFormData updatedInvolvementData) {
+		final InvolvementTableRowData transformedInvolvementData = new InvolvementTableRowData();
+		transformedInvolvementData.setEventId(updatedInvolvementData.getEventId().getValue());
+		transformedInvolvementData.setUserId(updatedInvolvementData.getUserId().getValue());
+		transformedInvolvementData.setExternalEventId(updatedInvolvementData.getExternalEventId().getValue());
+		transformedInvolvementData.setInvitedBy(updatedInvolvementData.getInvitedBy().getValue());
+		transformedInvolvementData.setReason(updatedInvolvementData.getReason().getValue());
+		transformedInvolvementData.setRole(updatedInvolvementData.getRole().getValue());
+		transformedInvolvementData.setState(updatedInvolvementData.getState().getValue());
+		return transformedInvolvementData;
+	}
+
 	public InvolvementTableRowData getInvolvementData() {
 		return this.involvementData;
 	}
@@ -50,6 +63,11 @@ public class ParticipantWithStatus {
 	public void setInvolvementData(final InvolvementTableRowData involvementData) {
 		this.involvementData = involvementData;
 		this.state = involvementData.getState();
+	}
+
+	public void setInvolvementData(final InvolvementFormData updatedInvolvementData) {
+		this.involvementData = this.toInvolvementRowData(updatedInvolvementData);
+		this.state = updatedInvolvementData.getState().getValue();
 	}
 
 	public String getEmail() {

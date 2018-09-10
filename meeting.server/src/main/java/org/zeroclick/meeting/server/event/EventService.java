@@ -331,25 +331,28 @@ public class EventService extends AbstractCommonService implements IEventService
 		formData.setLastModifier(super.userHelper.getCurrentUserId());
 
 		SQL.insert(SQLs.EVENT_INSERT, formData);
-		final EventFormData storedData = this.store(formData, Boolean.TRUE);
+		// Storing (update) event must be done AFTER Involvement creation, to
+		// Access Management works
 
 		// Organizer Involvement
 		final InvolvementFormData involevmentFormData = new InvolvementFormData();
-		involevmentFormData.getEventId().setValue(storedData.getEventId());
-		involevmentFormData.getUserId().setValue(storedData.getOrganizer().getValue());
+		involevmentFormData.getEventId().setValue(formData.getEventId());
+		involevmentFormData.getUserId().setValue(formData.getOrganizer().getValue());
 		involevmentFormData.getRole().setValue(EventRoleCodeType.OrganizerCode.ID);
 		involevmentFormData.getState().setValue(InvolvmentStateCodeType.ProposedCode.ID);
-		involevmentFormData.getInvitedBy().setValue(storedData.getOrganizer().getValue());
+		involevmentFormData.getInvitedBy().setValue(formData.getOrganizer().getValue());
 		involevmentService.create(involevmentFormData);
 
 		// Guest Involvement
 		final InvolvementFormData guestInvolevmentFormData = new InvolvementFormData();
-		guestInvolevmentFormData.getEventId().setValue(storedData.getEventId());
-		guestInvolevmentFormData.getUserId().setValue(storedData.getGuestId().getValue());
+		guestInvolevmentFormData.getEventId().setValue(formData.getEventId());
+		guestInvolevmentFormData.getUserId().setValue(formData.getGuestId().getValue());
 		guestInvolevmentFormData.getRole().setValue(EventRoleCodeType.RequiredGuestCode.ID);
 		guestInvolevmentFormData.getState().setValue(InvolvmentStateCodeType.AskedCode.ID);
-		guestInvolevmentFormData.getInvitedBy().setValue(storedData.getOrganizer().getValue());
+		guestInvolevmentFormData.getInvitedBy().setValue(formData.getOrganizer().getValue());
 		involevmentService.create(guestInvolevmentFormData);
+
+		final EventFormData storedData = this.store(formData, Boolean.TRUE);
 
 		final Set<String> notifiedUsers = this.buildNotifiedUsers(storedData);
 		BEANS.get(ClientNotificationRegistry.class).putForUsers(notifiedUsers,

@@ -80,7 +80,7 @@ public class EventStateCodeType extends AbstractCodeType<Long, String> {
 
 		@Override
 		protected java.lang.String getConfiguredText() {
-			return TEXTS.get("zc.meeting.state.refused");
+			return TEXTS.get("zc.meeting.event.state.canceled");
 		}
 
 		@Override

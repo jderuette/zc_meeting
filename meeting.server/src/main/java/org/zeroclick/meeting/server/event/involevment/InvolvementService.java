@@ -102,6 +102,15 @@ public class InvolvementService extends AbstractCommonService implements IInvolv
 	}
 
 	@Override
+	public InvolvementFormData load(final Long userId, final Long eventId) {
+		final InvolvementFormData formData = new InvolvementFormData();
+		formData.getEventId().setValue(eventId);
+		formData.getUserId().setValue(userId);
+
+		return this.load(formData);
+	}
+
+	@Override
 	public InvolvementFormData store(final InvolvementFormData formData) {
 		super.checkPermission(new UpdateEventPermission(formData.getEventId().getValue()));
 

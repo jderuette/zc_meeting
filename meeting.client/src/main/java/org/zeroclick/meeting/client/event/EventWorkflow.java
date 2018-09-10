@@ -25,6 +25,7 @@ import org.eclipse.scout.rt.platform.ApplicationScoped;
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.exception.VetoException;
 import org.eclipse.scout.rt.shared.TEXTS;
+import org.eclipse.scout.rt.shared.services.common.security.ACCESS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroclick.common.email.IMailSender;
@@ -38,6 +39,7 @@ import org.zeroclick.meeting.shared.calendar.CalendarConfigurationFormData;
 import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.EventStateCodeType;
 import org.zeroclick.meeting.shared.event.IEventService;
+import org.zeroclick.meeting.shared.event.UpdateEventPermission;
 import org.zeroclick.meeting.shared.event.externalevent.ExternalEventFormData;
 import org.zeroclick.meeting.shared.event.externalevent.IExternalEventService;
 import org.zeroclick.meeting.shared.event.involevment.IInvolvementService;
@@ -45,6 +47,7 @@ import org.zeroclick.meeting.shared.event.involevment.InvolvementFormData;
 import org.zeroclick.meeting.shared.event.involevment.InvolvementTablePageData;
 import org.zeroclick.meeting.shared.event.involevment.InvolvementTablePageData.InvolvementTableRowData;
 import org.zeroclick.meeting.shared.event.involevment.InvolvmentStateCodeType;
+import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
 
 /**
  * @author djer
@@ -54,6 +57,48 @@ import org.zeroclick.meeting.shared.event.involevment.InvolvmentStateCodeType;
 public class EventWorkflow {
 
 	private static final Logger LOG = LoggerFactory.getLogger(EventWorkflow.class);
+
+	public Boolean canReject(final Long eventId) {
+		final IInvolvementService involvementService = BEANS.get(IInvolvementService.class);
+		final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
+
+		Boolean canReject = Boolean.FALSE;
+
+		if (ACCESS.check(new UpdateEventPermission(eventId))) {
+			final InvolvementFormData userInvolvementData = involvementService
+					.load(acsHelper.getZeroClickUserIdOfCurrentSubject(), eventId);
+
+			final String userInvolvementSate = userInvolvementData.getState().getValue();
+
+			if (!InvolvmentStateCodeType.RefusedCode.ID.equals(userInvolvementSate)) {
+				canReject = Boolean.TRUE;
+			}
+		}
+
+		return canReject;
+	}
+
+	public Boolean canAccept(final Long eventId) {
+		final IEventService eventService = BEANS.get(IEventService.class);
+		final IInvolvementService involvementService = BEANS.get(IInvolvementService.class);
+		final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
+
+		Boolean canAccept = Boolean.FALSE;
+
+		if (ACCESS.check(new UpdateEventPermission(eventId))) {
+			final Boolean isRecipient = eventService.isRecipient(eventId);
+			final InvolvementFormData userInvolvementData = involvementService
+					.load(acsHelper.getZeroClickUserIdOfCurrentSubject(), eventId);
+
+			final String userInvolvementSate = userInvolvementData.getState().getValue();
+
+			if (isRecipient && InvolvmentStateCodeType.AskedCode.ID.equals(userInvolvementSate)) {
+				canAccept = Boolean.TRUE;
+			}
+		}
+
+		return canAccept;
+	}
 
 	public void acceptEvent(final EventFormData eventForm, final Long userId) {
 		final IInvolvementService involvementService = BEANS.get(IInvolvementService.class);
@@ -110,14 +155,20 @@ public class EventWorkflow {
 		involvementService.updateStatusAccepted(eventForm.getEventId(), organizerInvolvement.getUserId().getValue());
 		allExternalEvent.add(orgaExternalEventId);
 
+		final String eventExternalHtmlLink = calendarService.getEventExternalLink(orgaExternalEventId,
+				organizerInvolvement.getUserId().getValue());
+		this.sendConfirmationEmail(fullEventFormData, eventExternalHtmlLink, organizerEmail,
+				organizerInvolvement.getUserId().getValue(), paticipantsWithStatus, Boolean.TRUE);
+
 		// Create the external(s) event : for participants (not organizer)
-		if (participants.getRowCount() > 0) {
-			for (final InvolvementTableRowData participant : participants.getRows()) {
+		if (paticipantsWithStatus.size() > 0) {
+			for (final ParticipantWithStatus participant : paticipantsWithStatus) {
+				Boolean isAddCalendarConfigured = Boolean.FALSE;
 
 				if (participant.getState().equals(InvolvmentStateCodeType.AcceptedCode.ID)) {
 
 					final CalendarConfigurationFormData calendarToStoreEvent = calendarService
-							.getUserCreateEventCalendar(participant.getUserId());
+							.getUserCreateEventCalendar(participant.getInvolvementData().getUserId());
 
 					final Long participantProvider = calendarToStoreEvent.getProvider().getValue();
 
@@ -136,27 +187,37 @@ public class EventWorkflow {
 					if (null != usableExternalEvent) {
 						// share externalEventId
 						final InvolvementFormData updatedInvolvementData = this.setInvolvmentExternalEventId(
-								eventForm.getEventId(), participant.getUserId(),
+								eventForm.getEventId(), participant.getInvolvementData().getUserId(),
 								orgaExternalEventId.getExternalEventData().getExternalId().getValue());
+						participant.setInvolvementData(updatedInvolvementData);
+
 					} else {
 						// as one participant is Holder, the organizer must be
 						// added
 						// as participant, and THIS participant removed form
 						// participant
-						final EventIdentification participantExternalEventId = this.createExternalEvent(
-								fullEventFormData, participant.getUserId(), organizerEmail, paticipantsWithStatus);
-						allExternalEvent.add(participantExternalEventId);
+						usableExternalEvent = this.createExternalEvent(fullEventFormData,
+								participant.getInvolvementData().getUserId(), organizerEmail, paticipantsWithStatus);
+						allExternalEvent.add(usableExternalEvent);
 					}
+
+					if (null != calendarToStoreEvent) {
+						isAddCalendarConfigured = Boolean.TRUE;
+					}
+
+					final String participantEventExternalHtmlLink = calendarService
+							.getEventExternalLink(usableExternalEvent, participant.getInvolvementData().getUserId());
+
+					this.sendConfirmationEmail(fullEventFormData, participantEventExternalHtmlLink,
+							participant.getEmail(), participant.getInvolvementData().getUserId(), organizerEmail,
+							isAddCalendarConfigured);
 				}
+
+				// TODO Djer for user "not accepted", send email to indicate
+				// event created and they can participate( but no changing
+				// dates)
 			}
 		}
-
-		// send organizer confirmation
-		// this.sendConfirmationEmail(fullEventFormData);
-
-		// for each participant with status "accepted" send the confirmation
-		// email.
-		// this.sendConfirmationEmail(fullEventFormData);
 	}
 
 	private InvolvementFormData setInvolvmentExternalEventId(final Long eventId, final Long userId,
@@ -232,6 +293,22 @@ public class EventWorkflow {
 					+ formData.getEventId(), e);
 			throw new VetoException(TEXTS.get("zc.common.cannotSendEmail"));
 		}
+	}
+
+	private void sendConfirmationEmail(final EventFormData formData, final String eventHtmlLink, final String recipient,
+			final Long recipientUserId, final List<ParticipantWithStatus> otherParticpantEmail,
+			final Boolean isAddCalendarConfigured) {
+		final StringBuilder otherParticipantsEmails = new StringBuilder(128);
+
+		for (final ParticipantWithStatus participant : otherParticpantEmail) {
+			otherParticipantsEmails.append(participant.getEmail()).append(',');
+		}
+
+		final String emails = otherParticipantsEmails.toString();
+
+		this.sendConfirmationEmail(formData, eventHtmlLink, recipient, recipientUserId,
+				emails.substring(0, emails.length() - 1), isAddCalendarConfigured);
+
 	}
 
 	private void sendConfirmationEmail(final EventFormData formData, final String eventHtmlLink, final String recipient,

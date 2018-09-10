@@ -38,18 +38,16 @@ import org.zeroclick.meeting.client.event.EventInvitedPageForm.MainBox.SplitHori
 import org.zeroclick.meeting.client.event.EventInvitedPageForm.MainBox.SplitHorizontalField.EventDetailBox.ParticipantsField;
 import org.zeroclick.meeting.client.event.EventInvitedPageForm.MainBox.SplitHorizontalField.EventsBox;
 import org.zeroclick.meeting.client.event.EventInvitedPageForm.MainBox.SplitHorizontalField.EventsBox.AskedEventTableField;
-import org.zeroclick.meeting.shared.event.EventFormData;
 import org.zeroclick.meeting.shared.event.EventInvitedPageFormData;
-import org.zeroclick.meeting.shared.event.EventStateCodeType;
 import org.zeroclick.meeting.shared.event.EventTablePageData;
 import org.zeroclick.meeting.shared.event.IEventService;
 import org.zeroclick.meeting.shared.event.involevment.EventRoleCodeType;
 import org.zeroclick.meeting.shared.event.involevment.IInvolvementService;
 import org.zeroclick.meeting.shared.event.involevment.InvolvementFormData;
 import org.zeroclick.meeting.shared.event.involevment.InvolvementTablePageData;
-import org.zeroclick.meeting.shared.security.IAccessControlServiceHelper;
 import org.zeroclick.ui.form.columns.event.AbstractCreatedDateColumn;
 import org.zeroclick.ui.form.columns.event.AbstractEventIdColumn;
+import org.zeroclick.ui.form.columns.event.AbstractInvolvmentStateColumn;
 import org.zeroclick.ui.form.columns.event.AbstractMaximalStartDateColumn;
 import org.zeroclick.ui.form.columns.event.AbstractMinimalStartDateColumn;
 import org.zeroclick.ui.form.columns.event.AbstractSlotColumn;
@@ -157,43 +155,32 @@ public class EventInvitedPageForm extends AbstractForm implements IPageForm {
 		}
 
 		@Order(3000)
-		public class AcceptEventInvolvementBoxMenu extends AbstractMenu {
+		public class AcceptEventInvolvementBoxMenu extends AbstractAcceptEventInvolvementMenu {
 			@Override
-			protected String getConfiguredText() {
-				return TEXTS.get("zc.meeting.Accept");
+			protected Long getEventId() {
+				final Long eventId = EventInvitedPageForm.this.getAskedEventTableField().getTable().getEventIdColumn()
+						.getSelectedValue();
+				return eventId;
 			}
 
 			@Override
-			protected void execAction() {
-				final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
-
-				final ChooseDateForm form = new ChooseDateForm();
-				form.getEventIdField().setValue(EventInvitedPageForm.this.getAskedEventTableField().getTable()
-						.getEventIdColumn().getSelectedValue());
-				form.getEventSubjectField().setValue(EventInvitedPageForm.this.getAskedEventTableField().getTable()
-						.getSubjectColumn().getSelectedValue());
-				form.setForUserId(acsHelper.getZeroClickUserIdOfCurrentSubject());
-
-				form.startAccept();
+			protected boolean getConfiguredVisible() {
+				return false;
 			}
 		}
 
 		@Order(4000)
-		public class RefuseEventInvolvmentBoxMenu extends AbstractMenu {
+		public class RefuseEventInvolvmentBoxMenu extends AbstractRefuseEventInvolvmentMenu {
 			@Override
-			protected String getConfiguredText() {
-				return TEXTS.get("zc.meeting.refuse");
+			protected Long getEventId() {
+				final Long eventId = EventInvitedPageForm.this.getAskedEventTableField().getTable().getEventIdColumn()
+						.getSelectedValue();
+				return eventId;
 			}
 
 			@Override
-			protected void execAction() {
-				final IAccessControlServiceHelper acsHelper = BEANS.get(IAccessControlServiceHelper.class);
-
-				final RejectEventForm form = new RejectEventForm();
-				form.setEventId(EventInvitedPageForm.this.getAskedEventTableField().getTable().getEventIdColumn()
-						.getSelectedValue());
-				form.setForUserId(acsHelper.getZeroClickUserIdOfCurrentSubject());
-				form.startReject(false);
+			protected boolean getConfiguredVisible() {
+				return false;
 			}
 		}
 
@@ -264,10 +251,12 @@ public class EventInvitedPageForm extends AbstractForm implements IPageForm {
 						}
 
 						private void loadData() {
-							final SearchFilter filter = new SearchFilter();
-							final EventFormData eventFormDataFilter = new EventFormData();
-							eventFormDataFilter.getState().setValue(EventStateCodeType.WaitingCode.ID);
-							filter.setFormData(eventFormDataFilter);
+							// final SearchFilter filter = new SearchFilter();
+							// final EventFormData eventFormDataFilter = new
+							// EventFormData();
+							// eventFormDataFilter.getState().setValue(EventStateCodeType.WaitingCode.ID);
+							// filter.setFormData(eventFormDataFilter);
+							final SearchFilter filter = null;
 
 							final EventTablePageData pageData = BEANS.get(IEventService.class)
 									.getEventTableData(filter);
@@ -277,11 +266,21 @@ public class EventInvitedPageForm extends AbstractForm implements IPageForm {
 						public void refresh() {
 							this.loadData();
 							this.refreshLinkedData(this.getSelectedRow());
+							this.refreshMenus();
+						}
+
+						@Override
+						protected void execRowClick(final ITableRow row, final MouseButton mouseButton) {
+							if (mouseButton == MouseButton.Left) {
+								this.execRowAction(row);
+							}
+							super.execRowClick(row, mouseButton);
 						}
 
 						@Override
 						protected void execRowAction(final ITableRow row) {
 							this.refreshLinkedData(row);
+							this.refreshMenus();
 
 							super.execRowAction(row);
 						}
@@ -293,12 +292,33 @@ public class EventInvitedPageForm extends AbstractForm implements IPageForm {
 							}
 						}
 
-						@Override
-						protected void execRowClick(final ITableRow row, final MouseButton mouseButton) {
-							if (mouseButton == MouseButton.Left) {
-								this.refreshLinkedData(row);
+						private void refreshMenus() {
+							EventInvitedPageForm.this.getMainBox().getMenuByClass(AcceptEventInvolvementBoxMenu.class)
+									.refresh();
+							EventInvitedPageForm.this.getMainBox().getMenuByClass(RefuseEventInvolvmentBoxMenu.class)
+									.refresh();
+						}
+
+						@Order(3000)
+						public class AcceptEventInvolvementTableMenu extends AbstractAcceptEventInvolvementMenu {
+
+							@Override
+							protected Long getEventId() {
+								final Long eventId = AskedEventTableField.this.getTable().getEventIdColumn()
+										.getSelectedValue();
+								return eventId;
 							}
-							super.execRowClick(row, mouseButton);
+						}
+
+						@Order(4000)
+						public class RefuseEventInvolvmentTableMenu extends AbstractRefuseEventInvolvmentMenu {
+
+							@Override
+							protected Long getEventId() {
+								final Long eventId = AskedEventTableField.this.getTable().getEventIdColumn()
+										.getSelectedValue();
+								return eventId;
+							}
 						}
 
 						public MinimalStartDateColumn getMinimalStartDateColumn() {
@@ -606,11 +626,7 @@ public class EventInvitedPageForm extends AbstractForm implements IPageForm {
 						}
 
 						@Order(3000)
-						public class StateColumn extends AbstractStateColumn {
-							@Override
-							protected boolean getConfiguredVisible() {
-								return true;
-							}
+						public class StateColumn extends AbstractInvolvmentStateColumn {
 						}
 
 						@Order(4000)
