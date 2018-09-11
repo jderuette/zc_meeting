@@ -24,6 +24,7 @@ import java.util.TimeZone;
 
 import org.eclipse.scout.rt.platform.BEANS;
 import org.eclipse.scout.rt.platform.exception.VetoException;
+import org.eclipse.scout.rt.platform.util.StringUtility;
 import org.eclipse.scout.rt.shared.TEXTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,21 +104,29 @@ public class GoogleEventHelper extends AbstractEventHelper<Event, EventDateTime>
 
 	@Override
 	public Boolean isNotRegiteredOn(final Event event, final String userEmail) {
-		final String eventCreator = event.getCreator().getEmail();
-		final List<EventAttendee> attendees = event.getAttendees();
-		Boolean iAmRegistred = Boolean.FALSE;
-		if (null != attendees && attendees.size() > 0) {
-			for (final EventAttendee attendee : attendees) {
-				if (userEmail.equalsIgnoreCase(attendee.getEmail())) {
-					final String attendeeResponseStatus = attendee.getResponseStatus();
-					if ("accepted".equals(attendeeResponseStatus)) {
-						iAmRegistred = Boolean.TRUE;
+		Boolean isNotResgistred = Boolean.FALSE;
+
+		if (StringUtility.isNullOrEmpty(userEmail)) {
+			LOG.warn("Cannot check user registration, no email adress provided for (Google) event : "
+					+ event.getSummary());
+		} else {
+			final String eventCreator = event.getCreator().getEmail();
+			final List<EventAttendee> attendees = event.getAttendees();
+			Boolean iAmRegistred = Boolean.FALSE;
+			if (null != attendees && attendees.size() > 0) {
+				for (final EventAttendee attendee : attendees) {
+					if (userEmail.equalsIgnoreCase(attendee.getEmail())) {
+						final String attendeeResponseStatus = attendee.getResponseStatus();
+						if ("accepted".equals(attendeeResponseStatus)) {
+							iAmRegistred = Boolean.TRUE;
+						}
 					}
 				}
 			}
+			isNotResgistred = !(userEmail.equalsIgnoreCase(eventCreator) || iAmRegistred);
 		}
 
-		return !(userEmail.equalsIgnoreCase(eventCreator) || iAmRegistred);
+		return isNotResgistred;
 	}
 
 	@Override
