@@ -254,7 +254,7 @@ public class ApiService extends AbstractCommonService implements IApiService {
 			SQL.insert(SQLs.OAUHTCREDENTIAL_INSERT, formData);
 		} else {
 			LOG.warn("Duplicate API id found for user : " + formData.getUserId() + "  with account's email : "
-					+ formData.getAccountEmail().getValue() + " Not created only perform umpdate");
+					+ formData.getAccountEmail().getValue() + " Not created only perform update");
 		}
 
 		final ApiFormData apiFormCreated = this.store(formData, sendNotification || !isNew);

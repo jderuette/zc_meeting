@@ -517,7 +517,7 @@ public class GoogleApiHelper extends AbstractApiHelper<Credential, Calendar> {
 			final Person profile = peopleService.people().get("people/me").setPersonFields("emailAddresses").execute();
 			emailsAdresses = profile.getEmailAddresses();
 		} catch (final IOException ioe) {
-			LOG.error("Error while retrieveing user Adresse email", ioe);
+			LOG.error("Error while retrieving user adress email for api ID : " + apiCredentialId, ioe);
 		}
 
 		String mainAddressEmail = null;

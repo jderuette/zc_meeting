@@ -62,13 +62,13 @@ public class GoogleApiServletCallback extends AbstractApiServletRequestHandler {
 			throws ServletException, IOException {
 		final HtmlResponseHelper responseHelper = new HtmlResponseHelper();
 
-		final Long currentUsderId = this.googleApiHelper.getCurrentUserId();
-		LOG.info("Google API Storing User token for user Id : " + currentUsderId);
+		final Long currentUserId = this.googleApiHelper.getCurrentUserId();
+		LOG.info("Google API Storing User token for user Id : " + currentUserId);
 
 		// Store in DB
 		final IApiService apiService = BEANS.get(IApiService.class);
 		final ApiFormData input = new ApiFormData();
-		input.setUserId(Long.valueOf(currentUsderId));
+		input.setUserId(Long.valueOf(currentUserId));
 		input.getProvider().setValue(ProviderCodeType.GoogleCode.ID);
 
 		// Not propagate creation (yet) because no accesToken, ... yet
@@ -84,7 +84,7 @@ public class GoogleApiServletCallback extends AbstractApiServletRequestHandler {
 
 		// final String aditionnalParams = "";
 		if (null == credential) {
-			LOG.warn("Google API Auth error for : " + currentUsderId);
+			LOG.warn("Google API Auth error for : " + currentUserId);
 			responseHelper.addErrorMessage("Error while trying to Store your credential");
 
 			// aditionnalParams = "&Error=true";
